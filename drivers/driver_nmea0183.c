@@ -4160,7 +4160,6 @@ static gps_mask_t processRMC(int count, char *field[],
      * 1     225446.33    Time of fix 22:54:46 UTC
      * 2     A            Status of Fix:
      *                     A = Autonomous, valid;
-     *                     D = Differential, valid;
      *                     V = invalid
      * 3,4   4916.45,N    Latitude 49 deg. 16.45 min North
      * 5,6   12311.12,W   Longitude 123 deg. 11.12 min West
@@ -4186,9 +4185,12 @@ static gps_mask_t processRMC(int count, char *field[],
     char status = field[2][0];
     int newstatus;
 
+    /* As of Dec 2023, the regressions only have A, or V in field 2.
+     * NMEA says only A, and V are valid
+     */
     switch (status) {
     default:
-        // missing
+        // missing, never seen this case.
         FALLTHROUGH
     case 'V':
         // Invalid
@@ -4206,16 +4208,15 @@ static gps_mask_t processRMC(int count, char *field[],
         }
         mask |= STATUS_SET | MODE_SET;
         break;
-    case 'D':
-        /* Differential Fix
-         * STATUS_DGPS set below, after lat/lon check */
-        FALLTHROUGH
     case 'A':
         // Valid Fix
         /*
          * The MTK3301, Royaltek RGM-3800, and possibly other
          * devices deliver bogus time values when the navigation
          * warning bit is set.
+         */
+        /* The Meinberg GPS164 only outputs GPRMC.  Do set status
+         * so it can increment fixcnt.
          */
         if ('\0' != field[1][0] &&
             9 < count &&
@@ -4230,28 +4231,22 @@ static gps_mask_t processRMC(int count, char *field[],
         // else, no point to the time only case, no regressions with that
 
         if (0 == do_lat_lon(&field[3], &session->newdata)) {
-            if ('D' == status) {
-                newstatus = STATUS_DGPS;
-            } else {
-                newstatus = STATUS_GPS;
-            }
+            newstatus = STATUS_GPS;
             mask |= LATLON_SET;
             if (MODE_2D >= session->lastfix.mode) {
                 /* we have at least a 2D fix
                  * might cause blinking */
                 session->newdata.mode = MODE_2D;
-                mask |= MODE_SET;
             } else if (MODE_3D == session->lastfix.mode) {
                 // keep the 3D, this may be cycle starter
                 // might cause blinking
                 session->newdata.mode = MODE_3D;
-                mask |= MODE_SET;
             }
         } else {
             newstatus = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
-            mask |= MODE_SET;
         }
+        mask |= STATUS_SET | MODE_SET;
         if ('\0' != field[7][0]) {
             session->newdata.speed = safe_atof(field[7]) * KNOTS_TO_MPS;
             mask |= SPEED_SET;
