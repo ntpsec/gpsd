@@ -4246,7 +4246,7 @@ static gps_mask_t processRMC(int count, char *field[],
             newstatus = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
         }
-        mask |= STATUS_SET | MODE_SET;
+        mask |= MODE_SET;
         if ('\0' != field[7][0]) {
             session->newdata.speed = safe_atof(field[7]) * KNOTS_TO_MPS;
             mask |= SPEED_SET;
@@ -4282,7 +4282,9 @@ static gps_mask_t processRMC(int count, char *field[],
             }
         }
 
-        if (12 <= count) {
+        if (12 < count &&
+            '\0' != field[12][0]) {
+            // Have FAA mode indicator (NMEA 2.3 and later)
             newstatus = faa_mode(field[12][0]);
             /* QUectel uses
              * S = Safe  (s/b Simulated)
@@ -4301,16 +4303,14 @@ static gps_mask_t processRMC(int count, char *field[],
         if (3 < session->gpsdata.satellites_used) {
             // 4 sats used means 3D
             session->newdata.mode = MODE_3D;
-            mask |= MODE_SET;
         } else if (0 != isfinite(session->gpsdata.fix.altHAE) ||
                    0 != isfinite(session->gpsdata.fix.altMSL)) {
             /* we probably have at least a 3D fix
              * this handles old GPS that do not report 3D */
             session->newdata.mode = MODE_3D;
-            mask |= MODE_SET;
         }
         session->newdata.status = newstatus;
-        mask |= STATUS_SET;
+        mask |= STATUS_SET | MODE_SET;
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
