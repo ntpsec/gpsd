@@ -1,4 +1,17 @@
 /*
+ * Driver for NMEA 0183 protocol, aka IEC 61162-1
+ * There are many versions of NMEA 0183.
+ *
+ * IEC 61162-1:1995
+ * IEC 61162-1:2000
+ * IEC 61162-1:2007
+ * NMEA 4.00 aligns with IEC 61162-1:2010
+ * NMEA 4.10 aligns with IEC 61162-1:2016
+ *
+ * Sadly, the protocol is proprietary and not documented publicly.
+ * So every firmware seems to have a different opinion on how
+ * to implement the messages.
+ *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
@@ -128,6 +141,7 @@ static int do_lat_lon(char *field[], struct gps_fix_t *out)
 }
 
 /* process an FAA mode character
+ * As used in $GPRMC (field 13) and similar.
  * return status as in session->newdata.status
  */
 static int faa_mode(char mode)
@@ -142,9 +156,6 @@ static int faa_mode(char mode)
     default:
         newstatus = STATUS_GPS;
         break;
-    case 'C':   // Quectel unique: Caution
-        newstatus = STATUS_UNK;
-        break;
     case 'D':   // Differential
         newstatus = STATUS_DGPS;
         break;
@@ -153,6 +164,9 @@ static int faa_mode(char mode)
         break;
     case 'F':   // Float RTK
         newstatus = STATUS_RTK_FLT;
+        break;
+    case 'M':   // manual input.  Interpret as surveyed to better match GGA
+        newstatus = STATUS_TIME;
         break;
     case 'N':   // Data Not Valid
         // already handled, for paranoia sake also here
@@ -164,14 +178,8 @@ static int faa_mode(char mode)
     case 'R':   // fixed RTK
         newstatus = STATUS_RTK_FIX;
         break;
-    case 'M':   // manual input.  Interpret as surveyed to better match GGA
-        newstatus = STATUS_TIME;
-        break;
     case 'S':   // simulator
         newstatus = STATUS_SIM;
-        break;
-    case 'U':   // Quectel unique: Unsafe
-        newstatus = STATUS_UNK;
         break;
     }
     return newstatus;
@@ -4282,16 +4290,29 @@ static gps_mask_t processRMC(int count, char *field[],
             }
         }
 
-        if (12 < count &&
-            '\0' != field[12][0]) {
-            // Have FAA mode indicator (NMEA 2.3 and later)
-            newstatus = faa_mode(field[12][0]);
-            /* QUectel uses
-             * S = Safe  (s/b Simulated)
-             * C = Caution (not NMEA)
-             * U = Unsafe (not NMEA)
-             * V = Invalid
-             */
+        if (12 < count) {
+            if ('\0' != field[12][0]) {
+                // Have FAA mode indicator (NMEA 2.3 and later)
+                newstatus = faa_mode(field[12][0]);
+            }
+            /*
+             * If present, can not be NUL:
+             * S = Safe
+             * C = Caution
+             * U == Unsafe
+             * V = invalid.
+             *
+             * In the regressions, as of Dec 2023, field 13 is
+             * always 'V', and field 2 is always 'A'.  That seems
+             * like an invalid combination.... */
+            if (13 < count) {
+                if ('\0' != field[13][0]) {
+                    ; // skip for now
+                }
+            }
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "NMEA0183: RMC: status %s(%d) faa mode %s faa status %s\n",
+                     field[2], newstatus, field[12], field[13]);
         }
 
         /*
@@ -4901,8 +4922,12 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
              */
         {"AAM", NULL, 0,  false, NULL},    // ignore Waypoint Arrival Alarm
         {"ACCURACY", NULL, 1,  true, processACCURACY},
-        {"ALM", NULL, 0,  false, NULL},    // ignore GPS Almanac Data
-        {"APB", NULL, 0,  false, NULL},    // ignore Autopilot Sentence B
+        {"ACN", NULL, 0,  false, NULL},    // Alert Command, 4.10+
+        {"ALC", NULL, 0,  false, NULL},    // Cyclic Alert List, 4.10+
+        {"ALF", NULL, 0,  false, NULL},    // Alert Sentence, 4.10+
+        {"ALM", NULL, 0,  false, NULL},    // GPS Almanac Data
+        {"APB", NULL, 0,  false, NULL},    // Autopilot Sentence B
+        {"ACF", NULL, 0,  false, NULL},    // Alert Command Refused, 4.10+
         {"AVR", NULL, 0,  false, NULL},    // Same as $PTNL,AVR
         {"BOD", NULL, 0,  false, NULL},    // Bearing Origin to Destination
         // Bearing & Distance to Waypoint, Great Circle
@@ -4910,6 +4935,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"DBT", NULL, 7,  false, processDBT},  // depth
         {"DPT", NULL, 4,  false, processDPT},  // depth
         {"DTM", NULL, 2,  false, processDTM},  // datum
+        {"EPV", NULL, 0,  false, NULL},     // Command/report Prop Value, 4.10+
         {"GBS", NULL, 7,  false, processGBS},  // GNSS Sat Fault Detection
         {"GGA", NULL, 13, false, processGGA},  // GPS fix data
         {"GGK", NULL, 0,  false, NULL},        // Same as $PTNL,GGK
@@ -4922,15 +4948,19 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"GSA", NULL, 18, false, processGSA},  // DOP and Active sats
         {"GST", NULL, 8,  false, processGST},  // Pseudorange error stats
         {"GSV", NULL, 4,  false, processGSV},  // Sats in view
-        // ignore Heading, Deviation and Variation
+        {"HCR", NULL, 0,  false, NULL},        // Heading Correction, 4.10+
+        // Heading, Deviation and Variation
         {"HDG", NULL, 0,  false, processHDG},
         {"HDM", NULL, 3,  false, processHDM},   // $APHDM, Magnetic Heading
         {"HDT", NULL, 1,  false, processHDT},   // Heading true
+        // Hell Andle, Roll Period, Roll Amplitude.  NMEA 4.10+
+        {"HRM", NULL, 0,  false, NULL},
         {"HRP", NULL, 0, false, NULL},       // Serpentrio Headinf, Roll, Pitch
         {"HWBIAS", NULL, 0, false, NULL},       // Unknown HuaWei sentence
         {"LLK", NULL, 0, false, NULL},          // Leica local pos and GDOP
         {"LLQ", NULL, 0, false, NULL},          // Leica local pos and quality
         {"MLA", NULL, 0,  false, NULL},         // GLONASS Almana Data
+        {"MOB", NULL, 0,  false, NULL},         // Man Overboard, NMEA 4.10+
         {"MSS", NULL, 0,  false, NULL},         // beacon receiver status
         {"MTW", NULL, 3,  false, processMTW},   // Water Temperature
         {"MWD", NULL, 0,  false, processMWD},   // Wind Direction and Speed
@@ -5070,18 +5100,26 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"RBD", NULL, 0, false, NULL},       // Serpentrio rover-base direction
         {"RBP", NULL, 0, false, NULL},       // Serpentrio rover-base position
         {"RBV", NULL, 0, false, NULL},       // Serpentrio rover-base velocity
-        {"RLM", NULL, 0, false, NULL},          // Return Link Message
+        {"RLM", NULL, 0, false, NULL},       // Return Link Message, NMEA 4.10+
         // ignore Recommended Minimum Navigation Info, waypoint
         {"RMB", NULL, 0,  false, NULL},         // Recommended Min Nav Info
         {"RMC", NULL, 8,  false, processRMC},   // Recommended Minimum Data
         {"ROT", NULL, 3,  false, processROT},   // Rate of Turn
         {"RPM", NULL, 0,  false, NULL},         // ignore Revolutions
+        {"RRT", NULL, 0, false, NULL},     // Report Route Transfer, NMEA 4.10+
         {"RSA", NULL, 0,  false, NULL},         // Rudder Sensor Angle
         {"RTE", NULL, 0,  false, NULL},         // ignore Routes
+        {"SM1", NULL, 0, false, NULL},     // SafteyNET, All Ships, NMEA 4.10+
+        {"SM2", NULL, 0, false, NULL},     // SafteyNET, Coastal, NMEA 4.10+
+        {"SM3", NULL, 0, false, NULL},     // SafteyNET, Circular, NMEA 4.10+
+        {"SM4", NULL, 0, false, NULL},     // SafteyNET, Rectangular, NMEA 4.10+
+        {"SMB", NULL, 0, false, NULL},     // SafteyNET, Msg Body, NMEA 4.10+
+        {"SPW", NULL, 0, false, NULL},     // Security Password, NMEA 4.10+
         {"SNC", NULL, 0, false, NULL},       // Serpentrio NTRIP client status
         {"STI", NULL, 2,  false, processSTI},   // $STI  Skytraq
         {"TFM", NULL, 0, false, NULL},          // Serpentrio Coord Transform
         {"THS", NULL, 0,  false, processTHS},   // True Heading and Status
+        {"TRL", NULL, 0, false, NULL},     // AIS Xmit offline, NMEA 4.10+
         {"TXT", NULL, 5,  false, processTXT},
         {"TXTbase", NULL, 0,  false, NULL},     // RTCM 1029 TXT
         {"VBW", NULL, 0,  false, NULL},         // Dual Ground/Water Speed
