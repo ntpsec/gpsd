@@ -203,21 +203,13 @@ coverity:
   stage: test
   needs: ["alpine-3"]
   # test for what broke coverity - gem 28 Nov 2023
-  # rules:
-  #   - if: '$COVERITY_SCAN_PROJECT_NAME != /.+/'
-  #     when: never
-  #   - if: '$COVERITY_SCAN_TOKEN != /.+/'
-  #     when: never
-  #   - if: '$COVERITY_USER_EMAIL != /.+/'
-  #     when: never
-  #   - if: '$CI_OPT != $THIS_OPT'
-  #     when: never
-  #   - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != $CI_DEFAULT_BRANCH'
-  #     when: never
-  #   - if: '$CI_PIPELINE_SOURCE =~ /(push|schedule)/ && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
-  #     when: never
-  #   - if: $CI_PIPELINE_SOURCE !~ /(push|schedule|merge_request_event)/
-  #     when: never
+  rules:
+     - if: '$COVERITY_SCAN_PROJECT_NAME != /.+/'
+       when: never
+     - if: '$COVERITY_SCAN_TOKEN != /.+/'
+       when: never
+     - if: '$COVERITY_USER_EMAIL != /.+/'
+       when: never
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
     SCAN_BUILD: 'cov-analysis-linux64-*/bin/cov-build --dir cov-int'
