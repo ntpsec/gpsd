@@ -626,7 +626,7 @@ int main(int argc, char *argv[])
         has_kpps = true;
     } else {
         (void)printf("WARNING: time_pps_create(%s)) failed: %.80s(%d)\n"
-                     "WARRING: %s does not appear to be a KPPS device\n",
+                     "WARNING: %s does not appear to be a KPPS device\n",
                       device, strerror(errno), errno, device);
         if ('\0' != kpps_path[0]) {
             // try kpps_path
@@ -642,7 +642,7 @@ int main(int argc, char *argv[])
                 } else {
                     (void)printf(
                         "WARNING: time_pps_create(%s)) failed: %.80s(%d)\n"
-                        "WARRING: %s does not appear to be a KPPS device\n",
+                        "WARNING: %s does not appear to be a KPPS device\n",
                         kpps_path, strerror(errno), errno, device);
                 }
             }
