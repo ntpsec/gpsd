@@ -348,12 +348,12 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
     }
     if (0x200 == (0x200 & bitfield0)) {
         // yAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.001 * yAngRate;  // deg/s
+        session->gpsdata.attitude.gyro_y = 0.001 * yAngRate;  // deg/s
         mask |= ATTITUDE_SET;
     }
     if (0x400 == (0x400 & bitfield0)) {
         // zAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.001 * zAngRate;  // deg/s
+        session->gpsdata.attitude.gyro_z = 0.001 * zAngRate;  // deg/s
         mask |= ATTITUDE_SET;
     }
     if (0x800 == (0x800 & bitfield0)) {
@@ -750,12 +750,12 @@ ubx_msg_hnr_ins(struct gps_device_t *session, unsigned char *buf,
     }
     if (0x200 == (0x200 & bitfield0)) {
         // yAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.001 * getles32(buf, 16);  // deg/s
+        session->gpsdata.attitude.gyro_y = 0.001 * getles32(buf, 16);  // deg/s
         mask |= ATTITUDE_SET;
     }
     if (0x400 == (0x400 & bitfield0)) {
         // zAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.001 * getles32(buf, 20);  // deg/s
+        session->gpsdata.attitude.gyro_z = 0.001 * getles32(buf, 20);  // deg/s
         mask |= ATTITUDE_SET;
     }
     if (0x800 == (0x800 & bitfield0)) {
