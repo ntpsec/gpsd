@@ -246,7 +246,7 @@ nonempty message ID field:
 Technically, NMEA0183 does not actually require that a !-led sentence
 be AIS.  This format can be used for any encapsulated data. The
 syntax and semantics of fields 1-4 are fixed, and the fill-bit field
-and NEA checksum are required, but the payload fields may contain any
+and NMEA checksum are required, but the payload fields may contain any
 encapsulated data.
 
 It is, however, a safe bet that any such sentence containing an A or B
