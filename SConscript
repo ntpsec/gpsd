@@ -2258,7 +2258,7 @@ env.Command(target="libgps/gps_maskdump.c",
             source=["maskaudit.py", "include/gps.h", "include/gpsd.h"],
             action='''
     rm -f $TARGET &&\
-        $SC_PYTHON $SOURCE -c $SRCDIR > $TARGET &&\
+        $SC_PYTHON $SOURCE -c "$SRCDIR" > $TARGET &&\
         chmod a-w $TARGET''')
 
 env.Command(target="libgps/ais_json.i", source="libgps/jsongen.py",
@@ -2839,7 +2839,7 @@ env.Alias('scan_build', scan_build)  # For '_' vs. '-'
 # Run a valgrind audit on the daemon  - not in normal tests
 valgrind = Utility('valgrind', [
     'valgrind-audit.py', gpsd],
-    '$PYTHON $SRCDIR/valgrind-audit.py'
+    '$PYTHON "$SRCDIR"/valgrind-audit.py'
 )
 
 # Perform all (possible) local code-sanity checks (but not the Coverity scan).
@@ -2901,7 +2901,7 @@ if ((env["nmea2000"] and
         tgt = Utility(
             'nmea2000-regress-' + nmea2000_log[:-4],
             ['tests/test_nmea2000', nmea2000_log, nmea2000_log + '.chk'],
-        '    cd %s; $SRCDIR/tests/test_nmea2000 %s' %
+        '    cd %s; "$SRCDIR"/tests/test_nmea2000 %s' %
             (variantdir, nmea2000_log))
         nmea2000_tests.append(tgt)
     nmea2000_regress = env.Alias('nmea2000-regress', nmea2000_tests)
@@ -2918,7 +2918,7 @@ if env['socket_export'] and env['python']:
     # But first dump the platform and its delay parameters.
     gps_herald = Utility(
         'gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
-        'cd %s; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T' % variantdir)
+        'cd %s; $PYTHON $PYTHON_COVERAGE "$SRCDIR"/gpsfake -T' % variantdir)
 
     gps_log_pattern = "test/daemon/*.log"
     gps_logs = Glob(gps_log_pattern, strings=True)
@@ -2981,16 +2981,16 @@ if env["rtcm104v2"]:
     # the log files must be dependencies so they get copied into variant_dir
     rtcm_regress = Utility('rtcm-regress', [gpsdecode, rtcm2_logs], [
         '@echo "Testing RTCM decoding..."',
-        '@for f in $SRCDIR/test/*.rtcm2; do '
+        '@for f in "$SRCDIR"/test/*.rtcm2; do '
         '    echo "\tTesting $${f}..."; '
         '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '    $SRCDIR/clients/gpsdecode -u -j <$${f} >$${TMPFILE}; '
-        '    diff -ub $${f}.chk $${TMPFILE} || echo "Test FAILED!"; '
+        '    "$SRCDIR"/clients/gpsdecode -u -j <"$${f}" >$${TMPFILE}; '
+        '    diff -ub "$${f}".chk $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; '
         'done;',
         '@echo "Testing idempotency of JSON dump/decode for RTCM2"',
         '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '$SRCDIR/clients/gpsdecode -u -e -j <test/synthetic-rtcm2.json '
+        '"$SRCDIR"/clients/gpsdecode -u -e -j <test/synthetic-rtcm2.json '
         ' >$${TMPFILE}; '
         '    grep -v "^#" test/synthetic-rtcm2.json | diff -ub - $${TMPFILE} '
         '    || echo "Test FAILED!"; '
@@ -3002,8 +3002,8 @@ else:
 
 # Rebuild the RTCM regression tests.
 Utility('rtcm-makeregress', [gpsdecode], [
-    'for f in $SRCDIR/test/*.rtcm2; do '
-    '    $SRCDIR/clients/gpsdecode -j <$${f} >$${f}.chk; '
+    'for f in "$SRCDIR"/test/*.rtcm2; do '
+    '    "$SRCDIR"/clients/gpsdecode -j <"$${f}" >"$${f}".chk; '
     'done'
 ])
 
@@ -3029,7 +3029,7 @@ if env["aivdm"]:
             'aivdm-regress-%d' % aivdm_cnt,
             [aivdm_log, aivdm_chk, gpsdecode],
             ['@echo "Testing AIVDM decoding w/  %s ..."' % aivdm_opt,
-             '$SRCDIR/clients/gpsdecode %s < %s | diff -ub %s -' %
+             '"$SRCDIR"/clients/gpsdecode %s < %s | diff -ub %s -' %
              (aivdm_opt, aivdm_log, aivdm_chk)])
         aivdm_tests.append(tgt)
         aivdm_cnt += 1
@@ -3041,30 +3041,30 @@ else:
 # Rebuild the AIVDM regression tests.
 # Use root dir copies so the new .chk is back into root.
 Utility('aivdm-makeregress', [gpsdecode], [
-    'for f in $SRCDIR/../test/*.aivdm; do '
-    '    $SRCDIR/clients/gpsdecode -u -c <$${f} > $${f}.chk; '
-    '    $SRCDIR/clients/gpsdecode -u -j <$${f} > $${f}.ju.chk; '
-    '    $SRCDIR/clients/gpsdecode -j  <$${f} > $${f}.js.chk; '
+    'for f in "$SRCDIR"/../test/*.aivdm; do '
+    '    "$SRCDIR"/clients/gpsdecode -u -c <"$${f}" > "$${f}".chk; '
+    '    "$SRCDIR"/clients/gpsdecode -u -j <"$${f}" > "$${f}".ju.chk; '
+    '    "$SRCDIR"/clients/gpsdecode -j  <"$${f}" > "$${f}".js.chk; '
     'done', ])
 
 # Regression-test the packet getter.
 packet_regress = UtilityWithHerald(
     'Testing detection of invalid packets...',
     'packet-regress', [test_packet],
-    ['$SRCDIR/tests/test_packet | diff -u test/packet.test.chk -', ])
+    ['"$SRCDIR"/tests/test_packet | diff -u test/packet.test.chk -', ])
 
 # Rebuild the packet-getter regression test
 Utility('packet-makeregress', [test_packet], [
-    '$SRCDIR/tests/test_packet > test/packet.test.chk', ])
+    '"$SRCDIR"/tests/test_packet > test/packet.test.chk', ])
 
 # Regression-test the geoid and variation tester.
 geoid_regress = UtilityWithHerald(
     'Testing the geoid and variation models...',
-    'geoid-regress', [test_geoid], ['$SRCDIR/tests/test_geoid'])
+    'geoid-regress', [test_geoid], ['"$SRCDIR"/tests/test_geoid'])
 
 # Regression-test the calendar functions
 time_regress = Utility('time-regress', [test_mktime], [
-    '$SRCDIR/tests/test_mktime'
+    '"$SRCDIR"/tests/test_mktime'
 ])
 
 # Regression test the unpacking code in libgps
@@ -3074,8 +3074,8 @@ clientlib_logs = ['test/clientlib/multipacket.log',
 unpack_regress = UtilityWithHerald(
     'Testing the client-library sentence decoder...',
     'unpack-regress', [test_libgps, 'regress-driver', clientlib_logs], [
-        '$SRCDIR/regress-driver $REGRESSOPTS -c'
-        ' $SRCDIR/test/clientlib/*.log', ])
+        '"$SRCDIR"/regress-driver $REGRESSOPTS -c'
+        ' "$SRCDIR"/test/clientlib/*.log', ])
 # Unit-test the bitfield extractor
 misc_regress = Utility('misc-regress', [
     'tests/test_clienthelpers.py',
@@ -3089,43 +3089,43 @@ misc_regress = Utility('misc-regress', [
 # Build the regression test for the sentence unpacker
 Utility('unpack-makeregress', [test_libgps], [
     '@echo "Rebuilding the client sentence-unpacker tests..."',
-    '$SRCDIR/regress-driver $REGRESSOPTS -c -b $SRCDIR/test/clientlib/*.log'
+    '"$SRCDIR"/regress-driver $REGRESSOPTS -c -b "$SRCDIR"/test/clientlib/*.log'
 ])
 
 # Unit-test the JSON parsing
 if env['socket_export']:
     json_regress = Utility('json-regress', [test_json],
-                           ['$SRCDIR/tests/test_json'])
+                           ['"$SRCDIR"/tests/test_json'])
 else:
     json_regress = None
 
 # Unit-test timespec math
 timespec_regress = Utility('timespec-regress', [test_timespec], [
-    '$SRCDIR/tests/test_timespec'
+    '"$SRCDIR"/tests/test_timespec'
 ])
 
 # Unit-test float math
 float_regress = Utility('float-regress', [test_float], [
-    '$SRCDIR/tests/test_float'
+    '"$SRCDIR"/tests/test_float'
 ])
 
 # Unit-test trig math
 trig_regress = Utility('trig-regress', [test_trig], [
-    '$SRCDIR/tests/test_trig'
+    '"$SRCDIR"/tests/test_trig'
 ])
 
 # consistency-check the driver methods
 method_regress = UtilityWithHerald(
     'Consistency-checking driver methods...',
     'method-regress', [test_packet], [
-        '$SRCDIR/tests/test_packet -c >/dev/null', ])
+        '"$SRCDIR"/tests/test_packet -c >/dev/null', ])
 
 # Test the xgps/xgpsspeed dependencies
 if env['xgps_deps']:
     test_xgps_deps = UtilityWithHerald(
         'Testing xgps/xgpsspeed dependencies (since xgps=yes)...',
-        'test-xgps-deps', ['$SRCDIR/tests/test_xgps_deps.py'], [
-            '$PYTHON $SRCDIR/tests/test_xgps_deps.py'])
+        'test-xgps-deps', ['"$SRCDIR"/tests/test_xgps_deps.py'], [
+            '$PYTHON "$SRCDIR"/tests/test_xgps_deps.py'])
 else:
     test_xgps_deps = None
 
@@ -3257,13 +3257,13 @@ if env['systemd']:
     hotplug_wrapper_install = []
 else:
     hotplug_wrapper_install = [
-        'cp $SRCDIR/../gpsd.hotplug ' + DESTDIR + env['udevdir'],
+        'cp "$SRCDIR"/../gpsd.hotplug ' + DESTDIR + env['udevdir'],
         'chmod a+x ' + DESTDIR + env['udevdir'] + '/gpsd.hotplug'
     ]
 
 udev_install = Utility('udev-install', 'install', [
     'mkdir -p ' + DESTDIR + env['udevdir'] + '/rules.d',
-    'cp $SRCDIR/gpsd.rules ' + DESTDIR + env['udevdir'] +
+    'cp "$SRCDIR"/gpsd.rules ' + DESTDIR + env['udevdir'] +
     '/rules.d/25-gpsd.rules', ] + hotplug_wrapper_install)
 
 if env['systemd']:
@@ -3283,7 +3283,7 @@ Utility('udev-uninstall', '', [
 ])
 
 Utility('udev-test', '',
-        ['$SRCDIR/gpsd/gpsd -N -n -F /var/run/gpsd.sock -D 5', ])
+        ['"$SRCDIR"/gpsd/gpsd -N -n -F /var/run/gpsd.sock -D 5', ])
 
 # Default targets
 
