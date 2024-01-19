@@ -5324,6 +5324,8 @@ Identification System]
 
 - [[[NMEA-ADVANCE]]] https://vdocuments.net/nmea-0183-advancements-2pdfl-luft-1010-nmea-0183-advancements-slide-11-new.html
 
+- [[[Schwehr]]] https://ccom.unh.edu/user/schwehr
+
 
 == Change history
 
