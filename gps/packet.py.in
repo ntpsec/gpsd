@@ -8,17 +8,17 @@
 # Preserve this property!
 #
 # -*- coding: utf-8 -*-
-"""Python binding of the libgpsd module for recognizing GPS packets.
+"""Recognize GPS packets using the lexer from libgpsd and ctypes.
 
 The new() function returns a new packet-lexer instance.  Lexer instances
 have two methods:
-    get() takes a file descriptor argument and returns a tuple consisting of
-the integer packet type and string packet value.  On end of file it returns
-(-1, '').
+    get() takes a file handle argument and returns a tuple consisting of
+the integer packet type and string packet value.  At the end of the stream
+it returns (-1, "").
     reset() resets the packet-lexer to its initial state.
     The module also has a register_report() function that accepts a callback
-for debug message reporting.  The callback will get two arguments, the error
-level of the message and the message itself.
+for debug message reporting.  The callback will get two arguments: the error
+level of the message; and the message itself.
 """
 from __future__ import absolute_import, print_function
 import ctypes
@@ -41,34 +41,32 @@ class PacketLibraryNotFoundError(Exception):
 
 def importado():
     """
-Load the packet library or throw a PacketLibraryNotFoundError trying.
-See below for search order.
-find_library() looks in: LD_LIBRARY_PATH, DYLD_LIBRARY_PATH,
-$home/lib, /.usr/local/lib, /usr/lib, /lib
-Returns the library handle."""
+    Load the packet library or throw a PacketLibraryNotFoundError trying.
+    See below for the search list.
+    find_library() can look in: LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, /lib,
+    /usr/lib, /usr/local/lib, and $home/lib returning the library handle.
+    """
+    # Form full paths to candidates
+    packet_paths = [
+        os.path.join(os.path.abspath(x), "@GPSPACKET@")
+        for x in [
+            # First, look in the directory containing this package "gps",
+            # possibly following a symlink in the process. Scons places
+            # the file there in the build tree.  We expect it to fail
+            # when running the installed version rather than say
+            # `scons check`.
+            os.path.dirname(os.path.realpath(gps.__path__[0])),
 
-    packet_name = '@GPSPACKET@'
-    packet_dirs = []         # places to look
-    lib_dir = '@LIBDIR@'
+            # Next, look in the library install directory. This is the
+            # expected location when running the installed version.
+            os.path.realpath("@LIBDIR@"),
+        ]
+    ]
 
-    # First look in the directory containing this 'gps' package, possibly
-    # following a symlink in the process.
-    # This is the normal location within the build tree.  It is expected
-    # to fail when running the installed version.
-    packet_dirs.append(os.path.dirname(os.path.realpath(gps.__path__[0])))
+    # Finally, try find_library().
 
-    # Next look in the library install directory.
-    # This is the expected location when running the installed version.
-    packet_dirs.append(os.path.realpath(lib_dir))
-
-    # Form full paths to candidates so far
-    packet_paths = [os.path.join(os.path.abspath(x), packet_name)
-                    for x in packet_dirs]
-
-    # Finally try find_library().
-
-    # find_library() looks for bare library name, using dlopen()
-    # May, or may not, return a full path.  Either way use as is.
+    # find_library() looks for a bare library name, using dlopen()
+    # May, or may not, return a full path.  Either way, use it as is.
     #
     # linux dlopen() looks in:
     #  LD_LIBRARY_PATH,
@@ -88,9 +86,9 @@ Returns the library handle."""
     #   LoadLibrary() can use a full path, or whatever find_library() returned.
     #
     # macOS:
-    #   find_library() returns a full path unless lib in current directory
-    #   find_library() returns no full path if lib in current directory
-    #   But LoadLibrary() always needs a full path
+    #   find_library() returns a full path, unless lib is in the current
+    #   directory, then it returns a partial path. But LoadLibrary() always
+    #   needs a full path
     #
     packet_path = ctypes.util.find_library('gpsdpacket')
     if packet_path:
@@ -99,15 +97,18 @@ Returns the library handle."""
     for packet_path in packet_paths:
         try:
             if sys.flags.verbose:
-                print('try_packet_lib: %s' % packet_path, file=sys.stderr)
+                sys.stderr.write('INFO: try_packet_lib: %s\n' % packet_path)
             lib = ctypes.cdll.LoadLibrary(packet_path)
-            # get the library version from the library
-            gpsd_version = ctypes.c_char_p.in_dll(lib, "gpsd_version").value
-            gpsd_version = gps.polystr(gpsd_version)
-            if '@VERSION@' != gpsd_version:
-                sys.stderr.write("WARNING: got library version %s, "
-                                 "expected %s\n" %
-                                 (gpsd_version, '@VERSION@'))
+            # Get the library version from the library.
+            wrap_version = "@VERSION@"
+            flib_version = ctypes.c_char_p.in_dll(lib, "gpsd_version")
+            flib_version = gps.polystr(flib_version.value)
+            if wrap_version != flib_version:
+                sys.stderr.write(
+                    "ERROR: got library version %s, expected %s from %s\n"
+                    % (flib_version, wrap_version, packet_path)
+                )
+                sys.exit(1)
             return lib
         except OSError:
             pass
@@ -126,7 +127,7 @@ REPORTER = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_char_p)
 
 
 class GpsdErrOutT(ctypes.Structure):
-    '''Used in gps.packet:register_report() to set logging callback.'''
+    """Used in gps.packet:register_report() to set logging callback."""
     # pylint: disable-msg=R0903
     _fields_ = [('debug', ctypes.c_int),
                 ('report', REPORTER),
@@ -134,8 +135,8 @@ class GpsdErrOutT(ctypes.Structure):
 
 
 class lexer_t(ctypes.Structure):
-    '''Used in gps.packet:lexer.get() to pass in data and pull
-    out length, packet type, packet, and another datum.'''
+    """Used in gps.packet:lexer.get() to pass in data and pull
+    out length, packet type, packet, and another datum."""
     # pylint: disable-msg=R0903
     _fields_ = [
         ('packet_type', ctypes.c_int),
@@ -161,7 +162,7 @@ def new():
 def register_report(reporter):
     """register_report(callback)
 
-    callback must be a callable object expecting a string as parameter."""
+    The callback must be a callable object expecting a string parameter."""
     global _loaded
     if callable(reporter):
         _loaded.errout.report = REPORTER(reporter)
@@ -170,8 +171,7 @@ def register_report(reporter):
 class Lexer():
     """GPS packet lexer object
 
-Fetch a single packet from file descriptor
-"""
+    Fetch a single packet from a file handle."""
     pointer = None
 
     def __init__(self):
@@ -181,9 +181,9 @@ Fetch a single packet from file descriptor
         _loaded = self.pointer.contents
 
     def get(self, file_handle):
-        """Get a packet from a file descriptor.
+        """Get a packet from the file handle.
 
-Deprecated 2023, use packet_get1() instead"""
+        Deprecated in 2023; use packet_get1() instead"""
         global _loaded
         _packet.packet_get.restype = ctypes.c_int
         _packet.packet_get.argtypes = [ctypes.c_int, ctypes.POINTER(lexer_t)]
@@ -198,7 +198,7 @@ Deprecated 2023, use packet_get1() instead"""
                 _loaded.char_counter]
 
     def reset(self):
-        """Reset the packet self to ground state."""
+        """Reset the lexer to ground state."""
         _packet.ffi_Lexer_init.restype = None
         _packet.ffi_Lexer_init.argtypes = [ctypes.POINTER(lexer_t)]
         _packet.ffi_Lexer_init(self.pointer)
