@@ -1,10 +1,10 @@
-#!/bin/sh
+#! /bin/sh
 #
 # The regression-test driver script.  This used to be explicit in the
 # makefile before we regrouped the regression tests by stable and unstable
 # drivers.
 #
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # Without GNU date extensions, %N won't expand and we only get 1sec precision
@@ -14,7 +14,7 @@ starttime=`date +"%s  * 1000000000 + %N" | sed '/+ N/s///' 2>/dev/null`
 if [ "`dirname $0`" = "." ]; then
     GPSD_HOME=`pwd`
 else
-    GPSD_HOME=`dirname $0`
+    GPSD_HOME=`dirname "$0"`
 fi
 
 # sed may choke on binary data with some LANG settings
@@ -42,10 +42,10 @@ except:
  n = distutils.util.get_platform()
 print("lib.%s-%s" %(n, sys.version[0:3]))
 '
-py_libdir=`pwd`/build/`${PYTHON} -c "${PROG}"`
+py_libdir=${GPSD_HOME}/build/`${PYTHON} -c "${PROG}"`
 
-py_scriptdir=`pwd`/build/`${PYTHON} -c 'import sys; print("scripts-%s" %(sys.version[0:3], ))'`
-if [ -d ${py_libdir} ] && [ -d ${py_scriptdir} ]; then
+py_scriptdir=${GPSD_HOME}/build/`${PYTHON} -c 'import sys; print("scripts-%s" %(sys.version[0:3], ))'`
+if [ -d "${py_libdir}" ] && [ -d "${py_scriptdir}" ]; then
     PYTHONPATH=${py_libdir}
     export PYTHONPATH
 
@@ -151,37 +151,37 @@ case $mode in
     regress|slowregress)
         [ $quiet = true ] || echo "Testing the $testing..." >&2
         errors=0; total=0; notfound=0;error_list="";
-        for f in $*; do
-            if [ -r $f.chk ]
+        for f in "$*"; do
+            if [ -r "$f.chk" ]
             then
-                trap 'rm -f ${TMP}/test-$$.chk; exit $errors' EXIT HUP INT TERM
+                trap 'rm -f "${TMP}/test-$$.chk"; exit $errors' EXIT HUP INT TERM
                 case $testing in
-                daemon) TMPDIR=${TMP} ${PYTHON} ${PYTHON_COVERAGE} ${GPSD_HOME}/gpsfake -s 38400 -1 -p $opts ${f} | ${GPSFILTER} ${ALTFILTER} >${TMP}/test-$$.chk ;;
-                clientlib) ${GPSD_HOME}/tests/test_libgps -b <${f} >${TMP}/test-$$.chk ;;
+                daemon) TMPDIR=${TMP} ${PYTHON} ${PYTHON_COVERAGE} "${GPSD_HOME}/gpsfake" -s 38400 -1 -p $opts "${f}" | ${GPSFILTER} ${ALTFILTER} > "${TMP}/test-$$.chk" ;;
+                clientlib) "${GPSD_HOME}/tests/test_libgps" -b < "${f}" > "${TMP}/test-$$.chk" ;;
                 esac
                 if [ "${ALTFILTER}" ]
                 then
-                    trap 'rm -f ${TMP}/test-$$.chk ${TMP}/testout-$$.chk ${TMP}/testin-$$.chk ${TMP}/diff-$$; exit $errors' EXIT HUP INT TERM
-                    sed -n <${f}.chk >${TMP}/testin-$$.chk ${ALTFILTER} -e 'p';
-                    sed -n <${TMP}/test-$$.chk >${TMP}/testout-$$.chk ${ALTFILTER} -e 'p';
-                    diff -ub ${color} ${TMP}/testin-$$.chk ${TMP}/testout-$$.chk >${TMP}/diff-$$;
+                    trap 'rm -f "${TMP}/test-$$.chk" "${TMP}/testout-$$.chk" "${TMP}/testin-$$.chk" "${TMP}/diff-$$"; exit $errors' EXIT HUP INT TERM
+                    sed -n < "${f}.chk" > "${TMP}/testin-$$.chk" ${ALTFILTER} -e 'p';
+                    sed -n < "${TMP}/test-$$.chk " > "${TMP}/testout-$$.chk" ${ALTFILTER} -e 'p';
+                    diff -ub ${color} "${TMP}/testin-$$.chk" "${TMP}/testout-$$.chk" > "${TMP}/diff-$$";
                 else
-                    diff -ub ${color} ${f}.chk ${TMP}/test-$$.chk >${TMP}/diff-$$;
+                    diff -ub ${color} "${f}.chk" "${TMP}/test-$$.chk" > "${TMP}/diff-$$";
                 fi
-                if test -s ${TMP}/diff-$$ ; then
+                if test -s "${TMP}/diff-$$" ; then
                     errors=`expr $errors + 1`;
                     error_list="$error_list \"${f}\""
-                    if ! test -s ${TMP}/test-$$.chk ; then
-                        echo " Output missing for ${f}" >${TMP}/diff-$$
+                    if ! test -s "${TMP}/test-$$.chk" ; then
+                        echo " Output missing for ${f}" > "${TMP}/diff-$$"
                     fi
                     if [ -z "$logfile" ]
                     then
-                        cat ${TMP}/diff-$$
+                        cat "${TMP}/diff-$$"
                     else
-                        cat ${TMP}/diff-$$ >>$logfile
+                        cat "${TMP}/diff-$$" >> "$logfile"
                     fi
                 fi;
-                rm -f ${TMP}/test-$$.chk ${TMP}/testout-$$.chk ${TMP}/testin-$$.chk ${TMP}/diff-$$
+                rm -f "${TMP}/test-$$.chk" "${TMP}/testout-$$.chk" "${TMP}/testin-$$.chk" "${TMP}/diff-$$"
             else
                 echo "*** No check log $f.chk exists"
                 notfound=`expr $notfound + 1`;
