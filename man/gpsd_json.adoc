@@ -982,6 +982,9 @@ may be omitted only when there is exactly one subscribed channel.
 
 |readonly |No |boolean |True if device is read-only.
 
+|sernum |No |string |Hardware serial number (if the device driver
+returns that value).
+
 |stopbits |Yes |integer |Stop bits (1 or 2).
 
 |subtype |No |string |Whatever version information the device driver

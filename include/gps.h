@@ -105,6 +105,7 @@ extern "C" {
  *       Add wtemp to gps_fix_t
  *       Add rtcm3_4076_hdr
  *       change gps_data_t.gps_fd to type gps_fd_t.
+ *       devconfig_t add sernum[]
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -2657,6 +2658,7 @@ struct devconfig_t {
     // 96 too small for ZED-F9
     char subtype[128];           // maybe hardware version
     char subtype1[128];          // maybe software version
+    char sernum[30];             // maybe serial number or uniq id
     // a buffer to hold data to output to GPS
     char hexdata[HEXDATA_MAX];
     timespec_t activated;

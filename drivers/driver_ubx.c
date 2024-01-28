@@ -14,7 +14,7 @@
  * For the Antaris 4, the default leap-second offset (before getting one from
  * the sats, one presumes) is 0sec; for the u-blox 6 it's 15sec.
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -116,6 +116,8 @@ static gps_mask_t ubx_msg_nav_velecef(struct gps_device_t *session,
                                       unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_nav_sbas(struct gps_device_t *session,
                                    unsigned char *buf, size_t data_len);
+static gps_mask_t ubx_msg_sec_uniqid(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
                                  unsigned char *buf, size_t data_len);
 static void ubx_mode(struct gps_device_t *session, int mode);
@@ -1060,6 +1062,25 @@ static gps_mask_t ubx_msg_mon_ver(struct gps_device_t *session,
              "UBX-MON-VER: %s %s PROTVER %u\n",
              session->subtype, session->subtype1,
              session->driver.ubx.protver);
+
+    // Done with MON-VER, should we, can we, get UNIQID?
+
+    // Do we already have UNIQID?
+    if ('\0' != session->gpsdata.dev.sernum[0]) {
+        return 0;
+    }
+    // can we query for UNIQID?
+    if (session->context->passive ||
+        session->context->readonly) {
+        return 0;
+    }
+    if (18 > session->driver.ubx.protver) {
+        // No UNIQ-ID before PROTVER 18
+        return 0;
+    }
+    // UBX-SEC-UNIQID: query for uniq id
+    (void)ubx_write(session, UBX_CLASS_SEC, 0x03, NULL, 0);
+
     return 0;
 }
 
@@ -3478,6 +3499,67 @@ ubx_msg_inf(struct gps_device_t *session, unsigned char *buf, size_t data_len)
 }
 
 /**
+ * Unique chip ID
+ * UBX-SEC-UNIQID
+ *
+ * grab the 5 byte serial number / chip id
+ */
+static gps_mask_t ubx_msg_sec_uniqid(struct gps_device_t *session,
+                                     unsigned char *buf,
+                                     size_t data_len)
+{
+    unsigned version;
+
+    if (9 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-SEC-UNIQID message, runt payload len %zd\n", data_len);
+        return 0;
+    }
+
+    version = getub(buf, 0);
+    switch (version) {
+    case 1:
+        /* string of length 10 bytes
+         * PROTVER 18 -> 23 has five bytes of unique id.
+         * F10 is PROTVER 34, still has 5 bytes */
+        (void)snprintf(session->gpsdata.dev.sernum,
+                       sizeof(session->gpsdata.dev.sernum),
+                       "%02x%02x%02x%02x%02x",
+                       getub(buf, 4),
+                       getub(buf, 5),
+                       getub(buf, 6),
+                       getub(buf, 7),
+                       getub(buf, 8));
+        break;
+    case 2:
+        /* string of length 12 bytes
+         * some PROTVER 34 and beyond (for now) have six bytes of unique id.
+         * Such as MAX-M10S. */
+        (void)snprintf(session->gpsdata.dev.sernum,
+                       sizeof(session->gpsdata.dev.sernum),
+                       "%02x%02x%02x%02x%02x%02x",
+                       getub(buf, 4),
+                       getub(buf, 5),
+                       getub(buf, 6),
+                       getub(buf, 7),
+                       getub(buf, 8),
+                       getub(buf, 9));
+        break;
+    default:
+        // unknown version
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-SEC-UNIQID message bad version\n");
+        return 0;
+    }
+
+    // output chip id at LOG_INF
+    GPSD_LOG(LOG_INF, &session->context->errout,
+             "UBX-SEC-UNIQID: %s\n",
+             session->gpsdata.dev.sernum);
+    return 0;
+}
+
+/**
  * Survey-in data - UBX-TIM-SVIN
  * Time Sync products only
  */
@@ -3963,9 +4045,8 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX_SEC_SIGN\n");
         break;
     case UBX_SEC_UNIQID:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX_SEC_UNIQID\n");
+        mask = ubx_msg_sec_uniqid(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
-
     case UBX_TIM_DOSC:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-DOSC\n");
         break;
@@ -4156,6 +4237,10 @@ static void ubx_init_query(struct gps_device_t *session)
 {
     // UBX-MON-VER: query for version information
     (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
+
+    /* We can't get query for UBX-SEC-UNIQID as we need the protver first.
+     * Plus, we want to chain requests so as not to  overflow the receiver
+     * inbuffers. */
 }
 
 static void ubx_event_hook(struct gps_device_t *session, event_t event)

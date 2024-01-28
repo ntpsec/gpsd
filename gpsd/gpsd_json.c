@@ -689,6 +689,14 @@ void json_device_dump(const struct gps_device_t *device,
         (void)strlcat(reply, device->device_type->type_name, replylen);
         (void)strlcat(reply, "\"", replylen);
     }
+    if ('\0' != device->gpsdata.dev.sernum[0]) {
+        (void)strlcat(reply, ",\"sernum\":\"", replylen);
+        (void)strlcat(reply,
+                      json_stringify(buf1, sizeof(buf1),
+                                     device->gpsdata.dev.sernum),
+                      replylen);
+        (void)strlcat(reply, "\"", replylen);
+    }
     if ('\0' != device->subtype[0]) {
         (void)strlcat(reply, ",\"subtype\":\"", replylen);
         (void)strlcat(reply,

@@ -223,7 +223,9 @@ static const struct json_attr_t json_attrs_4[] = {
 static const char *json_str5 = "{\"class\":\"DEVICE\",\
            \"path\":\"/dev/ttyUSB0\",\
            \"flags\":5,\
-           \"driver\":\"Foonly\",\"subtype\":\"Foonly Frob\",\
+           \"driver\":\"Foonly\",\
+           \"sernum\":\"Shivering\",\
+           \"subtype\":\"Sparkling\",\"subtype1\":\"Satisfying\",\
            \"cycle\":1.1,\"mincycle\":0.002\
            }";
 
@@ -565,6 +567,9 @@ static void jsontest(int i)
         assert_string("path", gpsdata.dev.path, "/dev/ttyUSB0");
         assert_int("flags", "t_integer", gpsdata.dev.flags, 5);
         assert_string("driver", gpsdata.dev.driver, "Foonly");
+        assert_string("sernum", gpsdata.dev.sernum, "Shivering");
+        assert_string("subtype", gpsdata.dev.subtype, "Sparkling");
+        assert_string("subtype1", gpsdata.dev.subtype1, "Satisfying");
         expected_ts.tv_sec = 1;
         expected_ts.tv_nsec = 100000000;
         assert_ts("cycle", gpsdata.dev.cycle, expected_ts);
