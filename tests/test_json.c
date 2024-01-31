@@ -24,7 +24,7 @@ static int current_test = 0;
 
 static void assert_case(int status)
 {
-    if (status != 0) {
+    if (0 != status) {
         (void)fprintf(stderr, "case %d FAILED\n", current_test);
         (void)fprintf(stderr, "status %d (%s).\n",
                       status, json_error_string(status));
@@ -495,8 +495,7 @@ static void jsontest(int i)
     // do not keep old data!
     memset((void *)&gpsdata, 0, sizeof(gpsdata));
 
-    switch (i)
-    {
+    switch (i) {
     case 1:
         status = libgps_json_unpack(json_str1, &gpsdata, NULL);
         assert_case(status);
@@ -918,7 +917,9 @@ int main(int argc UNUSED, char *argv[]UNUSED)
             individual = atoi(optarg);
             break;
         case '?':
+            FALLTHROUGH
         case 'h':
+            FALLTHROUGH
         default:
             (void)fprintf(stderr,
                         "usage: %s [-D lvl] [-n tst] [-V]\n"
