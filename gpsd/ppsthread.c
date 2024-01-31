@@ -135,11 +135,11 @@ struct inner_context_t {
 
 #if defined(HAVE_SYS_TIMEPPS_H)
 static int get_edge_rfc2783(struct inner_context_t *,
-                         struct timespec *,
-                         int *,
-                         struct timespec *,
-                         int *,
-                         volatile struct timedelta_t *);
+                            struct timespec *,
+                            int *,
+                            struct timespec *,
+                            int *,
+                            volatile struct timedelta_t *);
 #endif  // defined(HAVE_SYS_TIMEPPS_H)
 
 static pthread_mutex_t ppslast_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -201,10 +201,12 @@ static void thread_unlock(volatile struct pps_thread_t *pps_thread)
  * empty (NUL-terminated) string if failure */
 static void get_sysfs_var(const char *path, char *buf, size_t bufsize)
 {
-    buf[0] = '\0';
     int fd = open(path, O_RDONLY);
+
+    buf[0] = '\0';
     if (0 <= fd) {
         ssize_t r = read(fd, buf, bufsize - 1);
+
         if (0 < r) {
             buf[r - 1] = '\0';     // remove trailing \x0a
         } else {
@@ -379,10 +381,10 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
                 "KPPS:%s RFC2783 path:%s, fd %d\n",
                 pps_thread->devicename, path, ret);
 
-    /* RFC 2783 implies the time_pps_setcap() needs privileges *
+    /* RFC 2783 implies the time_pps_setcap() needs privileges
      * keep root a tad longer just in case */
     if (0 > time_pps_create(ret,
-                            (pps_handle_t *)&inner_context->kernelpps_handle)) {
+                    (pps_handle_t *)&inner_context->kernelpps_handle)) {
         char errbuf[BUFSIZ] = "unknown error";
 
         pps_thread->log_hook(pps_thread, THREAD_INF,
@@ -398,6 +400,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
     if (0 > time_pps_getcap(inner_context->kernelpps_handle,
                             &inner_context->pps_caps)) {
         char errbuf[BUFSIZ] = "unknown error";
+
         inner_context->pps_caps = 0;
         pps_thread->log_hook(pps_thread, THREAD_INF,
                     "KPPS:%s time_pps_getcap() failed: %s(%d)\n",
@@ -424,9 +427,9 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
     }
     if (0 != (PPS_CANWAIT & inner_context->pps_caps)) {
        // we can wait! so no need for TIOCMIWAIT
-       pps_thread->log_hook(pps_thread, THREAD_INF,
-                   "KPPS:%s have PPS_CANWAIT\n",
-                   pps_thread->devicename);
+        pps_thread->log_hook(pps_thread, THREAD_INF,
+                             "KPPS:%s have PPS_CANWAIT\n",
+                             pps_thread->devicename);
         inner_context->pps_canwait = true;
     }
 
@@ -457,6 +460,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
 
     if (0 > time_pps_setparams(inner_context->kernelpps_handle, &pp)) {
         char errbuf[BUFSIZ] = "unknown error";
+
         pps_thread->log_hook(pps_thread, THREAD_ERROR,
             "KPPS:%s time_pps_setparams(mode=0x%02X) failed: %s(%d)\n",
             pps_thread->devicename, pp.mode,
@@ -510,6 +514,7 @@ static int get_edge_tiocmiwait(volatile struct pps_thread_t *thread_context,
 
     if (0 != ioctl(thread_context->devicefd, TIOCMIWAIT, PPS_LINE_TIOC)) {
         char errbuf[BUFSIZ] = "unknown error";
+
         thread_context->log_hook(thread_context, THREAD_WARN,
                 "TPPS:%s ioctl(TIOCMIWAIT) failed: %s(%d)\n",
                 thread_context->devicename,
@@ -533,6 +538,7 @@ static int get_edge_tiocmiwait(volatile struct pps_thread_t *thread_context,
     if (0 > clock_gettime(CLOCK_REALTIME, clock_ts)) {
         // uh, oh, can not get time!
         char errbuf[BUFSIZ] = "unknown error";
+
         thread_context->log_hook(thread_context, THREAD_ERROR,
                     "TPPS:%s clock_gettime() failed: %s(%d)\n",
                     thread_context->devicename,
@@ -1150,7 +1156,8 @@ static void *gpsd_ppsmonitor(void *arg)
             // probably should log computed offset just for grins here
             ok = false;
             log = "missing last_fixtime\n";
-        } else if (ok && last_second_used >= last_fixtime.real.tv_sec) {
+        } else if (ok &&
+                   last_second_used >= last_fixtime.real.tv_sec) {
             // uh, oh, this second already handled
             ok = false;
             log = "this second already handled\n";
@@ -1180,8 +1187,8 @@ static void *gpsd_ppsmonitor(void *arg)
         struct timedelta_t ppstimes;
 
         thread_context->log_hook(thread_context, THREAD_RAW,
-                    "PPS:%s %.10s categorized %.100s",
-                    thread_context->devicename, edge_str, log);
+                                 "PPS:%s %.10s categorized %.100s",
+                                 thread_context->devicename, edge_str, log);
 
         /* FIXME! The GR-601W at 38,400 or faster can send the
          * serial fix before the interrupt event carrying the PPS
@@ -1199,7 +1206,7 @@ static void *gpsd_ppsmonitor(void *arg)
             // handle x.9999 as x+1
             ppstimes.real.tv_sec++;
         }
-        ppstimes.real.tv_nsec = 0;  /* need to be fixed for 5Hz */
+        ppstimes.real.tv_nsec = 0;  // need to be fixed for 5Hz
         ppstimes.clock = clock_ts;
 
         // Here would be a good place to apply qErr
@@ -1227,7 +1234,8 @@ static void *gpsd_ppsmonitor(void *arg)
                         delay_str);
             log1 = "system clock went backwards";
         } else if ((2 < delay.tv_sec) ||
-                   (1 == delay.tv_sec && 100000000 < delay.tv_nsec)) {
+                   (1 == delay.tv_sec &&
+                    100000000 < delay.tv_nsec)) {
             /* system clock could be slewing so allow up to 1.1 sec delay
              * chronyd can slew +/-8.33% */
             thread_context->log_hook(thread_context, THREAD_RAW,
@@ -1288,7 +1296,7 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
 {
     int retval;
     pthread_t pt;
-    struct timespec start_delay = {0, 1000000};  /* 1 ms */
+    struct timespec start_delay = {0, 1000000};  // 1 ms
     /*
      * FIXME: this launch code is not itself thread-safe!
      * It would be if inner_context could be auto, but the monitor
@@ -1300,7 +1308,7 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
 
     inner_context.pps_thread = pps_thread;
 #if defined(HAVE_SYS_TIMEPPS_H)
-    /* some operations in init_kernel_pps() require root privs */
+    // some operations in init_kernel_pps() require root privs
     (void)init_kernel_pps(&inner_context);
     if ((pps_handle_t)0 <= inner_context.kernelpps_handle) {
         pps_thread->log_hook(pps_thread, THREAD_INF,
@@ -1321,8 +1329,8 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
     memset(&pt, 0, sizeof(pt));
     retval = pthread_create(&pt, NULL, gpsd_ppsmonitor, (void *)&inner_context);
     pps_thread->log_hook(pps_thread, THREAD_PROG, "PPS:%s thread %s\n",
-                pps_thread->devicename,
-                (retval==0) ? "launched" : "FAILED");
+                         pps_thread->devicename,
+                         (retval==0) ? "launched" : "FAILED");
     /* The monitor thread may not run immediately, particularly on a single-
      * core machine, so we need to wait for it to acknowledge its copying
      * of the inner_context struct before proceeding.
