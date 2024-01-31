@@ -56,12 +56,12 @@ handing GPS-subframe and RTCM decoding.
 
 You are not expected to understand any of this.
 
-This file is Copyright 2010 by the GPSD project
+This file is Copyright by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 
 *****************************************************************************/
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes */
 
 #include <stdbool.h>
 #include "../include/gpsd.h"
@@ -143,8 +143,8 @@ unsigned int isgps_parity(isgps30bits_t th)
 
 #ifdef __UNUSED__
     GPSD_LOG(ISGPS_ERRLEVEL_BASE + 2, errout, "ISGPS parity %u\n", p);
-#endif /* __UNUSED__ */
-    return (p);
+#endif  // __UNUSED__
+    return p;
 }
 
 /*
@@ -171,7 +171,7 @@ unsigned int isgps_parity(isgps30bits_t th)
 void isgps_init(struct gps_lexer_t *lexer)
 {
     lexer->isgps.curr_word = 0;
-    lexer->isgps.curr_offset = 24;      /* first word */
+    lexer->isgps.curr_offset = 24;      // first word
     lexer->isgps.locked = false;
     lexer->isgps.bufindex = 0;
     lexer->isgps.buflen = 0;
@@ -182,8 +182,8 @@ enum isgpsstat_t isgps_decode(struct gps_lexer_t *lexer,
                               bool(*length_check) (struct gps_lexer_t *),
                               size_t maxlen, unsigned int c)
 {
-    /* ASCII characters 64-127, @ through DEL */
-    if ((c & MAG_TAG_MASK) != MAG_TAG_DATA) {
+    // ASCII characters 64-127, @ through DEL
+    if (MAG_TAG_DATA != (c & MAG_TAG_MASK)) {
         GPSD_LOG(ISGPS_ERRLEVEL_BASE + 1, &lexer->errout,
                  "ISGPS word tag not correct, skipping byte\n");
         return ISGPS_SKIP;
@@ -195,9 +195,9 @@ enum isgpsstat_t isgps_decode(struct gps_lexer_t *lexer,
         lexer->isgps.curr_offset = -5;
         lexer->isgps.bufindex = 0;
 
-        while (lexer->isgps.curr_offset <= 0) {
+        while (0 >= lexer->isgps.curr_offset) {
             lexer->isgps.curr_word <<= 1;
-            if (lexer->isgps.curr_offset > 0) {
+            if (0 < lexer->isgps.curr_offset) {
                 lexer->isgps.curr_word |= c << lexer->isgps.curr_offset;
             } else {
                 lexer->isgps.curr_word |=
@@ -218,23 +218,24 @@ enum isgpsstat_t isgps_decode(struct gps_lexer_t *lexer,
                          "ISGPS preamble ok, parity fail\n");
             }
             lexer->isgps.curr_offset++;
-        }                       /* end while */
+        }                       // end while
     }
     if (lexer->isgps.locked) {
         enum isgpsstat_t res;
 
         res = ISGPS_SYNC;
 
-        if (lexer->isgps.curr_offset > 0) {
+        if (0 < lexer->isgps.curr_offset) {
             lexer->isgps.curr_word |= c << lexer->isgps.curr_offset;
         } else {
             lexer->isgps.curr_word |= c >> -(lexer->isgps.curr_offset);
         }
 
-        if (lexer->isgps.curr_offset <= 0) {
-            /* weird-assed inversion */
-            if (lexer->isgps.curr_word & P_30_MASK)
+        if (0 >=lexer->isgps.curr_offset) {
+            // weird-assed inversion
+            if (lexer->isgps.curr_word & P_30_MASK) {
                 lexer->isgps.curr_word ^= W_DATA_MASK;
+            }
 
             if (isgps_parityok(lexer->isgps.curr_word)) {
 #if 0
@@ -268,27 +269,26 @@ enum isgpsstat_t isgps_decode(struct gps_lexer_t *lexer,
                     lexer->isgps.buf[lexer->isgps.bufindex] =
                         lexer->isgps.curr_word;
 
-                    /* *INDENT-OFF* */
                     if ((lexer->isgps.bufindex == 0) &&
                         !preamble_match((isgps30bits_t *) lexer->isgps.buf)) {
                         GPSD_LOG(ISGPS_ERRLEVEL_BASE + 1, &lexer->errout,
                                  "ISGPS word 0 not a preamble- punting\n");
                         return ISGPS_NO_SYNC;
                     }
-                    /* *INDENT-ON* */
+
                     lexer->isgps.bufindex++;
 
                     if (length_check(lexer)) {
-                        /* jackpot, we have a complete packet */
+                        // jackpot, we have a complete packet
                         lexer->isgps.buflen = lexer->isgps.bufindex *
                                                   sizeof(isgps30bits_t);
                         lexer->isgps.bufindex = 0;
                         res = ISGPS_MESSAGE;
                     }
                 }
-                lexer->isgps.curr_word <<= 30;  /* preserve the 2 low bits */
+                lexer->isgps.curr_word <<= 30;  // preserve the 2 low bits
                 lexer->isgps.curr_offset += 30;
-                if (lexer->isgps.curr_offset > 0) {
+                if (0 < lexer->isgps.curr_offset) {
                     lexer->isgps.curr_word |=
                         c << lexer->isgps.curr_offset;
                 } else {
@@ -308,7 +308,7 @@ enum isgpsstat_t isgps_decode(struct gps_lexer_t *lexer,
         return res;
     }
 
-    /* never achieved lock */
+    // never achieved lock
     GPSD_LOG(ISGPS_ERRLEVEL_BASE + 1, &lexer->errout,
              "ISGPS lock never achieved\n");
     return ISGPS_NO_SYNC;
