@@ -125,10 +125,10 @@
 #endif  // TIMESERVICE_ENABLE || !SOCKET_EXPORT_ENABLE
 
 #ifdef SOCKET_EXPORT_ENABLE
-/* IP version used by the program */
-/* AF_UNSPEC: all
- * AF_INET: IPv4 only
- * AF_INET6: IPv6 only
+/* IP version used by the program:
+ *  AF_UNSPEC: all
+ *  AF_INET: IPv4 only
+ *  AF_INET6: IPv6 only
  */
 static const int af_allowed = AF_UNSPEC;
 #endif  // SOCKET_EXPORT_ENABLE/
@@ -356,7 +356,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     in_port_t port;
     char *af_str = "";
     char *proto_str = "";
-    const int dscp = IPTOS_LOWDELAY; // Prioritize packet
+    const int dscp = IPTOS_LOWDELAY;  // Prioritize packet
 
     INVALIDATE_SOCKET(s);
     pse = getservbyname(service, tcp_or_udp);
@@ -976,9 +976,9 @@ static void handle_control(int sfd, char *buf)
         } else {
             GPSD_LOG(LOG_INF, &context.errout,
                      "<= control(%d): adding %s\n", sfd, stash);
-            if (gpsd_add_device(stash, nowait))
+            if (gpsd_add_device(stash, nowait)) {
                 ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
-            else {
+            } else {
                 ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
                 GPSD_LOG(LOG_INF, &context.errout,
                          "control(%d): adding %s failed, too many "
@@ -1723,6 +1723,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
     // add any just-identified device to watcher lists
     if (0 != (changed & DRIVER_IS)) {
         bool listeners = false;
+
         for (sub = subscribers;
              sub < subscribers + MAX_CLIENTS; sub++) {
             if (0 != sub->active &&
