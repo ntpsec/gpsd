@@ -618,9 +618,9 @@ void gpsd_set_speed(struct gps_device_t *session,
         break;
     }
 
-    if (rate != cfgetispeed(&session->ttyset)
-        || parity != session->gpsdata.dev.parity
-        || stopbits != session->gpsdata.dev.stopbits) {
+    if (rate != cfgetispeed(&session->ttyset) ||
+        parity != session->gpsdata.dev.parity ||
+        stopbits != session->gpsdata.dev.stopbits) {
 
         /*
          *  "Don't mess with this conditional! Speed zero is supposed to mean
@@ -884,7 +884,7 @@ int gpsd_serial_open(struct gps_device_t *session)
          * against anything with root privileges, alas.
          */
         (void)ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCEXCL);
-#endif /* TIOCEXCL */
+#endif  // TIOCEXCL
     }
 
     session->lexer.type = BAD_PACKET;
@@ -940,7 +940,7 @@ int gpsd_serial_open(struct gps_device_t *session)
 
     // twiddle the speed, parity, etc. but only on real serial ports
     memset(session->ttyset.c_cc, 0, sizeof(session->ttyset.c_cc));
-    //session->ttyset.c_cc[VTIME] = 1;
+    // session->ttyset.c_cc[VTIME] = 1;
     /*
      * Tip from Chris Kuethe: the FIDI chip used in the Trip-Nav
      * 200 (and possibly other USB GPSes) gets completely hosed
@@ -1222,4 +1222,5 @@ void gpsd_close(struct gps_device_t *session)
         session->gpsdata.gps_fd = UNALLOCATED_FD;
     }
 }
+
 // vim: set expandtab shiftwidth=4
