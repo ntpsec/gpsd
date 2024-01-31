@@ -15,13 +15,13 @@ PERMISSIONS
 
 ***************************************************************************/
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
+#ifdef SOCKET_EXPORT_ENABLE
 #include <math.h>
 #include <stdbool.h>
 
 #include "../include/gpsd.h"
-#ifdef SOCKET_EXPORT_ENABLE
 #include "../include/gps_json.h"
 #include "../include/strfuncs.h"
 #include "../include/timespec.h"
@@ -33,7 +33,7 @@ int json_device_read(const char *buf,
     // initialized to shut up clang
     double d_cycle = 0.0, d_mincycle = 0.0;
 
-    /* *INDENT-OFF* */
+    // *INDENT-OFF*
     const struct json_attr_t json_attrs_device[] = {
         {"class",      t_check,      .dflt.check = "DEVICE"},
 
@@ -69,12 +69,13 @@ int json_device_read(const char *buf,
         {"", t_ignore},
         {NULL},
     };
-    /* *INDENT-ON* */
+    // *INDENT-ON*
     int status;
 
     status = json_read_object(buf, json_attrs_device, endptr);
-    if (status != 0)
+    if (0 != status) {
         return status;
+    }
 
     if (0 == isfinite(d_cycle)) {
         dev->cycle.tv_sec = 0;
@@ -96,7 +97,7 @@ int json_watch_read(const char *buf,
                     struct gps_policy_t *ccp,
                     const char **endptr)
 {
-    /* *INDENT-OFF* */
+    // *INDENT-OFF*
     struct json_attr_t chanconfig_attrs[] = {
         {"class",          t_check,    .dflt.check = "WATCH"},
 
@@ -120,7 +121,7 @@ int json_watch_read(const char *buf,
         {"", t_ignore},
         {NULL},
     };
-    /* *INDENT-ON* */
+    // *INDENT-ON*
     int status;
 
     status = json_read_object(buf, chanconfig_attrs, endptr);
@@ -131,7 +132,7 @@ int json_watch_read(const char *buf,
  * return outbuf
  */
 char *json_policy_to_watch(struct gps_policy_t *ccp,
-                         char *outbuf, size_t outbuf_len)
+                           char *outbuf, size_t outbuf_len)
 {
     char *str;
 
@@ -151,8 +152,9 @@ char *json_policy_to_watch(struct gps_policy_t *ccp,
 
     str_appendf(outbuf, outbuf_len, ",\"raw\":%u", ccp->raw);
 
-    if ('\0' != ccp->remote[0])
+    if ('\0' != ccp->remote[0]) {
         str_appendf(outbuf, outbuf_len, ",\"remote\":%s", ccp->remote);
+    }
 
     str = ccp->scaled ? ",\"scaled\":true" : ",\"scaled\":false";
     (void)strlcat(outbuf, str, outbuf_len);
@@ -166,7 +168,6 @@ char *json_policy_to_watch(struct gps_policy_t *ccp,
     return outbuf;
 }
 
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
-/* shared_json.c ends here */
 // vim: set expandtab shiftwidth=4
