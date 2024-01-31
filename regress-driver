@@ -214,8 +214,8 @@ case $mode in
         [ $quiet = true ] || echo "Rebuilding $testing regressions..." >&2
         for f in $*; do
             case $testing in
-            daemon) ${PYTHON} ${PYTHON_COVERAGE} ${GPSD_HOME}/gpsfake -s 38400 -1 -p $opts ${f} | ${GPSFILTER} >${f}.chk;;
-            clientlib) ${GPSD_HOME}/test_libgps -b <${f} >${f}.chk ;;
+            daemon) ${PYTHON} ${PYTHON_COVERAGE} "${GPSD_HOME}/gpsfake" -s 38400 -1 -p $opts ${f} | ${GPSFILTER} >${f}.chk;;
+            clientlib) "${GPSD_HOME}/test_libgps" -b <${f} >${f}.chk ;;
             esac
         done
         status=0
@@ -224,8 +224,8 @@ case $mode in
         [ $quiet = true ] || echo "Viewing..." >&2
         for f in $*; do
             case $testing in
-            daemon) ${PYTHON} ${PYTHON_COVERAGE} ${GPSD_HOME}/gpsfake -s 38400 -1 -p $opts ${f} | ${GPSFILTER} ;;
-            clientlib) ${GPSD_HOME}/tests/test_libgps -b <${f} ;;
+            daemon) ${PYTHON} ${PYTHON_COVERAGE} "${GPSD_HOME}/gpsfake" -s 38400 -1 -p $opts ${f} | ${GPSFILTER} ;;
+            clientlib) "${GPSD_HOME}/tests/test_libgps" -b <${f} ;;
             esac
         done
         status=0
