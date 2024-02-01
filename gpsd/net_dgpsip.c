@@ -1,6 +1,6 @@
 /* net_dgpsip.c -- gather and dispatch DGPS data from DGPSIP servers
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -76,20 +76,22 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
     return (socket_t)device->gpsdata.gps_fd;
 }
 
+// may be time to ship a usage report to the DGPSIP server
 void dgpsip_report(struct gps_context_t *context,
                    struct gps_device_t *gps,
                    struct gps_device_t *dgpsip)
-/* may be time to ship a usage report to the DGPSIP server */
 {
     /*
      * 10 is an arbitrary number, the point is to have gotten several good
      * fixes before reporting usage to our DGPSIP server.
      */
-    if (context->fixcnt > 10 && !dgpsip->dgpsip.reported) {
+    if (10 < context->fixcnt &&
+        !dgpsip->dgpsip.reported) {
         dgpsip->dgpsip.reported = true;
-        if (dgpsip->gpsdata.gps_fd > -1) {
+        if (-1 < dgpsip->gpsdata.gps_fd) {
             char buf[BUFSIZ];
             ssize_t blen;
+
             blen = snprintf(buf, sizeof(buf), "R %0.8f %0.8f %0.2f\r\n",
                             gps->gpsdata.fix.latitude,
                             gps->gpsdata.fix.longitude,
