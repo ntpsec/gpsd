@@ -157,49 +157,158 @@ static size_t oncore_payload_cksum_length(unsigned char id1, unsigned char id2)
      * including the checksum are given.  Return -1 for unknown IDs.
      */
 
-#define ONCTYPE(id2,id3) ((((unsigned int)id2)<<8)|(id3))
+#define ONCTYPE(id2,id3) ((((unsigned int)id2) << 8) | (id3))
 
-    // *INDENT-OFF*
     switch (ONCTYPE(id1,id2)) {
-    case ONCTYPE('A','b'): l = 10; break;   // GMT offset
-    case ONCTYPE('A','w'): l =  8; break;   // time mode
-    case ONCTYPE('A','c'): l = 11; break;   // date
-    case ONCTYPE('A','a'): l = 10; break;   // time of day
-    case ONCTYPE('A','d'): l = 11; break;   // latitude
-    case ONCTYPE('A','e'): l = 11; break;   // longitude
-    case ONCTYPE('A','f'): l = 15; break;   // height
-    case ONCTYPE('E','a'): l = 76; break;   // position/status/data
-    case ONCTYPE('A','g'): l =  8; break;   // satellite mask angle
-    case ONCTYPE('B','b'): l = 92; break;   // visible satellites status
-    case ONCTYPE('B','j'): l =  8; break;   // leap seconds pending
-    case ONCTYPE('A','q'): l =  8; break;   // atmospheric correction mode
-    case ONCTYPE('A','p'): l = 25; break;   // set user datum / select datum
+    // A...
+    case ONCTYPE('A','a'):
+        // time of day
+        l = 10;
+        break;
+    case ONCTYPE('A','b'):
+        // GMT offset
+        l = 10;
+        break;
+    case ONCTYPE('A','c'):
+        // date
+        l = 11;
+        break;
+    case ONCTYPE('A','d'):
+        // latitude
+        l = 11;
+        break;
+    case ONCTYPE('A','e'):
+        // longitude
+        l = 11;
+        break;
+    case ONCTYPE('A','f'):
+        // height
+        l = 15;
+        break;
+    case ONCTYPE('A','g'):
+        // satellite mask angle
+        l = 8;
+        break;
     // Command "Ao" gives "Ap" response (select datum)
-    case ONCTYPE('C','h'): l =  9; break;   // almanac input ("Cb" response)
-    case ONCTYPE('C','b'): l = 33; break;   // almanac output ("Be" response)
-    case ONCTYPE('S','z'): l =  8; break;   // system power-on failure
-    case ONCTYPE('C','j'): l = 294; break;  // receiver ID
-    case ONCTYPE('F','a'): l =  9; break;   // self-test
-    case ONCTYPE('C','f'): l =  7; break;   // set-to-defaults
-    case ONCTYPE('E','q'): l = 96; break;   // ASCII position
-    case ONCTYPE('A','u'): l = 12; break;   // altitude hold height
-    case ONCTYPE('A','v'): l =  8; break;   // altitude hold mode
-    case ONCTYPE('A','N'): l =  8; break;   // velocity filter
-    case ONCTYPE('A','O'): l =  8; break;   // RTCM report mode
-    case ONCTYPE('C','c'): l = 80; break;   // ephemeris data input ("Bf")
-    case ONCTYPE('C','k'): l =  7; break;   // pseudorng correction inp. ("Ce")
+    case ONCTYPE('A','p'):
+        // set user datum / select datum
+        l = 25;
+        break;
+    case ONCTYPE('A','q'):
+        // atmospheric correction mode
+        l = 8;
+        break;
+    case ONCTYPE('A','s'):
+        // position-hold position
+        l = 20;
+        break;
+    case ONCTYPE('A','t'):
+        // position-hold mode
+        l = 8;
+        break;
+    case ONCTYPE('A','u'):
+        // altitude hold height
+        l = 12;
+        break;
+    case ONCTYPE('A','v'):
+        // altitude hold mode
+        l = 8;
+        break;
+    case ONCTYPE('A','w'):
+        // time mode
+        l = 8;
+        break;
+    case ONCTYPE('A','y'):
+        // 1PPS offset
+        l = 11;
+        break;
+    case ONCTYPE('A','z'):
+        // 1PPS cable delay
+        l = 11;
+        break;
+    case ONCTYPE('A','N'):
+        // velocity filter
+        l = 8;
+        break;
+    case ONCTYPE('A','O'):
+        // RTCM report mode
+        l = 8;
+        break;
+    case ONCTYPE('A','P'):
+        // pulse mode
+        l = 8;
+        break;
+
+    // B...
+    case ONCTYPE('B','b'):
+        // visible satellites status
+        l = 92;
+        break;
+    case ONCTYPE('B','j'):
+        // leap seconds pending
+        l = 8;
+        break;
+    case ONCTYPE('B','o'):
+        // UTC offset status
+        l = 8;
+        break;
+
+    // C...
+    case ONCTYPE('C','b'):
+        // almanac output ("Be" response)
+        l = 33;
+        break;
+    case ONCTYPE('C','c'):
+        // ephemeris data input ("Bf")
+        l = 80;
+        break;
+    case ONCTYPE('C','f'):
+        // set-to-defaults
+        l = 7;
+        break;
     // Command "Ci" (switch to NMEA, GT versions only) has no response
-    case ONCTYPE('B','o'): l =  8; break;   // UTC offset status
-    case ONCTYPE('A','z'): l = 11; break;   // 1PPS cable delay
-    case ONCTYPE('A','y'): l = 11; break;   // 1PPS offset
-    case ONCTYPE('A','P'): l =  8; break;   // pulse mode
-    case ONCTYPE('A','s'): l = 20; break;   // position-hold position
-    case ONCTYPE('A','t'): l =  8; break;   // position-hold mode
-    case ONCTYPE('E','n'): l = 69; break;   // time RAIM setup and status
+    case ONCTYPE('C','h'):
+        // almanac input ("Cb" response)
+        l = 9;
+        break;
+    case ONCTYPE('C','j'):
+        // receiver ID
+        l = 294;
+        break;
+    case ONCTYPE('C','k'):
+        // pseudorng correction inp. ("Ce")
+        l = 7;
+        break;
+
+    // E...
+    case ONCTYPE('E','a'):
+        // position/status/data
+        l = 76;
+        break;
+    case ONCTYPE('E','n'):
+        // time RAIM setup and status
+        l = 69;
+        break;
+    case ONCTYPE('E','q'):
+        // ASCII position
+        l = 96;
+        break;
+
+    // F...
+    case ONCTYPE('F','a'):
+        // self-test
+        l = 9;
+        break;
+
+    // S...
+    case ONCTYPE('S','z'):
+        // system power-on failure
+        l = 8;
+        break;
+
     default:
         return 0;
     }
-    // *INDENT-ON*
 
     return l - 6;               // Subtract header and trailer.
 }
@@ -210,11 +319,14 @@ static size_t oncore_payload_cksum_length(unsigned char id1, unsigned char id2)
 // Convert hex char to binary form. Requires that c be a hex char.
 static unsigned long greis_hex2bin(char c)
 {
-    if (('a' <= c) && ('f' >= c)) {
+    if (('a' <= c) &&
+        ('f' >= c)) {
         c = c + 10 - 'a';
-    } else if (('A' <= c) && ('F' >= c)) {
+    } else if (('A' <= c) &&
+               ('F' >= c)) {
         c = c + 10 - 'A';
-    } else if (('0' <= c) && ('9' >= c)) {
+    } else if (('0' <= c) &&
+               ('9' >= c)) {
         c -= '0';
     }
     // FIXME: No error handling?
@@ -301,6 +413,7 @@ static bool character_pushback(struct gps_lexer_t *lexer,
     lexer->state = newstate;
     if (lexer->errout.debug >= LOG_RAW2) {
         unsigned char c = *lexer->inbufptr;
+
         GPSD_LOG(LOG_RAW, &lexer->errout,
                  "%08ld: character '%c' [%02x]  pushed back, state set to %s\n",
                  lexer->char_counter,
@@ -318,6 +431,7 @@ static void character_discard(struct gps_lexer_t *lexer)
     lexer->inbufptr = lexer->inbuffer;
     if (lexer->errout.debug >= LOG_RAW1) {
         char scratchbuf[MAX_PACKET_LENGTH*4+1];
+
         GPSD_LOG(LOG_RAW1, &lexer->errout,
                  "Character discarded, buffer %zu chars = %s\n",
                  lexer->inbuflen,
@@ -328,10 +442,10 @@ static void character_discard(struct gps_lexer_t *lexer)
 
 /* get 0-origin big-endian words relative to start of packet buffer
  * used for Zodiac */
-#define getzuword(i) (unsigned)(lexer->inbuffer[2*(i)] | \
-                                (lexer->inbuffer[2*(i)+1] << 8))
-#define getzword(i) (short)(lexer->inbuffer[2*(i)] | \
-                           (lexer->inbuffer[2*(i)+1] << 8))
+#define getzuword(i) (unsigned)(lexer->inbuffer[2 * (i)] | \
+                                (lexer->inbuffer[2 * (i) + 1] << 8))
+#define getzword(i) (short)(lexer->inbuffer[2 * (i)] | \
+                           (lexer->inbuffer[2 * (i) + 1] << 8))
 
 static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 {
@@ -342,6 +456,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #ifdef SUPERSTAR2_ENABLE
     static unsigned char ctmp;
 #endif  // SUPERSTAR2_ENABLE
+
     n++;
     switch (lexer->state) {
     case GROUND_STATE:
@@ -354,7 +469,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         case SOH:          // 0x01
             lexer->state = SUPERSTAR2_LEADER;
             break;
-#endif /* SUPERSTAR2_ENABLE */
+#endif // SUPERSTAR2_ENABLE
 #ifdef NAVCOM_ENABLE
         case STX:          // 0x02
             lexer->state = NAVCOM_LEADER_1;
@@ -705,8 +820,8 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #endif  // TNT_ENABLE
 #if defined(GARMINTXT_ENABLE)
         case '\r':
-            /* stay in this state, next character should be '\n' */
-            /* in the theory we can stop search here and don't wait for '\n' */
+            /* stay in this state, next character should be '\n'
+             * in the theory we can stop search here and don't wait for '\n' */
             lexer->state = AT1_LEADER;
             break;
         case '\n':
@@ -819,7 +934,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #ifdef SKYTRAQ_ENABLE
         } else if ('T' == c) {              // $ST leader accepted, to $STI
             lexer->state = NMEA_LEADER_END;
-#endif /* SKYTRAQ_ENABLE */
+#endif  // SKYTRAQ_ENABLE
         } else {
             return character_pushback(lexer, GROUND_STATE);
         }
@@ -1007,7 +1122,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             (void)character_pushback(lexer, GROUND_STATE);
         }
         break;
-#endif /* EARTHMATE_ENABLE */
+#endif  // EARTHMATE_ENABLE
     case NMEA_LEAD_A:
         if ('c' == c) {                // $Ac
             lexer->state = SIRF_ACK_LEAD_2;
@@ -1879,7 +1994,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = JSON_SPECIAL;
             break;
         default:
-            /* couldn't recognize start of value literal */
+            // couldn't recognize start of value literal
             return character_pushback(lexer, GROUND_STATE);
         }
         break;
@@ -1910,7 +2025,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             return character_pushback(lexer, JSON_LEADER);
         }
         if (',' != c) {
-            /* trailing garbage after JSON value */
+            // trailing garbage after JSON value
             return character_pushback(lexer, GROUND_STATE);
         }
         lexer->state = JSON_LEADER;
@@ -2032,7 +2147,7 @@ static void packet_unstash(struct gps_lexer_t *lexer)
 void lexer_init(struct gps_lexer_t *lexer, struct gpsd_errout_t *errout)
 {
     memset(lexer, 0, sizeof(struct gps_lexer_t));
-    /* lel memset() do all the zeros
+    /* let memset() do all the zeros
      *
      *  lexer->char_counter = 0;
      *  lexer->retry_counter = 0;
@@ -2680,58 +2795,58 @@ void packet_parse(struct gps_lexer_t *lexer)
                                          (len == (inbuflen - 4)))
 
                     if (0x13 == pkt_id) {
-                        /* pass */ ;
-                    /*
-                     * Not in [TSIP],  Accutime Gold only. Variable length.
-                     */
+                        ;  // pass
+                        /*
+                         * Not in [TSIP],  Accutime Gold only. Variable length.
+                         */
                     } else if ((0x1c == pkt_id) &&
                                (11 <= inbuflen)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x41, 10)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x42, 16)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x43, 20)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x45, 10)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x46, 2)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if ((0x47 == pkt_id) &&
                                (0 == (inbuflen % 5))) {
                         /*
                          * 0x47 data length 1+5*numSV, packetlen is 5+5*numSV
                          * FIXME, should be a proper length calculation
                          */
-                         /* pass */ ;
+                         ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x48, 22)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x49, 32)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x4a, 20)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x4b, 3)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x4c, 17)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x54, 12)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x55, 4)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x56, 20)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x57, 8)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x5a, 25)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x5b, 16)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x5c, 24)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x5d, 26)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x5e, 2)) {
-                        /* pass */ ;
+                        ;  // pass
                      /*
                      * Not in [TSIP]. the TSIP driver doesn't use type 0x5f.
                      * but we test for it so as to avoid setting packet not_tsip
@@ -2741,7 +2856,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                          * 0x6c data length 18+numSV, total packetlen is 22+numSV
                          * numSV up to 224
                          */
-                        /* pass */ ;
+                        ;  // pass
                     } else if ((0x6c == pkt_id) &&
                                ((22 <= inbuflen) &&
                                 (246 >= inbuflen))) {
@@ -2749,15 +2864,15 @@ void packet_parse(struct gps_lexer_t *lexer)
                          * 0x6d data length 17+numSV, total packetlen is 21+numSV
                          * numSV up to 32
                          */
-                        /* pass */ ;
+                        ;  // pass
                     } else if ((0x6d == pkt_id) &&
                                ((21 <= inbuflen) &&
                                 (53 >= inbuflen))) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x82, 1)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x83, 36)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else if (TSIP_ID_AND_LENGTH(0x84, 36)) {
                         // pass
                     } else if (0x8f <= pkt_id &&
@@ -2772,16 +2887,16 @@ void packet_parse(struct gps_lexer_t *lexer)
                      * This is according to [TSIP].
                      */
                     } else if (TSIP_ID_AND_LENGTH(0xbb, 40)) {
-                        /* pass */ ;
+                        ;  // pass
                     /*
                      * The Accutime Gold ships a version of this packet with a
                      * 43-byte payload.  We only use the first 21 bytes, and
                      * parts after byte 27 are padding.
                      */
                     } else if (TSIP_ID_AND_LENGTH(0xbb, 43)) {
-                        /* pass */ ;
+                        ;  // pass
                     } else {
-                        /* pass */ ;
+                        ;  // pass
                         GPSD_LOG(LOG_PROG, &lexer->errout,
                                  "TSIP REJECT pkt_id = %#02x, inbuflen= %d\n",
                                  pkt_id, inbuflen);
