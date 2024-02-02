@@ -102,7 +102,7 @@ extern "C" {
  *       Add fixsource_t and watch_t to gps_data_t
  *       move privdata_t here from libgps/gps_sock.c
  *       Add rot (Rate Of Turn), mheading, to struct attitude_t
- *       Add wtemp to gps_fix_t
+ *       Add wtemp and temp to gps_fix_t
  *       Add rtcm3_4076_hdr
  *       change gps_data_t.gps_fd to type gps_fd_t.
  *       devconfig_t add sernum[]
@@ -243,6 +243,7 @@ struct gps_fix_t {
     // depth in meters, probably depth of water under the keel
     double depth;
     double wtemp;           // water temp, degrees C
+    double temp;            // receiver temp, degrees C
 
     // ECEF data, all data in meters, and meters/second, or NaN
     struct {

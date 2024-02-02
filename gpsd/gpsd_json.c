@@ -511,7 +511,13 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
                         ",\"wspeedt\":%.1f", gpsdata->fix.wspeedt);
         }
     }
+    if (0 != isfinite(gpsdata->fix.temp)) {
+        // Receiver Temp, in degrees C
+        str_appendf(reply, replylen,
+                       ",\"temp\":%.3f", gpsdata->fix.temp);
+    }
     if (0 != isfinite(gpsdata->fix.wtemp)) {
+        // Water Temp, in degrees C
         str_appendf(reply, replylen,
                        ",\"wtemp\":%.3f", gpsdata->fix.wtemp);
     }

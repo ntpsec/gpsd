@@ -1,6 +1,6 @@
 /* gpsutils.c -- code shared between low-level and high-level interfaces
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -310,6 +310,7 @@ void gps_clear_fix(struct gps_fix_t *fixp)
     fixp->geoid_sep = NAN;
     fixp->dgps_age = NAN;
     fixp->dgps_station = -1;
+    fixp->temp = NAN;
     fixp->wanglem = NAN;
     fixp->wangler = NAN;
     fixp->wanglet = NAN;
@@ -520,6 +521,9 @@ void gps_merge_fix(struct gps_fix_t *to,
             to->wspeedt = from->wspeedt;
         }
     }
+    if (0 != isfinite(from->temp)) {
+        to->temp = from->temp;
+    }
     if (0 != isfinite(from->wtemp)) {
         to->wtemp = from->wtemp;
     }
@@ -600,8 +604,8 @@ timespec_t iso8601_to_timespec(const char *isotime)
     /* Fallback for systems without strptime (i.e. Windows)
      * This is a simplistic conversion for iso8601 strings only,
      * rather than embedding a full copy of strptime() that handles
-     * all formats */
-    /* Thus avoiding needing to test for (broken) negative date/time
+     * all formats.
+     * Thus avoiding needing to test for (broken) negative date/time
      * numbers in token reading - only need to check the upper range */
     bool failed = false;
     char *isotime_tokenizer = strdup(isotime);

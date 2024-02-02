@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 14 June 2023
+:date: 1 February 2024
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -132,23 +132,7 @@ expanded notes on the items and values in the TPV message.
 2=2D, +
 3=3D.
 
-|status |No |numeric |GPS fix status: +
-0=Unknown, +
-1=Normal, +
-2=DGPS, +
-3=RTK Fixed, +
-4=RTK Floating, +
-5=DR, +
-6=GNSSDR, +
-7=Time (surveyed), +
-8=Simulated, +
-9=P(Y)
-
-|time |No |string |Time/date stamp in ISO8601 format, UTC. May have a
-fractional part of up to .001sec precision. May be absent if the mode
-is not 2D or 3D.  May be present, but invalid, if there is no fix.  Verify
-3 consecutive 3D fixes before believing it is UTC.  Even then it may be
-off by several seconds until the current leap seconds is known.
+|alt |No |numeric |Deprecated. Undefined. Use altHAE or altMSL.
 
 |altHAE |No |numeric |Altitude, height above ellipsoid, in meters.
 Probably WGS84.
@@ -156,8 +140,6 @@ Probably WGS84.
 |altMSL |No |numeric |MSL Altitude in meters. The geoid used is rarely
 specified and is often inaccurate. See the comments below on geoidSep.
 altMSL is altHAE minus geoidSep.
-
-|alt |No |numeric |Deprecated. Undefined. Use altHAE or altMSL.
 
 |climb |No |numeric |Climb (positive) or sink (negative) rate, meters
 per second.
@@ -169,6 +151,24 @@ per second.
 |dgpsAge |No |numeric |Age of DGPS data. In seconds
 
 |dgpsSta |No |numeric |Station of DGPS data.
+
+|ecefx |No |numeric |ECEF X position in meters.
+
+|ecefy |No |numeric |ECEF Y position in meters.
+
+|ecefz |No |numeric |ECEF Z position in meters.
+
+|ecefpAcc |No |numeric |ECEF position error in meters. Certainty
+unknown.
+
+|ecefvx |No |numeric |ECEF X velocity in meters per second.
+
+|ecefvy |No |numeric |ECEF Y velocity in meters per second.
+
+|ecefvz |No |numeric |ECEF Z velocity in meters per second.
+
+|ecefvAcc |No |numeric |ECEF velocity error in meters per second.
+Certainty unknown.
 
 |epc |No |numeric |Estimated climb error in meters per second.
 Certainty unknown.
@@ -208,38 +208,12 @@ off as much as 12 meters.
 
 |lon |No |numeric |Longitude in degrees: +/- signifies East/West.
 
-|track |No |numeric |Course over ground, degrees from true north.
-
 |magtrack |No |numeric |Course over ground, degrees magnetic.
 
 |magvar |No |numeric |Magnetic variation, degrees. Also known as the
 magnetic declination (the direction of the horizontal component of the
 magnetic field measured clockwise from north) in degrees, Positive is
 West variation. Negative is East variation.
-
-|speed |No |numeric |Speed over ground, meters per second.
-
-|ecefx |No |numeric |ECEF X position in meters.
-
-|ecefy |No |numeric |ECEF Y position in meters.
-
-|ecefz |No |numeric |ECEF Z position in meters.
-
-|ecefpAcc |No |numeric |ECEF position error in meters. Certainty
-unknown.
-
-|ecefvx |No |numeric |ECEF X velocity in meters per second.
-
-|ecefvy |No |numeric |ECEF Y velocity in meters per second.
-
-|ecefvz |No |numeric |ECEF Z velocity in meters per second.
-
-|ecefvAcc |No |numeric |ECEF velocity error in meters per second.
-Certainty unknown.
-
-|sep |No |numeric |Estimated Spherical (3D) Position Error in meters.
-Guessed to be 95% confidence, but many GNSS receivers do not specify,
-so certainty unknown.
 
 |relD |No |numeric |Down component of relative position vector in
 meters.
@@ -249,6 +223,34 @@ meters.
 
 |relN |No |numeric |North component of relative position vector in
 meters.
+
+|sep |No |numeric |Estimated Spherical (3D) Position Error in meters.
+Guessed to be 95% confidence, but many GNSS receivers do not specify,
+so certainty unknown.
+
+|speed |No |numeric |Speed over ground, meters per second.
+
+|status |No |numeric |GPS fix status: +
+0=Unknown, +
+1=Normal, +
+2=DGPS, +
+3=RTK Fixed, +
+4=RTK Floating, +
+5=DR, +
+6=GNSSDR, +
+7=Time (surveyed), +
+8=Simulated, +
+9=P(Y)
+
+|temp |No |numeric |Receiver temperature in degrees Celsius.
+
+|time |No |string |Time/date stamp in ISO8601 format, UTC. May have a
+fractional part of up to .001sec precision. May be absent if the mode
+is not 2D or 3D.  May be present, but invalid, if there is no fix.  Verify
+3 consecutive 3D fixes before believing it is UTC.  Even then it may be
+off by several seconds until the current leap seconds is known.
+
+|track |No |numeric |Course over ground, degrees from true north.
 
 |velD |No |numeric |Down velocity component in meters.
 

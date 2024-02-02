@@ -1177,7 +1177,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     char buf2[BUFSIZ];
     uint32_t tow;             // time of week in milli seconds
     double ftow;              // time of week in seconds
-    double temp;              // temperature in degrees C
     double fqErr;             // PPS Offset. positive is slow.
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
@@ -2859,7 +2858,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             // ignore 24-27, DAC Value
             // ignore 28-31, DAC Voltage
             // 32-35, Temperature degrees C
-            temp = getbef32(buf, 32);
+            session->newdata.temp = getbef32(buf, 32);
             session->newdata.latitude = getbed64(buf, 36) * RAD_2_DEG;
             session->newdata.longitude = getbed64(buf, 44) * RAD_2_DEG;
             // SMT 360 doc says this is always altHAE in meters
@@ -2952,7 +2951,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                      session->newdata.longitude,
                      session->newdata.altHAE,
                      session->newdata.mode,
-                     temp, fqErr);
+                     session->newdata.temp, fqErr);
             break;
 
         case 0x02:
