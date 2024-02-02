@@ -2,3 +2,5 @@
 OPTIONS=""
 # Set to 'true' to add USB devices automatically via udev
 USBAUTO="true"
+GPSD_OPTIONS=""
+DEVICES=""
