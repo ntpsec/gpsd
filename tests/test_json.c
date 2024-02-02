@@ -138,7 +138,8 @@ static const char json_str1[] =
     "{\"class\":\"TPV\","
     "\"device\":\"GPS#1\",\"time\":\"2005-06-19T08:12:41.89Z\","
     "\"lon\":46.498203637,\"lat\":7.568074350,\"altHAE\":1327.780,"
-    "\"epx\":21.000,\"epy\":23.000,\"epv\":124.484,\"mode\":3}";
+    "\"epx\":21.000,\"epy\":23.000,\"epv\":124.484,\"mode\":3,"
+    "\"temp\":1.00,\"wtemp\":3.000}";
 
 /*
  * Case 2: SKY report
@@ -500,13 +501,15 @@ static void jsontest(int i)
         status = libgps_json_unpack(json_str1, &gpsdata, NULL);
         assert_case(status);
         assert_string("device", gpsdata.dev.path, "GPS#1");
+        assert_real("lat", gpsdata.fix.latitude, 7.568074350);
+        assert_real("lon", gpsdata.fix.longitude, 46.498203637);
         assert_int("mode", "t_integer", gpsdata.fix.mode, 3);
+        assert_real("temp", gpsdata.fix.temp, 1.000);
         assert_int("time.tv_sec", "t_integer", gpsdata.fix.time.tv_sec,
                    1119168761);
         assert_int("time.tv_nsec", "t_integer",
                    gpsdata.fix.time.tv_nsec / 10000000, 89);
-        assert_real("lon", gpsdata.fix.longitude, 46.498203637);
-        assert_real("lat", gpsdata.fix.latitude, 7.568074350);
+        assert_real("wtemp", gpsdata.fix.wtemp, 3.000);
         break;
 
     case 2:
