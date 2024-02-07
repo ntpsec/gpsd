@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
 #include <math.h>
 #include <stdbool.h>
@@ -53,7 +53,7 @@
 #define IO4_RAW 1
 #define IO4_DBHZ 8
 
-#define SEMI_2_DEG      (180.0 / 2147483647)    /* 2^-31 semicircle to deg */
+#define SEMI_2_DEG      (180.0 / 2147483647)    // 2^-31 semicircle to deg
 
 void configuration_packets_acutime_gold(struct gps_device_t *session);
 void configuration_packets_res360(struct gps_device_t *session);
@@ -235,13 +235,13 @@ static bool tsip_detect(struct gps_device_t *session)
     // FIXME.  Should respect fixed speed/framing
     gpsd_set_speed(session, 9600, 'O', 1);
 
-    /* request firmware revision and look for a valid response */
+    // request firmware revision and look for a valid response
     putbyte(buf, 0, 0x10);
     putbyte(buf, 1, 0x1f);
     putbyte(buf, 2, 0x10);
     putbyte(buf, 3, 0x03);
     myfd = session->gpsdata.gps_fd;
-    if (write(myfd, buf, 4) == 4) {
+    if (4 == write(myfd, buf, 4)) {
         unsigned int n;
         struct timespec to;
         // FIXME: this holds the main loop from running...
@@ -249,10 +249,11 @@ static bool tsip_detect(struct gps_device_t *session)
             // wait one second
             to.tv_sec = 1;
             to.tv_nsec = 0;
-            if (!nanowait(myfd, &to))
+            if (!nanowait(myfd, &to)) {
                 break;
-            if (packet_get1(session) >= 0) {
-                if (session->lexer.type == TSIP_PACKET) {
+            }
+            if (0 <= packet_get1(session)) {
+                if (TSIP_PACKET == session->lexer.type) {
                     GPSD_LOG(LOG_RAW, &session->context->errout,
                              "TSIP: tsip_detect found\n");
                     ret = true;
@@ -262,9 +263,10 @@ static bool tsip_detect(struct gps_device_t *session)
         }
     }
 
-    if (!ret)
-        /* return serial port to original settings */
+    if (!ret) {
+        // return serial port to original settings
         gpsd_set_speed(session, old_baudrate, old_parity, old_stopbits);
+    }
 
     return ret;
 }
@@ -1252,8 +1254,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  "cannot be parsed\n",
                  u1, u2);
         // ignore the rest of the bad data
-        if ((int)u1 == 0x8e && (int)u2 == 0x23) {
-            /* no Compact Super Packet 0x8e-23 */
+        if (0x8e == (int)u1 &&
+            0x23 == (int)u2) {
+            // no Compact Super Packet 0x8e-23
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "TSIP x8e-23: no available, use LFwEI (0x8f-20)\n");
 
@@ -1303,7 +1306,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                     u7 = 40;
                 }
                 // check for valid module name length, again
-                if (u7 > (len - 10)) {
+                if ((len - 10) < u7) {
                     u7 = len - 10;
                 }
                 // Product name in ASCII
@@ -1336,16 +1339,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 u3 = getub(buf, 6);      // Build month
                 ul2 = getbeu16(buf, 7);  // Build year
                 u4 = getub(buf, 9);      // Build hour
-                /* Hardware Code */
+                // Hardware Code
                 session->driver.tsip.hardware_code = getbeu16(buf, 10);
-                u5 = getub(buf, 12);     /* Length of Hardware ID */
+                u5 = getub(buf, 12);     // Length of Hardware ID
                 // check for valid module name length
                 // copernicus ii is 27 long
                 if (40 < u5) {
                     u5 = 40;
                 }
                 // check for valid module name length, again
-                if (u5 > (len - 13)) {
+                if ((len - 13) < u5) {
                     u5 = len - 13;
                 }
                 memcpy(buf2, &buf[13], u5);
@@ -1362,7 +1365,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
                 mask |= DEVICEID_SET;
 
-                /* Detecting device by Hardware Code */
+                // Detecting device by Hardware Code
                 switch (session->driver.tsip.hardware_code) {
                 case 3001:            // Acutime Gold
                     session->driver.tsip.subtype = TSIP_ACUTIME_GOLD;
@@ -1408,7 +1411,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (len != 10) {
+        if (10 != len) {
             bad_len = 10;
             break;
         }
@@ -1473,7 +1476,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Not Present in:
          *   Copernicus II (2009)
          */
-        if (len != 20) {
+        if (20 != len) {
             bad_len = 20;
             break;
         }
@@ -1558,12 +1561,12 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   all models?
          * RES SMT 360 says use 0x8f-ab or 0x8f-ac instead
          */
-        if ( 2 > len) {
+        if (2 > len) {
             bad_len = 2;
             break;
         }
         session->driver.tsip.last_46 = now;
-        u1 = getub(buf, 0);     /* Status code */
+        u1 = getub(buf, 0);     // Status code */
         /* Error codes, model dependent
          * 0x01 -- no battery, always set on RES SMT 360
          * 0x10 -- antenna fault
@@ -1593,16 +1596,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
         }
         gpsd_zero_satellites(&session->gpsdata);
-        /* satellite count, RES SMT 360 doc says 12 max */
+        // satellite count, RES SMT 360 doc says 12 max
         count = (int)getub(buf, 0);
-        if (len != (5 * count + 1)) {
+        if ((5 * count + 1) != len) {
             bad_len = 5 * count + 1;
             break;
         }
         buf2[0] = '\0';
         for (i = 0; i < count; i++) {
             u1 = getub(buf, 5 * i + 1);
-            if ((f1 = getbef32(buf, 5 * i + 2)) < 0) {
+            if (0 > (f1 = getbef32(buf, 5 * i + 2))) {
                 f1 = 0.0;
             }
             for (j = 0; j < TSIP_CHANNELS; j++) {
@@ -1639,13 +1642,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (len != 20) {
+        if (20 != len) {
             bad_len = 20;
             break;
         }
         session->newdata.latitude = getbef32(buf, 0) * RAD_2_DEG;
         session->newdata.longitude = getbef32(buf, 4) * RAD_2_DEG;
-        /* depending on GPS config, could be either WGS84 or MSL */
+        // depending on GPS config, could be either WGS84 or MSL
         d1 = getbef32(buf, 8);
         if (0 == session->driver.tsip.alt_is_msl) {
             session->newdata.altHAE = d1;
@@ -1686,16 +1689,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   all receivers?
          */
-        if (len != 3) {
+        if (3 != len) {
             bad_len = 3;
             break;
         }
-        session->driver.tsip.machine_id = getub(buf, 0);  /* Machine ID */
+        session->driver.tsip.machine_id = getub(buf, 0);  // Machine ID
         /* Status 1
          * bit 1 -- No RTC at power up
          * bit 3 -- almanac not complete and current */
         u2 = getub(buf, 1);
-        u3 = getub(buf, 2);     /* Status 2/Superpacket Support */
+        u3 = getub(buf, 2);     // Status 2/Superpacket Support
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP x4b: Machine ID: %02x %02x %02x\n",
                  session->driver.tsip.machine_id,
@@ -1755,8 +1758,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             case 1:
                 // 1 == superpacket is acutime 360, support 0x8f-20
 
-                /* set I/O Options for Super Packet output */
-                /* Position: 8F20, ECEF, DP */
+                /* set I/O Options for Super Packet output
+                 * Position: 8F20, ECEF, DP */
                 buf[0] = 0x35;
                 buf[1] = IO1_8F20|IO1_DP|IO1_ECEF;
                 buf[2] = 0x00;          // Velocity: none (via SP)
@@ -1780,7 +1783,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (len != 17) {
+        if (17 != len) {
             bad_len = 17;
             break;
         }
@@ -1833,18 +1836,18 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Lassen iQ defaults: 02 02 00 00
          * RES SMT 360 defaults:  12 02 00 08
          */
-        if (len != 4) {
+        if (4 != len) {
             bad_len = 4;
             break;
         }
-        u1 = getub(buf, 0);     /* Position */
+        u1 = getub(buf, 0);     // Position
         // decode HAE/MSL from Position byte
         if (IO1_MSL == (IO1_MSL & u1)) {
             session->driver.tsip.alt_is_msl = 1;
         } else {
             session->driver.tsip.alt_is_msl = 0;
         }
-        u2 = getub(buf, 1);     /* Velocity */
+        u2 = getub(buf, 1);     // Velocity
         /* Timing
          * bit 0 - reserved use 0x8e-a2 ?
          */
@@ -1875,7 +1878,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (len != 20) {
+        if (20 != len) {
             bad_len = 20;
             break;
         }
@@ -2052,18 +2055,18 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   Copernicus, Copernicus II
          *   Thunderbold E
          */
-        if (len != 26) {
+        if (26 != len) {
             bad_len = 26;
             break;
         }
-        u1 = getub(buf, 0);     /* PRN */
+        u1 = getub(buf, 0);     // PRN
 
         /* Channel number, bits 0-2 reserved/unused as of 1999.
          * Seems to always start series at zero and increment to last one.
          * No way to know how many there will be.
          * Save current channel to check for last 0x5d message
          */
-        i = getub(buf, 1);     /* chan */
+        i = getub(buf, 1);     // chan
         if (0 == i) {
             // start of new cycle, save last count
             session->gpsdata.satellites_visible =
@@ -2091,7 +2094,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 "Acq %d Use %d SNR %4.1f LMT %.04f El %4.1f Az %5.1f Old %d "
                 "Int %d Bad %d Col %d TPF %d SVT %d\n",
                 i, u10, u1, u3, u4, f1, ftow, d1, d2, u5, u6, u7, u8, u9, u10);
-        if (i < TSIP_CHANNELS) {
+        if (TSIP_CHANNELS > i) {
             session->gpsdata.skyview[i].PRN = (short)u1;
             session->gpsdata.skyview[i].ss = (double)f1;
             session->gpsdata.skyview[i].elevation = (double)d1;
@@ -2143,13 +2146,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         }
         u1 = getub(buf, 0);          // fix dimension, mode
         count = (int)getub(buf, 17);
-        if (len != (18 + count)) {
+        if ((18 + count) != len) {
             bad_len = 18 + count;
             break;
         }
 
         // why same as 6d?
-        session->driver.tsip.last_6d = now;     /* keep timestamp for request */
+        session->driver.tsip.last_6d = now;     // keep timestamp for request
         /*
          * This looks right, but it sets a spurious mode value when
          * the satellite constellation looks good to the chip but no
@@ -2158,7 +2161,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * that convey actual fix information, like 0x8f-20, but some
          * TSIP do not support 0x8f-20, and 0x6c may be all we got.
          */
-        switch (u1 & 7) {       /* dimension */
+        switch (u1 & 7) {       // dimension
         case 1:       // clock fix (surveyed in)
             FALLTHROUGH
         case 5:       // Overdetermined clock fix
@@ -2206,7 +2209,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         buf2[0] = '\0';
         for (i = 0; i < count; i++) {
             session->driver.tsip.sats_used[i] = (short)getub(buf, 18 + i);
-            if (session->context->errout.debug >= LOG_PROG) {
+            if (LOG_PROG <= session->context->errout.debug) {
                 str_appendf(buf2, sizeof(buf2),
                                " %d", session->driver.tsip.sats_used[i]);
             }
@@ -2242,13 +2245,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 1;
             break;
         }
-        u1 = getub(buf, 0);     /* nsvs/dimension */
+        u1 = getub(buf, 0);     // nsvs/dimension
         count = (int)((u1 >> 4) & 0x0f);
-        if (len != (17 + count)) {
+        if ((17 + count) != len) {
             bad_len = 17 + count;
             break;
         }
-        session->driver.tsip.last_6d = now;     /* keep timestamp for request */
+        session->driver.tsip.last_6d = now;     // keep timestamp for request
         /*
          * This looks right, but it sets a spurious mode value when
          * the satellite constellation looks good to the chip but no
@@ -2259,7 +2262,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          */
         if (0 != isfinite(session->gpsdata.fix.longitude)) {
             // have a fix
-            switch (u1 & 7) {   /* dimension */
+            switch (u1 & 7) {   // dimension
             case 1:       // clock fix (surveyed in)
                 FALLTHROUGH
             case 5:       // Overdetermined clock fix
@@ -2307,7 +2310,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         for (i = 0; i < count; i++) {
             // negative PRN means sat unhealthy
             session->driver.tsip.sats_used[i] = (short)getub(buf, 17 + i);
-            if (session->context->errout.debug >= LOG_PROG) {
+            if (LOG_PROG <= session->context->errout.debug ) {
                 str_appendf(buf2, sizeof(buf2),
                                " %d", session->driver.tsip.sats_used[i]);
             }
@@ -2340,14 +2343,14 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (len != 1) {
+        if (1 != len) {
             bad_len = 1;
             break;
         }
-        /* differential position fix mode */
+        // differential position fix mode
         u1 = getub(buf, 0);
         if (3 == (u1 & 3)) {
-            /* currently mode 3 (auto DGPS) and so have DGPS */
+            // currently mode 3 (auto DGPS) and so have DGPS
             session->newdata.status = STATUS_DGPS;
             mask |= STATUS_SET;
         }
@@ -2415,7 +2418,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (len != 36) {
+        if (36 != len) {
             bad_len = 36;
             break;
         }
@@ -2429,9 +2432,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             session->newdata.altMSL = d1;
         }
         mask |= ALTITUDE_SET;
-        //d1 = getbed64(buf, 24);       clock bias */
+        // d1 = getbed64(buf, 24);     // clock bias
         ftow = getbef32(buf, 32);       // time-of-fix
-        if ((session->context->valid & GPS_TIME_VALID)!=0) {
+        if (0 != (session->context->valid & GPS_TIME_VALID)) {
             // fingers crossed receiver set to UTC, not GPS.
             DTOTS(&ts_tow, ftow);
             session->newdata.time =
@@ -2479,7 +2482,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            if (len != 43) {
+            if (43 != len) {
                 bad_len = 43;
                 break;
             }
@@ -2506,8 +2509,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360
              *   RES SMT 360
              */
-            if ((len != 56) &&
-                (len != 64)) {
+            if (56 != (len) &&
+                64 != (len)) {
                 bad_len = 56;
                 break;
             }
@@ -2552,8 +2555,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
             session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
             session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
-            if (session->newdata.longitude > 180.0)
+            if (180.0 < session->newdata.longitude) {
                 session->newdata.longitude -= 360.0;
+            }
             // Lassen iQ doc says this is always altHAE in mm
             session->newdata.altHAE = (double)sl2 * 1e-3;
             mask |= ALTITUDE_SET;
@@ -2572,7 +2576,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 }
             }
             session->gpsdata.satellites_used = (int)u3;
-            if ((int)u4 > 10) {
+            if (10 < (int)u4) {
                 session->context->leap_seconds = (int)u4;
                 session->context->valid |= LEAP_SECOND_VALID;
                 /* check for week rollover
@@ -2640,7 +2644,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIP x8f-23: CSP: %u %d %u %u %d %u %d %d %d %d\n",
                      tow, week, u1, u2, sl1, ul2, sl3, s2, s3, s4);
-            if ((int)u1 > 10) {
+            if (10 < (int)u1) {
                 session->context->leap_seconds = (int)u1;
                 session->context->valid |= LEAP_SECOND_VALID;
             }
@@ -2662,8 +2666,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             }
             session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
             session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
-            if (session->newdata.longitude > 180.0)
+            if (180.0 < session->newdata.longitude) {
                 session->newdata.longitude -= 360.0;
+            }
             // Copernicus (ii) doc says this is always altHAE in mm
             session->newdata.altHAE = (double)sl3 * 1e-3;
             mask |= ALTITUDE_SET;
@@ -2796,7 +2801,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             ts_tow.tv_sec = tow;
             ts_tow.tv_nsec = 0;
             week = getbeu16(buf, 5);            // week
-            /* leap seconds */
+            // leap seconds
             session->context->leap_seconds = (int)getbes16(buf, 7);
             u2 = buf[9];                // Time Flag
             // should check time valid?
@@ -2838,8 +2843,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             }
 
             // byte 0 is Subpacket ID
-            u2 = getub(buf, 1);         /* Receiver Mode */
-            u3 = getub(buf, 12);        /* GNSS Decoding Status */
+            u2 = getub(buf, 1);         // Receiver Mode
+            u3 = getub(buf, 12);        // GNSS Decoding Status
             // ignore 2, Disciplining Mode
             // ignore 3, Self-Survey Progress
             // ignore 4-7, Holdover Duration
@@ -2866,20 +2871,18 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             // ignore 60-63, always zero
             // ignore 64-67, reserved
 
-            if (u3 != (uint8_t)0) {
+            if ((uint8_t)0 != u3) {
                 // not exactly true, could be sort of Dead Reckoning
                 session->newdata.status = STATUS_UNK;
                 mask |= STATUS_SET;
-            } else {
-                if (session->newdata.status < STATUS_GPS) {
-                    session->newdata.status = STATUS_GPS;
-                    mask |= STATUS_SET;
-                }
+            } else if (STATUS_GPS > session->newdata.status) {
+                session->newdata.status = STATUS_GPS;
+                mask |= STATUS_SET;
             }
 
-            /* Decode Fix modes */
+            // Decode Fix modes
             switch (u2 & 7) {
-            case 0:     /* Auto */
+            case 0:     // Auto
                 /*
                 * According to the Thunderbolt Manual, the
                 * first byte of the supplemental timing packet
@@ -2888,32 +2891,32 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 * look at the decode status.
                 */
                 switch (u3) {
-                case 0:   /* "Doing Fixes" */
+                case 0:   // "Doing Fixes"
                     session->newdata.mode = MODE_3D;
                     break;
-                case 0x0B: /* "Only 3 usable sats" */
+                case 0x0B: // "Only 3 usable sats"
                     session->newdata.mode = MODE_2D;
                     break;
-                case 0x1:   /* "Don't have GPS time" */
+                case 0x1:   // "Don't have GPS time"
                     FALLTHROUGH
-                case 0x3:   /* "PDOP is too high" */
+                case 0x3:   // "PDOP is too high"
                     FALLTHROUGH
-                case 0x8:   /* "No usable sats" */
+                case 0x8:   // "No usable sats"
                     FALLTHROUGH
-                case 0x9:   /* "Only 1 usable sat" */
+                case 0x9:   // "Only 1 usable sat"
                     FALLTHROUGH
-                case 0x0A:  /* "Only 2 usable sats */
+                case 0x0A:  // "Only 2 usable sats
                     FALLTHROUGH
-                case 0x0C:  /* "The chosen sat is unusable" */
+                case 0x0C:  // "The chosen sat is unusable"
                     FALLTHROUGH
-                case 0x10:  /* TRAIM rejected the fix */
+                case 0x10:  // TRAIM rejected the fix
                     FALLTHROUGH
                 default:
                     session->newdata.mode = MODE_NO_FIX;
                     break;
                 }
                 break;
-            case 6:             /* Clock Hold 2D */
+            case 6:             // Clock Hold 2D
                 /* Not present:
                  *   SMT 360
                  *   Acutime 360
@@ -3589,8 +3592,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (len != 40 && len != 43) {
-            /* see packet.c for explamation */
+        if (40 != len &&
+            43 != len) {
+            // see packet.c for explamation
             bad_len = 40;
             break;
         }
@@ -4060,7 +4064,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         (void)tsip_write1(session, "\x26", 1);
         session->driver.tsip.last_46 = now;
     }
-    if ((session->driver.tsip.req_compact > 0) &&
+    if ((0 < session->driver.tsip.req_compact) &&
         (5 < llabs(now - session->driver.tsip.req_compact))) {
         /* Compact Superpacket requested but no response
          * Not in:
@@ -4112,7 +4116,7 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
          */
         // Position: enable: Double Precision, LLA, disable: ECEF
         buf[0] = 0x35;
-        // Velocity: enable: ENU, disable vECEF */
+        // Velocity: enable: ENU, disable vECEF
         buf[1] = IO1_8F20|IO1_DP|IO1_LLA;
         // Time: enable: 0x42, 0x43, 0x4a, disable: 0x83, 0x84, 0x56
         buf[2] = IO2_ENU;
@@ -4122,7 +4126,7 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
         break;
     case event_configure:
         // this seems to get called on every packet...
-        if (session->lexer.counter == 0) {
+        if (0 == session->lexer.counter) {
             /* but the above if() makes it never execute
              * formerely tried to force 801 here, but luckily it
              * never fired as some Trimble are 8N1 */
@@ -4187,8 +4191,8 @@ static void tsip_mode(struct gps_device_t *session, int mode)
         buf[3] = 0x00;  //  Reserved
         buf[4] = 0x00;  //  Reserved
         buf[5] = 0x01;  //  1=GST, Reserved
-        /* 1=GGA, 2=GGL, 4=VTG, 8=GSV, */
-        /* 0x10=GSA, 0x20=ZDA, 0x40=Reserved, 0x80=RMC  */
+        /* 1=GGA, 2=GGL, 4=VTG, 8=GSV,
+         * 0x10=GSA, 0x20=ZDA, 0x40=Reserved, 0x80=RMC  */
         buf[6] = 0x19;
 
         (void)tsip_write1(session, buf, 7);
@@ -4235,7 +4239,7 @@ void configuration_packets_generic(struct gps_device_t *session)
         // Set basic configuration, using Set or Request I/O Options (0x35).
         // Position: enable: Double Precision, LLA, disable: ECEF
         buf[0] = 0x35;
-        // Time: enable: 0x42, 0x43, 0x4a, disable: 0x83, 0x84, 0x56 */
+        // Time: enable: 0x42, 0x43, 0x4a, disable: 0x83, 0x84, 0x56
         buf[1] = IO1_8F20|IO1_DP|IO1_LLA;
         // Velocity: enable: ENU, disable ECEF
         buf[2] = IO2_ENU;
@@ -4289,7 +4293,7 @@ void configuration_packets_generic(struct gps_device_t *session)
         (void)tsip_write1(session, "\xbb\x00", 2);
 }
 
-/* configure Acutime Gold to a known state */
+// configure Acutime Gold to a known state
 void configuration_packets_acutime_gold(struct gps_device_t *session)
 {
         char buf[100];
@@ -4404,8 +4408,8 @@ void configuration_packets_res360(struct gps_device_t *session)
 #endif // __UNUSED__
 }
 
-/* this is everything we export */
-/* *INDENT-OFF* */
+// this is everything we export
+// *INDENT-OFF*
 const struct gps_type_t driver_tsip =
 {
     .type_name      = "Trimble TSIP",     // full name of type
@@ -4427,8 +4431,8 @@ const struct gps_type_t driver_tsip =
     .control_send   = tsip_write1,        // how to send commands
     .time_offset     = NULL,
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 
-#endif /* TSIP_ENABLE */
+#endif  // TSIP_ENABLE
 
 // vim: set expandtab shiftwidth=4
