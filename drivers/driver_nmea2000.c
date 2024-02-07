@@ -1922,9 +1922,10 @@ int nmea2000_open(struct gps_device_t *session)
 void nmea2000_close(struct gps_device_t *session)
 {
     if (!BAD_SOCKET(session->gpsdata.gps_fd)) {
+        // cast for 32-bit ints.
         GPSD_LOG(LOG_SPIN, &session->context->errout,
                  "close(%ld) in nmea2000_close(%s)\n",
-                 session->gpsdata.gps_fd, session->gpsdata.dev.path);
+                 (long)session->gpsdata.gps_fd, session->gpsdata.dev.path);
         (void)close(session->gpsdata.gps_fd);
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
 

@@ -43,16 +43,18 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
 
     dsock = netlib_connectsock(AF_UNSPEC, dgpsserver, dgpsport, "tcp");
     if (0 > dsock) {
+        // cast for 32-bit ints
         GPSD_LOG(LOG_ERROR, &device->context->errout,
                  "DGPS: can't connect to DGPS server %s, "
                  "netlib error %s(%ld).\n",
-                 dgpsserver, netlib_errstr(dsock), dsock);
+                 dgpsserver, netlib_errstr(dsock), (long)dsock);
         device->gpsdata.gps_fd = PLACEHOLDING_FD;
         return dsock;
     }
+    // cast for 32-bit ints
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "DGPS: connection to DGPS server %s established. fd=%ld\n",
-             dgpsserver, dsock);
+             dgpsserver, (long)dsock);
     device->gpsdata.gps_fd = (gps_fd_t)dsock;
     (void)gethostname(hn, sizeof(hn));
     // greeting required by some RTCM104 servers; others will ignore it

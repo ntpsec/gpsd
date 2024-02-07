@@ -278,9 +278,10 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
         errno = 0;         // paranoia
         // read, leave room for trailing NUL
         rlen = read(fd, &buf[len], sizeof(buf) - (size_t)(1 + len));
+        // cast for 32-bit ints
         GPSD_LOG(LOG_RAW, &device->context->errout,
-                 "NTRIP: on fd %ld len %zd  tried %zd, got %zd\n", fd, len,
-                 sizeof(buf) - (size_t)(1 + len), rlen);
+                 "NTRIP: on fd %ld len %zd  tried %zd, got %zd\n",
+                 (long)fd, len, sizeof(buf) - (size_t)(1 + len), rlen);
         if (-1 == rlen) {
             if (EINTR == errno) {
                 continue;
@@ -290,16 +291,18 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 // not found a match, but there is no more data
                 return 0;
             }
+            // cast for 32-bit ints
             GPSD_LOG(LOG_ERROR, &device->context->errout,
                      "NTRIP: stream read error %s(%d) on fd %ld\n",
-                     strerror(errno), errno, fd);
+                     strerror(errno), errno, (long)fd);
             return -1;
         }
         if (0 == rlen) {     // server closed the connection
+            // cast for 32-bit ints
             GPSD_LOG(LOG_ERROR, &device->context->errout,
                      "NTRIP: stream unexpected close %s(%d) on fd %ld "
                      "during sourcetable read\n",
-                     strerror(errno), errno, fd);
+                     strerror(errno), errno, (long)fd);
             return -2;
         }
 
@@ -1005,24 +1008,26 @@ static int ntrip_reconnect(struct gps_device_t *device)
     // nonblocking means we have the fd, but the connection is not
     // finished yet.  Connection may fail, later.
     if (0 > dsock) {
-        // no way to recover from this, except wait and try again later
+        /* no way to recover from this, except wait and try again later
+         * cast for 32-bit ints. */
         GPSD_LOG(LOG_ERROR, &device->context->errout,
                  "NTRIP: ntrip_reconnect(%s) IP %s, failed: %s(%ld)\n",
                  device->gpsdata.dev.path, addrbuf,
-                 netlib_errstr(dsock), dsock);
+                 netlib_errstr(dsock), (long)dsock);
         // set time for retry
         (void)clock_gettime(CLOCK_REALTIME, &device->ntrip.stream.stream_time);
         // leave in connextion closed state for later retry.
         device->ntrip.conn_state = NTRIP_CONN_CLOSED;
         return PLACEHOLDING_FD;
     }
-    // will have to wait for select() to confirm conenction, then send
-    // the ntrip request again.
+    /* will have to wait for select() to confirm conenction, then send
+     * the ntrip request again.
+     * cast for 32-bit ints */
     device->ntrip.conn_state = NTRIP_CONN_INPROGRESS;
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_reconnect(%s) IP %s, fd %ld "
              "NTRIP_CONN_INPROGRESS \n",
-             device->gpsdata.dev.path, addrbuf, dsock);
+             device->gpsdata.dev.path, addrbuf, (long)dsock);
 #else  // no SOCK_NONBLOCK
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_reconnect(%s) no SOCK_NONBLOCK, can't reconnect.\n",
@@ -1045,9 +1050,10 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
     char outbuf[BUFSIZ];
     ssize_t blen;
 
+    // cast for 32-bit ints
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_open(%s) fd %ld state = %s(%d)\n",
-             orig, device->gpsdata.gps_fd,
+             orig, (long)device->gpsdata.gps_fd,
              ntrip_state(device->ntrip.conn_state),
              device->ntrip.conn_state);
 
