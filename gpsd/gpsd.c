@@ -498,7 +498,8 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
         return -1;
     }
 
-    GPSD_LOG(LOG_SPIN, &context.errout, "passivesock_af() -> %ld\n", s);
+    // cast for 32-bit intptr_t
+    GPSD_LOG(LOG_SPIN, &context.errout, "passivesock_af() -> %ld\n", (long)s);
     return s;
 }
 
@@ -779,10 +780,11 @@ static bool open_device( struct gps_device_t *device)
         // can't happen, to shut up compilers
         return false;
     }
+    // cast for 32-bit intptr_t
     GPSD_LOG(LOG_PROG, &context.errout,
              "CORE: open_device(%s) fd %ld\n",
              device->gpsdata.dev.path,
-             device->gpsdata.gps_fd);
+             (long)device->gpsdata.gps_fd);
 
     activated = gpsd_activate(device, O_OPTIMIZE);
     if (0 > activated &&
@@ -1074,10 +1076,11 @@ static bool awaken(struct gps_device_t *device)
 {
     int ret;
 
+    // cast for 32-bit intptr_t
     GPSD_LOG(LOG_PROG, &context.errout,
              "awaken(%d) fd %ld, path %s\n",
              (int)(device - devices),
-             device->gpsdata.gps_fd, device->gpsdata.dev.path);
+             (long)device->gpsdata.gps_fd, device->gpsdata.dev.path);
 
     // open that device
     if ((!initialized_device(device) &&
@@ -1089,10 +1092,11 @@ static bool awaken(struct gps_device_t *device)
     }
 
     if (!BAD_SOCKET(device->gpsdata.gps_fd)) {
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_PROG, &context.errout,
                  "device %d (fd=%ld, path %s) already active.\n",
                  (int)(device - devices),
-                 device->gpsdata.gps_fd, device->gpsdata.dev.path);
+                 (long)device->gpsdata.gps_fd, device->gpsdata.dev.path);
         return true;
     }
 
@@ -1115,9 +1119,10 @@ static bool awaken(struct gps_device_t *device)
         return false;
     }
 
+    // cast for 32-bit intptr_t
     GPSD_LOG(LOG_RAW, &context.errout,
              "flagging descriptor %ld in assign_channel()\n",
-             device->gpsdata.gps_fd);
+             (long)device->gpsdata.gps_fd);
     FD_SET(device->gpsdata.gps_fd, &all_fds);
     adjust_max_fd(device->gpsdata.gps_fd, true);
     return true;
@@ -1202,9 +1207,10 @@ static void set_serial(struct gps_device_t *device,
              * across any given type of UART.
              */
             if (0 != tcdrain(device->gpsdata.gps_fd)) {
+                // cast for 32-bit intptr_t
                 GPSD_LOG(LOG_ERROR, &device->context->errout,
                          "SER: set_serial(%ld) tcdrain() failed: %s(%d)\n",
-                         device->gpsdata.gps_fd,
+                         (long)device->gpsdata.gps_fd,
                          strerror(errno), errno);
             }
 
@@ -2425,14 +2431,16 @@ int main(int argc, char *argv[])
                      control_socket, strerror(errno), errno);
         }
         if (BAD_SOCKET(csock = filesock(control_socket))) {
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "control socket %s create failed, netlib error %ld\n",
-                     control_socket, csock);
+                     control_socket, (long)csock);
             exit(EXIT_FAILURE);
         } else {
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_PROG, &context.errout,
                      "control socket %s is fd %ld\n",
-                     control_socket, csock);
+                     control_socket, (long)csock);
         }
         FD_SET(csock, &all_fds);
         adjust_max_fd(csock, true);
@@ -2510,9 +2518,10 @@ int main(int argc, char *argv[])
             getservbyname("gpsd", "tcp") ? "gpsd" : DEFAULT_GPSD_PORT;
     }
     if (1 > passivesocks(gpsd_service, "tcp", QLEN, msocks)) {
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "command sockets creation failed, netlib errors %ld, %ld\n",
-                 msocks[0], msocks[1]);
+                 (long)msocks[0], (long)msocks[1]);
         if (NULL != pid_file) {
             (void)unlink(pid_file);
         }
@@ -2787,10 +2796,11 @@ int main(int argc, char *argv[])
                     c_ip = netlib_sock2ip(ssock);
                     client = allocate_client();
                     if (NULL == client) {
+                        // cast for 32-bit intptr_t
                         GPSD_LOG(LOG_ERROR, &context.errout,
                                  "Client %s connect on fd %ld -"
                                  "no subscriber slots available\n", c_ip,
-                                    ssock);
+                                  (long)ssock);
                         (void)close(ssock);
                     } else if (-1 == setsockopt(ssock,
                                                 SOL_SOCKET, SO_LINGER,
@@ -2806,9 +2816,10 @@ int main(int argc, char *argv[])
                         adjust_max_fd(ssock, true);
                         client->fd = ssock;
                         client->active = time(NULL);
+                        // cast for 32-bit intptr_t
                         GPSD_LOG(LOG_SPIN, &context.errout,
                                  "client %s (%d) connect on fd %ld\n", c_ip,
-                                 sub_index(client), ssock);
+                                 sub_index(client), (long)ssock);
                         json_version_dump(announce, sizeof(announce));
                         (void)throttled_write(client, announce,
                                               strnlen(announce,
@@ -2831,9 +2842,10 @@ int main(int argc, char *argv[])
                 GPSD_LOG(LOG_ERROR, &context.errout,
                          "accept: %s(%d)\n", strerror(errno), errno);
             } else {
+                // cast for 32-bit intptr_t
                 GPSD_LOG(LOG_INF, &context.errout,
                          "control socket connect on fd %ld\n",
-                         ssock);
+                         (long)ssock);
                 FD_SET(ssock, &all_fds);
                 FD_SET(ssock, &control_fds);
                 adjust_max_fd(ssock, true);
@@ -2852,13 +2864,15 @@ int main(int argc, char *argv[])
 
                 while (0 < (rd = read(cfd, buf, sizeof(buf) - 1))) {
                     buf[rd] = '\0';
+                    // cast for 32-bit intptr_t
                     GPSD_LOG(LOG_CLIENT, &context.errout,
-                             "<= control(%ld): %s\n", cfd, buf);
+                             "<= control(%ld): %s\n", (long)cfd, buf);
                     // coverity[tainted_data] Safe, never handed to exec
                     handle_control(cfd, buf);
                 }
+                // cast for 32-bit intptr_t
                 GPSD_LOG(LOG_SPIN, &context.errout,
-                         "close(%ld) of control socket\n", cfd);
+                         "close(%ld) of control socket\n", (long)cfd);
                 (void)close(cfd);
                 FD_CLR(cfd, &all_fds);
                 FD_CLR(cfd, &control_fds);
@@ -2880,9 +2894,10 @@ int main(int argc, char *argv[])
             multipoll_ret = gpsd_multipoll(FD_ISSET(device->gpsdata.gps_fd,
                                            &rfds), device, all_reports,
                                            DEVICE_REAWAKE);
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_DATA, &context.errout,
                      "gpsd_multipoll(%ld) = %d\n",
-                     device->gpsdata.gps_fd, multipoll_ret);
+                     (long)device->gpsdata.gps_fd, multipoll_ret);
             switch (multipoll_ret) {
             case DEVICE_READY:
                 FD_SET(device->gpsdata.gps_fd, &all_fds);
@@ -2921,9 +2936,10 @@ int main(int argc, char *argv[])
                 TS_SUB(&delta, &now, &device->lexer.pkt_time);
                 // llabs() in case the system time jumped
                 if (5 <= llabs(delta.tv_sec)) {
+                    // cast for 32-bit intptr_t
                     GPSD_LOG(LOG_PROG, &context.errout,
                         "gpsd_multipoll(%ld) DEVICE_UNCHANGED for %lld\n",
-                        device->gpsdata.gps_fd, (long long)delta.tv_sec);
+                        (long)device->gpsdata.gps_fd, (long long)delta.tv_sec);
                     if (time_warp) {
                         // ugh, start over...
                         device->lexer.pkt_time = now;
@@ -2944,10 +2960,11 @@ int main(int argc, char *argv[])
                 }
                 break;
             default:
-                // huh?
+                /* huh?
+                 * cast for 32-bit intptr_t */
                 GPSD_LOG(LOG_WARN, &context.errout,
                          "gpsd_multipoll(%ld) = unknown return value %d\n",
-                         device->gpsdata.gps_fd, multipoll_ret);
+                         (long)device->gpsdata.gps_fd, multipoll_ret);
                 break;
             }
         }
@@ -3078,18 +3095,20 @@ int main(int argc, char *argv[])
                     BAD_PACKET != device->lexer.type) {
                     if (0 == device->releasetime) {
                         device->releasetime = time(NULL);
+                        // cast for 32-bit intptr_t
                         GPSD_LOG(LOG_PROG, &context.errout,
                                  "device %d (fd %ld) released\n",
                                  (int)(device - devices),
-                                 device->gpsdata.gps_fd);
+                                 (long)device->gpsdata.gps_fd);
                     } else if (RELEASE_TIMEOUT <
                                (time(NULL) - device->releasetime)) {
                         GPSD_LOG(LOG_PROG, &context.errout,
                                  "device %d closed\n",
                                  (int)(device - devices));
+                        // cast for 32-bit intptr_t
                         GPSD_LOG(LOG_RAW, &context.errout,
                                  "unflagging descriptor %ld\n",
-                                 device->gpsdata.gps_fd);
+                                 (long)device->gpsdata.gps_fd);
                         deactivate_device(device);
                     }
                 }
