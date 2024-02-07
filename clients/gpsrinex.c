@@ -1185,9 +1185,15 @@ int main(int argc, char **argv)
             gps_enable_debug(debug, log_file);
             break;
         case 'f':       // Output file name.
+            if (NULL != file_out) {
+                free(file_out);
+            }
             file_out = strdup(optarg);
             break;
         case 'F':       // input file name.
+            if (NULL != file_in) {
+                free(file_in);
+            }
             file_in = strdup(optarg);
             break;
         case 'i':               // set sampling interval
@@ -1209,6 +1215,12 @@ int main(int argc, char **argv)
         case 'V':
             (void)fprintf(stderr, "%s: version %s (revision %s)\n",
                           progname, VERSION, REVISION);
+            if (NULL != file_in) {
+                free(file_in);
+            }
+            if (NULL != file_out) {
+                free(file_out);
+            }
             exit(EXIT_SUCCESS);
         case AGENCY:
             strlcpy(agency, optarg, sizeof(agency));
@@ -1251,6 +1263,12 @@ int main(int argc, char **argv)
         case 'h':
             FALLTHROUGH
         default:
+            if (NULL != file_in) {
+                free(file_in);
+            }
+            if (NULL != file_out) {
+                free(file_out);
+            }
             usage();
             // NOTREACHED
         }
@@ -1291,13 +1309,14 @@ int main(int argc, char **argv)
         file_out = strdup(tmstr);
     }
     log_file = fopen(file_out, "w");
-    if (log_file == NULL) {
+    if (NULL == log_file) {
         syslog(LOG_ERR, "ERROR: Failed to open %s: %s",
                file_out, strerror(errno));
         free(file_out);      // pacify -Wanalyzer-malloc-leak
         exit(3);
     }
 
+    free(file_out);      // pacify -Wanalyzer-malloc-leak
     // clear the counts
     memset(obs_cnt, 0, sizeof(obs_cnt));
 
@@ -1372,6 +1391,9 @@ int main(int argc, char **argv)
     if (0 != sig_flag &&
         SIGINT != sig_flag) {
         syslog(LOG_INFO, "exiting, signal %d received", sig_flag);
+    }
+    if (NULL != file_in) {
+        free(file_in);      // pacify -Wanalyzer-malloc-leak
     }
     exit(EXIT_SUCCESS);
 }
