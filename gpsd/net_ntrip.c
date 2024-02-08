@@ -1079,9 +1079,10 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
 
         ret = ntrip_stream_req_probe(&device->ntrip.stream,
                                      &device->context->errout);
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "NTRIP: ntrip_stream_req_probe(%s) ret %ld\n",
-                 device->ntrip.stream.url, ret);
+                 device->ntrip.stream.url, (long)ret);
         if (-1 == ret) {
             device->gpsdata.gps_fd = PLACEHOLDING_FD;
             device->ntrip.conn_state = NTRIP_CONN_ERR;
@@ -1096,9 +1097,10 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
         return ret;
     case NTRIP_CONN_SENT_PROBE:     // state = 1
         ret = ntrip_sourcetable_parse(device);
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "NTRIP: ntrip_sourcetable_parse(%s) = %ld\n",
-                 device->ntrip.stream.mountpoint, ret);
+                 device->ntrip.stream.mountpoint, (long)ret);
         if (0 > ret) {
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
@@ -1192,10 +1194,11 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
                   gps_visibilize(outbuf, sizeof(outbuf), buf, blen));
 
         if (blen != write(device->gpsdata.gps_fd, buf, blen)) {
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_ERROR, &device->context->errout,
                      "NTRIP: stream write error %s(%d) on fd %ld during "
                      "get request\n",
-                     strerror(errno), errno, device->gpsdata.gps_fd);
+                     strerror(errno), errno, (long)device->gpsdata.gps_fd);
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             // leave FD so deactivate_device() can remove from the
             // select() loop
@@ -1226,9 +1229,10 @@ void ntrip_report(struct gps_context_t *context,
     if (0 == caster->ntrip.stream.nmea) {
         return;   // no need to be here...
     }
+    // cast for 32-bit intptr_t
     GPSD_LOG(LOG_IO, &context->errout,
              "NTRIP: = ntrip_report() fixcnt %d count %d caster %ld\n",
-             context->fixcnt, count, caster->gpsdata.gps_fd);
+             context->fixcnt, count, (long)caster->gpsdata.gps_fd);
 
     /* 10 is an arbitrary number, the point is to have gotten several good
      * fixes before reporting usage to our NTRIP caster.
@@ -1257,13 +1261,15 @@ void ntrip_report(struct gps_context_t *context,
             GPSD_LOG(LOG_IO, &context->errout, "NTRIP: => caster %s\n",
                      buf);
         } else if (0 > ret) {
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_ERROR, &context->errout,
                      "NTRIP: ntrip_report() write(%ld) error %s(%d)\n",
-                     caster->gpsdata.gps_fd, strerror(errno), errno);
+                     (long)caster->gpsdata.gps_fd, strerror(errno), errno);
         } else {
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_ERROR, &context->errout,
                      "NTRIP: ntrip_report() short write(%ld) = %zd\n",
-                     caster->gpsdata.gps_fd, ret);
+                     (long)caster->gpsdata.gps_fd, ret);
         }
     }
 }
@@ -1273,23 +1279,26 @@ void ntrip_close(struct gps_device_t *session)
 {
     if (0 > session->gpsdata.gps_fd) {
         // UNALLOCATED_FD (-1) or PLACEHOLDING_FD (-2). Nothing to do.
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "NTRIP: ntrip_close(%s), close(%ld) bad fd\n",
-                 session->gpsdata.dev.path, session->gpsdata.gps_fd);
+                 session->gpsdata.dev.path, (long)session->gpsdata.gps_fd);
         session->gpsdata.gps_fd = PLACEHOLDING_FD;
         return;
     }
 
     if (-1 == close(session->gpsdata.gps_fd)) {
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "NTRIP: ntrip_close(%s), close(%ld), %s(%d)\n",
                  session->gpsdata.dev.path,
-                 session->gpsdata.gps_fd, strerror(errno), errno);
+                 (long)session->gpsdata.gps_fd, strerror(errno), errno);
     } else {
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_IO, &session->context->errout,
                  "NTRIP: ntrip_close(%s), close(%ld)\n",
                  session->gpsdata.dev.path,
-                 session->gpsdata.gps_fd);
+                 (long)session->gpsdata.gps_fd);
     }
     // Prepare for a retry, don't use opentime as that gets reset elsewhere
     (void)clock_gettime(CLOCK_REALTIME, &session->ntrip.stream.stream_time);
