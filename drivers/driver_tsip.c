@@ -1555,6 +1555,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP x45: Software version: %s\n", session->subtype);
         mask |= DEVICEID_SET;
+
+        /* request actual subtype from 0x1c-81
+         * which in turn requests 0x1c-83 */
+        (void)tsip_write1(session, "\x1c\x01", 2);
         break;
     case 0x46:
         /* Health of Receiver (0x46).  Poll with 0x26
@@ -1686,13 +1690,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         break;
     case 0x4b:
         /* Machine/Code ID and Additional Status (0x4b)
-         * polled by i0x25 or 0x26.  Sent with 0x46.
+         * polled by 0x25 (soft reset) or 0x26 (request health).
+         * Sent with 0x46 (receiver health).
          * Present in:
          *   pre-2000 models
          *   Copernicus II (2009)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          *   all receivers?
+         * Deprecated in:
+         *    Resolution SMTx
          */
         if (3 != len) {
             bad_len = 3;
@@ -1702,7 +1709,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         /* Status 1
          * bit 1 -- No RTC at power up
          * bit 3 -- almanac not complete and current */
-        u2 = getub(buf, 1);
+        u2 = getub(buf, 1);     // status 1
         u3 = getub(buf, 2);     // Status 2/Superpacket Support
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP x4b: Machine ID: %02x %02x %02x\n",
@@ -1773,7 +1780,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 (void)tsip_write1(session, buf, 5);
                 break;
             case 2:
-                // 2 == SMT 360, no 0x8f-20
+                /* 2 == SMT 360, or Resolution SMTx
+                 * no 0x8f-20 */
                 break;
             }
         }
