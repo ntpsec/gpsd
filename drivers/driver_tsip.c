@@ -222,33 +222,37 @@ static ssize_t tsip_write1(struct gps_device_t *session,
  */
 static bool tsip_detect(struct gps_device_t *session)
 {
-    char buf[BUFSIZ];
     bool ret = false;
     int myfd;
     speed_t old_baudrate;
     char old_parity;
     unsigned int old_stopbits;
+    bool override = true;
 
-    old_baudrate = session->gpsdata.dev.baudrate;
-    old_parity = session->gpsdata.dev.parity;
-    old_stopbits = session->gpsdata.dev.stopbits;
-    // FIXME.  Should respect fixed speed/framing
-    gpsd_set_speed(session, 9600, 'O', 1);
+    if ((speed_t)0 == session->context->fixed_port_speed &&
+        '\0' == session->context->fixed_port_framing[0]) {
+        // Only try 9600 8O1 is no speed or framing override
+        old_baudrate = session->gpsdata.dev.baudrate;
+        old_parity = session->gpsdata.dev.parity;
+        old_stopbits = session->gpsdata.dev.stopbits;
+        // FIXME.  Should respect fixed speed/framing
+        gpsd_set_speed(session, 9600, 'O', 1);
+        override = false;
+    }
 
-    // request firmware revision and look for a valid response
-    putbyte(buf, 0, 0x10);
-    putbyte(buf, 1, 0x1f);
-    putbyte(buf, 2, 0x10);
-    putbyte(buf, 3, 0x03);
-    myfd = session->gpsdata.gps_fd;
-    if (4 == write(myfd, buf, 4)) {
+    /* request firmware revision and look for a valid response
+     * send 0x1f, expext 0x45.  We think every Trrimble knows 0x45 */
+    if (0 == tsip_write1(session, "\x1f", 1)) {
         unsigned int n;
         struct timespec to;
+
+        myfd = session->gpsdata.gps_fd;
+
         // FIXME: this holds the main loop from running...
         for (n = 0; n < 3; n++) {
-            // wait one second
-            to.tv_sec = 1;
-            to.tv_nsec = 0;
+            // wait 100 milli second
+            to.tv_sec = 0;
+            to.tv_nsec = 100000000;
             if (!nanowait(myfd, &to)) {
                 break;
             }
@@ -263,7 +267,8 @@ static bool tsip_detect(struct gps_device_t *session)
         }
     }
 
-    if (!ret) {
+    if (!ret &&
+        !override) {
         // return serial port to original settings
         gpsd_set_speed(session, old_baudrate, old_parity, old_stopbits);
     }
