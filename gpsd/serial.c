@@ -500,9 +500,10 @@ static void gpsd_flush(struct gps_device_t * session)
     struct timespec delay;
 
     if (0 != tcflush(session->gpsdata.gps_fd, TCIOFLUSH)) {
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "SER: gpsd_flush(%ld): %s(%d)\n",
-                 session->gpsdata.gps_fd, strerror(errno), errno);
+                 (long)session->gpsdata.gps_fd, strerror(errno), errno);
     }
 
     // wait 200,000 uSec
@@ -510,9 +511,10 @@ static void gpsd_flush(struct gps_device_t * session)
     delay.tv_nsec = 200000000L;
     nanosleep(&delay, NULL);
     if (0 != tcflush(session->gpsdata.gps_fd, TCIOFLUSH)) {
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "SER: gpsd_flush(%ld): %s(%d)\n",
-                 session->gpsdata.gps_fd, strerror(errno), errno);
+                 (long)session->gpsdata.gps_fd, strerror(errno), errno);
     }
 }
 
@@ -564,10 +566,10 @@ int gpsd_serial_isatty(const struct gps_device_t *session)
         return 0;
     }
 
-    // else warning, and assume not a tty.
+    // else warning, and assume not a tty./ cast for 32-bit intptr_t
     GPSD_LOG(LOG_WARNING, &session->context->errout,
              "SER: gpsd_serial_isatty(%ld) < 1: %s(%d)\n",
-             session->gpsdata.gps_fd,
+             (long)session->gpsdata.gps_fd,
              strerror(errno), errno);
     return 0;
 }
@@ -639,18 +641,19 @@ void gpsd_set_speed(struct gps_device_t *session,
          * aren't so nice.
          */
         if (B0 == rate) {
-            // how does one get here?
+            // how does one get here?  cast for 32-bit intptr_t
             GPSD_LOG(LOG_IO, &session->context->errout,
                      "SER: fd %ld keeping old speed %d(%d)\n",
-                     session->gpsdata.gps_fd,
+                     (long)session->gpsdata.gps_fd,
                      code2speed(cfgetispeed(&session->ttyset)),
                      (int) cfgetispeed(&session->ttyset));
         } else {
             (void)cfsetispeed(&session->ttyset, rate);
             (void)cfsetospeed(&session->ttyset, rate);
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_IO, &session->context->errout,
                      "SER: fd %ld set speed %d(%d)\n",
-                     session->gpsdata.gps_fd,
+                     (long)session->gpsdata.gps_fd,
                      code2speed(cfgetispeed(&session->ttyset)), (int) rate);
         }
         session->ttyset.c_iflag &= ~(PARMRK | INPCK);
@@ -672,19 +675,21 @@ void gpsd_set_speed(struct gps_device_t *session,
              * we do not try, we get other failures.
              * so ignore for now, as we always have, until it can
              * be nailed down.
+             * cast for 32-bit intptr_t
              */
              GPSD_LOG(LOG_WARN, &session->context->errout,
                       "SER: fd %ld error setting port attributes: %s(%d), "
                       "sourcetype: %d\n",
-                      session->gpsdata.gps_fd,
+                      (long)session->gpsdata.gps_fd,
                       strerror(errno), errno, session->sourcetype);
         }
 
         gpsd_flush(session);
     }
+    // cast for 32-bit intptr_t
     GPSD_LOG(LOG_INF, &session->context->errout,
              "SER: fd %ld current speed %lu, %d%c%d\n",
-             session->gpsdata.gps_fd,
+             (long)session->gpsdata.gps_fd,
              (unsigned long)gpsd_get_speed(session), 9 - stopbits, parity,
              stopbits);
 
@@ -740,11 +745,12 @@ int gpsd_serial_open(struct gps_device_t *session)
 
     session->sourcetype = gpsd_classify(session);
 
+    // cast for 32-bit intptr_t
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SER: gpsd_serial_open(%s) sourcetype %d fd %ld\n",
              session->gpsdata.dev.path,
              session->sourcetype,
-             session->gpsdata.gps_fd);
+             (long)session->gpsdata.gps_fd);
 
     session->servicetype = SERVICE_SENSOR;
 
@@ -832,10 +838,11 @@ int gpsd_serial_open(struct gps_device_t *session)
                 return UNALLOCATED_FD;
             }
 
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SER: file device open of %s succeeded fd %ld\n",
                      session->gpsdata.dev.path,
-                     session->gpsdata.gps_fd);
+                     (long)session->gpsdata.gps_fd);
         }
     }
 
@@ -890,9 +897,10 @@ int gpsd_serial_open(struct gps_device_t *session)
     session->lexer.type = BAD_PACKET;
 
     if (0 >= gpsd_serial_isatty(session)) {
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_IO, &session->context->errout,
                  "SER: gpsd_serial_open(%s) -> %ld, Not tty\n",
-                 session->gpsdata.dev.path, session->gpsdata.gps_fd);
+                 session->gpsdata.dev.path, (long)session->gpsdata.gps_fd);
         // (int) to pacify Codacy.
         return (int)session->gpsdata.gps_fd;
     }
@@ -900,10 +908,10 @@ int gpsd_serial_open(struct gps_device_t *session)
     // Save original terminal parameters, why?
     //  At least it tests we can read port parameters.
     if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
-        // Maybe still useable somehow?
+        // Maybe still useable somehow?  cast for 32-bit intptr_t
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "SER: gpsd_serial_open() tcgetattr(%ld) failed: %s(%d)\n",
-                 session->gpsdata.gps_fd,
+                 (long)session->gpsdata.gps_fd,
                  strerror(errno), errno);
         return UNALLOCATED_FD;
     }
@@ -911,13 +919,15 @@ int gpsd_serial_open(struct gps_device_t *session)
 
     if (0 < session->context->fixed_port_speed) {
         session->saved_baud = session->context->fixed_port_speed;
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SER: fd %ld fixed speed %d\n",
-                 session->gpsdata.gps_fd, session->saved_baud);
+                 (long)session->gpsdata.gps_fd, session->saved_baud);
     } else if (0 < session->saved_baud) {
+        // cast for 32-bit intptr_t
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SER: fd %ld saved speed %d\n",
-                 session->gpsdata.gps_fd, session->saved_baud);
+                 (long)session->gpsdata.gps_fd, session->saved_baud);
     }
 
     if (0 < session->saved_baud) {
@@ -926,14 +936,16 @@ int gpsd_serial_open(struct gps_device_t *session)
         (void)cfsetospeed(&session->ttyset, (speed_t)session->saved_baud);
         if (0 == tcsetattr(session->gpsdata.gps_fd, TCSANOW,
                            &session->ttyset)) {
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SER: fd %ld restoring fixed/saved speed %d(%d)\n",
-                     session->gpsdata.gps_fd, session->saved_baud,
+                     (long)session->gpsdata.gps_fd, session->saved_baud,
                      (int) cfgetispeed(&session->ttyset));
         } else {
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "SER: fd %ld Error setting port attributes: %s(%d)\n",
-                     session->gpsdata.gps_fd, strerror(errno), errno);
+                     (long)session->gpsdata.gps_fd, strerror(errno), errno);
         }
         gpsd_flush(session);
     }
@@ -986,9 +998,10 @@ int gpsd_serial_open(struct gps_device_t *session)
 
     // start the autobaud hunt clock.
     clock_gettime(CLOCK_REALTIME, &session->ts_startCurrentBaud);
+    // cast for 32-bit intptr_t
     GPSD_LOG(LOG_IO, &session->context->errout,
              "SER: open(%s) -> %ld in gpsd_serial_open()\n",
-             session->gpsdata.dev.path, session->gpsdata.gps_fd);
+             session->gpsdata.dev.path, (long)session->gpsdata.gps_fd);
     return session->gpsdata.gps_fd;
 }
 
@@ -1011,9 +1024,10 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
     if (0 < gpsd_serial_isatty(session)) {
         // do we really need to block on tcdrain?
         if (0 != tcdrain(session->gpsdata.gps_fd)) {
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "SER: gpsd_serial_write(%ld) tcdrain() failed: %s(%d)\n",
-                     session->gpsdata.gps_fd,
+                     (long)session->gpsdata.gps_fd,
                      strerror(errno), errno);
         }
     }
@@ -1063,9 +1077,10 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
     clock_gettime(CLOCK_REALTIME, &ts_now);
     TS_SUB(&ts_diff, &ts_now, &session->ts_startCurrentBaud);
 
+    // cast for 32-bit intptr_t
     GPSD_LOG(LOG_IO, &session->context->errout,
              "SER: gpsd_next_hunt_setting(%ld) retries %lu diff %lld\n",
-             session->gpsdata.gps_fd,
+             (long)session->gpsdata.gps_fd,
              session->lexer.retry_counter,
              (long long)ts_diff.tv_sec);
 
@@ -1088,16 +1103,19 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         } else if (-1 == ioctl(session->gpsdata.gps_fd,
                                (unsigned long)TIOCGICOUNT, &icount)) {
             // some tty-like devices do not implment TIOCGICOUNT
-            if (errno != ENOTTY) {
+            if (ENOTTY != errno) {
+                // cast for 32-bit intptr_t
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
                          "SER: ioctl(%ld, TIOCGICOUNT) failed: %s(%d)\n",
-                         session->gpsdata.gps_fd, strerror(errno), errno);
+                         (long)session->gpsdata.gps_fd,
+                         strerror(errno), errno);
             }
         } else {
+            // cast for 32-bit intptr_t
             GPSD_LOG(LOG_INF, &session->context->errout,
                      "SER: ioctl(%ld, TIOCGICOUNT) rx %d tx %d frame %d "
                      "overrun %d parity %d brk %d buf_overrun %d\n",
-                     session->gpsdata.gps_fd, icount.rx, icount.tx,
+                     (long)session->gpsdata.gps_fd, icount.rx, icount.tx,
                      icount.frame, icount.overrun, icount.parity, icount.brk,
                      icount.buf_overrun);
         }
@@ -1162,17 +1180,20 @@ void gpsd_close(struct gps_device_t *session)
 #ifdef TIOCNXCL
         // This command resets the exclusive use of a terminal.
         if (-1 == ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCNXCL)) {
+                // cast for 32-bit intptr_t
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
                          "SER: ioctl(%ld, TIOCNXCL) failed: %s(%d)\n",
-                         session->gpsdata.gps_fd, strerror(errno), errno);
+                         (long)session->gpsdata.gps_fd,
+                         strerror(errno), errno);
         }
 #endif  // TIOCNXCL
         if (!session->context->readonly) {
             // Be sure all output is sent.
             if (0 != tcdrain(session->gpsdata.gps_fd)) {
+                // cast for 32-bit intptr_t
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
                          "SER: gpsd_close(%ld) tcdrain() failed: %s(%d)\n",
-                         session->gpsdata.gps_fd,
+                         (long)session->gpsdata.gps_fd,
                          strerror(errno), errno);
             }
         }
@@ -1213,10 +1234,11 @@ void gpsd_close(struct gps_device_t *session)
         session->gpsdata.gps_fd = PLACEHOLDING_FD;
         session->opentime = time(NULL);
     }
+    // cast for 32-bit intptr_t
     GPSD_LOG(LOG_IO, &session->context->errout,
              "SER: gpsd_close(%s), close(%ld)\n",
              session->gpsdata.dev.path,
-             session->gpsdata.gps_fd);
+             (long)session->gpsdata.gps_fd);
     if (!BAD_SOCKET(session->gpsdata.gps_fd)) {
         (void)close(session->gpsdata.gps_fd);
         session->gpsdata.gps_fd = UNALLOCATED_FD;
