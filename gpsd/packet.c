@@ -2749,6 +2749,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                      * 0x8f-20, LLA & ENU
                      * 0x8f-26, SEEPROM write status
                      * 0x8f-40, TAIP Configuration
+                     * 0x8f-42, Stored Production Parameters
                      * 0x90-XX, Version/Config (TSIPv1)
                      * 0xa1-00, Timing Info (TSIPv1)
                      * 0xa1-01, Frequency Info (TSIPv1)

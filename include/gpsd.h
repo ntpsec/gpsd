@@ -747,13 +747,20 @@ struct gps_device_t {
             int subtype;                // hardware ID, sort of
 #define TSIP_UNKNOWN               0
 #define TSIP_ACEIII               93
+#define TSIP_LASSENIQ           1001
+// 1002 includes Copernicus II?
+#define TSIP_COPERNICUS         1002
+// 1003 undocumented?
 #define TSIP_COPERNICUS_II      1003
 #define TSIP_ACUTIME_GOLD       3001
 #define TSIP_REST               3002
+#define TSIP_TBOLTE             3007
 #define TSIP_RESSMT             3009
+#define TSIP_RES_SMTX           3017
 #define TSIP_RESSMT360          3023
 #define TSIP_ICMSMT360          3026
 #define TSIP_RES36017x22        3031
+#define TSIP_ACUTIME_360        3002
 #define TSIP_RES720             3100
             uint8_t alt_is_msl;         // 0 if alt is HAE, 1 if MSL
             timespec_t last_tow;        // used to find cycle start
