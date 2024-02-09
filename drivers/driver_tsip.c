@@ -1425,8 +1425,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->driver.tsip.subtype =
                     session->driver.tsip.hardware_code;
                 break;
-                    session->driver.tsip.hardware_code;
-                break;
         default:
                 GPSD_LOG(LOG_WARN, &session->context->errout,
                          "TSIP x1c-%02x: Unhandled subpacket\n", u1);
