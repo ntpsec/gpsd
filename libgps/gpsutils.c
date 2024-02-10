@@ -32,6 +32,31 @@
 #include <QStringList>
 #endif
 
+// mode val to mode string
+struct vlist_t vmode_str[] = {
+    {1, "No Fix"},
+    {2, "2D Fix"},
+    {3, "3D Fix"},
+    {0, NULL},
+};
+/* val2str(val, vlist) - given a value, return a matching string.
+ *
+ * val the value to find in  vlist
+ *
+ * Return: pointer to static string
+ *         The string matching val, or "Unk".
+ */
+const char *val2str(unsigned val, const struct vlist_t *vlist)
+{
+    while (NULL != vlist->str) {
+        if (vlist->val == val) {
+            return vlist->str;
+        }
+        vlist++;
+    }
+    return "Unk";
+}
+
 /*
  * Berkeley implementation of strtod(), inlined to avoid locale problems
  * with the decimal point and stripped down to an atof()-equivalent.

@@ -106,6 +106,7 @@ extern "C" {
  *       Add rtcm3_4076_hdr
  *       change gps_data_t.gps_fd to type gps_fd_t.
  *       devconfig_t add sernum[]
+ *       Add val2sstr()
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -2951,6 +2952,14 @@ extern void gps_merge_fix(struct gps_fix_t *, gps_mask_t, struct gps_fix_t *);
 extern void gps_enable_debug(int, FILE *);
 extern const char *gps_maskdump(gps_mask_t);
 
+// stuff from libgps/gpsutils.c
+struct vlist_t {
+    unsigned val;
+    const char *str;
+};
+// mode val to mode string
+extern struct vlist_t vmode_str[];
+extern const char *val2str(unsigned val, const struct vlist_t *vlist);
 extern double safe_atof(const char *);
 extern time_t mkgmtime(struct tm *);
 extern timespec_t iso8601_to_timespec(const char *);
