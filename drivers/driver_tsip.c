@@ -56,10 +56,6 @@
 
 #define SEMI_2_DEG      (180.0 / 2147483647)    // 2^-31 semicircle to deg
 
-void configuration_packets_acutime_gold(struct gps_device_t *session);
-void configuration_packets_res360(struct gps_device_t *session);
-void configuration_packets_generic(struct gps_device_t *session);
-
 /* convert TSIP SV Type to satellite_t.gnssid and satellite_t.svid
  * return gnssid directly, svid indirectly through pointer */
 static unsigned char tsip_gnssid(unsigned svtype, short prn,
@@ -276,6 +272,200 @@ static bool tsip_detect(struct gps_device_t *session)
     }
 
     return ret;
+}
+
+// configure generic Trimble TSIP device to a known state
+static void configuration_packets_generic(struct gps_device_t *session)
+{
+        char buf[100];
+
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP: configuration_packets_generic()\n");
+
+        // Set basic configuration, using Set or Request I/O Options (0x35).
+        // Position: enable: Double Precision, LLA, disable: ECEF
+        buf[0] = 0x35;
+        // Time: enable: 0x42, 0x43, 0x4a, disable: 0x83, 0x84, 0x56
+        buf[1] = IO1_8F20|IO1_DP|IO1_LLA;
+        // Velocity: enable: ENU, disable ECEF
+        buf[2] = IO2_ENU;
+        buf[3] = 0x00;
+        buf[4] = IO4_DBHZ;    // Aux: enable: 0x5A, dBHz
+        (void)tsip_write1(session, buf, 5);
+
+        // Request Software Version (0x1f), returns 0x45
+        (void)tsip_write1(session, "\x1f", 1);
+
+        // Current Time Request (0x21), returns 0x41
+        (void)tsip_write1(session, "\x21", 1);
+
+        /* Set Operating Parameters (0x2c)
+         * not present in:
+         *   Lassen SQ (2002)
+         *   Lassen iQ (2005)
+         *   RES SMT 360 */
+        /* dynamics code: enabled: 1=land
+         *   disabled: 2=sea, 3=air, 4=static
+         *   default is land */
+        buf[0] = 0x2c;
+        buf[1] = 0x01;
+        // elevation mask, 10 degrees is a common default, TSIP default is 15
+        putbef32(buf, 2, (float)10.0 * DEG_2_RAD);
+        // signal level mask, default is 2.0 AMU. 5.0 to 6.0 for high accuracy
+        putbef32(buf, 6, (float)06.0);
+        // PDOP mask default is 12. 5.0 to 6.0 for high accuracy
+        putbef32(buf, 10, (float)8.0);
+        // PDOP switch, default is 8.0
+        putbef32(buf, 14, (float)6.0);
+        (void)tsip_write1(session, buf, 18);
+
+        /* Set Position Fix Mode (0x22)
+         * 0=auto 2D/3D, 1=time only, 3=2D, 4=3D, 10=Overdetermined clock */
+        (void)tsip_write1(session, "\x22\x00", 2);
+
+        /* Request GPS System Message (0x48)
+         * not supported on model RES SMT 360 */
+        (void)tsip_write1(session, "\x28", 1);
+
+        /* Last Position and Velocity Request (0x37)
+         * returns 0x57 and (0x42, 0x4a, 0x83, or 0x84) and (0x43 or 0x56)  */
+        (void)tsip_write1(session, "\x37", 1);
+
+        // 0x8e-15 request output datum
+        (void)tsip_write1(session, "\x8e\x15", 2);
+
+        /* Primary Receiver Configuration Parameters Request (0xbb-00)
+         * returns  Primary Receiver Configuration Block (0xbb-00) */
+        (void)tsip_write1(session, "\xbb\x00", 2);
+}
+
+// configure Acutime Gold to a known state
+static void configuration_packets_acutime_gold(struct gps_device_t *session)
+{
+        char buf[100];
+
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP: configuration_packets_acutime_gold()\n");
+
+        /* Request Firmware Version (0x1c-01)
+         * returns Firmware component version information (0x1x-81) */
+        (void)tsip_write1(session, "\x1c\x01", 2);
+
+        buf[0] = 0x8e;          // Set Self-Survey Parameters (0x8e-a9)
+        buf[1] = 0xa9;          // Subcode
+        buf[2] = 0x01;          // Self-Survey Enable = enable
+        buf[3] = 0x01;          // Position Save Flag = save position
+        putbe32(buf, 4, 2000);  // Self-Survey Length = 2000 fixes, default 2000
+        // Horizontal Uncertainty, 1-100, 1=best, 100=worst, default 100
+        putbef32(buf, 8, 100);
+        // Verical Uncertainty, 1-100, 1=best, 100=worst, default 100
+        putbef32(buf, 12, 100);
+        (void)tsip_write1(session, buf, 16);
+
+        /* Set PPS Output Option (0x8e-4e)
+         * 0x4e Subcode
+         * 2 == PPS driver switch (PPS is always output) */
+        (void)tsip_write1(session, "\x8e\x4e\x02", 3);
+
+        buf[0] = 0xbb;  // Set Primary Receiver Configuration (0xbb-00)
+        buf[1] = 0x00;  // 00 =  Subcode
+        buf[2] = 0x07;  // Receiver mode, 7 = Force Overdetermined clock
+        buf[3] = 0xff;  // Not enabled = unchanged, must be 0xff on RES SMT 360
+        buf[4] = 0x01;  // Dynamics code = default must be 0xff on RES SMT 360
+        buf[5] = 0x01;  // Solution Mode = default must be 0xff on RES SMT 360
+        // Elevation Mask = 10 deg
+        putbef32((char *)buf, 6, (float)10.0 * DEG_2_RAD);
+        // AMU Mask. 0 to 55. default is 4.0
+        putbef32((char *)buf, 10, (float)4.0);
+        // PDOP Mask = 8.0, default = 6
+        putbef32((char *)buf, 14, (float)8.0);
+        // PDOP Switch = 6.0, ignored in RES SMT 360
+        putbef32((char *)buf, 18, (float)6.0);
+        buf[22] = 0xff;  // must be 0xff
+        buf[23] = 0x0;   // Anti-Jam Mode, 0=Off, 1=On
+        putbe16(buf, 24, 0xffff);  // Reserved.  Must be 0xffff
+        /* Measurement Rate and Position Fix Rate = default
+         * must be 0xffff on res smt 360 */
+        putbe16(buf, 26, 0x0000);
+        /* 27 is Constellation on RES SMT 360.
+         * 1 = GPS, 2=GLONASS, 8=BeiDou, 0x10=Galileo, 5=QZSS */
+        putbe32(buf, 28, 0xffffffff);   // Reserved
+        putbe32(buf, 32, 0xffffffff);   // Reserved
+        putbe32(buf, 36, 0xffffffff);   // Reserved
+        putbe32(buf, 40, 0xffffffff);   // Reserved
+        (void)tsip_write1(session, buf, 44);
+
+        buf[0] = 0x8e;   // Set Packet Broadcast Mask (0x8e-a5)
+        buf[1] = 0xa5;   // Subcode a5
+        /* Packets bit field = default + Primary timing,
+         *  Supplemental timing 32e1
+         *  1=0x8f-ab, 4=0x8f-ac, 0x40=Automatic Output Packets */
+        putbe16(buf, 2, 0x32e1);
+        buf[4] = 0x00;   // not used
+        buf[5] = 0x00;   // not used
+        (void)tsip_write1(session, buf, 6);
+}
+
+// configure RES 360, Resolution SMTx, and similar to a known state
+static void configuration_packets_res360(struct gps_device_t *session)
+{
+    char buf[100];
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP: configuration_packets_res360()\n");
+
+    // should already have versions 0x8f-81 and 0x8f-83.
+
+    // Request Self Survey Parameters (0x8e-a9)
+    (void)tsip_write1(session, "\x8e\xa9", 2);
+
+    if (session->context->passive) {
+        // request I/O Options (0x55)
+        (void)tsip_write1(session, "\x35", 1);
+
+        // request Receiver Configuration (0xbb)
+        (void)tsip_write1(session, "\xbb\x00", 2);
+
+        // Request Packet Broadcast Mask (0x8e-a5)
+        (void)tsip_write1(session, "\x8e\xa5", 2);
+
+    } else {
+        // PPS Output Option (0x8e-4e) is default on
+
+        buf[0] = 0x8e;  // Set Packet Broadcast Mask (0x8e-a5)
+        buf[1] = 0xa5;  // a5 = Subcode
+        /* Packets bit field = default + Auto output packets
+         *  1=0x8f-ab, 4=0x8f-ac, 0x40=Automatic Output Packets */
+        buf[2] = 0;        // reserved
+        buf[3] = 0x45;
+        buf[4] = 0;        // reserved
+        buf[5] = 0;        // reserved
+        (void)tsip_write1(session, buf, 6);
+
+        /* IO Options defaults:
+         *   Lassen iQ:       02 02 00 00
+         *   RES SMT 360:     12 02 00 08
+         *   Resolution SMTx: 12 02 00 08
+         */
+        buf[0] = 0x35;  // set I/O Options
+        // position and velocity only sent during self-survey.
+        // Position
+        buf[1] =  IO1_DP|IO1_LLA|IO1_ECEF;
+        // Velocity
+        buf[2] = IO2_VECEF|IO2_ENU;
+        // Timing
+        buf[3] = 0x01;          // Use 0x8e-a2
+        // Auxiliary
+        buf[4] = 0x08;         // Packet 0x5a off, dBHz
+        (void)tsip_write1(session, buf, 5);
+
+// #ifdef __UNUSED__
+#if 1
+        // Restart Self-Survey (0x8e-a6)
+        // which gives us 2,000 normal fixes, before going quiet again.
+        (void)tsip_write1(session, "\x8e\xa6\x00", 3);
+#endif // __UNUSED__
+    }
 }
 
 /* send the next TSIPv1 query
@@ -1378,6 +1568,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                          session->gpsdata.dev.sernum);
 
                 mask |= DEVICEID_SET;
+                session->driver.tsip.subtype =
+                    session->driver.tsip.hardware_code;
 
                 // Detecting device by Hardware Code
                 switch (session->driver.tsip.hardware_code) {
@@ -1399,8 +1591,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 case 3031:            // RES360 17x22
                     FALLTHROUGH
                 case 3100:            // TSIP_RES720
-                    session->driver.tsip.subtype =
-                        session->driver.tsip.hardware_code;
                     configuration_packets_res360(session);
                     break;
 
@@ -1422,8 +1612,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                     configuration_packets_generic(session);
                     break;
                 }
-                session->driver.tsip.subtype =
-                    session->driver.tsip.hardware_code;
                 break;
         default:
                 GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -1441,6 +1629,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   Copernicus II (2009)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
+         *   Resolution SMTx
          */
         if (10 != len) {
             bad_len = 10;
@@ -1448,7 +1637,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         }
         session->driver.tsip.last_41 = now;     // keep timestamp for request
         ftow = getbef32(buf, 0);                // gpstime
-        week = getbeu16(buf, 4);                // week
+        week = getbes16(buf, 4);                // week, yes, signed!
         f2 = getbef32(buf, 6);                  // leap seconds
         if (0.0 <= ftow &&
             10.0 < f2) {
@@ -1597,6 +1786,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   Copernicus II (2009)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
+         *   Resolution SMTx
          *   all models?
          * RES SMT 360 says use 0x8f-ab or 0x8f-ac instead
          */
@@ -1605,22 +1795,28 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
         }
         session->driver.tsip.last_46 = now;
-        u1 = getub(buf, 0);     // Status code */
+        /* Status code
+         * 0 Doing position fixes
+         * 1 Do not have GPS time yet
+         * 2 Reserved (set to zero)
+         * 3 PDOP is too high
+         * 8 No usable satellites
+         * 9 Only 1 usable satellite
+         * 10 Only 2 usable satellites
+         * 11 Only 3 usable satellites
+         * 12 The chosen satellite is unusable.
+         */
+        u1 = getub(buf, 0);
+
         /* Error codes, model dependent
          * 0x01 -- no battery, always set on RES SMT 360
          * 0x10 -- antenna fault
          * 0x20 -- antenna is shorted
          */
         u2 = getub(buf, 1);
-        if ((uint8_t)0 != u1) {
-            session->newdata.status = STATUS_UNK;
-            mask |= STATUS_SET;
-        } else if (STATUS_GPS > session->newdata.status) {
-            session->newdata.status = STATUS_GPS;
-            mask |= STATUS_SET;
-        }
+
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x46: Receiver Health: %x %x\n", u1, u2);
+                 "TSIP x46: Receiver Health: x%x x%x\n", u1, u2);
         break;
     case 0x47:
         /* Signal Levels for all Satellites
@@ -2287,6 +2483,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   Copernicus II (2009)
          *   Lassen SQ
          *   Lassen iQ
+         * Deprecated in:
+         *   Resolution SMTx
          * Not present in:
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
@@ -2364,7 +2562,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP x6d: AIVSS: u1=x%x status=%d mode=%d used=%d "
-                 "pdop=%.1f hdop=%.1f vdop=%.1f tdop=%.1f used:%s\n",
+                 "pdop=%.1f hdop=%.1f vdop=%.1f tdop=%.1f used >%s<\n",
                  u1,
                  session->newdata.status,
                  session->newdata.mode,
@@ -2862,6 +3060,28 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                          (long long unsigned)tow, u1);
             }
             break;
+        case 0xa9:
+            /* Self Survey Parameters
+             * Present in:
+             *   ICM SMT 360 (2018)
+             *   RES SMT 360 (2018)
+             *   Resolution SMTx
+             * Not Present in:
+             *   pre-2000 models
+             *   Copernicus II (2009)
+             */
+            if (11 > len) {
+                bad_len = 11;
+                break;
+            }
+            u1 = getub(buf, 1);         // Self Survey Enable
+            u2 = getub(buf, 2);         // Position Save Flag
+            u3 = getbeu32(buf, 3);      // Self Survey Length
+            u4 = getbeu32(buf, 7);      // Reserved
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "TSIP x8f-a9 SSP: sse %u psf %u length %d rex x%x \n",
+                     u1, u2, u3, u4);
+            break;
         case 0xab:
             /* Thunderbolt Timing Superpacket
              * Present in:
@@ -2887,15 +3107,32 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             /* ignore the broken down time, use the GNSS time.
              * Hope it is not BeiDou time */
 
-            // how do we know leap valid?
-            session->context->valid |= LEAP_SECOND_VALID;
-            session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
-            mask |= TIME_SET | NTPTIME_IS;
+            if (1 == (u2 & 1)) {
+                // time is UTC, have leap seconds.
+                session->context->valid |= LEAP_SECOND_VALID;
+            } else {
+                // time is GPS
+                if (0 == (u2 & 8)) {
+                    // have leap seconds.
+                    session->context->valid |= LEAP_SECOND_VALID;
+                }
+            }
+            if (0 == (u2 & 0x14)) {
+                // time it good, not in test mode
+                session->newdata.time = gpsd_gpstime_resolv(session, week,
+                                                            ts_tow);
+                mask |= TIME_SET | NTPTIME_IS;
+            } else {
+                // time is bad
+            }
+
             if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
                 mask |= CLEAR_IS;
                 session->driver.tsip.last_tow = ts_tow;
             }
 
+            /* since we compute time from weeks and tow, we ignore the
+             * supplied H:M:S M/D/Y */
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIP x8f-ab: SP-TTS: tow %u wk %u ls %d flag x%x "
                      "time %s mask %s\n",
@@ -2911,6 +3148,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ThunderboltE
              *   ICM SMT 360
              *   RES SMT 360
+             *   Resolution SMTx
              * Not Present in:
              *   pre-2000 models
              *   Lassen iQ
@@ -2923,13 +3161,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
             // byte 0 is Subpacket ID
             u2 = getub(buf, 1);         // Receiver Mode
-            u3 = getub(buf, 12);        // GNSS Decoding Status
-            // ignore 2, Disciplining Mode
-            // ignore 3, Self-Survey Progress
-            // ignore 4-7, Holdover Duration
-            // ignore 8-9, Critical Alarms
-            // ignore 10-11, Minor Alarms
-            // ignore 12, GNSS Decoding Status
+            // Disciplining Mode, reserved on Resolution SMTx
+            u3 = getub(buf, 2);
+            // Self-Survey Progress
+            u4 = getub(buf, 3);
+            // ignore 4-7, Holdover Duration, reserved on Resolution SMTx
+            // ignore 8-9, Critical Alarms, reserved on Resolution SMTx
+            // Minor Alarms
+            u5 = getbeu16(buf, 10);
+            u6 = getub(buf, 12);        // GNSS Decoding Status
             // ignore 13, Disciplining Activity
             // ignore 14, PPS indication
             // ignore 15, PPS reference
@@ -2950,7 +3190,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             // ignore 60-63, always zero
             // ignore 64-67, reserved
 
-            if ((uint8_t)0 != u3) {
+            if ((uint8_t)0 != u6) {
                 // not exactly true, could be sort of Dead Reckoning
                 session->newdata.status = STATUS_UNK;
                 mask |= STATUS_SET;
@@ -2969,7 +3209,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 * device, not the actual lock, so we need to
                 * look at the decode status.
                 */
-                switch (u3) {
+                switch (u6) {
                 case 0:   // "Doing Fixes"
                     session->newdata.mode = MODE_3D;
                     break;
@@ -3020,7 +3260,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->newdata.mode = MODE_3D;
                 break;
             default:
-                //session->newdata.status = STATUS_UNK;
                 session->newdata.mode = MODE_NO_FIX;
                 break;
             }
@@ -3028,12 +3267,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             mask |= LATLON_SET | ALTITUDE_SET | MODE_SET;
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIP x8f-ac: SP-TPS: lat=%.2f lon=%.2f altHAE=%.2f "
-                     "mode %d temp %.1f fqErr %.4f\n",
+                     "mode %d temp %.1f fqErr %.4f rm x%x dm %u ssp %u ma x%x "
+                     "gds x%x\n",
                      session->newdata.latitude,
                      session->newdata.longitude,
                      session->newdata.altHAE,
                      session->newdata.mode,
-                     session->newdata.temp, fqErr);
+                     session->newdata.temp, fqErr, u2, u3, u4, u5, u6);
             break;
 
         case 0x02:
@@ -3562,16 +3802,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             FALLTHROUGH
         case 0xa8:
             /* Oscillator disciplining parameters
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            FALLTHROUGH
-        case 0xa9:
-            /* self-survey parameters
              * Present in:
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
@@ -4283,197 +4513,6 @@ static void tsip_mode(struct gps_device_t *session, int mode)
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "TSIP: unknown mode %i requested\n", mode);
     }
-}
-
-// configure generic Trimble TSIP device to a known state
-void configuration_packets_generic(struct gps_device_t *session)
-{
-        char buf[100];
-
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP: configuration_packets_generic()\n");
-
-        // Set basic configuration, using Set or Request I/O Options (0x35).
-        // Position: enable: Double Precision, LLA, disable: ECEF
-        buf[0] = 0x35;
-        // Time: enable: 0x42, 0x43, 0x4a, disable: 0x83, 0x84, 0x56
-        buf[1] = IO1_8F20|IO1_DP|IO1_LLA;
-        // Velocity: enable: ENU, disable ECEF
-        buf[2] = IO2_ENU;
-        buf[3] = 0x00;
-        buf[4] = IO4_DBHZ;    // Aux: enable: 0x5A, dBHz
-        (void)tsip_write1(session, buf, 5);
-
-        // Request Software Version (0x1f), returns 0x45
-        (void)tsip_write1(session, "\x1f", 1);
-
-        // Current Time Request (0x21), returns 0x41
-        (void)tsip_write1(session, "\x21", 1);
-
-        /* Set Operating Parameters (0x2c)
-         * not present in:
-         *   Lassen SQ (2002)
-         *   Lassen iQ (2005)
-         *   RES SMT 360 */
-        /* dynamics code: enabled: 1=land
-         *   disabled: 2=sea, 3=air, 4=static
-         *   default is land */
-        buf[0] = 0x2c;
-        buf[1] = 0x01;
-        // elevation mask, 10 degrees is a common default, TSIP default is 15
-        putbef32(buf, 2, (float)10.0 * DEG_2_RAD);
-        // signal level mask, default is 2.0 AMU. 5.0 to 6.0 for high accuracy
-        putbef32(buf, 6, (float)06.0);
-        // PDOP mask default is 12. 5.0 to 6.0 for high accuracy
-        putbef32(buf, 10, (float)8.0);
-        // PDOP switch, default is 8.0
-        putbef32(buf, 14, (float)6.0);
-        (void)tsip_write1(session, buf, 18);
-
-        /* Set Position Fix Mode (0x22)
-         * 0=auto 2D/3D, 1=time only, 3=2D, 4=3D, 10=Overdetermined clock */
-        (void)tsip_write1(session, "\x22\x00", 2);
-
-        /* Request GPS System Message (0x48)
-         * not supported on model RES SMT 360 */
-        (void)tsip_write1(session, "\x28", 1);
-
-        /* Last Position and Velocity Request (0x37)
-         * returns 0x57 and (0x42, 0x4a, 0x83, or 0x84) and (0x43 or 0x56)  */
-        (void)tsip_write1(session, "\x37", 1);
-
-        // 0x8e-15 request output datum
-        (void)tsip_write1(session, "\x8e\x15", 2);
-
-        /* Primary Receiver Configuration Parameters Request (0xbb-00)
-         * returns  Primary Receiver Configuration Block (0xbb-00) */
-        (void)tsip_write1(session, "\xbb\x00", 2);
-}
-
-// configure Acutime Gold to a known state
-void configuration_packets_acutime_gold(struct gps_device_t *session)
-{
-        char buf[100];
-
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP: configuration_packets_acutime_gold()\n");
-
-        /* Request Firmware Version (0x1c-01)
-         * returns Firmware component version information (0x1x-81) */
-        (void)tsip_write1(session, "\x1c\x01", 2);
-
-        buf[0] = 0x8e;          // Set Self-Survey Parameters (0x8e-a9)
-        buf[1] = 0xa9;          // Subcode
-        buf[2] = 0x01;          // Self-Survey Enable = enable
-        buf[3] = 0x01;          // Position Save Flag = save position
-        putbe32(buf, 4, 2000);  // Self-Survey Length = 2000 fixes, default 2000
-        // Horizontal Uncertainty, 1-100, 1=best, 100=worst, default 100
-        putbef32(buf, 8, 100);
-        // Verical Uncertainty, 1-100, 1=best, 100=worst, default 100
-        putbef32(buf, 12, 100);
-        (void)tsip_write1(session, buf, 16);
-
-        /* Set PPS Output Option (0x8e-4e)
-         * 0x4e Subcode
-         * 2 == PPS driver switch (PPS is always output) */
-        (void)tsip_write1(session, "\x8e\x4e\x02", 3);
-
-        buf[0] = 0xbb;  // Set Primary Receiver Configuration (0xbb-00)
-        buf[1] = 0x00;  // 00 =  Subcode
-        buf[2] = 0x07;  // Receiver mode, 7 = Force Overdetermined clock
-        buf[3] = 0xff;  // Not enabled = unchanged, must be 0xff on RES SMT 360
-        buf[4] = 0x01;  // Dynamics code = default must be 0xff on RES SMT 360
-        buf[5] = 0x01;  // Solution Mode = default must be 0xff on RES SMT 360
-        // Elevation Mask = 10 deg
-        putbef32((char *)buf, 6, (float)10.0 * DEG_2_RAD);
-        // AMU Mask. 0 to 55. default is 4.0
-        putbef32((char *)buf, 10, (float)4.0);
-        // PDOP Mask = 8.0, default = 6
-        putbef32((char *)buf, 14, (float)8.0);
-        // PDOP Switch = 6.0, ignored in RES SMT 360
-        putbef32((char *)buf, 18, (float)6.0);
-        buf[22] = 0xff;  // must be 0xff
-        buf[23] = 0x0;   // Anti-Jam Mode, 0=Off, 1=On
-        putbe16(buf, 24, 0xffff);  // Reserved.  Must be 0xffff
-        /* Measurement Rate and Position Fix Rate = default
-         * must be 0xffff on res smt 360 */
-        putbe16(buf, 26, 0x0000);
-        /* 27 is Constellation on RES SMT 360.
-         * 1 = GPS, 2=GLONASS, 8=BeiDou, 0x10=Galileo, 5=QZSS */
-        putbe32(buf, 28, 0xffffffff);   // Reserved
-        putbe32(buf, 32, 0xffffffff);   // Reserved
-        putbe32(buf, 36, 0xffffffff);   // Reserved
-        putbe32(buf, 40, 0xffffffff);   // Reserved
-        (void)tsip_write1(session, buf, 44);
-
-        buf[0] = 0x8e;   // Set Packet Broadcast Mask (0x8e-a5)
-        buf[1] = 0xa5;   // Subcode a5
-        /* Packets bit field = default + Primary timing,
-         *  Supplemental timing 32e1
-         *  1=0x8f-ab, 4=0x8f-ac, 0x40=Automatic Output Packets */
-        putbe16(buf, 2, 0x32e1);
-        buf[4] = 0x00;   // not used
-        buf[5] = 0x00;   // not used
-        (void)tsip_write1(session, buf, 6);
-}
-
-// configure RES 360 to a known state
-void configuration_packets_res360(struct gps_device_t *session)
-{
-    char buf[100];
-
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "TSIP: configuration_packets_res360()\n");
-
-    // should already have versions 0x8f-81 and 0x8f-83.
-    /* Self-Survey Parameters (0x8e-a9) is default on
-     * query them? */
-
-    if (session->context->passive) {
-        // request I/O Options (0x55)
-        (void)tsip_write1(session, "\x35", 1);
-
-        // request Receiver Configuration (0xbb)
-        (void)tsip_write1(session, "\xbb\x00", 2);
-
-        // Request Packet Broadcast Mask (0x8e-a5)
-        (void)tsip_write1(session, "\x8e\xa5", 2);
-
-    } else {
-        // PPS Output Option (0x8e-4e) is default on
-
-        buf[0] = 0x8e;  // Set Packet Broadcast Mask (0x8e-a5)
-        buf[1] = 0xa5;  // a5 = Subcode
-        /* Packets bit field = default + Auto output packets
-         *  1=0x8f-ab, 4=0x8f-ac, 0x40=Automatic Output Packets */
-        buf[2] = 0;        // reserved
-        buf[3] = 0x45;
-        buf[4] = 0;        // reserved
-        buf[5] = 0;        // reserved
-        (void)tsip_write1(session, buf, 6);
-
-        /* IO Options defaults:
-         *   Lassen iQ:       02 02 00 00
-         *   RES SMT 360:     12 02 00 08
-         *   Resolution SMTx: 12 02 00 08
-         */
-        buf[0] = 0x35;  // set I/O Options
-        // position and velocity only sent during self-survey.
-        // Position
-        buf[1] =  IO1_DP|IO1_LLA|IO1_ECEF;
-        // Velocity
-        buf[2] = IO2_VECEF|IO2_ENU;
-        // Timing
-        buf[3] = 0x01;          // Use 0x8e-a2
-        // Auxiliary
-        buf[4] = 0x08;         // Packet 0x5a off, dBHz
-        (void)tsip_write1(session, buf, 5);
-    }
-#ifdef __UNUSED__
-    // Restart Self-Survey (0x8e-a6)
-    // which gives us 2,000 normal fixes, before going quiet again.
-    (void)tsip_write1(session, "\x8e\xa6\x00", 3);
-#endif // __UNUSED__
 }
 
 // this is everything we export
