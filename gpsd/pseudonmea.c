@@ -155,8 +155,8 @@ int gpsd_position_fix_dump(struct gps_device_t *session,
     utc_to_hhmmss(session->gpsdata.fix.time, time_str, sizeof(time_str), &tm);
     switch(session->gpsdata.fix.status) {
     case STATUS_UNK:
-        fixquality = FIX_QUALITY_INVALID;
-        break;
+        // should not happen as we send no GGA when NO_FIX
+        FALLTHROUGH
     case STATUS_GPS:
         fixquality = FIX_QUALITY_GPS;
         break;
