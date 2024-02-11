@@ -1381,6 +1381,35 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     char ts_buf[TIMESPEC_LEN];
     int bad_len = 0;
 
+    /* GNSS Decoding Status to string
+     * Used in x46, x8f-ac */
+    struct vlist_t vgnss_decode_status[] = {
+        {0, "Doing Fixes"},
+        {1, "No GPS time"},
+        {2, "Needs Init"},        // ACE II
+        {3, "PDOP too high"},
+        {8, "0 usable sats"},
+        {9, "1 usable sat"},
+        {10, "2 usable sats"},
+        {11, "3 usable sats"},
+        {13, "chosen sat unusable"},
+        {16, "TRAIM rejected"},  // Thunderbolt E
+        {0, NULL},
+    };
+
+    /* Receiver Mode
+     * Used in xbb, x8f-ac */
+    struct vlist_t vrec_mode[] = {
+        {0, "Autonomous (2D/3D)"},
+        {1, "Time Only (1-SV)"},    // Accutime 2000, Tbolt
+        {3, "2D"},                  // Accutime 2000, Tbolt
+        {4, "3D"},                  // Accutime 2000, Tbolt
+        {5, "DGPS"},                // Accutime 2000, Tbolt
+        {6, "2D Clock hold"},       // Accutime 2000, Tbolt
+        {7, "Overdetermined"},      // Stationary Timing, surveyed
+        {0, NULL},
+    };
+
     if (TSIP_PACKET != session->lexer.type) {
         // this should not happen
         GPSD_LOG(LOG_INF, &session->context->errout,
@@ -1795,17 +1824,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
         }
         session->driver.tsip.last_46 = now;
-        /* Status code
-         * 0 Doing position fixes
-         * 1 Do not have GPS time yet
-         * 2 Reserved (set to zero)
-         * 3 PDOP is too high
-         * 8 No usable satellites
-         * 9 Only 1 usable satellite
-         * 10 Only 2 usable satellites
-         * 11 Only 3 usable satellites
-         * 12 The chosen satellite is unusable.
-         */
+        // Status code, see vgnss_decode_status
         u1 = getub(buf, 0);
 
         /* Error codes, model dependent
@@ -1817,6 +1836,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP x46: Receiver Health: x%x x%x\n", u1, u2);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIP x46: gds %s\n",
+                 val2str(u1, vgnss_decode_status));
         break;
     case 0x47:
         /* Signal Levels for all Satellites
@@ -2419,11 +2441,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             session->newdata.mode = MODE_3D;
             break;
         case 3:
-            session->newdata.status = STATUS_GPS;
             session->newdata.mode = MODE_2D;
             break;
         case 4:
-            session->newdata.status = STATUS_GPS;
             session->newdata.mode = MODE_3D;
             break;
         case 2:
@@ -2433,7 +2453,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         case 7:
             FALLTHROUGH
         default:
-            session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
             break;
         }
@@ -2472,6 +2491,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->gpsdata.dop.vdop,
                  session->gpsdata.dop.tdop,
                  buf2);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIP x5c: rm %s\n",
+                 val2str(u1, vrec_mode));
         mask |= USED_IS;
         break;
     case 0x6d:
@@ -2518,11 +2540,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->newdata.mode = MODE_3D;
                 break;
             case 3:
-                session->newdata.status = STATUS_GPS;
                 session->newdata.mode = MODE_2D;
                 break;
             case 4:
-                session->newdata.status = STATUS_GPS;
                 session->newdata.mode = MODE_3D;
                 break;
             case 2:
@@ -2532,12 +2552,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             case 7:
                 FALLTHROUGH
             default:
-                session->newdata.status = STATUS_UNK;
                 session->newdata.mode = MODE_NO_FIX;
                 break;
             }
         } else {
-            session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
         }
         mask |= MODE_SET | STATUS_SET;
@@ -3103,7 +3121,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             // leap seconds
             session->context->leap_seconds = (int)getbes16(buf, 7);
             u2 = buf[9];                // Time Flag
-            // should check time valid?
             /* ignore the broken down time, use the GNSS time.
              * Hope it is not BeiDou time */
 
@@ -3112,6 +3129,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->context->valid |= LEAP_SECOND_VALID;
             } else {
                 // time is GPS
+                // FIXME: canvert to UTC
                 if (0 == (u2 & 8)) {
                     // have leap seconds.
                     session->context->valid |= LEAP_SECOND_VALID;
@@ -3154,7 +3172,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   Lassen iQ
              *   Copernicus II (2009)
              */
-            if (len != 68) {
+            if (68 != len) {
                 bad_len = 68;
                 break;
             }
@@ -3190,14 +3208,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             // ignore 60-63, always zero
             // ignore 64-67, reserved
 
-            if ((uint8_t)0 != u6) {
-                // not exactly true, could be sort of Dead Reckoning
-                session->newdata.status = STATUS_UNK;
-                mask |= STATUS_SET;
-            } else if (STATUS_GPS > session->newdata.status) {
-                session->newdata.status = STATUS_GPS;
-                mask |= STATUS_SET;
-            }
+            // We don;t know enough to set status, probably TIME_TIME
 
             // Decode Fix modes
             switch (u2 & 7) {
@@ -3242,7 +3253,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  */
                 FALLTHROUGH
             case 3:             // forced 2D Position Fix
-                //session->newdata.status = STATUS_GPS;
+                // Does this mean STATUS_TIME?
                 session->newdata.mode = MODE_2D;
                 break;
             case 1:             // Single Satellite Time
@@ -3254,9 +3265,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 /* Present in:
                  *   Acutiome 360
                  */
-                FALLTHROUGH
+                session->newdata.status = STATUS_TIME;
+                session->newdata.mode = MODE_3D;
+                break;
             case 4:             // forced 3D position Fix
-                //session->newdata.status = STATUS_GPS;
+                // Does this mean STATUS_TIME?
                 session->newdata.mode = MODE_3D;
                 break;
             default:
@@ -3274,6 +3287,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                      session->newdata.altHAE,
                      session->newdata.mode,
                      session->newdata.temp, fqErr, u2, u3, u4, u5, u6);
+            GPSD_LOG(LOG_IO, &session->context->errout,
+                     "TSIP x8f-ac: mode %s rm %s gds %s\n",
+                     val2str(session->newdata.mode, vmode_str),
+                     val2str(u2, vrec_mode),
+                     val2str(u6, vgnss_decode_status));
             break;
 
         case 0x02:
@@ -3898,7 +3916,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
         }
         u1 = getub(buf, 0);             // Subcode, always zero?
-        u2 = getub(buf, 1);             // Operating Dimension
+        u2 = getub(buf, 1);             // Operating Dimension (Receiver Mode)
         u3 = getub(buf, 2);             // DGPS Mode (not in Acutime Gold)
         u4 = getub(buf, 3);             // Dynamics Code
         f1 = getbef32(buf, 5);          // Elevation Mask
@@ -3916,12 +3934,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * bit 6 - reserved
          * bit 7 - reserved
          */
+        // RES SMT 360 defaults to Mode 7, Constellation 3
         u6 = getub(buf, 27);
+
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP xbb: Navigation Configuration: %u %u %u %u %f %f %f "
                  "%f %u x%x\n",
                  u1, u2, u3, u4, f1, f2, f3, f4, u5, u6);
-        // RES SMT 360 defaults to Mode 7, Constellation 3
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIP xbb: rm %s\n",
+                 val2str(u1, vrec_mode));
         break;
 
     case 0x1a:
