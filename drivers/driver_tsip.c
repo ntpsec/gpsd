@@ -1386,14 +1386,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     struct vlist_t vgnss_decode_status[] = {
         {0, "Doing Fixes"},
         {1, "No GPS time"},
-        {2, "Needs Init"},        // ACE II
+        {2, "Needs Init"},                      // ACE II, LassenSQ
         {3, "PDOP too high"},
         {8, "0 usable sats"},
         {9, "1 usable sat"},
         {10, "2 usable sats"},
         {11, "3 usable sats"},
-        {13, "chosen sat unusable"},
-        {16, "TRAIM rejected"},  // Thunderbolt E
+        {12, "chosen sat unusable"},
+        {16, "TRAIM rejected"},                 // Thunderbolt E
+        {0xbb, "Have GPS Time Fix (OD mode)"},  // Acutime 360
         {0, NULL},
     };
 
@@ -1407,6 +1408,31 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         {5, "DGPS"},                // Accutime 2000, Tbolt
         {6, "2D Clock hold"},       // Accutime 2000, Tbolt
         {7, "Overdetermined"},      // Stationary Timing, surveyed
+        {0, NULL},
+    };
+
+    /* Error Code Flags
+     * Used in x46 */
+    struct vlist_t verr_codes[] = {
+        {1, "No Bat"},
+        {0x10, "Ant Fault"},
+        {0x20, "Ant Short"},
+        {0, NULL},
+    };
+
+    /* Minor Alarm Flags
+     * Used in x8f-ac */
+    struct vlist_t vminor_alarms[] = {
+        {2, "Ant Open"},
+        {4, "Ant Short"},
+        {8, "Not tracking Sats"},
+        {0x20, "Survey in progress"},
+        {0x40, "No stored Position"},
+        {0x80, "Leap Sec Pending"},
+        {0x100, "Test Mode"},
+        {0x200, "Position questionable"},
+        {0x800, "Almanac Incomplete"},
+        {0x1000, "PPS generated"},
         {0, NULL},
     };
 
@@ -1835,10 +1861,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         u2 = getub(buf, 1);
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x46: Receiver Health: x%x x%x\n", u1, u2);
+                 "TSIP x46: Receiver Health: gds:x%x ec:x%x\n", u1, u2);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP x46: gds %s\n",
-                 val2str(u1, vgnss_decode_status));
+                 "TSIP x46: gds:%s ec:%s\n",
+                 val2str(u1, vgnss_decode_status),
+                 flags2str(u2, verr_codes, buf2, sizeof(buf2)));
         break;
     case 0x47:
         /* Signal Levels for all Satellites
@@ -3288,10 +3315,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                      session->newdata.mode,
                      session->newdata.temp, fqErr, u2, u3, u4, u5, u6);
             GPSD_LOG(LOG_IO, &session->context->errout,
-                     "TSIP x8f-ac: mode %s rm %s gds %s\n",
+                     "TSIP x8f-ac: mode:%s rm:%s gds:%s ma:%s\n",
                      val2str(session->newdata.mode, vmode_str),
                      val2str(u2, vrec_mode),
-                     val2str(u6, vgnss_decode_status));
+                     val2str(u6, vgnss_decode_status),
+                     flags2str(u5, vminor_alarms, buf2, sizeof(buf2)));
             break;
 
         case 0x02:
