@@ -39,9 +39,35 @@ struct vlist_t vmode_str[] = {
     {3, "3D Fix"},
     {0, NULL},
 };
+
+/* flags2str(val, vlist) - given flags, return a matching string.
+ *
+ * flags the flags to find in vlist
+ * buffer -  the buffer to return string in
+ ( buflen - length of buffer
+ *
+ * Return: pointer to passed in buffer
+ *         A string matching the flags.
+ */
+const char *flags2str(unsigned flags, const struct vlist_t *vlist, char *buffer,
+                      size_t buflen)
+{
+    buffer[0] = '\0';
+    while (NULL != vlist->str) {
+        if (vlist->val == (vlist->val & flags)) {
+            if ('\0' != buffer[0]) {
+                strlcat(buffer, " ", buflen);
+            }
+            strlcat(buffer, vlist->str, buflen);
+        }
+        vlist++;
+    }
+    return buffer;
+}
+
 /* val2str(val, vlist) - given a value, return a matching string.
  *
- * val the value to find in  vlist
+ * val the value to find in vlist
  *
  * Return: pointer to static string
  *         The string matching val, or "Unk".

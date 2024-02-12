@@ -2959,6 +2959,8 @@ struct vlist_t {
 };
 // mode val to mode string
 extern struct vlist_t vmode_str[];
+extern const char *flags2str(unsigned flags, const struct vlist_t *vlist,
+                             char *buffer, size_t buflen);
 extern const char *val2str(unsigned val, const struct vlist_t *vlist);
 extern double safe_atof(const char *);
 extern time_t mkgmtime(struct tm *);
