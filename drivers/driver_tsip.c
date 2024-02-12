@@ -459,8 +459,8 @@ static void configuration_packets_res360(struct gps_device_t *session)
         buf[4] = 0x08;         // Packet 0x5a off, dBHz
         (void)tsip_write1(session, buf, 5);
 
-// #ifdef __UNUSED__
-#if 1
+#ifdef __UNUSED__
+// #if 1
         // Restart Self-Survey (0x8e-a6)
         // which gives us 2,000 normal fixes, before going quiet again.
         (void)tsip_write1(session, "\x8e\xa6\x00", 3);
