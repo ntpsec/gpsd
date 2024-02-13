@@ -1374,6 +1374,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     time_t now;
     char buf[BUFSIZ];
     char buf2[BUFSIZ];
+    char buf3[BUFSIZ];
     uint32_t tow;             // time of week in milli seconds
     double ftow;              // time of week in seconds
     double fqErr;             // PPS Offset. positive is slow.
@@ -1394,7 +1395,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         {11, "3 usable sats"},
         {12, "chosen sat unusable"},
         {16, "TRAIM rejected"},                 // Thunderbolt E
-        {0xbb, "Have GPS Time Fix (OD mode)"},  // Acutime 360
+        {0xbb, "GPS Time Fix (OD mode)"},       // Acutime 360
         {0, NULL},
     };
 
@@ -1420,17 +1421,77 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         {0, 0, NULL},
     };
 
+    /* Status 1
+     * Used in x4b */
+    struct flist_t vstat1[] = {
+        {2, 2, "RTC invalid"},
+        {8, 8, "No Almanac"},
+        {0, 0, NULL},
+    };
+
+    /* Status 2
+     * Used in x4b */
+    struct flist_t vstat2[] = {
+        {1, 1, "Superpackets"},
+        {2, 2, "Superpackets 2"},
+        {0, 0, NULL},
+    };
+
+    /* Fis Dimension, Fix Mode
+     * Used in x6c, x6d */
+    struct flist_t vfix[] = {
+        // Accutime calls 0 "Auto"
+        {0, 7, "No Fix"},
+        // in x6d, Thunderbolt E calls 1 "1D Time Fix", not an OD Fix
+        {1, 7, "OD Fix"},
+        // Accutime calls 3 "2D Clock Hold"
+        {3, 7, "2D Fix"},
+        {4, 7, "3D Fix"},
+        {5, 7, "OD Fix"},       // in Thunderbolt E, x6d, others
+        {6, 7, "DGPS"},         // in Accutime
+        {0, 8, "Auto"},
+        {1, 8, "Manual"},
+        {0, 0, NULL},
+    };
+
+    /* Timing Flags
+     * Used in x8f-ab */
+    struct flist_t vtiming[] = {
+        {0, 1, "GPS time"},
+        {1, 1, "UTC time"},
+        {0, 2, "GPS PPS"},
+        {1, 2, "UTC PPS"},
+        {4, 4, "Time not set"},
+        {8, 8,  "no UTC info"},
+        {0x10, 0x10, "time from user"},
+        {0, 0, NULL},
+    };
+
+    /* Critical Alarm Flags
+     * Used in x8f-ac */
+    struct flist_t vcrit_alarms[] = {
+        {1, 1, "ROM error"},               // Thunderbolt
+        {2, 2, "RAM error"},               // Thunderbolt
+        {4, 4, "FPGA error"},              // Thunderbolt
+        {8, 8, "Power error"},             // Thunderbolt
+        {0x10, 0x10, "OSC error"},         // Thunderbolt
+        {0, 0, NULL},
+    };
+
     /* Minor Alarm Flags
      * Used in x8f-ac */
     struct flist_t vminor_alarms[] = {
+        {1, 1, "OSC warning"},                   // Thunderbolt
         {2, 2, "Ant Open"},
         {4, 4, "Ant Short"},
         {8, 8, "Not tracking Sats"},
+        {0x10, 0x10, "Osc unlocked"},            // Thunderbolt
         {0x20, 0x20, "Survey in progress"},
         {0x40, 0x40, "No stored Position"},
         {0x80, 0x80, "Leap Sec Pending"},
         {0x100, 0x100, "Test Mode"},
         {0x200, 0x200, "Position questionable"},
+        {0x400, 0x400, "EEROM corrupt"},         // Thunderbolt
         {0x800, 0x800, "Almanac Incomplete"},
         {0x1000, 0x1000, "PPS generated"},
         {0, 0, NULL},
@@ -1852,6 +1913,37 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         session->driver.tsip.last_46 = now;
         // Status code, see vgnss_decode_status
         u1 = getub(buf, 0);
+        switch (u1) {
+        case 0:         //  "Doing Fixes"
+            session->newdata.mode = MODE_3D;
+            break;
+        case 9:          // "1 usable sat"
+            session->newdata.mode = MODE_2D;
+            break;
+        case 10:         // "2 usable sats"
+            session->newdata.mode = MODE_2D;
+            break;
+        case 11:         // "3 usable sats"
+            session->newdata.mode = MODE_2D;
+            break;
+        case 1:          // "No GPS time"
+            FALLTHROUGH
+        case 2:          // "Needs Init"
+            FALLTHROUGH
+        case 3:          // "PDOP too high"
+            FALLTHROUGH
+        case 8:          // "0 usable sats"
+            FALLTHROUGH
+        case 12:         // "chosen sat unusable"
+            FALLTHROUGH
+        case 16:         // "TRAIM rejected"
+            session->newdata.mode = MODE_NO_FIX;
+            break;
+        case 0xbb:       // "GPS Time Fix (OD mode)"
+            session->newdata.status = STATUS_TIME;
+            session->newdata.mode = MODE_3D;
+            break;
+         }
 
         /* Error codes, model dependent
          * 0x01 -- no battery, always set on RES SMT 360
@@ -1860,8 +1952,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          */
         u2 = getub(buf, 1);
 
+        if (STATUS_UNK != session->newdata.status) {
+            mask |= STATUS_SET;
+        }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x46: Receiver Health: gds:x%x ec:x%x\n", u1, u2);
+                 "TSIP x46: Receiver Health: mode %d status %d  gds:x%x "
+                 "ec:x%x\n",
+                session->newdata.status,
+                session->newdata.mode,
+                u1, u2);
         GPSD_LOG(LOG_IO, &session->context->errout,
                  "TSIP x46: gds:%s ec:%s\n",
                  val2str(u1, vgnss_decode_status),
@@ -1973,9 +2072,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          *   Resolution SMTx
-         *   all receivers?
          * Deprecated in:
          *   Resolution SMTx
+         * Not in:
+         *   Thunderbolt (2003)
          */
         if (3 != len) {
             bad_len = 3;
@@ -1991,6 +2091,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  "TSIP x4b: Machine ID: %02x %02x %02x\n",
                  session->driver.tsip.machine_id,
                  u2, u3);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIP x4b: stat1:%s stat2:%s\n",
+                 flags2str(u2, vstat1, buf2, sizeof(buf2)),
+                 flags2str(u3, vstat2, buf3, sizeof(buf3)));
 
         if ('\0' == session->subtype[0]) {
             const char *name;
@@ -2430,6 +2534,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         break;
     case 0x6c:
         /* Satellite Selection List (0x6c) polled by 0x24
+         * Eeerily similar to 0x6d, the difference is where the sat count is.
          *
          * Present in:
          *   ICM SMT 360 (2018)
@@ -2473,9 +2578,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         case 4:
             session->newdata.mode = MODE_3D;
             break;
-        case 2:
-            FALLTHROUGH
         case 6:
+            // Accutime
+            session->newdata.status = STATUS_DGPS;
+            session->newdata.mode = MODE_3D;
+            break;
+        case 0:
+            // Sometimes this is No Fix, sometimes Auto....
+            FALLTHROUGH
+        case 2:
             FALLTHROUGH
         case 7:
             FALLTHROUGH
@@ -2487,7 +2598,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             // Surveyed in
             session->newdata.status = STATUS_TIME;
         }
-        mask |= MODE_SET | STATUS_SET;
+        if (STATUS_UNK < session->newdata.status) {
+            mask |= STATUS_SET;
+        }
+        mask |= MODE_SET;
 
         session->gpsdata.satellites_used = count;
         session->gpsdata.dop.pdop = getbef32(buf, 1);
@@ -2508,8 +2622,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             }
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x5c: AIVSS: mode %d status %d used %d "
-                 "pdop %.1f hdop %.1f vdop %.1f tdop %.1f Used %s\n",
+                 "TSIP xcc: AIVSS: mode %d status %d used %d "
+                 "pdop %.1f hdop %.1f vdop %.1f tdop %.1f Used %s fixd x%x\n",
                  session->newdata.mode,
                  session->newdata.status,
                  session->gpsdata.satellites_used,
@@ -2517,10 +2631,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->gpsdata.dop.hdop,
                  session->gpsdata.dop.vdop,
                  session->gpsdata.dop.tdop,
-                 buf2);
+                 buf2, u1);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP x5c: rm %s\n",
-                 val2str(u1, vrec_mode));
+                 "TSIP x6c: fixd %s\n",
+                 flags2str(u1, vfix, buf2, sizeof(buf2)));
         mask |= USED_IS;
         break;
     case 0x6d:
@@ -2542,13 +2656,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 1;
             break;
         }
-        u1 = getub(buf, 0);     // nsvs/dimension
-        count = (int)((u1 >> 4) & 0x0f);
-        if ((17 + count) != len) {
-            bad_len = 17 + count;
-            break;
-        }
         session->driver.tsip.last_6d = now;     // keep timestamp for request
+
+        u1 = getub(buf, 0);     // nsvs/dimension
         /*
          * This looks right, but it sets a spurious mode value when
          * the satellite constellation looks good to the chip but no
@@ -2567,14 +2677,19 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->newdata.mode = MODE_3D;
                 break;
             case 3:
+                // Copernicus ii can output this for OD mode.
                 session->newdata.mode = MODE_2D;
                 break;
             case 4:
+                // SMTx can output this for OD mode.
+                session->newdata.mode = MODE_3D;
+                break;
+            case 6:
+                // Accutime
+                session->newdata.status = STATUS_DGPS;
                 session->newdata.mode = MODE_3D;
                 break;
             case 2:
-                FALLTHROUGH
-            case 6:
                 FALLTHROUGH
             case 7:
                 FALLTHROUGH
@@ -2585,7 +2700,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         } else {
             session->newdata.mode = MODE_NO_FIX;
         }
-        mask |= MODE_SET | STATUS_SET;
+        if (STATUS_UNK < session->newdata.status) {
+            mask |= STATUS_SET;
+        }
+        mask |= MODE_SET;
+
+        count = (int)((u1 >> 4) & 0x0f);
+        if ((17 + count) != len) {
+            bad_len = 17 + count;
+            break;
+        }
 
         session->gpsdata.satellites_used = count;
         session->gpsdata.dop.pdop = getbef32(buf, 1);
@@ -2616,6 +2740,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->gpsdata.dop.hdop,
                  session->gpsdata.dop.vdop,
                  session->gpsdata.dop.tdop, buf2);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIP x6d: fix::%s\n",
+                 flags2str(u1, vfix, buf2, sizeof(buf2)));
         mask |= USED_IS;
         break;
     case 0x82:
@@ -3156,7 +3283,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->context->valid |= LEAP_SECOND_VALID;
             } else {
                 // time is GPS
-                // FIXME: canvert to UTC
                 if (0 == (u2 & 8)) {
                     // have leap seconds.
                     session->context->valid |= LEAP_SECOND_VALID;
@@ -3185,6 +3311,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                      timespec_str(&session->newdata.time, ts_buf,
                                   sizeof(ts_buf)),
                      gps_maskdump(mask));
+            GPSD_LOG(LOG_IO, &session->context->errout,
+                     "TSIP x8f-ab: tf::%s\n",
+                     flags2str(u2, vtiming, buf2, sizeof(buf2)));
             break;
 
         case 0xac:
@@ -3212,9 +3341,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             u4 = getub(buf, 3);
             // ignore 4-7, Holdover Duration, reserved on Resolution SMTx
             // ignore 8-9, Critical Alarms, reserved on Resolution SMTx
+            u5 = getbeu16(buf, 8);
             // Minor Alarms
-            u5 = getbeu16(buf, 10);
-            u6 = getub(buf, 12);        // GNSS Decoding Status
+            u6 = getbeu16(buf, 10);
+            u7 = getub(buf, 12);        // GNSS Decoding Status
             // ignore 13, Disciplining Activity
             // ignore 14, PPS indication
             // ignore 15, PPS reference
@@ -3247,7 +3377,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 * device, not the actual lock, so we need to
                 * look at the decode status.
                 */
-                switch (u6) {
+                switch (u7) {
                 case 0:   // "Doing Fixes"
                     session->newdata.mode = MODE_3D;
                     break;
@@ -3303,23 +3433,28 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->newdata.mode = MODE_NO_FIX;
                 break;
             }
+            if (STATUS_UNK != session->newdata.status) {
+                mask |= STATUS_SET;
+            }
 
             mask |= LATLON_SET | ALTITUDE_SET | MODE_SET;
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIP x8f-ac: SP-TPS: lat=%.2f lon=%.2f altHAE=%.2f "
-                     "mode %d temp %.1f fqErr %.4f rm x%x dm %u ssp %u ma x%x "
-                     "gds x%x\n",
+                     "mode %d status %d  temp %.1f fqErr %.4f rm x%x dm %u "
+                     "sp %u ca %x ma x%x gds x%x\n",
                      session->newdata.latitude,
                      session->newdata.longitude,
                      session->newdata.altHAE,
                      session->newdata.mode,
-                     session->newdata.temp, fqErr, u2, u3, u4, u5, u6);
+                     session->newdata.status,
+                     session->newdata.temp, fqErr, u2, u3, u4, u5, u6, u7);
             GPSD_LOG(LOG_IO, &session->context->errout,
-                     "TSIP x8f-ac: mode:%s rm:%s gds:%s ma:%s\n",
+                     "TSIP x8f-ac: mode:%s rm:%s gds:%s ca:%s ma:%s\n",
                      val2str(session->newdata.mode, vmode_str),
                      val2str(u2, vrec_mode),
                      val2str(u6, vgnss_decode_status),
-                     flags2str(u5, vminor_alarms, buf2, sizeof(buf2)));
+                     flags2str(u5, vcrit_alarms, buf2, sizeof(buf2)),
+                     flags2str(u6, vminor_alarms, buf3, sizeof(buf3)));
             break;
 
         case 0x02:
