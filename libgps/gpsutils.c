@@ -49,18 +49,18 @@ struct vlist_t vmode_str[] = {
  * Return: pointer to passed in buffer
  *         A string matching the flags.
  */
-const char *flags2str(unsigned flags, const struct vlist_t *vlist, char *buffer,
+const char *flags2str(unsigned flags, const struct flist_t *flist, char *buffer,
                       size_t buflen)
 {
     buffer[0] = '\0';
-    while (NULL != vlist->str) {
-        if (vlist->val == (vlist->val & flags)) {
+    while (NULL != flist->str) {
+        if (flist->val == (flist->mask & flags)) {
             if ('\0' != buffer[0]) {
                 strlcat(buffer, " ", buflen);
             }
-            strlcat(buffer, vlist->str, buflen);
+            strlcat(buffer, flist->str, buflen);
         }
-        vlist++;
+        flist++;
     }
     return buffer;
 }

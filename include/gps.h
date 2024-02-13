@@ -2953,13 +2953,24 @@ extern void gps_enable_debug(int, FILE *);
 extern const char *gps_maskdump(gps_mask_t);
 
 // stuff from libgps/gpsutils.c
+
+// a flag list for flags2str()
+struct flist_t {
+    unsigned val;
+    unsigned mask;
+    const char *str;
+};
+
+// a value list for val2str()
 struct vlist_t {
     unsigned val;
     const char *str;
 };
 // mode val to mode string
 extern struct vlist_t vmode_str[];
-extern const char *flags2str(unsigned flags, const struct vlist_t *vlist,
+
+
+extern const char *flags2str(unsigned flags, const struct flist_t *flist,
                              char *buffer, size_t buflen);
 extern const char *val2str(unsigned val, const struct vlist_t *vlist);
 extern double safe_atof(const char *);

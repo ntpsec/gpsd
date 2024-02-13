@@ -1413,27 +1413,27 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
     /* Error Code Flags
      * Used in x46 */
-    struct vlist_t verr_codes[] = {
-        {1, "No Bat"},
-        {0x10, "Ant Fault"},
-        {0x20, "Ant Short"},
-        {0, NULL},
+    struct flist_t verr_codes[] = {
+        {1, 1, "No Bat"},
+        {0x10, 0x30, "Ant Open"},
+        {0x30, 0x30, "Ant Short"},
+        {0, 0, NULL},
     };
 
     /* Minor Alarm Flags
      * Used in x8f-ac */
-    struct vlist_t vminor_alarms[] = {
-        {2, "Ant Open"},
-        {4, "Ant Short"},
-        {8, "Not tracking Sats"},
-        {0x20, "Survey in progress"},
-        {0x40, "No stored Position"},
-        {0x80, "Leap Sec Pending"},
-        {0x100, "Test Mode"},
-        {0x200, "Position questionable"},
-        {0x800, "Almanac Incomplete"},
-        {0x1000, "PPS generated"},
-        {0, NULL},
+    struct flist_t vminor_alarms[] = {
+        {2, 2, "Ant Open"},
+        {4, 4, "Ant Short"},
+        {8, 8, "Not tracking Sats"},
+        {0x20, 0x20, "Survey in progress"},
+        {0x40, 0x40, "No stored Position"},
+        {0x80, 0x80, "Leap Sec Pending"},
+        {0x100, 0x100, "Test Mode"},
+        {0x200, 0x200, "Position questionable"},
+        {0x800, 0x800, "Almanac Incomplete"},
+        {0x1000, 0x1000, "PPS generated"},
+        {0, 0, NULL},
     };
 
     if (TSIP_PACKET != session->lexer.type) {
