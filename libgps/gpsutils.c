@@ -554,6 +554,9 @@ void gps_merge_fix(struct gps_fix_t *to,
         to->dgps_station = from->dgps_station;
     }
 
+    if (ANT_UNK != from->ant_stat) {
+        to->ant_stat = from->ant_stat;
+    }
     // navdata stuff.  just wind angle and angle for now
     if (0 != (transfer & NAVDATA_SET)) {
         if (0 != isfinite(from->wanglem)) {

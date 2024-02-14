@@ -42,10 +42,12 @@ static int json_tpv_read(const char *buf, struct gps_data_t *gpsdata,
         {"class",  t_check,   .dflt.check = "TPV"},
         {"alt",    t_real,    .addr.real = &gpsdata->fix.altitude,
                                  .dflt.real = NAN}, // DEPRECATED, undefined
-        {"altHAE",    t_real,  .addr.real = &gpsdata->fix.altHAE,
+        {"altHAE", t_real,    .addr.real = &gpsdata->fix.altHAE,
                                  .dflt.real = NAN},
         {"altMSL", t_real,    .addr.real = &gpsdata->fix.altMSL,
                                  .dflt.real = NAN},
+        {"ant",    t_integer, .addr.integer = &gpsdata->fix.ant_stat,
+                                 .dflt.integer = 0},
         {"baseS",     t_integer,   .addr.integer = &gpsdata->fix.base.status,
          .dflt.integer = STATUS_UNK},     // aka zero
         {"baseE",     t_real,      .addr.real = &gpsdata->fix.base.east,

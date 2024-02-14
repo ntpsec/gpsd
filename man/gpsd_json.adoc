@@ -141,6 +141,10 @@ Probably WGS84.
 specified and is often inaccurate. See the comments below on geoidSep.
 altMSL is altHAE minus geoidSep.
 
+|ant |No |numeric |Antenna Status: +
+2=Short, +
+3=Open.
+
 |climb |No |numeric |Climb (positive) or sink (negative) rate, meters
 per second.
 

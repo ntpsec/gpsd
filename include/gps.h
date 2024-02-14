@@ -102,11 +102,11 @@ extern "C" {
  *       Add fixsource_t and watch_t to gps_data_t
  *       move privdata_t here from libgps/gps_sock.c
  *       Add rot (Rate Of Turn), mheading, to struct attitude_t
- *       Add wtemp and temp to gps_fix_t
+ *       Add wtemp, temp, and ant_stat to gps_fix_t
  *       Add rtcm3_4076_hdr
  *       change gps_data_t.gps_fd to type gps_fd_t.
  *       devconfig_t add sernum[]
- *       Add val2sstr()
+ *       Add val2sstr() and flags2str()
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -245,6 +245,11 @@ struct gps_fix_t {
     double depth;
     double wtemp;           // water temp, degrees C
     double temp;            // receiver temp, degrees C
+    int ant_stat;           // antenna status
+#define ANT_UNK 0
+#define ANT_OK 1
+#define ANT_OPEN 2
+#define ANT_SHORT 3
 
     // ECEF data, all data in meters, and meters/second, or NaN
     struct {

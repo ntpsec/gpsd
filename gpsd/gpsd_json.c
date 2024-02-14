@@ -489,6 +489,10 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
                            ",\"dgpsRatio\":%.3f", gpsdata->fix.base.ratio);
         }
     }
+    if (ANT_OK < gpsdata->fix.ant_stat){
+        str_appendf(reply, replylen,
+                    ",\"ant\":%d", gpsdata->fix.ant_stat);
+    }
     if (0 != (changed & NAVDATA_SET)) {
         if (0 != isfinite(gpsdata->fix.wanglem)){
             str_appendf(reply, replylen,

@@ -1432,8 +1432,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     /* Status 2
      * Used in x4b */
     struct flist_t vstat2[] = {
-        {1, 1, "Superpackets"},
-        {2, 2, "Superpackets 2"},
+        {1, 1, "Superpackets"},      // x8f-20 (LFwEI)
+        {2, 2, "Superpackets 2"},    // x8f-1b, x8f-ac
         {0, 0, NULL},
     };
 
@@ -1696,9 +1696,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 // RES look-alikes
                 case 3002:            // TSIP_REST
                     FALLTHROUGH
-                case 3009:            // TSIP_RESSMT
+                case 3009:            // TSIP_RESSMT, Model 66266
                     FALLTHROUGH
-                case 3017:            // Resolution SMTx
+                case 3017:            // Resolution SMTx,  Model 99889
                     FALLTHROUGH
                 case 3023:            // RES SMT 360
                     FALLTHROUGH
@@ -1947,10 +1947,21 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
         /* Error codes, model dependent
          * 0x01 -- no battery, always set on RES SMT 360
-         * 0x10 -- antenna fault
-         * 0x20 -- antenna is shorted
+         * 0x10 -- antenna is open
+         * 0x30 -- antenna is shorted
          */
         u2 = getub(buf, 1);
+        switch (u2 & 0x30) {
+        case 0x10:
+            session->newdata.ant_stat = ANT_OPEN;
+            break;
+        case 0x30:
+            session->newdata.ant_stat = ANT_SHORT;
+            break;
+        default:
+            session->newdata.ant_stat = ANT_OK;
+            break;
+        }
 
         if (STATUS_UNK != session->newdata.status) {
             mask |= STATUS_SET;
@@ -3344,6 +3355,18 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             u5 = getbeu16(buf, 8);
             // Minor Alarms
             u6 = getbeu16(buf, 10);
+            switch (u6 & 6) {
+            case 2:
+                session->newdata.ant_stat = ANT_OPEN;
+                break;
+            case 4:
+                session->newdata.ant_stat = ANT_SHORT;
+                break;
+            default:
+                session->newdata.ant_stat = ANT_OK;
+                break;
+            }
+
             u7 = getub(buf, 12);        // GNSS Decoding Status
             // ignore 13, Disciplining Activity
             // ignore 14, PPS indication
