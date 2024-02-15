@@ -14,7 +14,7 @@ now live in a different module.
 """
 
 #
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
@@ -853,5 +853,4 @@ if __name__ == '__main__':
         # Avoid garble on ^C
         print("")
 
-# gps.py ends here
 # vim: set expandtab shiftwidth=4
