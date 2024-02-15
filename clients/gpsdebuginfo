@@ -28,10 +28,10 @@ if command -v gpsd; then
 fi
 if command -v python; then
     # get gps module version
-    python -m gps
+    python -c "import gps; print(gps.__version__)"
 elif command -v python3; then
     # get gps module version
-    python3 -m gps
+    python3 -c "import gps; print(gps.__version__)"
 fi
 # use sockstat, lsof, netstat or ss, depending, for owner of port 2947
 if command -v sockstat; then
