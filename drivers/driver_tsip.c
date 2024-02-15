@@ -56,6 +56,121 @@
 
 #define SEMI_2_DEG      (180.0 / 2147483647)    // 2^-31 semicircle to deg
 
+/* GNSS Decoding Status to string
+ * Used in x46, x8f-ac */
+static struct vlist_t vgnss_decode_status[] = {
+    {0, "Doing Fixes"},
+    {1, "No GPS time"},
+    {2, "Needs Init"},                      // ACE II, LassenSQ
+    {3, "PDOP too high"},
+    {8, "0 usable sats"},
+    {9, "1 usable sat"},
+    {10, "2 usable sats"},
+    {11, "3 usable sats"},
+    {12, "chosen sat unusable"},
+    {16, "TRAIM rejected"},                 // Thunderbolt E
+    {0xbb, "GPS Time Fix (OD mode)"},       // Acutime 360
+    {0, NULL},
+};
+
+/* Receiver Mode
+ * Used in xbb, x8f-ac */
+static struct vlist_t vrec_mode[] = {
+    {0, "Autonomous (2D/3D)"},
+    {1, "Time Only (1-SV)"},    // Accutime 2000, Tbolt
+    {3, "2D"},                  // Accutime 2000, Tbolt
+    {4, "3D"},                  // Accutime 2000, Tbolt
+    {5, "DGPS"},                // Accutime 2000, Tbolt
+    {6, "2D Clock hold"},       // Accutime 2000, Tbolt
+    {7, "Overdetermined"},      // Stationary Timing, surveyed
+    {0, NULL},
+};
+
+/* Error Code Flags
+ * Used in x46 */
+static struct flist_t verr_codes[] = {
+    {1, 1, "No Bat"},
+    {0x10, 0x30, "Ant Open"},
+    {0x30, 0x30, "Ant Short"},
+    {0, 0, NULL},
+};
+
+/* Status 1
+ * Used in x4b */
+static struct flist_t vstat1[] = {
+    {2, 2, "RTC invalid"},
+    {8, 8, "No Almanac"},
+    {0, 0, NULL},
+};
+
+/* Status 2
+ * Used in x4b */
+static struct flist_t vstat2[] = {
+    {1, 1, "Superpackets"},      // x8f-20 (LFwEI)
+    {2, 2, "Superpackets 2"},    // x8f-1b, x8f-ac
+    {0, 0, NULL},
+};
+
+/* Fis Dimension, Fix Mode
+ * Used in x6c, x6d */
+static struct flist_t vfix[] = {
+    // Accutime calls 0 "Auto"
+    {0, 7, "No Fix"},
+    // in x6d, Thunderbolt E calls 1 "1D Time Fix", not an OD Fix
+    {1, 7, "OD Fix"},
+    // Accutime calls 3 "2D Clock Hold"
+    {3, 7, "2D Fix"},
+    {4, 7, "3D Fix"},
+    {5, 7, "OD Fix"},       // in Thunderbolt E, x6d, others
+    {6, 7, "DGPS"},         // in Accutime
+    {0, 8, "Auto"},
+    {1, 8, "Manual"},
+    {0, 0, NULL},
+};
+
+/* Timing Flags
+ * Used in x8f-ab */
+static struct flist_t vtiming[] = {
+    {0, 1, "GPS time"},
+    {1, 1, "UTC time"},
+    {0, 2, "GPS PPS"},
+    {1, 2, "UTC PPS"},
+    {4, 4, "Time not set"},
+    {8, 8,  "no UTC info"},
+    {0x10, 0x10, "time from user"},
+    {0, 0, NULL},
+};
+
+/* Critical Alarm Flags
+ * Used in x8f-ac */
+static struct flist_t vcrit_alarms[] = {
+    {1, 1, "ROM error"},               // Thunderbolt
+    {2, 2, "RAM error"},               // Thunderbolt
+    {4, 4, "FPGA error"},              // Thunderbolt
+    {8, 8, "Power error"},             // Thunderbolt
+    {0x10, 0x10, "OSC error"},         // Thunderbolt
+    {0, 0, NULL},
+};
+
+/* Minor Alarm Flags
+ * Used in x8f-ac */
+static struct flist_t vminor_alarms[] = {
+    {1, 1, "OSC warning"},                   // Thunderbolt
+    {2, 2, "Ant Open"},
+    {4, 4, "Ant Short"},
+    {8, 8, "Not tracking Sats"},
+    {0x10, 0x10, "Osc unlocked"},            // Thunderbolt
+    {0x20, 0x20, "Survey in progress"},
+    {0x40, 0x40, "No stored Position"},
+    {0x80, 0x80, "Leap Sec Pending"},
+    {0x100, 0x100, "Test Mode"},
+    {0x200, 0x200, "Position questionable"},
+    {0x400, 0x400, "EEROM corrupt"},         // Thunderbolt
+    {0x800, 0x800, "Almanac Incomplete"},
+    {0x1000, 0x1000, "PPS generated"},
+    {0, 0, NULL},
+};
+
 /* convert TSIP SV Type to satellite_t.gnssid and satellite_t.svid
  * return gnssid directly, svid indirectly through pointer */
 static unsigned char tsip_gnssid(unsigned svtype, short prn,
@@ -1354,6 +1469,191 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     return mask;
 }
 
+// decode Superpacket x8f-qc
+static unsigned decode_x8f_ac(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    unsigned rec_mode;
+    unsigned disc_mode;
+    unsigned survey_prog;
+    unsigned crit_alarm;
+    unsigned minor_alarm;
+    unsigned decode_stat;
+    double fqErr;             // PPS Offset. positive is slow.
+    char buf2[BUFSIZ];
+    char buf3[BUFSIZ];
+
+    // byte 0 is Subpacket ID
+    rec_mode = getub(buf, 1);         // Receiver Mode
+    // Disciplining Mode, reserved on Resolution SMTx
+    disc_mode = getub(buf, 2);
+    // Self-Survey Progress
+    survey_prog = getub(buf, 3);
+    // ignore 4-7, Holdover Duration, reserved on Resolution SMTx
+    // ignore 8-9, Critical Alarms, reserved on Resolution SMTx
+    crit_alarm = getbeu16(buf, 8);
+    // Minor Alarms
+    minor_alarm = getbeu16(buf, 10);
+    switch (minor_alarm & 6) {
+    case 2:
+        session->newdata.ant_stat = ANT_OPEN;
+        break;
+    case 4:
+        session->newdata.ant_stat = ANT_SHORT;
+        break;
+    default:
+        session->newdata.ant_stat = ANT_OK;
+        break;
+    }
+
+    decode_stat = getub(buf, 12);        // GNSS Decoding Status
+    // ignore 13, Disciplining Activity
+    // ignore 14, PPS indication
+    // ignore 15, PPS reference
+    /* PPS Offset in ns
+     * save as (long)pico seconds
+     * can't really use it as it is not referenced to any PPS */
+    fqErr = getbef32(buf, 16);
+    session->gpsdata.qErr = (long)(fqErr * 1000);
+    // ignore 20-23, Clock Offset
+    // ignore 24-27, DAC Value
+    // ignore 28-31, DAC Voltage
+    // 32-35, Temperature degrees C
+    session->newdata.temp = getbef32(buf, 32);
+    session->newdata.latitude = getbed64(buf, 36) * RAD_2_DEG;
+    session->newdata.longitude = getbed64(buf, 44) * RAD_2_DEG;
+    // SMT 360 doc says this is always altHAE in meters
+    session->newdata.altHAE = getbed64(buf, 52);
+    // ignore 60-63, always zero
+    // ignore 64-67, reserved
+
+    // We don;t know enough to set status, probably TIME_TIME
+
+    // Decode Fix modes
+    switch (rec_mode & 7) {
+    case 0:     // Auto
+        /*
+        * According to the Thunderbolt Manual, the
+        * first byte of the supplemental timing packet
+        * simply indicates the configuration of the
+        * device, not the actual lock, so we need to
+        * look at the decode status.
+        */
+        switch (decode_stat) {
+        case 0:   // "Doing Fixes"
+            session->newdata.mode = MODE_3D;
+            break;
+        case 0x0B: // "Only 3 usable sats"
+            session->newdata.mode = MODE_2D;
+            break;
+        case 0x1:   // "Don't have GPS time"
+            FALLTHROUGH
+        case 0x3:   // "PDOP is too high"
+            FALLTHROUGH
+        case 0x8:   // "No usable sats"
+            FALLTHROUGH
+        case 0x9:   // "Only 1 usable sat"
+            FALLTHROUGH
+        case 0x0A:  // "Only 2 usable sats
+            FALLTHROUGH
+        case 0x0C:  // "The chosen sat is unusable"
+            FALLTHROUGH
+        case 0x10:  // TRAIM rejected the fix
+            FALLTHROUGH
+        default:
+            session->newdata.mode = MODE_NO_FIX;
+            break;
+        }
+        break;
+    case 6:             // Clock Hold 2D
+        /* Not present:
+         *   SMT 360
+         *   Acutime 360
+         */
+        FALLTHROUGH
+    case 3:             // forced 2D Position Fix
+        // Does this mean STATUS_TIME?
+        session->newdata.mode = MODE_2D;
+        break;
+    case 1:             // Single Satellite Time
+        /* Present in:
+         *   Acutime 360
+         */
+        FALLTHROUGH
+    case 7:             // overdetermined clock
+        /* Present in:
+         *   Acutiome 360
+         *   Resolution SMTx
+         */
+        /*
+        * According to the Thunderbolt Manual, the
+        * first byte of the supplemental timing packet
+        * simply indicates the configuration of the
+        * device, not the actual lock, so we need to
+        * look at the decode status.
+        */
+        session->newdata.status = STATUS_TIME;
+        switch (decode_stat) {
+        case 0:   // "Doing Fixes"
+            session->newdata.mode = MODE_3D;
+            break;
+        case 0x0B: // "Only 3 usable sats"
+            session->newdata.mode = MODE_2D;
+            break;
+        case 0x1:   // "Don't have GPS time"
+            FALLTHROUGH
+        case 0x3:   // "PDOP is too high"
+            FALLTHROUGH
+        case 0x8:   // "No usable sats"
+            FALLTHROUGH
+        case 0x9:   // "Only 1 usable sat"
+            FALLTHROUGH
+        case 0x0A:  // "Only 2 usable sats
+            FALLTHROUGH
+        case 0x0C:  // "The chosen sat is unusable"
+            FALLTHROUGH
+        case 0x10:  // TRAIM rejected the fix
+            FALLTHROUGH
+        default:
+            session->newdata.mode = MODE_NO_FIX;
+            break;
+        }
+        break;
+    case 4:             // forced 3D position Fix
+        session->newdata.mode = MODE_3D;
+        break;
+    default:
+        session->newdata.mode = MODE_NO_FIX;
+        break;
+    }
+    if (STATUS_UNK != session->newdata.status) {
+        mask |= STATUS_SET;
+    }
+
+    mask |= LATLON_SET | ALTITUDE_SET | MODE_SET;
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP x8f-ac: SP-TPS: lat=%.2f lon=%.2f altHAE=%.2f "
+             "mode %d status %d  temp %.1f fqErr %.4f rm x%x dm %u "
+             "sp %u ca %x ma x%x gds x%x\n",
+             session->newdata.latitude,
+             session->newdata.longitude,
+             session->newdata.altHAE,
+             session->newdata.mode,
+             session->newdata.status,
+             session->newdata.temp, fqErr, rec_mode,
+             disc_mode, survey_prog, crit_alarm,
+             minor_alarm, decode_stat);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIP x8f-ac: mode:%s rm:%s gds:%s ca:%s ma:%s\n",
+             val2str(session->newdata.mode, vmode_str),
+             val2str(rec_mode, vrec_mode),
+             val2str(decode_stat, vgnss_decode_status),
+             flags2str(crit_alarm, vcrit_alarms, buf2,
+                       sizeof(buf2)),
+             flags2str(minor_alarm, vminor_alarms, buf3,
+                       sizeof(buf3)));
+    return mask;
+}
 
 /* This is the meat of parsing all the TSIP packets, except v1
  *
@@ -1377,125 +1677,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     char buf3[BUFSIZ];
     uint32_t tow;             // time of week in milli seconds
     double ftow;              // time of week in seconds
-    double fqErr;             // PPS Offset. positive is slow.
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
     int bad_len = 0;
-
-    /* GNSS Decoding Status to string
-     * Used in x46, x8f-ac */
-    struct vlist_t vgnss_decode_status[] = {
-        {0, "Doing Fixes"},
-        {1, "No GPS time"},
-        {2, "Needs Init"},                      // ACE II, LassenSQ
-        {3, "PDOP too high"},
-        {8, "0 usable sats"},
-        {9, "1 usable sat"},
-        {10, "2 usable sats"},
-        {11, "3 usable sats"},
-        {12, "chosen sat unusable"},
-        {16, "TRAIM rejected"},                 // Thunderbolt E
-        {0xbb, "GPS Time Fix (OD mode)"},       // Acutime 360
-        {0, NULL},
-    };
-
-    /* Receiver Mode
-     * Used in xbb, x8f-ac */
-    struct vlist_t vrec_mode[] = {
-        {0, "Autonomous (2D/3D)"},
-        {1, "Time Only (1-SV)"},    // Accutime 2000, Tbolt
-        {3, "2D"},                  // Accutime 2000, Tbolt
-        {4, "3D"},                  // Accutime 2000, Tbolt
-        {5, "DGPS"},                // Accutime 2000, Tbolt
-        {6, "2D Clock hold"},       // Accutime 2000, Tbolt
-        {7, "Overdetermined"},      // Stationary Timing, surveyed
-        {0, NULL},
-    };
-
-    /* Error Code Flags
-     * Used in x46 */
-    struct flist_t verr_codes[] = {
-        {1, 1, "No Bat"},
-        {0x10, 0x30, "Ant Open"},
-        {0x30, 0x30, "Ant Short"},
-        {0, 0, NULL},
-    };
-
-    /* Status 1
-     * Used in x4b */
-    struct flist_t vstat1[] = {
-        {2, 2, "RTC invalid"},
-        {8, 8, "No Almanac"},
-        {0, 0, NULL},
-    };
-
-    /* Status 2
-     * Used in x4b */
-    struct flist_t vstat2[] = {
-        {1, 1, "Superpackets"},      // x8f-20 (LFwEI)
-        {2, 2, "Superpackets 2"},    // x8f-1b, x8f-ac
-        {0, 0, NULL},
-    };
-
-    /* Fis Dimension, Fix Mode
-     * Used in x6c, x6d */
-    struct flist_t vfix[] = {
-        // Accutime calls 0 "Auto"
-        {0, 7, "No Fix"},
-        // in x6d, Thunderbolt E calls 1 "1D Time Fix", not an OD Fix
-        {1, 7, "OD Fix"},
-        // Accutime calls 3 "2D Clock Hold"
-        {3, 7, "2D Fix"},
-        {4, 7, "3D Fix"},
-        {5, 7, "OD Fix"},       // in Thunderbolt E, x6d, others
-        {6, 7, "DGPS"},         // in Accutime
-        {0, 8, "Auto"},
-        {1, 8, "Manual"},
-        {0, 0, NULL},
-    };
-
-    /* Timing Flags
-     * Used in x8f-ab */
-    struct flist_t vtiming[] = {
-        {0, 1, "GPS time"},
-        {1, 1, "UTC time"},
-        {0, 2, "GPS PPS"},
-        {1, 2, "UTC PPS"},
-        {4, 4, "Time not set"},
-        {8, 8,  "no UTC info"},
-        {0x10, 0x10, "time from user"},
-        {0, 0, NULL},
-    };
-
-    /* Critical Alarm Flags
-     * Used in x8f-ac */
-    struct flist_t vcrit_alarms[] = {
-        {1, 1, "ROM error"},               // Thunderbolt
-        {2, 2, "RAM error"},               // Thunderbolt
-        {4, 4, "FPGA error"},              // Thunderbolt
-        {8, 8, "Power error"},             // Thunderbolt
-        {0x10, 0x10, "OSC error"},         // Thunderbolt
-        {0, 0, NULL},
-    };
-
-    /* Minor Alarm Flags
-     * Used in x8f-ac */
-    struct flist_t vminor_alarms[] = {
-        {1, 1, "OSC warning"},                   // Thunderbolt
-        {2, 2, "Ant Open"},
-        {4, 4, "Ant Short"},
-        {8, 8, "Not tracking Sats"},
-        {0x10, 0x10, "Osc unlocked"},            // Thunderbolt
-        {0x20, 0x20, "Survey in progress"},
-        {0x40, 0x40, "No stored Position"},
-        {0x80, 0x80, "Leap Sec Pending"},
-        {0x100, 0x100, "Test Mode"},
-        {0x200, 0x200, "Position questionable"},
-        {0x400, 0x400, "EEROM corrupt"},         // Thunderbolt
-        {0x800, 0x800, "Almanac Incomplete"},
-        {0x1000, 0x1000, "PPS generated"},
-        {0, 0, NULL},
-    };
 
     if (TSIP_PACKET != session->lexer.type) {
         // this should not happen
@@ -3343,141 +3527,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 bad_len = 68;
                 break;
             }
-
-            // byte 0 is Subpacket ID
-            u2 = getub(buf, 1);         // Receiver Mode
-            // Disciplining Mode, reserved on Resolution SMTx
-            u3 = getub(buf, 2);
-            // Self-Survey Progress
-            u4 = getub(buf, 3);
-            // ignore 4-7, Holdover Duration, reserved on Resolution SMTx
-            // ignore 8-9, Critical Alarms, reserved on Resolution SMTx
-            u5 = getbeu16(buf, 8);
-            // Minor Alarms
-            u6 = getbeu16(buf, 10);
-            switch (u6 & 6) {
-            case 2:
-                session->newdata.ant_stat = ANT_OPEN;
-                break;
-            case 4:
-                session->newdata.ant_stat = ANT_SHORT;
-                break;
-            default:
-                session->newdata.ant_stat = ANT_OK;
-                break;
-            }
-
-            u7 = getub(buf, 12);        // GNSS Decoding Status
-            // ignore 13, Disciplining Activity
-            // ignore 14, PPS indication
-            // ignore 15, PPS reference
-            /* PPS Offset in ns
-             * save as (long)pico seconds
-             * can't really use it as it is not referenced to any PPS */
-            fqErr = getbef32(buf, 16);
-            session->gpsdata.qErr = (long)(fqErr * 1000);
-            // ignore 20-23, Clock Offset
-            // ignore 24-27, DAC Value
-            // ignore 28-31, DAC Voltage
-            // 32-35, Temperature degrees C
-            session->newdata.temp = getbef32(buf, 32);
-            session->newdata.latitude = getbed64(buf, 36) * RAD_2_DEG;
-            session->newdata.longitude = getbed64(buf, 44) * RAD_2_DEG;
-            // SMT 360 doc says this is always altHAE in meters
-            session->newdata.altHAE = getbed64(buf, 52);
-            // ignore 60-63, always zero
-            // ignore 64-67, reserved
-
-            // We don;t know enough to set status, probably TIME_TIME
-
-            // Decode Fix modes
-            switch (u2 & 7) {
-            case 0:     // Auto
-                /*
-                * According to the Thunderbolt Manual, the
-                * first byte of the supplemental timing packet
-                * simply indicates the configuration of the
-                * device, not the actual lock, so we need to
-                * look at the decode status.
-                */
-                switch (u7) {
-                case 0:   // "Doing Fixes"
-                    session->newdata.mode = MODE_3D;
-                    break;
-                case 0x0B: // "Only 3 usable sats"
-                    session->newdata.mode = MODE_2D;
-                    break;
-                case 0x1:   // "Don't have GPS time"
-                    FALLTHROUGH
-                case 0x3:   // "PDOP is too high"
-                    FALLTHROUGH
-                case 0x8:   // "No usable sats"
-                    FALLTHROUGH
-                case 0x9:   // "Only 1 usable sat"
-                    FALLTHROUGH
-                case 0x0A:  // "Only 2 usable sats
-                    FALLTHROUGH
-                case 0x0C:  // "The chosen sat is unusable"
-                    FALLTHROUGH
-                case 0x10:  // TRAIM rejected the fix
-                    FALLTHROUGH
-                default:
-                    session->newdata.mode = MODE_NO_FIX;
-                    break;
-                }
-                break;
-            case 6:             // Clock Hold 2D
-                /* Not present:
-                 *   SMT 360
-                 *   Acutime 360
-                 */
-                FALLTHROUGH
-            case 3:             // forced 2D Position Fix
-                // Does this mean STATUS_TIME?
-                session->newdata.mode = MODE_2D;
-                break;
-            case 1:             // Single Satellite Time
-                /* Present in:
-                 *   Acutime 360
-                 */
-                FALLTHROUGH
-            case 7:             // overdetermined clock
-                /* Present in:
-                 *   Acutiome 360
-                 */
-                session->newdata.status = STATUS_TIME;
-                session->newdata.mode = MODE_3D;
-                break;
-            case 4:             // forced 3D position Fix
-                // Does this mean STATUS_TIME?
-                session->newdata.mode = MODE_3D;
-                break;
-            default:
-                session->newdata.mode = MODE_NO_FIX;
-                break;
-            }
-            if (STATUS_UNK != session->newdata.status) {
-                mask |= STATUS_SET;
-            }
-
-            mask |= LATLON_SET | ALTITUDE_SET | MODE_SET;
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-ac: SP-TPS: lat=%.2f lon=%.2f altHAE=%.2f "
-                     "mode %d status %d  temp %.1f fqErr %.4f rm x%x dm %u "
-                     "sp %u ca %x ma x%x gds x%x\n",
-                     session->newdata.latitude,
-                     session->newdata.longitude,
-                     session->newdata.altHAE,
-                     session->newdata.mode,
-                     session->newdata.status,
-                     session->newdata.temp, fqErr, u2, u3, u4, u5, u6, u7);
-            GPSD_LOG(LOG_IO, &session->context->errout,
-                     "TSIP x8f-ac: mode:%s rm:%s gds:%s ca:%s ma:%s\n",
-                     val2str(session->newdata.mode, vmode_str),
-                     val2str(u2, vrec_mode),
-                     val2str(u6, vgnss_decode_status),
-                     flags2str(u5, vcrit_alarms, buf2, sizeof(buf2)),
-                     flags2str(u6, vminor_alarms, buf3, sizeof(buf3)));
+            mask = decode_x8f_ac(session, buf);
             break;
 
         case 0x02:
