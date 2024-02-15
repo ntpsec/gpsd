@@ -26,6 +26,13 @@ if command -v gpsd; then
     # get as-built options
     gpsd -h | grep '^#.*enabled'
 fi
+if command -v python; then
+    # get gps module version
+    python -m gps
+elif command -v python3; then
+    # get gps module version
+    python3 -m gps
+fi
 # use sockstat, lsof, netstat or ss, depending, for owner of port 2947
 if command -v sockstat; then
     # sockstat for FreeBSD
