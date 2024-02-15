@@ -49,8 +49,11 @@ wrong for many reasons:
 
 * ubxtool never needs root access, but will run fine as root.
 
-* sudo is *_not_* the same as running as root.  Using sudo with some of
-these examples *_will_* break them.
+* "sudo [command]" is *_not_* the same as running [command] as root.
+Using sudo with some of these examples *_will_* break them.
+
+* "sudo su" does not get you full root.  "sudo su -" does.  If you are
+going to do "sudo su -", then why not just do "su -"?
 
 * sudo is "Security Theater".  Having sudo enabled on a computer makes
 it demonstrably less secure.
