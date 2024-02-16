@@ -1,5 +1,5 @@
 = Building GPSD from source
-:date: 17 November 2021
+:date: 15 February 2024
 :description: Steps for Building GPSD from source
 :docinfodir: www
 :keywords: GPSD, GPS, installation
@@ -28,9 +28,13 @@ http://download.savannah.gnu.org/releases/gpsd/
 Under Linux, assuming you have all your build prerequisites in place,
 these lines will do, and need to be run as root:
 
+   # become root, don't forget the dash ('-')
+   su -
    tar -xzf gpsd-X.YY.tar.gz
    cd gpsd-X.YY
-   scons && scons check && scons udev-install
+   scons && scons check
+   # if that passes, and you want udev support, not recommended:
+   scons udev-install
 
 If you get any errors, you need to read the detailed instructions that follow.
 
