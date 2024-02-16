@@ -348,7 +348,6 @@ static bool tsip_detect(struct gps_device_t *session)
         old_baudrate = session->gpsdata.dev.baudrate;
         old_parity = session->gpsdata.dev.parity;
         old_stopbits = session->gpsdata.dev.stopbits;
-        // FIXME.  Should respect fixed speed/framing
         gpsd_set_speed(session, 9600, 'O', 1);
         override = false;
     }
@@ -1798,6 +1797,10 @@ static unsigned decode_x8f_ac(struct gps_device_t *session, const char *buf)
         session->newdata.mode = MODE_NO_FIX;
         break;
     }
+    if (0 != (8 & 0x200 & minor_alarm)) {
+        // No sats or position questionable, must be Dead reckoning
+        session->newdata.status = STATUS_DR;
+    }
     if (STATUS_UNK != session->newdata.status) {
         mask |= STATUS_SET;
     }
@@ -1869,8 +1872,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         return 0;
     }
 
-    // get receive time, first
-    (void)time(&now);
+    /* get receive time, first
+     * using system time breaks regressions!
+     * so use latest from receiver */
+    if (0 != session->lastfix.time.tv_sec) {
+        now = session->lastfix.time.tv_sec;
+    } else if (0 != session->oldfix.time.tv_sec) {
+        now = session->oldfix.time.tv_sec;
+    } else {
+        now = 0;
+    }
 
     // put data part of message in buf
 
