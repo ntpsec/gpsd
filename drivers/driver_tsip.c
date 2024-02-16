@@ -1469,6 +1469,114 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     return mask;
 }
 
+// decode packet x6d
+static unsigned decode_x6d(struct gps_device_t *session, const char *buf,
+                           int len)
+{
+    gps_mask_t mask = 0;
+    int i, count;
+    unsigned fix_dim;
+    char buf2[BUFSIZ];
+
+    fix_dim = getub(buf, 0);     // nsvs/dimension
+    count = (int)((fix_dim >> 4) & 0x0f);
+    if ((17 + count) != len) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "TSIP: x6d: bad length %d s/b %d\n", len, 17 + count);
+        return 0;
+    }
+
+    /*
+     * This looks right, but it sets a spurious mode value when
+     * the satellite constellation looks good to the chip but no
+     * actual fix has yet been acquired.  We should set the mode
+     * field (which controls gpsd's fix reporting) only from sentences
+     * that convey actual fix information, like 0x8f-20, but some
+     * TSIP do not support 0x8f-20, and 0x6c may be all we got.
+     */
+    if (0 != isfinite(session->gpsdata.fix.longitude)) {
+        // have a fix?
+        switch (fix_dim & 7) {   // dimension
+        case 1:       // clock fix (surveyed in)
+            FALLTHROUGH
+        case 5:       // Overdetermined clock fix
+            session->newdata.status = STATUS_TIME;
+            session->newdata.mode = MODE_3D;
+            break;
+        case 3:
+            // Copernicus ii can output this for OD mode.
+            session->newdata.mode = MODE_2D;
+            break;
+        case 4:
+            // SMTx can output this for OD mode.
+            session->newdata.mode = MODE_3D;
+            break;
+        case 6:
+            // Accutime
+            session->newdata.status = STATUS_DGPS;
+            session->newdata.mode = MODE_3D;
+            break;
+        case 2:
+            FALLTHROUGH
+        case 7:
+            FALLTHROUGH
+        default:
+            session->newdata.mode = MODE_NO_FIX;
+            break;
+        }
+        if (0 == count) {
+            // reports a fix even ith no sats!
+            session->newdata.status = STATUS_DR;
+        }
+    } else {
+        session->newdata.mode = MODE_NO_FIX;
+    }
+    if (STATUS_UNK < session->newdata.status) {
+        mask |= STATUS_SET;
+    }
+    mask |= MODE_SET;
+
+    session->gpsdata.satellites_used = count;
+    session->gpsdata.dop.pdop = getbef32(buf, 1);
+    session->gpsdata.dop.hdop = getbef32(buf, 5);
+    session->gpsdata.dop.vdop = getbef32(buf, 9);
+    session->gpsdata.dop.tdop = getbef32(buf, 13);
+    mask |= DOP_SET;
+
+    memset(session->driver.tsip.sats_used, 0,
+           sizeof(session->driver.tsip.sats_used));
+    buf2[0] = '\0';
+    for (i = 0; i < count; i++) {
+        // negative PRN means sat unhealthym why use an unhealthy sat??
+        short PRN;
+
+        PRN = getsb(buf, 17 + i);
+        session->driver.tsip.sats_used[i] = abs(PRN);
+        // FIXME: how to mark unhealthy??
+        if (LOG_PROG <= session->context->errout.debug ) {
+            str_appendf(buf2, sizeof(buf2),
+                           " %u", session->driver.tsip.sats_used[i]);
+        }
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP x6d: AIVSS: fix_dim=x%x status=%d mode=%d used=%d "
+             "pdop=%.1f hdop=%.1f vdop=%.1f tdop=%.1f used >%s<\n",
+             fix_dim,
+             session->newdata.status,
+             session->newdata.mode,
+             session->gpsdata.satellites_used,
+             session->gpsdata.dop.pdop,
+             session->gpsdata.dop.hdop,
+             session->gpsdata.dop.vdop,
+             session->gpsdata.dop.tdop, buf2);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIP x6d: fix::%s\n",
+             flags2str(fix_dim, vfix, buf2, sizeof(buf2)));
+    mask |= USED_IS;
+
+    return mask;
+}
+
 // decode Superpacket x8f-qc
 static unsigned decode_x8f_ac(struct gps_device_t *session, const char *buf)
 {
@@ -2847,98 +2955,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (1 > len) {
-            bad_len = 1;
+        if (17 > len) {
+            bad_len = 17;
             break;
         }
         session->driver.tsip.last_6d = now;     // keep timestamp for request
 
-        u1 = getub(buf, 0);     // nsvs/dimension
-        /*
-         * This looks right, but it sets a spurious mode value when
-         * the satellite constellation looks good to the chip but no
-         * actual fix has yet been acquired.  We should set the mode
-         * field (which controls gpsd's fix reporting) only from sentences
-         * that convey actual fix information, like 0x8f-20, but some
-         * TSIP do not support 0x8f-20, and 0x6c may be all we got.
-         */
-        if (0 != isfinite(session->gpsdata.fix.longitude)) {
-            // have a fix
-            switch (u1 & 7) {   // dimension
-            case 1:       // clock fix (surveyed in)
-                FALLTHROUGH
-            case 5:       // Overdetermined clock fix
-                session->newdata.status = STATUS_TIME;
-                session->newdata.mode = MODE_3D;
-                break;
-            case 3:
-                // Copernicus ii can output this for OD mode.
-                session->newdata.mode = MODE_2D;
-                break;
-            case 4:
-                // SMTx can output this for OD mode.
-                session->newdata.mode = MODE_3D;
-                break;
-            case 6:
-                // Accutime
-                session->newdata.status = STATUS_DGPS;
-                session->newdata.mode = MODE_3D;
-                break;
-            case 2:
-                FALLTHROUGH
-            case 7:
-                FALLTHROUGH
-            default:
-                session->newdata.mode = MODE_NO_FIX;
-                break;
-            }
-        } else {
-            session->newdata.mode = MODE_NO_FIX;
-        }
-        if (STATUS_UNK < session->newdata.status) {
-            mask |= STATUS_SET;
-        }
-        mask |= MODE_SET;
-
-        count = (int)((u1 >> 4) & 0x0f);
-        if ((17 + count) != len) {
-            bad_len = 17 + count;
-            break;
-        }
-
-        session->gpsdata.satellites_used = count;
-        session->gpsdata.dop.pdop = getbef32(buf, 1);
-        session->gpsdata.dop.hdop = getbef32(buf, 5);
-        session->gpsdata.dop.vdop = getbef32(buf, 9);
-        session->gpsdata.dop.tdop = getbef32(buf, 13);
-        mask |= DOP_SET;
-
-        memset(session->driver.tsip.sats_used, 0,
-               sizeof(session->driver.tsip.sats_used));
-        buf2[0] = '\0';
-        for (i = 0; i < count; i++) {
-            // negative PRN means sat unhealthy
-            session->driver.tsip.sats_used[i] = (short)getub(buf, 17 + i);
-            if (LOG_PROG <= session->context->errout.debug ) {
-                str_appendf(buf2, sizeof(buf2),
-                               " %d", session->driver.tsip.sats_used[i]);
-            }
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x6d: AIVSS: u1=x%x status=%d mode=%d used=%d "
-                 "pdop=%.1f hdop=%.1f vdop=%.1f tdop=%.1f used >%s<\n",
-                 u1,
-                 session->newdata.status,
-                 session->newdata.mode,
-                 session->gpsdata.satellites_used,
-                 session->gpsdata.dop.pdop,
-                 session->gpsdata.dop.hdop,
-                 session->gpsdata.dop.vdop,
-                 session->gpsdata.dop.tdop, buf2);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP x6d: fix::%s\n",
-                 flags2str(u1, vfix, buf2, sizeof(buf2)));
-        mask |= USED_IS;
+        mask = decode_x6d(session, buf, len);
         break;
     case 0x82:
         /* Differential Position Fix Mode (0x82) poll with 0x62-ff
