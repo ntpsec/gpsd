@@ -1577,7 +1577,71 @@ static unsigned decode_x6d(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
-// decode Superpacket x8f-qc
+/* decode Superpacket x8f-ab
+ * Oddly, no flag to say if the time is valid...
+ */
+static unsigned decode_x8f_ab(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    uint32_t tow;                 // time of week in milli seconds
+    timespec_t ts_tow;
+    unsigned short week;
+    char ts_buf[TIMESPEC_LEN];
+    unsigned time_flag;
+    char buf2[BUFSIZ];
+
+    // we assume the receiver not in some crazy mode, and is GPS time
+    tow = getbeu32(buf, 1);             // gpstime in seconds
+    ts_tow.tv_sec = tow;
+    ts_tow.tv_nsec = 0;
+    week = getbeu16(buf, 5);            // week
+    // leap seconds
+    session->context->leap_seconds = (int)getbes16(buf, 7);
+    time_flag = buf[9];                // Time Flag
+    /* ignore the broken down time, use the GNSS time.
+     * Hope it is not BeiDou time */
+
+    if (1 == (time_flag & 1)) {
+        // time is UTC, have leap seconds.
+        session->context->valid |= LEAP_SECOND_VALID;
+    } else {
+        // time is GPS
+        if (0 == (time_flag & 8)) {
+            // have leap seconds.
+            session->context->valid |= LEAP_SECOND_VALID;
+        }
+    }
+    if (0 == (time_flag & 0x14)) {
+        // time it good, not in test mode
+        session->newdata.time = gpsd_gpstime_resolv(session, week,
+                                                    ts_tow);
+        mask |= TIME_SET | NTPTIME_IS;
+    } else {
+        // time is bad
+    }
+
+    if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+        mask |= CLEAR_IS;
+        session->driver.tsip.last_tow = ts_tow;
+    }
+
+    /* since we compute time from weeks and tow, we ignore the
+     * supplied H:M:S M/D/Y */
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP x8f-ab: SP-TTS: tow %u wk %u ls %d flag x%x "
+             "time %s mask %s\n",
+             tow, week, session->context->leap_seconds, time_flag,
+             timespec_str(&session->newdata.time, ts_buf,
+                          sizeof(ts_buf)),
+             gps_maskdump(mask));
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIP x8f-ab: tf::%s\n",
+             flags2str(time_flag, vtiming, buf2, sizeof(buf2)));
+
+    return mask;
+}
+
+// decode Superpacket x8f-ac
 static unsigned decode_x8f_ac(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -3485,53 +3549,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 break;
             }
             session->driver.tsip.last_41 = now; // keep timestamp for request
-            // we assume the receiver not in some crazy mode, and is GPS time
-            tow = getbeu32(buf, 1);             // gpstime in seconds
-            ts_tow.tv_sec = tow;
-            ts_tow.tv_nsec = 0;
-            week = getbeu16(buf, 5);            // week
-            // leap seconds
-            session->context->leap_seconds = (int)getbes16(buf, 7);
-            u2 = buf[9];                // Time Flag
-            /* ignore the broken down time, use the GNSS time.
-             * Hope it is not BeiDou time */
-
-            if (1 == (u2 & 1)) {
-                // time is UTC, have leap seconds.
-                session->context->valid |= LEAP_SECOND_VALID;
-            } else {
-                // time is GPS
-                if (0 == (u2 & 8)) {
-                    // have leap seconds.
-                    session->context->valid |= LEAP_SECOND_VALID;
-                }
-            }
-            if (0 == (u2 & 0x14)) {
-                // time it good, not in test mode
-                session->newdata.time = gpsd_gpstime_resolv(session, week,
-                                                            ts_tow);
-                mask |= TIME_SET | NTPTIME_IS;
-            } else {
-                // time is bad
-            }
-
-            if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-                mask |= CLEAR_IS;
-                session->driver.tsip.last_tow = ts_tow;
-            }
-
-            /* since we compute time from weeks and tow, we ignore the
-             * supplied H:M:S M/D/Y */
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-ab: SP-TTS: tow %u wk %u ls %d flag x%x "
-                     "time %s mask %s\n",
-                     tow, week, session->context->leap_seconds, u2,
-                     timespec_str(&session->newdata.time, ts_buf,
-                                  sizeof(ts_buf)),
-                     gps_maskdump(mask));
-            GPSD_LOG(LOG_IO, &session->context->errout,
-                     "TSIP x8f-ab: tf::%s\n",
-                     flags2str(u2, vtiming, buf2, sizeof(buf2)));
+            mask = decode_x8f_ab(session, buf);
             break;
 
         case 0xac:
