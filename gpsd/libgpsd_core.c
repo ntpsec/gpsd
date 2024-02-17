@@ -1916,10 +1916,10 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
      * fix packet AND held a valid fix. We must ignore non-fix packets
      * AND packets which have fix data but are flagged as invalid. Some
      * devices output fix packets on a regular basis, even when unable
-     * to derive a good fix. Such packets should set STATUS_UNK.
+     * to derive a good fix. Such bad packets should set MODE_NO_FIX
      */
     if (0 != (session->gpsdata.set & (LATLON_SET|ECEF_SET))) {
-        if ( session->gpsdata.fix.status > STATUS_UNK) {
+        if (MODE_NO_FIX < session->gpsdata.fix.mode) {
             session->context->fixcnt++;
             session->fixcnt++;
         } else {
@@ -1927,7 +1927,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
             session->fixcnt = 0;
         }
     } else if (0 != (session->gpsdata.set & (MODE_SET))) {
-        if (STATUS_UNK == session->gpsdata.fix.status) {
+        if (MODE_NO_FIX == session->gpsdata.fix.mode) {
             session->context->fixcnt = 0;
             session->fixcnt = 0;
         }
