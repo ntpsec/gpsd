@@ -1469,7 +1469,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
 }
 
 // decode packet x6d
-static unsigned decode_x6d(struct gps_device_t *session, const char *buf,
+static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
                            int len)
 {
     gps_mask_t mask = 0;
@@ -1546,12 +1546,9 @@ static unsigned decode_x6d(struct gps_device_t *session, const char *buf,
            sizeof(session->driver.tsip.sats_used));
     buf2[0] = '\0';
     for (i = 0; i < count; i++) {
-        // negative PRN means sat unhealthym why use an unhealthy sat??
-        short PRN;
+        // negative PRN means sat unhealthy why use an unhealthy sat??
 
-        PRN = getsb(buf, 17 + i);
-        session->driver.tsip.sats_used[i] = abs(PRN);
-        // FIXME: how to mark unhealthy??
+        session->driver.tsip.sats_used[i] = getsb(buf, 17 + i);
         if (LOG_PROG <= session->context->errout.debug ) {
             str_appendf(buf2, sizeof(buf2),
                            " %u", session->driver.tsip.sats_used[i]);
@@ -1579,7 +1576,7 @@ static unsigned decode_x6d(struct gps_device_t *session, const char *buf,
 /* decode Superpacket x8f-ab
  * Oddly, no flag to say if the time is valid...
  */
-static unsigned decode_x8f_ab(struct gps_device_t *session, const char *buf)
+static gps_mask_t decode_x8f_ab(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
     uint32_t tow;                 // time of week in milli seconds
@@ -1641,7 +1638,7 @@ static unsigned decode_x8f_ab(struct gps_device_t *session, const char *buf)
 }
 
 // decode Superpacket x8f-ac
-static unsigned decode_x8f_ac(struct gps_device_t *session, const char *buf)
+static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
     unsigned rec_mode;
@@ -1768,6 +1765,10 @@ static unsigned decode_x8f_ac(struct gps_device_t *session, const char *buf)
         case 0:   // "Doing Fixes"
             session->newdata.mode = MODE_3D;
             break;
+        case 0x9:   // "Only 1 usable sat"
+            FALLTHROUGH
+        case 0x0A:  // "Only 2 usable sats
+            FALLTHROUGH
         case 0x0B: // "Only 3 usable sats"
             session->newdata.mode = MODE_2D;
             break;
@@ -1776,10 +1777,6 @@ static unsigned decode_x8f_ac(struct gps_device_t *session, const char *buf)
         case 0x3:   // "PDOP is too high"
             FALLTHROUGH
         case 0x8:   // "No usable sats"
-            FALLTHROUGH
-        case 0x9:   // "Only 1 usable sat"
-            FALLTHROUGH
-        case 0x0A:  // "Only 2 usable sats
             FALLTHROUGH
         case 0x0C:  // "The chosen sat is unusable"
             FALLTHROUGH
@@ -1797,8 +1794,10 @@ static unsigned decode_x8f_ac(struct gps_device_t *session, const char *buf)
         session->newdata.mode = MODE_NO_FIX;
         break;
     }
-    if (0 != (8 & 0x200 & minor_alarm)) {
-        // No sats or position questionable, must be Dead reckoning
+    if (0 != (0x208 & minor_alarm) &&
+        7 == (rec_mode & 7)) {
+        // OD, No sats or position questionable, must be Dead reckoning
+        session->newdata.mode = MODE_3D;
         session->newdata.status = STATUS_DR;
     }
     if (STATUS_UNK != session->newdata.status) {
@@ -2794,6 +2793,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 &session->gpsdata.skyview[i].svid);
             if (0.1 < f1) {
                 // check used list, if ss is non-zero
+                // FIXME: what about negative PRN?
                 for (j = 0; j < session->gpsdata.satellites_used; j++) {
                     if (session->gpsdata.skyview[i].PRN != 0 &&
                         session->driver.tsip.sats_used[j] != 0) {
@@ -2993,7 +2993,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 sizeof(session->driver.tsip.sats_used));
         buf2[0] = '\0';
         for (i = 0; i < count; i++) {
-            session->driver.tsip.sats_used[i] = (short)getub(buf, 18 + i);
+            // negative PRN means sat unhealthy why use an unhealthy sat??
+            session->driver.tsip.sats_used[i] = getsb(buf, 18 + i);
             if (LOG_PROG <= session->context->errout.debug) {
                 str_appendf(buf2, sizeof(buf2),
                                " %d", session->driver.tsip.sats_used[i]);

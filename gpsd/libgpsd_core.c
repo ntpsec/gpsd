@@ -1888,6 +1888,10 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     GPSD_LOG(LOG_SHOUT, &session->context->errout,
              "CORE: transfer mask: %s\n",
              gps_maskdump(session->gpsdata.set));
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+             "CORE: SNARD before: status old %d new %d\n",
+             session->gpsdata.fix.status,
+             session->newdata.status);
 #endif  // __UNUSED
     gps_merge_fix(&session->gpsdata.fix,
                   session->gpsdata.set, &session->newdata);
