@@ -111,6 +111,7 @@ extern "C" {
  *      change lexer_init() prototype
  *      Change RTCM_MAX to RTCM2_MAX to avoid confusiotn, and make it 4 longer.
  *      add shm_clock_lastsec and shm_pps_lastsec to gps_device_t;
+ *      add queue to gps_device_t.tsip
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -732,7 +733,7 @@ struct gps_device_t {
             /* Super Packet mode requested.
              * 0 = None, 1 = old superpacket, 2 = new superpacket (SMT 360) */
             uint8_t superpkt;
-            uint8_t machine_id;         // from 0x4b
+            uint8_t machine_id;         // from 0x4b, or x90-01
             uint16_t hardware_code;     // from 0x1c-83, or 0x90-01
             time_t last_41;             // Timestamps for packet requests
             time_t last_48;
@@ -756,15 +757,18 @@ struct gps_device_t {
 #define TSIP_REST               3002
 #define TSIP_TBOLTE             3007
 #define TSIP_RESSMT             3009
+// Part Number 99889-xx, Resolution SMTx
 #define TSIP_RES_SMTX           3017
 #define TSIP_RESSMT360          3023
 #define TSIP_ICMSMT360          3026
 #define TSIP_RES36017x22        3031
 #define TSIP_ACUTIME_360        3002
+// Part Number 121238-xx, RES 720
 #define TSIP_RES720             3100
             uint8_t alt_is_msl;         // 0 if alt is HAE, 1 if MSL
             timespec_t last_tow;        // used to find cycle start
             int last_chan_seen;         // from 0x5c or 0x5d
+            int queue;                  // Next item in TSIPv1 queue to request.
         } tsip;
 #endif  // TSIP_ENABLE
 #ifdef GARMIN_ENABLE    // private housekeeping stuff for the Garmin driver

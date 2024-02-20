@@ -95,6 +95,22 @@ static struct flist_t verr_codes[] = {
     {0, 0, NULL},
 };
 
+/* Error Code Flags
+ * Used in xa3-21 */
+static struct vlist_t verr_codes1[] = {
+    {1, "Parameter Error"},
+    {2, "Length Error"},
+    {3, "Invalid Parket Format"},
+    {4, "Invalid Checksum"},
+    {5, "Bad TNL/User mode"},
+    {6, "Invalid Packet ID"},
+    {7, "Invalid Subacket ID"},
+    {8, "Update in Progress"},
+    {9, "Internal Error (div by 0)"},
+    {10, "Internal Error (failed queuing)"},
+    {0, NULL},
+};
+
 /* Status 1
  * Used in x4b */
 static struct flist_t vstat1[] = {
@@ -585,20 +601,20 @@ static void configuration_packets_res360(struct gps_device_t *session)
 /* send the next TSIPv1 query
  * Return: void
  */
-static void tsipv1_query(struct gps_device_t *session, int index)
+static void tsipv1_query(struct gps_device_t *session)
 {
     char snd_buf[24];         // send buffer
 
-    switch (index) {
-    case 0:
-        // x90-01, GNSS config
-        snd_buf[0] = 0x91;             // id
-        snd_buf[1] = 0x01;             // sub id
-        putbe16(snd_buf, 2, 2);        // length
-        snd_buf[4] = 0;                // mode: query
-        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
-        (void)tsip_write1(session, snd_buf, 6);
-        break;
+    // advance to next queue item.
+    session->driver.tsip.queue++;
+    // allow it to repear every x1000 packets
+    session->driver.tsip.queue &= 0x0ffff;
+
+    if (0 != (session->driver.tsip.queue % 4)) {
+        // once every 4 messages
+        return;
+    }
+    switch (session->driver.tsip.queue / 4) {
     case 1:
         // x90-00, query protocol version
         snd_buf[0] = 0x90;             // id
@@ -618,6 +634,15 @@ static void tsipv1_query(struct gps_device_t *session, int index)
         (void)tsip_write1(session, snd_buf, 6);
         break;
     case 3:
+        // x9q-01, GNSS config
+        snd_buf[0] = 0x91;             // id
+        snd_buf[1] = 0x01;             // sub id
+        putbe16(snd_buf, 2, 2);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
+        (void)tsip_write1(session, snd_buf, 6);
+        break;
+    case 4:
         // x91-03, query timing config
         snd_buf[0] = 0x91;             // id
         snd_buf[1] = 0x03;             // sub id
@@ -626,19 +651,10 @@ static void tsipv1_query(struct gps_device_t *session, int index)
         snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
         (void)tsip_write1(session, snd_buf, 6);
         break;
-    case 4:
+    case 5:
         // x91-04, self survey config
         snd_buf[0] = 0x91;             // id
         snd_buf[1] = 0x04;             // sub id
-        putbe16(snd_buf, 2, 2);        // length
-        snd_buf[4] = 0;                // mode: query
-        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
-        (void)tsip_write1(session, snd_buf, 6);
-        break;
-    case 5:
-        // x93-00, production info
-        snd_buf[0] = 0x93;             // id
-        snd_buf[1] = 0x00;             // sub id
         putbe16(snd_buf, 2, 2);        // length
         snd_buf[4] = 0;                // mode: query
         snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
@@ -669,6 +685,15 @@ static void tsipv1_query(struct gps_device_t *session, int index)
             snd_buf[22] = tsip1_checksum(snd_buf, 22);   // checksum
             (void)tsip_write1(session, snd_buf, 23);
         }
+        break;
+    case 7:
+        // x93-00, production info
+        snd_buf[0] = 0x93;             // id
+        snd_buf[1] = 0x00;             // sub id
+        putbe16(snd_buf, 2, 2);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
+        (void)tsip_write1(session, snd_buf, 6);
         break;
     default:
         // nothing to do
@@ -815,6 +840,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  id, len);
         return mask;
     }
+    /* Note: bug starts at sub id, offset 2 of the wire packet.
+     * So subtract 2 from the offsets in the Trimble doc. */
     sub_id = getub(buf, 0);
     length = getbeu16(buf, 1);  // expected length
     mode = getub(buf, 3);
@@ -850,10 +877,10 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
          * Why would we even see one? */
         return mask;
     }
-    // FIXME: check len/length and checksum
+    // FIXME: check len/length
     switch ((id << 8) | sub_id) {
     case 0x9000:
-        // Protocol Version
+        // Protocol Version, x90-00
         if (11 > length) {
             bad_len = true;
             break;
@@ -868,11 +895,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 x90-00: NMEA %u.%u TSIP %u TNMEA %u "
                  "res x%04x x%02x \n",
                  u1, u2, u3, u4, u6, u7);
-        tsipv1_query(session, 0);
-
         break;
     case 0x9001:
-        /* Receiver Version Information
+        /* Receiver Version Information, x90-01
          * Received in response to the TSIPv1 probe */
         if (11 > length) {
             bad_len = true;
@@ -894,7 +919,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             u8 = 40;
         }
         if ((int)u8 > (len - 13)) {
-            u8 = (unsigned)len - 13;
+            u8 = len - 13;
         }
         memcpy(buf2, &buf[14], u8);
         buf2[u8] = '\0';
@@ -907,11 +932,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  u1, u2, u3, u6, u5, u4, u7, u8, buf2, u8);
         mask |= DEVICEID_SET;
 
-        tsipv1_query(session, 1);
-
         break;
     case 0x9100:
-        // Port Configuration
+        // Port Configuration, x91-00
         if (18 > length) {
             bad_len = true;
             break;
@@ -930,7 +953,6 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "parity %u stop %u res x%04x %04x\n",
                  u1, u2, u3, u4, u5, u6, u7, u8, u9);
 
-        tsipv1_query(session, 2);
         break;
     case 0x9101:
         // GNSS Configuration
@@ -951,8 +973,6 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 x91-01: cons %u el %f signal %f PDOP %f jam %u "
                  "rate %u delay %f res x%04x\n",
                  u1, d1, d2, d3, u2, u3, d4, u4);
-        tsipv1_query(session, 3);
-
         break;
     case 0x9102:
         // NVS Configuration
@@ -982,7 +1002,6 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 x91-03: time base %u PPS base %u mask %u res x%04x "
                  "width %u offset %f\n",
                  u1, u2, u3, u4, u5, d1);
-        tsipv1_query(session, 4);
         break;
     case 0x9104:
         // Self-Survey Configuration
@@ -997,7 +1016,6 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-04: mask %u length %u eph %u epv %u\n",
                  u1, u2, u3, u4);
-        tsipv1_query(session, 5);
         break;
     case 0x9105:
         // x91-05 Receiver Configuration
@@ -1013,7 +1031,6 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-05: port %u type x%04x res x%04x x%04x x%04x\n",
                  u1, u2, u3, u4, u5);
-        tsipv1_query(session, 7);
         break;
     case 0x9201:
         // Reset Cause
@@ -1050,13 +1067,17 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         (void)snprintf(session->subtype1, sizeof(session->subtype1),
                        "hw %u %02u/%02u/%04u",
                        u9, u5, u6, u7);
+        // extended sernum seems to be zeros...
+        (void)snprintf(session->gpsdata.dev.sernum,
+                       sizeof(session->gpsdata.dev.sernum),
+                       "%x", u2);
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1 x93-00: res %u ser %u x%04x %04x Build %u/%u/%u %u "
+                 "TSIPv1 x93-00: res %u ser %s x%x-%x Build %u/%u/%u %u "
                  "machine %u hardware x%04x %04x product x%04x %04x "
                  "options x%04x res x%04x\n",
-                 u1, u2, u3, u4, u7, u6, u5, u8, u9, u10,
+                 u1, session->gpsdata.dev.sernum,
+                 u3, u4, u7, u6, u5, u8, u9, u10,
                  u11, u12, u13, u14, u15);
-        tsipv1_query(session, 6);
         mask |= DEVICEID_SET;
         break;
     case 0xa000:
@@ -1386,18 +1407,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         // usually the last message, except for A2-00
         break;
     case 0xa321:
-        /* Error Report
+        /* Error Report xa3-21
          * expect errors for x1c-03 and x35-32 from TSIP probes
-         * 1 - Parameter error
-         * 2 - Length error
-         * 3 - Invalid packet format
-         * 4 - Invalid checksum
-         * 5 - Incorrect TNL/User mode
-         * 6 - Invalid Packet ID
-         * 7 - Invalid subpacket ID
-         * 8 - Update in progress
-         * 9 - Internal error caused div by 0
-         * 10 - Internal error (failed queuing)
          */
         if (5 > length) {
             bad_len = true;
@@ -1409,6 +1420,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 xa3-21: id x%02x-%02x error: %u\n",
                  u1, u2, u3);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: ec:%s\n",
+                 val2str(u3, verr_codes1));
         break;
     case 0xd000:
         // Debug Output type packet
@@ -1464,6 +1478,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  id, sub_id, length);
         mask = 0;
     }
+    // get next item off queue
+    tsipv1_query(session);
 
     return mask;
 }
