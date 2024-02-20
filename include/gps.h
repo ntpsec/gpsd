@@ -2971,9 +2971,8 @@ struct vlist_t {
     unsigned val;
     const char *str;
 };
-// mode val to mode string
-extern struct vlist_t vmode_str[];
-
+extern struct vlist_t vmode_str[];       // mode val to mode string
+extern struct vlist_t vstatus_str[];     // status val to tatus string
 
 extern const char *flags2str(unsigned flags, const struct flist_t *flist,
                              char *buffer, size_t buflen);

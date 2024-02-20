@@ -40,6 +40,20 @@ struct vlist_t vmode_str[] = {
     {0, NULL},
 };
 
+// status val to status string
+struct vlist_t vstatus_str[] = {
+    {0, "UNK"},
+    {1, "GPS"},
+    {2, "DGPS"},
+    {3, "RTK_FIX"},
+    {4, "RTK_FLT"},
+    {5, "DR"},
+    {6, "GNSSDR"},
+    {7, "TIME"},      // Surveyd
+    {8, "SIM "},
+    {0, NULL},
+};
+
 /* flags2str(val, vlist) - given flags, return a matching string.
  *
  * flags the flags to find in vlist
@@ -56,7 +70,7 @@ const char *flags2str(unsigned flags, const struct flist_t *flist, char *buffer,
     while (NULL != flist->str) {
         if (flist->val == (flist->mask & flags)) {
             if ('\0' != buffer[0]) {
-                strlcat(buffer, " ", buflen);
+                strlcat(buffer, ",", buflen);
             }
             strlcat(buffer, flist->str, buflen);
         }
