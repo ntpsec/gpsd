@@ -56,6 +56,141 @@
 
 #define SEMI_2_DEG      (180.0 / 2147483647)    // 2^-31 semicircle to deg
 
+// Start TSIPv1 values and flags
+
+/* Data Bits v1
+ * Used in x91-00 */
+static struct vlist_t vdbits1[] = {
+    {3, "8 bits"},
+    {0, NULL},
+};
+
+/* Fix Type v1
+ * Used in xa1-11 */
+static struct vlist_t vfix_type1[] = {
+    {0, "No Fix"},
+    {1, "1D"},
+    {2, "3D"},
+    {0, NULL},
+};
+
+/* GNSS Decoding Status to string
+ * Used in xa3-11 */
+static struct vlist_t vgnss_decode_status1[] = {
+    {0, "Doing Fixes"},
+    {1, "No GPS time"},
+    {2, "PDOP too high"},
+    {3, "0 usable sats"},
+    {4, "1 usable sat"},
+    {5, "2 usable sats"},
+    {6, "3 usable sats"},
+    {0xff, "GPS Time Fix (OD mode)"},
+    {0, NULL},
+};
+
+/* Parity v1
+ * Used in x91-00 */
+static struct vlist_t vparity1[] = {
+    {0, "None bits"},
+    {1, "Odd"},
+    {2, "Even"},
+    {255, "Ignore"},
+    {0, NULL},
+};
+
+/* Port Name v1
+ * Used in x91-00 */
+static struct vlist_t vport_name1[] = {
+    {0, "Port A"},
+    {1, "Port B"},
+    {255, "Current Port"},
+    {0, NULL},
+};
+
+/* Port Type v1
+ * Used in x91-00 */
+static struct vlist_t vport_type1[] = {
+    {0, "UART"},
+    {0, NULL},
+};
+
+/* Position Mask
+ * Used in xa1-11 */
+static struct flist_t vpos_mask1[] = {
+    {0, 1, "Real Time Position"},
+    {1, 1, "Surveyed Position"},
+    {0, 2, "LLA Position"},
+    {2, 2, "XYZ ECEF"},
+    {0, 4, "HAE"},
+    {4, 4, "MSL"},
+    {0, 8, "Velocity ENU"},
+    {8, 8, "Velocity ECEF"},
+    {0, 0, NULL},
+};
+
+/* Protocol v1
+ * Used in x91-00 */
+static struct vlist_t vprotocol1[] = {
+    {2, "TSIP"},
+    {4, "NMEA"},
+    {255, "Ignore"},
+    {0, NULL},
+};
+
+/* Receiver Mode v1
+ * Used in xa3-11 */
+static struct vlist_t vrec_mode1[] = {
+    {0, "2D"},
+    {1, "(3D) Time Only"},
+    {3, "Automatic"},
+    {6, "Overdetermined"},
+    {0, NULL},
+};
+
+/* Speed v1
+ * Used in x91-00 */
+static struct vlist_t vspeed1[] = {
+    {11, "115200"},
+    {12, "230400"},
+    {13, "460800"},
+    {14, "1821600"},
+    {255, "Ignore"},
+    {0, NULL},
+};
+
+/* Stop Bits v1
+ * Used in x91-00 */
+static struct vlist_t vstop1[] = {
+    {0, "1 bit"},
+    {1, "2 bit"},
+    {255, "Ignore"},
+    {0, NULL},
+};
+
+/* Time Base Bits v1
+ * Used in xa1-00 */
+static struct vlist_t vtime_base1[] = {
+    {0, "GPS"},
+    {1, "GLO"},
+    {2, "BDS"},
+    {3, "GAL"},
+    {0, NULL},
+};
+
+/* Time Flags v1
+ * Used in xa1-00 */
+static struct flist_t vtime_flags1[] = {
+    {9, 1, "UTC Invalid"},
+    {1, 1, "UTC Valid"},
+    {9, 2, "Time Invalid"},
+    {2, 2, "Time Valid"},
+    {0, 0, NULL},
+};
+
+// End  TSIPv1 values and flags
+
+// Start  TSIP values and flags
+
 /* GNSS Decoding Status to string
  * Used in x46, x8f-ac */
 static struct vlist_t vgnss_decode_status[] = {
@@ -369,7 +504,8 @@ static bool tsip_detect(struct gps_device_t *session)
     }
 
     /* request firmware revision and look for a valid response
-     * send 0x1f, expext 0x45.  We think every Trrimble knows 0x45 */
+     * send 0x1f, expext 0x45.  TSIPv1 does not have this, but it
+     * will respond with a TSIPv1 error message, so all good. */
     if (0 == tsip_write1(session, "\x1f", 1)) {
         unsigned int n;
         struct timespec to;
@@ -607,7 +743,7 @@ static void tsipv1_query(struct gps_device_t *session)
 
     // advance to next queue item.
     session->driver.tsip.queue++;
-    // allow it to repear every x1000 packets
+    // allow it to repeat every x1000 packets
     session->driver.tsip.queue &= 0x0ffff;
 
     if (0 != (session->driver.tsip.queue % 4)) {
@@ -634,7 +770,17 @@ static void tsipv1_query(struct gps_device_t *session)
         (void)tsip_write1(session, snd_buf, 6);
         break;
     case 3:
-        // x9q-01, GNSS config
+        // x91-00, Port config
+        snd_buf[0] = 0x91;             // id
+        snd_buf[1] = 0x00;             // sub id
+        putbe16(snd_buf, 2, 3);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = 0;                // current port
+        snd_buf[6] = tsip1_checksum(snd_buf, 6);   // checksum
+        (void)tsip_write1(session, snd_buf, 7);
+        break;
+    case 4:
+        // x81-01, GNSS config
         snd_buf[0] = 0x91;             // id
         snd_buf[1] = 0x01;             // sub id
         putbe16(snd_buf, 2, 2);        // length
@@ -642,7 +788,7 @@ static void tsipv1_query(struct gps_device_t *session)
         snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
         (void)tsip_write1(session, snd_buf, 6);
         break;
-    case 4:
+    case 5:
         // x91-03, query timing config
         snd_buf[0] = 0x91;             // id
         snd_buf[1] = 0x03;             // sub id
@@ -651,7 +797,7 @@ static void tsipv1_query(struct gps_device_t *session)
         snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
         (void)tsip_write1(session, snd_buf, 6);
         break;
-    case 5:
+    case 6:
         // x91-04, self survey config
         snd_buf[0] = 0x91;             // id
         snd_buf[1] = 0x04;             // sub id
@@ -660,7 +806,7 @@ static void tsipv1_query(struct gps_device_t *session)
         snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
         (void)tsip_write1(session, snd_buf, 6);
         break;
-    case 6:
+    case 7:
         if (session->context->passive) {
             // x91-05, query current periodic messages
             snd_buf[0] = 0x91;             // id
@@ -671,14 +817,15 @@ static void tsipv1_query(struct gps_device_t *session)
             snd_buf[6] = tsip1_checksum(snd_buf, 6);   // checksum
             (void)tsip_write1(session, snd_buf, 7);
         } else {
-            /* request everything periodically, x91-05
+            /* request periodic  messages, x91-05
              * little harm at 115.2 kbps, this also responses as a query */
             snd_buf[0] = 0x91;             // id
             snd_buf[1] = 0x05;             // sub id
             putbe16(snd_buf, 2, 19);       // length
             snd_buf[4] = 0x01;             // mode: set
             snd_buf[5] = 0xff;             // port: current port
-            putbe32(snd_buf, 6, 0x02aaa);
+            // 0xaaaaa, everything preiodic
+            putbe32(snd_buf, 6, 0xaaaaa);
             putbe32(snd_buf, 10, 0);       // reserved
             putbe32(snd_buf, 14, 0);       // reserved
             putbe32(snd_buf, 18, 0);       // reserved
@@ -686,7 +833,7 @@ static void tsipv1_query(struct gps_device_t *session)
             (void)tsip_write1(session, snd_buf, 23);
         }
         break;
-    case 7:
+    case 8:
         // x93-00, production info
         snd_buf[0] = 0x93;             // id
         snd_buf[1] = 0x00;             // sub id
@@ -935,7 +1082,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         break;
     case 0x9100:
         // Port Configuration, x91-00
-        if (18 > length) {
+        if (17 > length) {
             bad_len = true;
             break;
         }
@@ -952,10 +1099,19 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 x91-00: port %u type %u proto %u baud %u bits %u "
                  "parity %u stop %u res x%04x %04x\n",
                  u1, u2, u3, u4, u5, u6, u7, u8, u9);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: port %s type %s, proto %s speed %s bits %s %s %s\n",
+                 val2str(u1, vport_name1),
+                 val2str(u2, vport_type1),
+                 val2str(u3, vprotocol1),
+                 val2str(u4, vspeed1),
+                 val2str(u5, vdbits1),
+                 val2str(u6, vparity1),
+                 val2str(u6, vstop1));
 
         break;
     case 0x9101:
-        // GNSS Configuration
+        // GNSS Configuration, x91-01
         if (28 > length) {
             bad_len = true;
             break;
@@ -975,7 +1131,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  u1, d1, d2, d3, u2, u3, d4, u4);
         break;
     case 0x9102:
-        // NVS Configuration
+        // NVS Configuration, x91-02
         if (8 > length) {
             bad_len = true;
             break;
@@ -987,7 +1143,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  u1, u2);
         break;
     case 0x9103:
-        // Timing Configuration
+        // Timing Configuration, x91-03
         if (19 > length) {
             bad_len = true;
             break;
@@ -1004,7 +1160,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  u1, u2, u3, u4, u5, d1);
         break;
     case 0x9104:
-        // Self-Survey Configuration
+        // Self-Survey Configuration, x91-04
         if (11 > length) {
             bad_len = true;
             break;
@@ -1018,7 +1174,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  u1, u2, u3, u4);
         break;
     case 0x9105:
-        // x91-05 Receiver Configuration
+        //  Receiver Configuration, xx91-05
         if (19 > length) {
             bad_len = true;
             break;
@@ -1031,9 +1187,12 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-05: port %u type x%04x res x%04x x%04x x%04x\n",
                  u1, u2, u3, u4, u5);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: port %s\n",
+                 val2str(u1, vport_name1));
         break;
     case 0x9201:
-        // Reset Cause
+        // Reset Cause, x92-01
         if (3 > length) {
             bad_len = true;
             break;
@@ -1043,12 +1202,12 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 x92-01: cause %u\n", u1);
         break;
     case 0x9300:
-        // Production Information
+        // Production Information, x93-00
         if (78 > length) {
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);               // reserved
+        u1 = getub(buf, 4);               // reserved. always 0xff
         u2 = getbeu32(buf, 5);            // serial number
         u3 = getbeu64(buf, 9);            // extended serial number
         u4 = getbeu64(buf, 17);           // extended serial number
@@ -1067,6 +1226,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         (void)snprintf(session->subtype1, sizeof(session->subtype1),
                        "hw %u %02u/%02u/%04u",
                        u9, u5, u6, u7);
+        // The sernum I get does not match the printed one on the device...
         // extended sernum seems to be zeros...
         (void)snprintf(session->gpsdata.dev.sernum,
                        sizeof(session->gpsdata.dev.sernum),
@@ -1081,7 +1241,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         mask |= DEVICEID_SET;
         break;
     case 0xa000:
-        // Firmware Upload
+        // Firmware Upload, xa0-00
         // could be length 3, or 8, different data...
         switch (length) {
         case 3:
@@ -1104,7 +1264,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         }
         break;
     case 0xa100:
-        // Timing Information
+        // Timing Information. xa1-00
         // the only message on by default
         if (32 > length) {
             bad_len = true;
@@ -1126,9 +1286,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u2 = getub(buf, 18);                // PPS base
         u3 = getub(buf, 19);                // flags
         s1 = getbes16(buf, 20);             // UTC Offset
-        d1 = getbef32(buf, 22);     // PPS Quantization Error
-        d2 = getbef32(buf, 26);     // Bias
-        d3 = getbef32(buf, 30);     // Bias Rate
+        d1 = getbef32(buf, 22);             // PPS Quantization Error
+        d2 = getbef32(buf, 26);             // Bias
+        d3 = getbef32(buf, 30);             // Bias Rate
 
         // convert seconds to pico seconds
         session->gpsdata.qErr = (long)(d1 * 10e12);
@@ -1140,10 +1300,18 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         session->context->valid |= LEAP_SECOND_VALID;
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa1-00: tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
-                 "base %u/%u flagsx%x UTC offset %d qErr %f Bias %f/%f\n",
+                 "tbase %u/%u tflags x%x UTC offset %d qErr %f Bias %f/%f\n",
                  tow, week, date.tm_hour, date.tm_min, date.tm_sec,
                  date.tm_year + 1900, date.tm_mon, date.tm_mday,
                  u1, u2, u3, s1, d1, d2, d3);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: tbase:%s%s pbase:%s%s tflags:%s\n",
+                 val2str(u1 & 7, vtime_base1),
+                 (u1 & 8) ? "" : " UTC",
+                 val2str(u2 & 7, vtime_base1),
+                 (u2 & 8) ? "" : " UTC",
+                 flags2str(u3, vtime_flags1, buf2, sizeof(buf2)));
+
         if (2 == (u3 & 2)) {
             // flags say we have good time
             // if we have good time, can we guess at fix mode?
@@ -1160,7 +1328,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         mask |= CLEAR_IS;  // ssems to always be first. Time to clear.
         break;
     case 0xa102:
-        // Frequency Information
+        // Frequency Information, xa1-02
         if (17 > length) {
             bad_len = true;
             break;
@@ -1177,7 +1345,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         break;
 
     case 0xa111:
-        // Position Information
+        // Position Information, xa1-11
         if (52 > length) {
             bad_len = true;
             break;
@@ -1252,12 +1420,20 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         session->newdata.epv = d9;       // 0 - 100, unknown units
         mask |= MODE_SET | STATUS_SET | DOP_SET | HERR_SET | VERR_SET;
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 xa1-11: mask %u fix %u Pos %f %f %f Vel %f %f %f "
-                 "PDOP %f eph %f epv %f\n",
+                 "TSIPv1 xa1-11: mode %d status %d pmask %u fixt %u "
+                 "Pos %f %f %f Vel %f %f %f PDOP %f eph %f epv %f\n",
+                 session->newdata.mode,
+                 session->newdata.status,
                  u1, u2, d1, d2, d3, d4, d5, d6, d7, d8, d9);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: mode:%s status:%s pmask:%s fixt %s\n",
+                 val2str(session->newdata.mode, vmode_str),
+                 val2str(session->newdata.status, vstatus_str),
+                 flags2str(u1, vpos_mask1, buf2, sizeof(buf2)),
+                 val2str(u2, vfix_type1));
         break;
     case 0xa200:
-        // Satellite Information
+        // Satellite Information, xa2-00
         if (25 > length) {
             bad_len = true;
             break;
@@ -1331,7 +1507,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         break;
 
     case 0xa300:
-        // System Alarms
+        // System Alarms, xa3-00
         if (18 > length) {
             bad_len = true;
             break;
@@ -1346,7 +1522,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  u1, u2, u3, u4);
         break;
     case 0xa311:
-        // Receiver Status
+        // Receiver Status, za3-11
         if (29 > length) {
             bad_len = true;
             break;
@@ -1358,7 +1534,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         d2 = getbef32(buf, 11);           // HDOP
         d3 = getbef32(buf, 15);           // VDOP
         d4 = getbef32(buf, 19);           // TDOP
-        d5 = getbef32(buf, 23);           // Temperature, degrees C
+        session->newdata.temp = getbef32(buf, 23);  // Temperature, degrees C
         session->gpsdata.dop.pdop = d1;
         session->gpsdata.dop.hdop = d2;
         session->gpsdata.dop.vdop = d3;
@@ -1393,17 +1569,26 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             mask |= STATUS_SET;
             break;
         case 255:
+            session->newdata.mode = MODE_3D;
             session->newdata.status = STATUS_TIME;
-            mask |= STATUS_SET;
+            mask |= STATUS_SET | MODE_SET;
             break;
         default:
             // huh?
             break;
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 xa3-11: mode %u status %u survey %u PDOP %f HDOP %f "
-                 "VDOP %f TDOP %f temp %f\n",
-                 u1, u2, u3, d1, d2, d3, d4, d5);
+                 "TSIPv1 xa3-11: mode %d status %d rm %u stat %u survey %u "
+                 "PDOP %f HDOP %f VDOP %f TDOP %f temp %f\n",
+                 session->newdata.mode,
+                 session->newdata.status,
+                 u1, u2, u3, d1, d2, d3, d4,
+                 session->newdata.temp);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: mode %s rm:%s stat %s\n",
+                 val2str(session->newdata.mode, vmode_str),
+                 val2str(u1, vrec_mode1),
+                 val2str(u2, vgnss_decode_status1));
         // usually the last message, except for A2-00
         break;
     case 0xa321:
@@ -1425,7 +1610,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  val2str(u3, verr_codes1));
         break;
     case 0xd000:
-        // Debug Output type packet
+        // Debug Output type packet, xd0-00
         if (3 > length) {
             bad_len = true;
             break;
@@ -1435,7 +1620,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 xd0-00: debug %u\n", u1);
         break;
     case 0xd001:
-        // Trimble Debug config packet
+        // Trimble Debug config packet, xd0-01
         if (4 > length) {
             bad_len = true;
             break;
@@ -1446,13 +1631,13 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 xd0-01: debug type %u level %u\n", u1, u2);
         break;
     case 0xd040:
-        // Trimble Raw GNSS Debug Output packet
+        // Trimble Raw GNSS Debug Output packet. xd0-40
         // length can be zero, contents undefined
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 xd0-40: raw GNSS data\n");
         break;
     case 0xd041:
-        // Trimble Raw GNSS Debug Output packet
+        // Trimble Raw GNSS Debug Output packet. xd0-41
         // length can be zero, contents undefined
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 xd0-41: raw GNSS data\n");
@@ -1460,10 +1645,10 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
 
     // undecoded:
     case 0x9200:
-        // Receiver Reset, send only
+        // Receiver Reset, send only, x92-00
         FALLTHROUGH
     case 0xa400:
-        // AGNSS, send only
+        // AGNSS, send only, xa4-00
         FALLTHROUGH
     default:
         // Huh?
@@ -2230,7 +2415,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   Copernicus II (2009)
          *   ICM SMT 360
          *   RES SMT 360
-         *   Probably all TSIP
+         * Not present in:
+         *   RES 720
          */
         if (10 > len) {
             bad_len = 10;
