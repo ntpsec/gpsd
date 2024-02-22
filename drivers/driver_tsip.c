@@ -88,6 +88,34 @@ static struct vlist_t vgnss_decode_status1[] = {
     {0, NULL},
 };
 
+/* Major Alarm Flags v1
+ * Used in xa3-00 */
+static struct flist_t vmajor_alarms1[] = {
+    {1, 1, "Not tracking sats"},
+    {2, 2, "PPS bad"},
+    {4, 4, "PPS not generated"},
+    {0x80, 0x80, "Spoofing/Multipath"},
+    {0x100, 0x100, "Jamming"},
+    {0, 0, NULL},
+};
+
+/* Minor Alarm Flags v1
+ * Used in xa3-00 */
+static struct flist_t vminor_alarms1[] = {
+    {1, 1, "Ant Open"},
+    {2, 2, "Ant Short"},
+    {4, 4, "Leap Pending"},
+    {8, 8, "Almanac Incomplete"},
+    {0x10, 0x10, "Survey in Progress"},
+    {0x20, 0x20, "GPS Almanac Incomplete"},
+    {0x20, 0x20, "GLO Almanac Incomplete"},
+    {0x40, 0x40, "BDS Almanac Incomplete"},
+    {0x80, 0x80, "GAL Almanac Incomplete"},
+    {0x100, 0x100, "Leap Second Insertion"},
+    {0x200, 0x200, "Leap Second Deletion"},
+    {0, 0, NULL},
+};
+
 /* Parity v1
  * Used in x91-00 */
 static struct vlist_t vparity1[] = {
@@ -128,6 +156,20 @@ static struct flist_t vpos_mask1[] = {
     {0, 0, NULL},
 };
 
+/* PPS Mask v1
+ * Used in x91-03 */
+static struct vlist_t vpps_mask1[] = {
+    {0, "Off"},
+    {1, "On"},
+    {2, "Fix Based"},
+    {3, "When Valid"},
+    {4, "Off"},
+    {5, "On/Negative"},
+    {6, "Fix Based/Negative"},
+    {7, "When Valid/Negative"},
+    {0, NULL},
+};
+
 /* Protocol v1
  * Used in x91-00 */
 static struct vlist_t vprotocol1[] = {
@@ -147,6 +189,16 @@ static struct vlist_t vrec_mode1[] = {
     {0, NULL},
 };
 
+/* Satellite Flags v1
+ * Used in xa2-00 */
+static struct flist_t vsflags1[] = {
+    {1, 1, "Acquired"},
+    {2, 2, "Used in Position"},
+    {4, 4, "Used in PPS"},
+    // Bits 8 - 15 "Satellite Status, otherwise undocumented.
+    {0, 0, NULL},
+};
+
 /* Speed v1
  * Used in x91-00 */
 static struct vlist_t vspeed1[] = {
@@ -158,6 +210,17 @@ static struct vlist_t vspeed1[] = {
     {0, NULL},
 };
 
+/* Self-Survey Mask v1
+ * Used in x91-04 */
+static struct flist_t vss_mask1[] = {
+    {1, 1, "SS restarted"},
+    {0, 2, "SS Disabled"},
+    {2, 2, "SS Enabled"},
+    {0, 8, "Don't save position"},
+    {8, 8, "Save position"},
+    {0, 0, NULL},
+};
+
 /* Stop Bits v1
  * Used in x91-00 */
 static struct vlist_t vstop1[] = {
@@ -167,22 +230,72 @@ static struct vlist_t vstop1[] = {
     {0, NULL},
 };
 
-/* Time Base Bits v1
- * Used in xa1-00 */
+/* SV Type v1
+ * Used in xa2-00 */
+static struct vlist_t vsv_type1[] = {
+    {1, "GPS L1C"},
+    {2, "GPS L2"},
+    {3, "GPS L5"},
+    {5, "GLO G1"},
+    {6, "GLO G2"},
+    {9, "SBAS"},
+    {13, "BDS B1"},
+    {14, "BDS B2i"},
+    {15, "BDS B2a"},
+    {17, "GAL E1"},
+    {18, "GAL E5a"},
+    {19, "GAL E5b"},
+    {20, "GAL E6"},
+    {22, "QZSS L1"},
+    {23, "QZSS L2C"},
+    {24, "QZSS L5"},
+    {26, "IRNSS L5"},
+    {0, NULL},
+};
+
+/* SV Types v1
+ * Used in x91-01 */
+static struct flist_t vsv_types1[] = {
+    {1, 1, "GPS L1C"},
+    {2, 2, "GPS L2"},
+    {4, 3, "GPS L5"},
+    {0x20, 0x20, "GLO G1"},
+    {0x40, 0x40, "GLO G2"},
+    {0x100, 0x100, "SBAS"},
+    {0x1000, 0x1000, "BDS B1"},
+    {0x2000, 0x2000, "BDS B2i"},
+    {0x4000, 0x4000, "BDS B2a"},
+    {0x10000, 0x10000, "GAL E1"},
+    {0x20000, 0x20000, "GAL E5a"},
+    {0x40000, 0x40000, "GAL E5b"},
+    {0x80000, 0x80000, "GAL E6"},
+    {0x100000, 0x100000, "QZSS L1"},
+    {0x200000, 0x200000, "QZSS L2C"},
+    {0x400000, 0x400000, "QZSS L5"},
+    {0x1000000, 0x1000000, "IRNSS L5"},
+    {0, 0, NULL},
+};
+
+/* Time Base v1
+ * Used in x91-03, xa1-00 */
 static struct vlist_t vtime_base1[] = {
     {0, "GPS"},
     {1, "GLO"},
     {2, "BDS"},
     {3, "GAL"},
+    {4, "GPS/UTC"},
+    {6, "GLO/UTC"},
+    {6, "BDS/UTC"},
+    {7, "GAL/UTC"},
     {0, NULL},
 };
 
 /* Time Flags v1
  * Used in xa1-00 */
 static struct flist_t vtime_flags1[] = {
-    {9, 1, "UTC Invalid"},
+    {0, 1, "UTC Invalid"},
     {1, 1, "UTC Valid"},
-    {9, 2, "Time Invalid"},
+    {0, 2, "Time Invalid"},
     {2, 2, "Time Valid"},
     {0, 0, NULL},
 };
@@ -971,13 +1084,14 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     uint32_t tow;             // time of week in milli seconds
     timespec_t ts_tow;
     unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
-    unsigned u10, u11, u12, u13, u14, u15;    // , u16, u17, u18, u19;
+    unsigned u10, u11;
     int s1;
     double d1, d2, d3, d4, d5, d6, d7, d8, d9;
     struct tm date = {0};
     bool bad_len = false;
     unsigned char chksum;
     char buf2[BUFSIZ];
+    char buf3[BUFSIZ];
     unsigned char gnssid, sigid;
 
     if (4 > len) {
@@ -1100,7 +1214,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "parity %u stop %u res x%04x %04x\n",
                  u1, u2, u3, u4, u5, u6, u7, u8, u9);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: port %s type %s, proto %s speed %s bits %s %s %s\n",
+                 "TSIPv1: port:%s type:%s, proto:%s speed:%s bits:%s %s %s\n",
                  val2str(u1, vport_name1),
                  val2str(u2, vport_type1),
                  val2str(u3, vprotocol1),
@@ -1116,7 +1230,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        // constellation, 0 to 26, mashup of constellation and signal
+        /* constellations, 0 to 26, mashup of constellation and signal
+         * ignore if 0xffffffff */
         u1 = getbeu32(buf, 4);            // constellation
         d1 = getbef32(buf, 8);            // elevation mask
         d2 = getbef32(buf, 12);           // signal mask
@@ -1126,9 +1241,12 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         d4 = getbef32(buf, 22);           // Antenna CAble delay, seconds
         u4 = getbeu32(buf, 26);           // reserved
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x91-01: cons %u el %f signal %f PDOP %f jam %u "
+                 "TSIPv1 x91-01: cons x%x el %f signal %f PDOP %f jam %u "
                  "rate %u delay %f res x%04x\n",
                  u1, d1, d2, d3, u2, u3, d4, u4);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: cons %s\n",
+                 flags2str(u1, vsv_types1, buf2, sizeof(buf2)));
         break;
     case 0x9102:
         // NVS Configuration, x91-02
@@ -1158,6 +1276,11 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 x91-03: time base %u PPS base %u mask %u res x%04x "
                  "width %u offset %f\n",
                  u1, u2, u3, u4, u5, d1);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: time base:%s pps base:%s pps mask:%s\n",
+                 val2str(u1, vtime_base1),
+                 val2str(u2, vtime_base1),
+                 val2str(u3, vpps_mask1));
         break;
     case 0x9104:
         // Self-Survey Configuration, x91-04
@@ -1170,8 +1293,11 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u3 = getbeu16(buf, 9);            // horz uncertainty, meters
         u4 = getbeu16(buf, 11);           // vert uncertainty, meters
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x91-04: mask %u length %u eph %u epv %u\n",
+                 "TSIPv1 x91-04: mask x%x length %u eph %u epv %u\n",
                  u1, u2, u3, u4);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1:ssmask %s\n",
+                 flags2str(u1, vss_mask1, buf2, sizeof(buf2)));
         break;
     case 0x9105:
         //  Receiver Configuration, xx91-05
@@ -1216,12 +1342,12 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u7 = getbeu16(buf, 27);           // build year
         u8 = getub(buf, 29);              // build hour
         u9 = getbeu16(buf, 30);           // machine id
-        u10 = getbeu64(buf, 32);          // hardware ID string
-        u11 = getbeu64(buf, 40);          // hardware ID string
-        u12 = getbeu64(buf, 48);          // product ID string
-        u13 = getbeu64(buf, 56);          // product ID string
-        u14 = getbeu32(buf, 64);          // premium options
-        u15 = getbeu32(buf, 78);          // reserved
+        // getbeu64(buf, 32);             // hardware ID string
+        // getbeu64(buf, 40);             // hardware ID string
+        // getbeu64(buf, 48);             // product ID string
+        // getbeu64(buf, 56);             // product ID string
+        u10 = getbeu32(buf, 64);          // premium options
+        u11 = getbeu32(buf, 78);          // reserved
         // ignore 77 Osc search range, and 78–81 Osc offset, always 0xff
         (void)snprintf(session->subtype1, sizeof(session->subtype1),
                        "hw %u %02u/%02u/%04u",
@@ -1233,11 +1359,15 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                        "%x", u2);
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 x93-00: res %u ser %s x%x-%x Build %u/%u/%u %u "
-                 "machine %u hardware x%04x %04x product x%04x %04x "
+                 "machine %u hardware %s product %s "
                  "options x%04x res x%04x\n",
                  u1, session->gpsdata.dev.sernum,
-                 u3, u4, u7, u6, u5, u8, u9, u10,
-                 u11, u12, u13, u14, u15);
+                 u3, u4, u7, u6, u5, u8, u9,
+                 gpsd_packetdump(buf2, sizeof(buf2),
+                                (const unsigned char *)&buf[32], 16),
+                 gpsd_packetdump(buf3, sizeof(buf3),
+                                (const unsigned char *)&buf[48], 16),
+                 u10, u11);
         mask |= DEVICEID_SET;
         break;
     case 0xa000:
@@ -1305,11 +1435,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  date.tm_year + 1900, date.tm_mon, date.tm_mday,
                  u1, u2, u3, s1, d1, d2, d3);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: tbase:%s%s pbase:%s%s tflags:%s\n",
-                 val2str(u1 & 7, vtime_base1),
-                 (u1 & 8) ? "" : " UTC",
-                 val2str(u2 & 7, vtime_base1),
-                 (u2 & 8) ? "" : " UTC",
+                 "TSIPv1: tbase:%s pbase:%s tflags:%s\n",
+                 val2str(u1, vtime_base1),
+                 val2str(u2, vtime_base1),
                  flags2str(u3, vtime_flags1, buf2, sizeof(buf2)));
 
         if (2 == (u3 & 2)) {
@@ -1502,8 +1630,12 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
          * be no SKY, unless the cycle ender pushes the SKY */
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa2-00: num %u type %u (gnss %u sigid %u) PRN %u "
-                 "az %f el %f snr %f flags x%0x4 tow %u\n",
+                 "az %f el %f snr %f sflags x%0x4 tow %u\n",
                  u1, u2, gnssid, sigid, u3, d1, d2, d3, u4, tow);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: svtype:%s flags:%s\n",
+                 val2str(u2, vsv_type1),
+                 flags2str(u4, vsflags1, buf2, sizeof(buf2)));
         break;
 
     case 0xa300:
@@ -1520,6 +1652,10 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 xa3-00: Minor x%04x res x%04x Major x%04x "
                  "res x%04u\n",
                  u1, u2, u3, u4);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIPv1: minor:%s mojor:%s\n",
+                 flags2str(u1, vminor_alarms1, buf2, sizeof(buf2)),
+                 flags2str(u3, vmajor_alarms1, buf3, sizeof(buf3)));
         break;
     case 0xa311:
         // Receiver Status, za3-11
@@ -1767,7 +1903,7 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
              session->gpsdata.dop.vdop,
              session->gpsdata.dop.tdop, buf2);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIP x6d: fix::%s\n",
+             "TSIP: fix::%s\n",
              flags2str(fix_dim, vfix, buf2, sizeof(buf2)));
     mask |= USED_IS;
 
@@ -1832,7 +1968,7 @@ static gps_mask_t decode_x8f_ab(struct gps_device_t *session, const char *buf)
                           sizeof(ts_buf)),
              gps_maskdump(mask));
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIP x8f-ab: tf::%s\n",
+             "TSIP: tf::%s\n",
              flags2str(time_flag, vtiming, buf2, sizeof(buf2)));
 
     return mask;
@@ -2019,7 +2155,7 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
              disc_mode, survey_prog, crit_alarm,
              minor_alarm, decode_stat);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIP x8f-ac: mode:%s rm:%s gds:%s ca:%s ma:%s\n",
+             "TSIP: mode:%s rm:%s gds:%s ca:%s ma:%s\n",
              val2str(session->newdata.mode, vmode_str),
              val2str(rec_mode, vrec_mode),
              val2str(decode_stat, vgnss_decode_status),
@@ -2541,7 +2677,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->newdata.mode,
                 u1, u2);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP x46: gds:%s ec:%s\n",
+                 "TSIP: gds:%s ec:%s\n",
                  val2str(u1, vgnss_decode_status),
                  flags2str(u2, verr_codes, buf2, sizeof(buf2)));
         break;
@@ -2671,7 +2807,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->driver.tsip.machine_id,
                  u2, u3);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP x4b: stat1:%s stat2:%s\n",
+                 "TSIP: stat1:%s stat2:%s\n",
                  flags2str(u2, vstat1, buf2, sizeof(buf2)),
                  flags2str(u3, vstat2, buf3, sizeof(buf3)));
 
@@ -3214,7 +3350,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->gpsdata.dop.tdop,
                  buf2, u1);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP x6c: fixd %s\n",
+                 "TSIP: fixd %s\n",
                  flags2str(u1, vfix, buf2, sizeof(buf2)));
         mask |= USED_IS;
         break;
@@ -4433,7 +4569,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  "%f %u x%x\n",
                  u1, u2, u3, u4, f1, f2, f3, f4, u5, u6);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP xbb: rm %s\n",
+                 "TSIP: rm %s\n",
                  val2str(u1, vrec_mode));
         break;
 
