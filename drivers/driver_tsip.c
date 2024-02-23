@@ -1068,13 +1068,152 @@ static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
     return gnssid;
 }
 
+// decode packet xa3-00
+static gps_mask_t decode_xa3_00(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    char buf2[BUFSIZ];
+    char buf3[BUFSIZ];
+
+    unsigned minor_alarm = getbeu32(buf, 4);            // Minor Alarms
+    unsigned res1 = getbeu32(buf, 8);                   // reserved
+    unsigned major_alarm = getbeu32(buf, 12);           // Major Alarms
+    unsigned res2 = getbeu32(buf, 16);                  // reserved
+
+    if (1 == (major_alarm & 1)) {
+        // not tracking sats, assume surveyed-in
+        session->newdata.status = STATUS_DR;
+    } else {
+        session->newdata.status = STATUS_GPS;
+    }
+    mask |= STATUS_SET;
+
+    if (1 & minor_alarm) {
+        session->newdata.ant_stat = ANT_OPEN;
+    } else if (2 & minor_alarm) {
+        session->newdata.ant_stat = ANT_SHORT;
+    } else {
+        session->newdata.ant_stat = ANT_OK;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 xa3-00: Minor x%04x res x%04x Major x%04x "
+             "res x%04u status %d\n",
+             minor_alarm, res1, major_alarm, res2,
+             session->newdata.status);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: minor:%s mojor:%s status:%s\n",
+             flags2str(minor_alarm, vminor_alarms1, buf2, sizeof(buf2)),
+             flags2str(major_alarm, vmajor_alarms1, buf3, sizeof(buf3)),
+             val2str(session->newdata.status, vstatus_str));
+    return mask;
+}
+
+// decode packet xa3-11
+static gps_mask_t decode_xa3_11(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned rec_mode = getub(buf, 4);                // receiver mode
+    unsigned rec_status = getub(buf, 5);              // status
+    unsigned ssp = getub(buf, 6);              // self survey progress 0 - 100
+    session->gpsdata.dop.pdop = getbef32(buf, 7);     // PDOP
+    session->gpsdata.dop.hdop = getbef32(buf, 11);    // HDOP
+    session->gpsdata.dop.vdop = getbef32(buf, 15);    // VDOP
+    session->gpsdata.dop.tdop = getbef32(buf, 19);    // TDOP
+    session->newdata.temp = getbef32(buf, 23);        // Temperature, degrees C
+
+    // don't have tow, so use the one from xa2-00, if any
+    session->driver.tsip.last_a311 = session->driver.tsip.last_a200;
+
+    if (0 < session->driver.tsip.last_a200) {
+        session->driver.tsip.last_a200 = 0;
+        // TSIPv1 seem to be sent in numerical order, so this
+        // is after xa2-00 and the sats.  Push out any lingering sats.
+        mask |= SATELLITE_SET;
+    }
+    mask |= REPORT_IS | DOP_SET;
+    switch (rec_status) {
+    case 0:         // 2D
+        session->newdata.mode = MODE_2D;
+        mask |= MODE_SET;
+        break;
+    case 1:         // 3D (time only)
+        session->newdata.mode = MODE_3D;
+        mask |= MODE_SET;
+        break;
+    case 3:         // Automatic (?)
+        break;
+    case 4:         // OD clock
+        session->newdata.status = STATUS_TIME;
+        mask |= STATUS_SET;
+        break;
+    default:        // Huh?
+        break;
+    }
+
+    switch (rec_status) {
+    case 0:         // doing position fixes
+        FALLTHROUGH
+    case 4:         // using 1 sat
+        FALLTHROUGH
+    case 5:         // using 2 sat
+        FALLTHROUGH
+    case 6:         // using 3 sat
+        session->newdata.status = STATUS_GPS;
+        mask |= STATUS_SET;
+        break;
+    case 1:         // no GPS time
+        FALLTHROUGH
+    case 2:         // PDOP too high
+        FALLTHROUGH
+    case 3:         // no sats
+        session->newdata.status = STATUS_UNK;
+        mask |= STATUS_SET;
+        break;
+    case 255:
+        session->newdata.mode = MODE_3D;
+        session->newdata.status = STATUS_TIME;
+        mask |= STATUS_SET | MODE_SET;
+        break;
+    default:
+        // huh?
+        break;
+    }
+
+    if (10.0 < session->gpsdata.dop.pdop) {
+        session->newdata.status = STATUS_DR;
+        mask |= STATUS_SET;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 xa3-11: mode %d status %d rm %u stat %u survey %u "
+             "PDOP %f HDOP %f VDOP %f TDOP %f temp %f\n",
+             session->newdata.mode,
+             session->newdata.status,
+             rec_mode, rec_status, ssp,
+             session->gpsdata.dop.pdop,
+             session->gpsdata.dop.hdop,
+             session->gpsdata.dop.vdop,
+             session->gpsdata.dop.tdop,
+             session->newdata.temp);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: mode:%s status:%s rm:%s stat:%s\n",
+             val2str(session->newdata.mode, vmode_str),
+             val2str(session->newdata.status, vstatus_str),
+             val2str(rec_mode, vrec_mode1),
+             val2str(rec_status, vgnss_decode_status1));
+
+    return mask;
+}
+
+
 /* parse TSIP v1 packages.
- * Currently only in RES720 devices, from 2020 onward.
- * buf: raw data, with DLE stuffing removed
- * len:  length of data in buf
- *
- * return: mask
- */
+* Currently only in RES720 devices, from 2020 onward.
+* buf: raw data, with DLE stuffing removed
+* len:  length of data in buf
+*
+* return: mask
+*/
 static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                                 const char *buf, int len)
 {
@@ -1465,11 +1604,11 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u1 = getbeu16(buf, 10);           // DAC value
         u2 = getub(buf, 12);              // holdover status
         u3 = getbeu32(buf, 13);           // holdover time
-        d2 = getbef32(buf, 17);           // temperature, degrees C
+        session->newdata.temp = getbef32(buf, 17);  // Temperature, degrees C
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa1-02: DAC voltage %f value %u Holdover status %u "
                  "time %u temp %f\n",
-                 d1, u1, u2, u3, d2);
+                 d1, u1, u2, u3, session->newdata.temp);
         break;
 
     case 0xa111:
@@ -1491,11 +1630,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         d9 = getbef32(buf, 50);           // vert uncertainty
         session->gpsdata.dop.pdop = d7;
         mask |= DOP_SET;
-        if (0 == (u1 & 1)) {
-            session->newdata.status = STATUS_GPS;
-        } else {
-            session->newdata.status = STATUS_TIME;
-        }
+        // position mask bit 0 does not tell us if we are in OD mode
         if (0 == (u1 & 2)) {
             // LLA
             session->newdata.latitude = d1;
@@ -1546,7 +1681,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         session->gpsdata.dop.pdop = d7;
         session->newdata.eph = d8;       // 0 - 100, unknown units
         session->newdata.epv = d9;       // 0 - 100, unknown units
-        mask |= MODE_SET | STATUS_SET | DOP_SET | HERR_SET | VERR_SET;
+        // status NOT set
+        mask |= MODE_SET | DOP_SET | HERR_SET | VERR_SET;
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa1-11: mode %d status %d pmask %u fixt %u "
                  "Pos %f %f %f Vel %f %f %f PDOP %f eph %f epv %f\n",
@@ -1644,88 +1780,18 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getbeu32(buf, 4);            // Minor Alarms
-        u2 = getbeu32(buf, 8);            // reserved
-        u3 = getbeu32(buf, 12);           // Major Alarms
-        u4 = getbeu32(buf, 16);           // reserved
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 xa3-00: Minor x%04x res x%04x Major x%04x "
-                 "res x%04u\n",
-                 u1, u2, u3, u4);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: minor:%s mojor:%s\n",
-                 flags2str(u1, vminor_alarms1, buf2, sizeof(buf2)),
-                 flags2str(u3, vmajor_alarms1, buf3, sizeof(buf3)));
+        mask = decode_xa3_00(session, buf);
         break;
     case 0xa311:
-        // Receiver Status, za3-11
+        /* Receiver Status, xa3-11
+         * RES 720
+         */
         if (29 > length) {
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);               // receiver mode
-        u2 = getub(buf, 5);               // status
-        u3 = getub(buf, 6);               // self survey progress 0 - 100
-        d1 = getbef32(buf, 7);            // PDOP
-        d2 = getbef32(buf, 11);           // HDOP
-        d3 = getbef32(buf, 15);           // VDOP
-        d4 = getbef32(buf, 19);           // TDOP
-        session->newdata.temp = getbef32(buf, 23);  // Temperature, degrees C
-        session->gpsdata.dop.pdop = d1;
-        session->gpsdata.dop.hdop = d2;
-        session->gpsdata.dop.vdop = d3;
-        session->gpsdata.dop.tdop = d4;
-        // don't have tow, so use the one from xa2-00, if any
-        session->driver.tsip.last_a311 = session->driver.tsip.last_a200;
-
-        if (0 < session->driver.tsip.last_a200) {
-            session->driver.tsip.last_a200 = 0;
-            // TSIPv1 seem to be sent in numerical order, so this
-            // is after xa2-00 and the sats.  Push out any lingering sats.
-            mask |= SATELLITE_SET;
-        }
-        mask |= REPORT_IS | DOP_SET;
-        switch (u2) {
-        case 0:         // doing position fixes
-            FALLTHROUGH
-        case 4:         // using 1 sat
-            FALLTHROUGH
-        case 5:         // using 2 sat
-            FALLTHROUGH
-        case 6:         // using 3 sat
-            session->newdata.status = STATUS_GPS;
-            mask |= STATUS_SET;
-            break;
-        case 1:         // no GPS time
-            FALLTHROUGH
-        case 2:         // PDOP too high
-            FALLTHROUGH
-        case 3:         // no sats
-            session->newdata.status = STATUS_UNK;
-            mask |= STATUS_SET;
-            break;
-        case 255:
-            session->newdata.mode = MODE_3D;
-            session->newdata.status = STATUS_TIME;
-            mask |= STATUS_SET | MODE_SET;
-            break;
-        default:
-            // huh?
-            break;
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 xa3-11: mode %d status %d rm %u stat %u survey %u "
-                 "PDOP %f HDOP %f VDOP %f TDOP %f temp %f\n",
-                 session->newdata.mode,
-                 session->newdata.status,
-                 u1, u2, u3, d1, d2, d3, d4,
-                 session->newdata.temp);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: mode %s rm:%s stat %s\n",
-                 val2str(session->newdata.mode, vmode_str),
-                 val2str(u1, vrec_mode1),
-                 val2str(u2, vgnss_decode_status1));
-        // usually the last message, except for A2-00
+        // usually the last message, except for A2-00 (sats)
+        mask = decode_xa3_11(session, buf);
         break;
     case 0xa321:
         /* Error Report xa3-21
