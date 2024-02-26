@@ -1068,6 +1068,52 @@ static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
     return gnssid;
 }
 
+// Decode Production Information, x93-00
+static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    char buf2[BUFSIZ];
+    char buf3[BUFSIZ];
+
+    unsigned u1 = getub(buf, 4);               // reserved. always 0xff
+    unsigned u2 = getbeu32(buf, 5);            // serial number
+    unsigned u3 = getbeu64(buf, 9);            // extended serial number
+    unsigned u4 = getbeu64(buf, 17);           // extended serial number
+    unsigned u5 = getub(buf, 25);              // build day
+    unsigned u6 = getub(buf, 26);              // build month
+    unsigned u7 = getbeu16(buf, 27);           // build year
+    unsigned u8 = getub(buf, 29);              // build hour
+    unsigned u9 = getbeu16(buf, 30);           // machine id
+    // getbeu64(buf, 32);             // hardware ID string
+    // getbeu64(buf, 40);             // hardware ID string
+    // getbeu64(buf, 48);             // product ID string
+    // getbeu64(buf, 56);             // product ID string
+    unsigned u10 = getbeu32(buf, 64);          // premium options
+    unsigned u11 = getbeu32(buf, 78);          // reserved
+    // ignore 77 Osc search range, and 78–81 Osc offset, always 0xff
+
+    (void)snprintf(session->subtype1, sizeof(session->subtype1),
+                   "hw %u %02u/%02u/%04u",
+                   u9, u5, u6, u7);
+    // The sernum I get does not match the printed one on the device...
+    // extended sernum seems to be zeros...
+    (void)snprintf(session->gpsdata.dev.sernum,
+                   sizeof(session->gpsdata.dev.sernum),
+                   "%x", u2);
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "TSIPv1 x93-00: res %u ser %s x%x-%x Build %u/%u/%u %u "
+             "machine %u hardware %s product %s "
+             "options x%04x res x%04x\n",
+             u1, session->gpsdata.dev.sernum,
+             u3, u4, u7, u6, u5, u8, u9,
+             gpsd_packetdump(buf2, sizeof(buf2),
+                            (const unsigned char *)&buf[32], 16),
+             gpsd_packetdump(buf3, sizeof(buf3),
+                            (const unsigned char *)&buf[48], 16),
+             u10, u11);
+    mask |= DEVICEID_SET;
+    return mask;
+}
 
 // Decode packet Position Information, xa1-11
 static gps_mask_t decode_xa1_11(struct gps_device_t *session, const char *buf)
@@ -1311,14 +1357,12 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     uint32_t tow;             // time of week in milli seconds
     timespec_t ts_tow;
     unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
-    unsigned u10, u11;
     int s1;
     double d1, d2, d3, d4;
     struct tm date = {0};
     bool bad_len = false;
     unsigned char chksum;
     char buf2[BUFSIZ];
-    char buf3[BUFSIZ];
     unsigned char gnssid, sigid;
 
     if (4 > len) {
@@ -1560,42 +1604,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);               // reserved. always 0xff
-        u2 = getbeu32(buf, 5);            // serial number
-        u3 = getbeu64(buf, 9);            // extended serial number
-        u4 = getbeu64(buf, 17);           // extended serial number
-        u5 = getub(buf, 25);              // build day
-        u6 = getub(buf, 26);              // build month
-        u7 = getbeu16(buf, 27);           // build year
-        u8 = getub(buf, 29);              // build hour
-        u9 = getbeu16(buf, 30);           // machine id
-        // getbeu64(buf, 32);             // hardware ID string
-        // getbeu64(buf, 40);             // hardware ID string
-        // getbeu64(buf, 48);             // product ID string
-        // getbeu64(buf, 56);             // product ID string
-        u10 = getbeu32(buf, 64);          // premium options
-        u11 = getbeu32(buf, 78);          // reserved
-        // ignore 77 Osc search range, and 78–81 Osc offset, always 0xff
-        (void)snprintf(session->subtype1, sizeof(session->subtype1),
-                       "hw %u %02u/%02u/%04u",
-                       u9, u5, u6, u7);
-        // The sernum I get does not match the printed one on the device...
-        // extended sernum seems to be zeros...
-        (void)snprintf(session->gpsdata.dev.sernum,
-                       sizeof(session->gpsdata.dev.sernum),
-                       "%x", u2);
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1 x93-00: res %u ser %s x%x-%x Build %u/%u/%u %u "
-                 "machine %u hardware %s product %s "
-                 "options x%04x res x%04x\n",
-                 u1, session->gpsdata.dev.sernum,
-                 u3, u4, u7, u6, u5, u8, u9,
-                 gpsd_packetdump(buf2, sizeof(buf2),
-                                (const unsigned char *)&buf[32], 16),
-                 gpsd_packetdump(buf3, sizeof(buf3),
-                                (const unsigned char *)&buf[48], 16),
-                 u10, u11);
-        mask |= DEVICEID_SET;
+        mask = decode_x93_00(session, buf);
         break;
     case 0xa000:
         // Firmware Upload, xa0-00
