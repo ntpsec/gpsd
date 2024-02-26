@@ -1068,6 +1068,94 @@ static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
     return gnssid;
 }
 
+
+// Decode packet Position Information, xa1-11
+static gps_mask_t decode_xa1_11(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    char buf2[BUFSIZ];
+
+    unsigned pmask = getub(buf, 4);            // position mask
+    unsigned ftype = getub(buf, 5);            // fix type
+    double d1 = getbed64(buf, 6);              // latitude or X
+    double d2  = getbed64(buf, 14);            // longitude or Y
+    double d3  = getbed64(buf, 22);            // altitude or Z
+    double d4  = getbef32(buf, 30);            // velocity X or E
+    double d5  = getbef32(buf, 34);            // velocity Y or N
+    double d6  = getbef32(buf, 38);            // velocity Z or U
+
+    session->gpsdata.dop.pdop = getbef32(buf, 42);  // PDOP, surveyed/current
+    session->newdata.eph = getbef32(buf, 46);  // eph, 0 - 100, unknown units
+    session->newdata.epv = getbef32(buf, 50);  // epv, 0 - 100, unknown units
+    mask |= DOP_SET;
+    // position mask bit 0 does not tell us if we are in OD mode
+    if (0 == (pmask & 2)) {
+        // LLA
+        session->newdata.latitude = d1;
+        session->newdata.longitude = d2;
+        if (0 == (pmask & 4)) {
+            // HAE
+            session->newdata.altHAE = d3;
+        } else {
+            // MSL
+            session->newdata.altMSL = d3;
+        }
+        mask |= LATLON_SET | ALTITUDE_SET;
+    } else {
+        // XYZ ECEF
+        session->newdata.ecef.x = d1;
+        session->newdata.ecef.y = d2;
+        session->newdata.ecef.z = d3;
+        mask |= ECEF_SET;
+    }
+    if (0 == (pmask & 1)) {
+        // valid velocity
+        if (0 == (pmask & 8)) {
+            // Velocity ENU
+            session->newdata.NED.velN = d5;
+            session->newdata.NED.velE = d4;
+            session->newdata.NED.velD = -d6;
+            mask |= VNED_SET;
+        } else {
+            // Velocity ECEF
+            session->newdata.ecef.vx = d4;
+            session->newdata.ecef.vy = d5;
+            session->newdata.ecef.vz = d6;
+            mask |= VECEF_SET;
+        }
+    }
+    switch (ftype) {
+    default:
+        FALLTHROUGH
+    case 0:
+        session->newdata.mode = MODE_NO_FIX;
+        break;
+    case 1:
+        session->newdata.mode = MODE_2D;
+        break;
+    case 2:
+        session->newdata.mode = MODE_3D;
+    }
+    // status NOT set
+    mask |= MODE_SET | DOP_SET | HERR_SET | VERR_SET;
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 xa1-11: mode %d status %d pmask %u fixt %u "
+             "Pos %f %f %f Vel %f %f %f PDOP %f eph %f epv %f\n",
+             session->newdata.mode,
+             session->newdata.status,
+             pmask, ftype, d1, d2, d3, d4, d5, d6,
+             session->gpsdata.dop.pdop,
+             session->newdata.eph,
+             session->newdata.epv);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: mode:%s status:%s pmask:%s fixt %s\n",
+             val2str(session->newdata.mode, vmode_str),
+             val2str(session->newdata.status, vstatus_str),
+             flags2str(pmask, vpos_mask1, buf2, sizeof(buf2)),
+             val2str(ftype, vfix_type1));
+    return mask;
+}
+
 // decode packet xa3-00
 static gps_mask_t decode_xa3_00(struct gps_device_t *session, const char *buf)
 {
@@ -1225,7 +1313,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
     unsigned u10, u11;
     int s1;
-    double d1, d2, d3, d4, d5, d6, d7, d8, d9;
+    double d1, d2, d3, d4;
     struct tm date = {0};
     bool bad_len = false;
     unsigned char chksum;
@@ -1617,84 +1705,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);               // position mask
-        u2 = getub(buf, 5);               // fix type
-        d1 = getbed64(buf, 6);            // latitude or X
-        d2 = getbed64(buf, 14);           // longitude or Y
-        d3 = getbed64(buf, 22);           // altitude or Z
-        d4 = getbef32(buf, 30);           // velocity X or E
-        d5 = getbef32(buf, 34);           // velocity Y or N
-        d6 = getbef32(buf, 38);           // velocity Z or U
-        d7 = getbef32(buf, 42);           // PDOP, surveyed or current
-        d8 = getbef32(buf, 46);           // horz uncertainty
-        d9 = getbef32(buf, 50);           // vert uncertainty
-        session->gpsdata.dop.pdop = d7;
-        mask |= DOP_SET;
-        // position mask bit 0 does not tell us if we are in OD mode
-        if (0 == (u1 & 2)) {
-            // LLA
-            session->newdata.latitude = d1;
-            session->newdata.longitude = d2;
-            if (0 == (u1 & 4)) {
-                // HAE
-                session->newdata.altHAE = d3;
-            } else {
-                // MSL
-                session->newdata.altMSL = d3;
-            }
-            mask |= LATLON_SET | ALTITUDE_SET;
-        } else {
-            // XYZ ECEF
-            session->newdata.ecef.x = d1;
-            session->newdata.ecef.y = d2;
-            session->newdata.ecef.z = d3;
-            mask |= ECEF_SET;
-        }
-        if (0 == (u1 & 1)) {
-            // valid velocity
-            if (0 == (u1 & 8)) {
-                // Velocity ENU
-                session->newdata.NED.velN = d5;
-                session->newdata.NED.velE = d4;
-                session->newdata.NED.velD = -d6;
-                mask |= VNED_SET;
-            } else {
-                // Velocity ECEF
-                session->newdata.ecef.vx = d4;
-                session->newdata.ecef.vy = d5;
-                session->newdata.ecef.vz = d6;
-                mask |= VECEF_SET;
-            }
-        }
-        switch (u2) {
-        default:
-            FALLTHROUGH
-        case 0:
-            session->newdata.mode = MODE_NO_FIX;
-            break;
-        case 1:
-            session->newdata.mode = MODE_2D;
-            break;
-        case 2:
-            session->newdata.mode = MODE_3D;
-        }
-        session->gpsdata.dop.pdop = d7;
-        session->newdata.eph = d8;       // 0 - 100, unknown units
-        session->newdata.epv = d9;       // 0 - 100, unknown units
-        // status NOT set
-        mask |= MODE_SET | DOP_SET | HERR_SET | VERR_SET;
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 xa1-11: mode %d status %d pmask %u fixt %u "
-                 "Pos %f %f %f Vel %f %f %f PDOP %f eph %f epv %f\n",
-                 session->newdata.mode,
-                 session->newdata.status,
-                 u1, u2, d1, d2, d3, d4, d5, d6, d7, d8, d9);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: mode:%s status:%s pmask:%s fixt %s\n",
-                 val2str(session->newdata.mode, vmode_str),
-                 val2str(session->newdata.status, vstatus_str),
-                 flags2str(u1, vpos_mask1, buf2, sizeof(buf2)),
-                 val2str(u2, vfix_type1));
+        mask = decode_xa1_11(session, buf);
         break;
     case 0xa200:
         // Satellite Information, xa2-00
