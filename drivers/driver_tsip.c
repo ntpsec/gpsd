@@ -1068,6 +1068,37 @@ static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
     return gnssid;
 }
 
+// Decode x91-00
+static gps_mask_t decode_x91_00(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned u1 = getub(buf, 4);               // port
+    unsigned u2 = getub(buf, 5);               // port type
+    unsigned u3 = getub(buf, 6);               // protocol
+    unsigned u4 = getub(buf, 7);               // baud rate
+    unsigned u5 = getub(buf, 8);               // data bits
+    unsigned u6 = getub(buf, 9);               // parity
+    unsigned u7 = getub(buf, 10);              // stop bits
+    unsigned u8 = getbeu32(buf, 11);           // reserved
+    unsigned u9 = getbeu32(buf, 12);           // reserved
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 x91-00: port %u type %u proto %u baud %u bits %u "
+             "parity %u stop %u res x%04x %04x\n",
+             u1, u2, u3, u4, u5, u6, u7, u8, u9);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: port:%s type:%s, proto:%s speed:%s bits:%s %s %s\n",
+             val2str(u1, vport_name1),
+             val2str(u2, vport_type1),
+             val2str(u3, vprotocol1),
+             val2str(u4, vspeed1),
+             val2str(u5, vdbits1),
+             val2str(u6, vparity1),
+             val2str(u6, vstop1));
+    return mask;
+}
+
 // Decode Production Information, x93-00
 static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
 {
@@ -1356,7 +1387,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
     timespec_t ts_tow;
-    unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
+    unsigned u1, u2, u3, u4, u5, u6, u7, u8;
     int s1;
     double d1, d2, d3, d4;
     struct tm date = {0};
@@ -1471,29 +1502,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);               // port
-        u2 = getub(buf, 5);               // port type
-        u3 = getub(buf, 6);               // protocol
-        u4 = getub(buf, 7);               // baud rate
-        u5 = getub(buf, 8);               // data bits
-        u6 = getub(buf, 9);               // parity
-        u7 = getub(buf, 10);              // stop bits
-        u8 = getbeu32(buf, 11);           // reserved
-        u9 = getbeu32(buf, 12);           // reserved
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x91-00: port %u type %u proto %u baud %u bits %u "
-                 "parity %u stop %u res x%04x %04x\n",
-                 u1, u2, u3, u4, u5, u6, u7, u8, u9);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: port:%s type:%s, proto:%s speed:%s bits:%s %s %s\n",
-                 val2str(u1, vport_name1),
-                 val2str(u2, vport_type1),
-                 val2str(u3, vprotocol1),
-                 val2str(u4, vspeed1),
-                 val2str(u5, vdbits1),
-                 val2str(u6, vparity1),
-                 val2str(u6, vstop1));
-
+        mask = decode_x91_00(session, buf);
         break;
     case 0x9101:
         // GNSS Configuration, x91-01
