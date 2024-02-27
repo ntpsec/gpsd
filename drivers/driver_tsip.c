@@ -1158,6 +1158,26 @@ static gps_mask_t decode_x91_00(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode x91-05
+static gps_mask_t decode_x91_05(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned port = getub(buf, 4);              // port
+    unsigned otype = getbeu32(buf, 5);           // type of output
+    unsigned res1 = getbeu32(buf, 9);           // reserved
+    unsigned res2 = getbeu32(buf, 13);          // reserved
+    unsigned res3 = getbeu32(buf, 17);          // reserved
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 x91-05: port %u type x%04x res x%04x x%04x x%04x\n",
+             port, otype, res1, res2, res3);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: port %s\n",
+             val2str(port, vport_name1));
+    return mask;
+}
+
 // Decode Production Information, x93-00
 static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
 {
@@ -1607,17 +1627,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);              // port
-        u2 = getbeu32(buf, 5);           // type of output
-        u3 = getbeu32(buf, 9);           // reserved
-        u4 = getbeu32(buf, 13);          // reserved
-        u5 = getbeu32(buf, 17);          // reserved
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x91-05: port %u type x%04x res x%04x x%04x x%04x\n",
-                 u1, u2, u3, u4, u5);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: port %s\n",
-                 val2str(u1, vport_name1));
+        mask = decode_x91_05(session, buf);
         break;
     case 0x9201:
         // Reset Cause, x92-01
