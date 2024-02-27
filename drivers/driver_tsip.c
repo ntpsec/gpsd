@@ -1310,6 +1310,36 @@ static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode xa0-00
+static gps_mask_t decode_xa0_00(struct gps_device_t *session, const char *buf,
+                                int len)
+{
+    gps_mask_t mask = 0;
+    unsigned u1, u2, u3;
+
+    switch (len) {
+    case 3:
+        u1 = getub(buf, 6);               // command
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIPv1 xa0-00: command %u\n", u1);
+        break;
+    case 8:
+        // ACK/NAK
+        u1 = getub(buf, 6);               // command
+        u2 = getub(buf, 7);               // status
+        u3 = getbeu16(buf, 8);            // frame
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIPv1 xa0-00: command %u status %u frame %u\n",
+                 u1, u2, u3);
+        break;
+    default:
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1 xa0-00: bad length %d\n", len);
+        break;
+    }
+    return mask;
+}
+
 // Decode xa1-00
 static gps_mask_t decode_xa1_00(struct gps_device_t *session, const char *buf)
 {
@@ -1704,6 +1734,24 @@ static gps_mask_t decode_xa3_11(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// decode packet xa3-21
+static gps_mask_t decode_xa3_21(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned u1 = getub(buf, 4);            // reference packet id
+    unsigned u2 = getub(buf, 5);            // reference sub packet id
+    unsigned u3 = getub(buf, 6);            // error code
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "TSIPv1 xa3-21: id x%02x-%02x error: %u\n",
+             u1, u2, u3);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: ec:%s\n",
+             val2str(u3, verr_codes1));
+    return mask;
+}
+
 
 /* parse TSIP v1 packages.
 * Currently only in RES720 devices, from 2020 onward.
@@ -1717,7 +1765,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
 {
     gps_mask_t mask = 0;
     unsigned sub_id, length, mode;
-    unsigned u1, u2, u3;
+    unsigned u1, u2;
     bool bad_len = false;
     unsigned char chksum;
 
@@ -1853,25 +1901,12 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     case 0xa000:
         // Firmware Upload, xa0-00
         // could be length 3, or 8, different data...
-        switch (length) {
-        case 3:
-            u1 = getub(buf, 6);               // command
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIPv1 xa0-00: command %u\n", u1);
-            break;
-        case 8:
-            // ACK/NAK
-            u1 = getub(buf, 6);               // command
-            u2 = getub(buf, 7);               // status
-            u3 = getbeu16(buf, 8);            // frame
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIPv1 xa0-00: command %u status %u frame %u\n",
-                     u1, u2, u3);
-            break;
-        default:
+        if (3 != length &&
+            8 != length) {
             bad_len = true;
             break;
         }
+        mask = decode_xa0_00(session, buf, length);
         break;
     case 0xa100:
         // Timing Information. xa1-00
@@ -1936,15 +1971,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);            // reference packet id
-        u2 = getub(buf, 5);            // reference sub packet id
-        u3 = getub(buf, 6);            // error code
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1 xa3-21: id x%02x-%02x error: %u\n",
-                 u1, u2, u3);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: ec:%s\n",
-                 val2str(u3, verr_codes1));
+        mask = decode_xa3_21(session, buf);
         break;
     case 0xd000:
         // Debug Output type packet, xd0-00
