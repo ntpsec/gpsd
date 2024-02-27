@@ -1068,6 +1068,47 @@ static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
     return gnssid;
 }
 
+/* Receiver Version Information, x90-01
+ * Received in response to TSIPv1 probe
+ */
+static gps_mask_t decode_x90_01(struct gps_device_t *session, const char *buf,
+                                int len)
+{
+    gps_mask_t mask = 0;
+    char buf2[BUFSIZ];
+
+    unsigned u1 = getub(buf, 4);               // Major version
+    unsigned u2 = getub(buf, 5);               // Minor version
+    unsigned u3 = getub(buf, 6);               // Build number
+    unsigned u4 = getub(buf, 7);               // Build month
+    unsigned u5 = getub(buf, 8);               // Build day
+    unsigned u6 = getbeu16(buf, 9);            // Build year
+    unsigned u7 = getbeu16(buf, 11);           // Hardware ID
+    unsigned u8 = getub(buf, 13);              // Product Name length
+
+    session->driver.tsip.hardware_code = u7;
+    // check for valid module name length
+    // RES720 is 27 long
+    // check for valid module name length, again
+    if (40 < u8) {
+        u8 = 40;
+    }
+    if ((int)u8 > (len - 13)) {
+        u8 = len - 13;
+    }
+    memcpy(buf2, &buf[14], u8);
+    buf2[u8] = '\0';
+    (void)snprintf(session->subtype, sizeof(session->subtype),
+                   "fw %u.%u %u %02u/%02u/%04u %.40s",
+                   u1, u2, u3, u6, u5, u4, buf2);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 x90-01: Version %u.%u Build %u %u/%u/%u hwid %u, "
+             "%.*s[%u]\n",
+             u1, u2, u3, u6, u5, u4, u7, u8, buf2, u8);
+    mask |= DEVICEID_SET;
+    return mask;
+}
+
 // Decode x91-00
 static gps_mask_t decode_x91_00(struct gps_device_t *session, const char *buf)
 {
@@ -1387,7 +1428,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
     timespec_t ts_tow;
-    unsigned u1, u2, u3, u4, u5, u6, u7, u8;
+    unsigned u1, u2, u3, u4, u5, u6, u7;
     int s1;
     double d1, d2, d3, d4;
     struct tm date = {0};
@@ -1466,35 +1507,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);               // Major version
-        u2 = getub(buf, 5);               // Minor version
-        u3 = getub(buf, 6);               // Build number
-        u4 = getub(buf, 7);               // Build month
-        u5 = getub(buf, 8);               // Build day
-        u6 = getbeu16(buf, 9);            // Build year
-        u7 = getbeu16(buf, 11);           // Hardware ID
-        u8 = getub(buf, 13);              // Product Name length
-        session->driver.tsip.hardware_code = u7;
-        // check for valid module name length
-        // RES720 is 27 long
-        // check for valid module name length, again
-        if (40 < u8) {
-            u8 = 40;
-        }
-        if ((int)u8 > (len - 13)) {
-            u8 = len - 13;
-        }
-        memcpy(buf2, &buf[14], u8);
-        buf2[u8] = '\0';
-        (void)snprintf(session->subtype, sizeof(session->subtype),
-                       "fw %u.%u %u %02u/%02u/%04u %.40s",
-                       u1, u2, u3, u6, u5, u4, buf2);
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x90-01: Version %u.%u Build %u %u/%u/%u hwid %u, "
-                 "%.*s[%u]\n",
-                 u1, u2, u3, u6, u5, u4, u7, u8, buf2, u8);
-        mask |= DEVICEID_SET;
-
+        mask = decode_x90_01(session, buf, len);
         break;
     case 0x9100:
         // Port Configuration, x91-00
