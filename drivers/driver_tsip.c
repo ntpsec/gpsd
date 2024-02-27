@@ -1158,6 +1158,30 @@ static gps_mask_t decode_x91_00(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode x91-03
+static gps_mask_t decode_x91_03(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned tbase = getub(buf, 4);               // time base
+    unsigned pbase = getub(buf, 5);               // PPS base
+    unsigned pmask = getub(buf, 6);               // PPS mask
+    unsigned res = getbeu16(buf, 7);              // reserved
+    unsigned pwidth = getbeu16(buf, 9);           // PPS width
+    double  poffset = getbed64(buf, 11);          // PPS offset, in seconds
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 x91-03: time base %u PPS base %u mask %u res x%04x "
+             "width %u offset %f\n",
+             tbase, pbase, pmask, res, pwidth, poffset);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: time base:%s pps base:%s pps mask:%s\n",
+             val2str(tbase, vtime_base1),
+             val2str(pbase, vtime_base1),
+             val2str(pmask, vpps_mask1));
+    return mask;
+}
+
 // Decode x91-05
 static gps_mask_t decode_x91_05(struct gps_device_t *session, const char *buf)
 {
@@ -1466,7 +1490,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
     timespec_t ts_tow;
-    unsigned u1, u2, u3, u4, u5;
+    unsigned u1, u2, u3, u4;
     int s1;
     double d1, d2, d3, d4;
     struct tm date = {0};
@@ -1588,21 +1612,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);               // time basee
-        u2 = getub(buf, 5);               // PPS base
-        u3 = getub(buf, 6);               // PPS mask
-        u4 = getbeu16(buf, 7);            // reserved
-        u5 = getbeu16(buf, 9);            // PPS width
-        d1 = getbed64(buf, 11);           // PPS offset, in seconds
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x91-03: time base %u PPS base %u mask %u res x%04x "
-                 "width %u offset %f\n",
-                 u1, u2, u3, u4, u5, d1);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: time base:%s pps base:%s pps mask:%s\n",
-                 val2str(u1, vtime_base1),
-                 val2str(u2, vtime_base1),
-                 val2str(u3, vpps_mask1));
+        mask = decode_x91_03(session, buf);
         break;
     case 0x9104:
         // Self-Survey Configuration, x91-04
