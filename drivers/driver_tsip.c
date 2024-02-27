@@ -1276,6 +1276,73 @@ static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode xa1-00
+static gps_mask_t decode_xa1_00(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    char buf2[BUFSIZ];
+    unsigned u1, u2, u3;
+    int s1;
+    double d1, d2, d3;
+    struct tm date = {0};
+
+    unsigned tow = getbeu32(buf, 4);
+    unsigned week = getbeu16(buf, 8);
+
+    session->context->gps_week = week;
+
+    date.tm_hour = getub(buf, 10);               // hours 0 - 23
+    date.tm_min = getub(buf, 11);                // minutes 0 -59
+    date.tm_sec = getub(buf, 12);                // seconds 0 - 60
+    date.tm_mon = getub(buf, 13) - 1;            // month 1 - 12
+    date.tm_mday = getub(buf, 14);               // day of month 1 - 31
+    date.tm_year = getbeu16(buf, 15) - 1900;     // year
+
+    u1 = getub(buf, 17);                // time base
+    u2 = getub(buf, 18);                // PPS base
+    u3 = getub(buf, 19);                // flags
+    s1 = getbes16(buf, 20);             // UTC Offset
+    d1 = getbef32(buf, 22);             // PPS Quantization Error
+    d2 = getbef32(buf, 26);             // Bias
+    d3 = getbef32(buf, 30);             // Bias Rate
+
+    // convert seconds to pico seconds
+    session->gpsdata.qErr = (long)(d1 * 10e12);
+    // fix.time is w/o leap seconds...
+    session->newdata.time.tv_sec = mkgmtime(&date) - s1;
+    session->newdata.time.tv_nsec = 0;
+
+    session->context->leap_seconds = s1;
+    session->context->valid |= LEAP_SECOND_VALID;
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 xa1-00: tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
+             "tbase %u/%u tflags x%x UTC offset %d qErr %f Bias %f/%f\n",
+             tow, week, date.tm_hour, date.tm_min, date.tm_sec,
+             date.tm_year + 1900, date.tm_mon, date.tm_mday,
+             u1, u2, u3, s1, d1, d2, d3);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: tbase:%s pbase:%s tflags:%s\n",
+             val2str(u1, vtime_base1),
+             val2str(u2, vtime_base1),
+             flags2str(u3, vtime_flags1, buf2, sizeof(buf2)));
+
+    if (2 == (u3 & 2)) {
+        // flags say we have good time
+        // if we have good time, can we guess at fix mode?
+        mask |= TIME_SET;
+        if (1 == (u3 & 1)) {
+            // good UTC
+            mask |= NTPTIME_IS;
+        }
+    }
+    if (0 == session->driver.tsip.hardware_code) {
+        // Query Receiver Version Information
+        (void)tsip_write1(session, "\x90\x01\x00\x02\x00\x93", 6);
+    }
+    mask |= CLEAR_IS;  // ssems to always be first. Time to clear.
+    return mask;
+}
+
 // Decode packet Position Information, xa1-11
 static gps_mask_t decode_xa1_11(struct gps_device_t *session, const char *buf)
 {
@@ -1598,12 +1665,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
 {
     gps_mask_t mask = 0;
     unsigned sub_id, length, mode;
-    unsigned short week;
-    uint32_t tow;             // time of week in milli seconds
     unsigned u1, u2, u3, u4;
-    int s1;
-    double d1, d2, d3;
-    struct tm date = {0};
+    double d1;
     bool bad_len = false;
     unsigned char chksum;
     char buf2[BUFSIZ];
@@ -1780,61 +1843,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-
-        tow = getbeu32(buf, 4);
-        week = getbeu16(buf, 8);
-        session->context->gps_week = week;
-
-        date.tm_hour = getub(buf, 10);               // hours 0 - 23
-        date.tm_min = getub(buf, 11);                // minutes 0 -59
-        date.tm_sec = getub(buf, 12);                // seconds 0 - 60
-        date.tm_mon = getub(buf, 13) - 1;            // month 1 - 12
-        date.tm_mday = getub(buf, 14);               // day of month 1 - 31
-        date.tm_year = getbeu16(buf, 15) - 1900;     // year
-
-        u1 = getub(buf, 17);                // time base
-        u2 = getub(buf, 18);                // PPS base
-        u3 = getub(buf, 19);                // flags
-        s1 = getbes16(buf, 20);             // UTC Offset
-        d1 = getbef32(buf, 22);             // PPS Quantization Error
-        d2 = getbef32(buf, 26);             // Bias
-        d3 = getbef32(buf, 30);             // Bias Rate
-
-        // convert seconds to pico seconds
-        session->gpsdata.qErr = (long)(d1 * 10e12);
-        // fix.time is w/o leap seconds...
-        session->newdata.time.tv_sec = mkgmtime(&date) - s1;
-        session->newdata.time.tv_nsec = 0;
-
-        session->context->leap_seconds = s1;
-        session->context->valid |= LEAP_SECOND_VALID;
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 xa1-00: tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
-                 "tbase %u/%u tflags x%x UTC offset %d qErr %f Bias %f/%f\n",
-                 tow, week, date.tm_hour, date.tm_min, date.tm_sec,
-                 date.tm_year + 1900, date.tm_mon, date.tm_mday,
-                 u1, u2, u3, s1, d1, d2, d3);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: tbase:%s pbase:%s tflags:%s\n",
-                 val2str(u1, vtime_base1),
-                 val2str(u2, vtime_base1),
-                 flags2str(u3, vtime_flags1, buf2, sizeof(buf2)));
-
-        if (2 == (u3 & 2)) {
-            // flags say we have good time
-            // if we have good time, can we guess at fix mode?
-            mask |= TIME_SET;
-            if (1 == (u3 & 1)) {
-                // good UTC
-                mask |= NTPTIME_IS;
-            }
-        }
-        if (0 == session->driver.tsip.hardware_code) {
-            // Query Receiver Version Information
-            (void)tsip_write1(session, "\x90\x01\x00\x02\x00\x93", 6);
-        }
-        mask |= CLEAR_IS;  // ssems to always be first. Time to clear.
+        mask = decode_xa1_00(session, buf);
         break;
+
     case 0xa102:
         // Frequency Information, xa1-02
         if (17 > length) {
