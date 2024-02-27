@@ -189,6 +189,21 @@ static struct vlist_t vrec_mode1[] = {
     {0, NULL},
 };
 
+/* Reset Type, Reset Cause
+ * Used in x92-00, x92-01 */
+static struct vlist_t vreset_type1[] = {
+    {1, "No Reset"},           // x92-01 only
+    {1, "Cold Reset"},
+    {2, "Hot Reset"},
+    {3, "Warm Reset"},
+    {4, "Factory Reset"},
+    {5, "System Reset"},
+    {6, "Power Cycle"},        // x92-01 only
+    {7, "Watchdog"},           // x92-01 only
+    {8, "Hardfault"},          // x92-01 only
+    {0, NULL},
+};
+
 /* Satellite Flags v1
  * Used in xa2-00 */
 static struct flist_t vsflags1[] = {
@@ -357,6 +372,14 @@ static struct vlist_t verr_codes1[] = {
     {9, "Internal Error (div by 0)"},
     {10, "Internal Error (failed queuing)"},
     {0, NULL},
+};
+
+/* Save Status
+ * Used in x91-02 */
+static struct flist_t vsave_status1[] = {
+    {0, 1, "Save failed"},
+    {1, 1, "Save OK"},
+    {0, 0, NULL},
 };
 
 /* Status 1
@@ -1068,7 +1091,7 @@ static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
     return gnssid;
 }
 
-// Decode x90-00
+// Decode Protocol Version: x90-00
 static gps_mask_t decode_x90_00(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -1127,7 +1150,7 @@ static gps_mask_t decode_x90_01(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
-// Decode x91-00
+// Decode, Port Configuration: x91-00
 static gps_mask_t decode_x91_00(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -1158,7 +1181,7 @@ static gps_mask_t decode_x91_00(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
-// Decode x91-01
+// Decode GNSS COnfiguration: x91-01
 static gps_mask_t decode_x91_01(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -1177,7 +1200,7 @@ static gps_mask_t decode_x91_01(struct gps_device_t *session, const char *buf)
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIPv1 x91-01 cons x%x el %f signal %f PDOP %f jam %u "
-             "rate %u delay %f res x%04x\n",
+             "frate %u delay %f res x%04x\n",
              cons, d1, d2, d3, u2, u3, d4, u4);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "TSIPv1: cons %s\n",
@@ -1189,6 +1212,7 @@ static gps_mask_t decode_x91_01(struct gps_device_t *session, const char *buf)
 static gps_mask_t decode_x91_02(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
+    char buf2[20];
 
     unsigned u1 = getub(buf, 6);               // status
     unsigned u2 = getbeu32(buf, 7);            // reserved
@@ -1196,10 +1220,13 @@ static gps_mask_t decode_x91_02(struct gps_device_t *session, const char *buf)
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIPv1 x91-02: status %u res x%04x\n",
              u1, u2);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: Status:%s\n",
+             flags2str(u1, vsave_status1, buf2, sizeof(buf2)));
     return mask;
 }
 
-// Decode x91-03
+// Decode Timing Configuration: x91-03
 static gps_mask_t decode_x91_03(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -1223,7 +1250,7 @@ static gps_mask_t decode_x91_03(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
-// Decode x91-04
+// Decode Self Survey Copnfiguration: x91-04
 static gps_mask_t decode_x91_04(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -1243,7 +1270,7 @@ static gps_mask_t decode_x91_04(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
-// Decode x91-05
+// Decode Receiver COnfiguration: x91-05
 static gps_mask_t decode_x91_05(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -1258,12 +1285,15 @@ static gps_mask_t decode_x91_05(struct gps_device_t *session, const char *buf)
              "TSIPv1 x91-05: port %u type x%04x res x%04x x%04x x%04x\n",
              port, otype, res1, res2, res3);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIPv1: port %s\n",
-             val2str(port, vport_name1));
+             "TSIPv1: port %s xa1-00: %u xa1-03: %u xa1-11: %u "
+             "xa1-00: %u  xa3-00: %u  xa3-11: %u\n",
+             val2str(port, vport_name1),
+             otype & 3, (otype >> 2) & 3, (otype >> 4) & 3,
+            (otype >> 6) & 3, (otype >> 8) & 3, (otype >> 10) & 3);
     return mask;
 }
 
-// Decode x92-01
+// Decode Receiver Reset: x92-01
 static gps_mask_t decode_x92_01(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -1271,10 +1301,13 @@ static gps_mask_t decode_x92_01(struct gps_device_t *session, const char *buf)
 
     GPSD_LOG(LOG_WARN, &session->context->errout,
              "TSIPv1 x92-01: cause %u\n", u1);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: cause:%s\n",
+             val2str(u1, vreset_type1));
     return mask;
 }
 
-// Decode Production Information, x93-00
+// Decode Production Information: x93-00
 static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
