@@ -1185,6 +1185,20 @@ static gps_mask_t decode_x91_01(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode NVS Configuration, x91-02
+static gps_mask_t decode_x91_02(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned u1 = getub(buf, 6);               // status
+    unsigned u2 = getbeu32(buf, 7);            // reserved
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 x91-02: status %u res x%04x\n",
+             u1, u2);
+    return mask;
+}
+
 // Decode x91-03
 static gps_mask_t decode_x91_03(struct gps_device_t *session, const char *buf)
 {
@@ -1206,6 +1220,26 @@ static gps_mask_t decode_x91_03(struct gps_device_t *session, const char *buf)
              val2str(tbase, vtime_base1),
              val2str(pbase, vtime_base1),
              val2str(pmask, vpps_mask1));
+    return mask;
+}
+
+// Decode x91-04
+static gps_mask_t decode_x91_04(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    char buf2[BUFSIZ];
+
+    unsigned u1 = getub(buf, 4);               // self-survey mask
+    unsigned u2 = getbeu32(buf, 5);            // self-survey length, # fixes
+    unsigned u3 = getbeu16(buf, 9);            // horz uncertainty, meters
+    unsigned u4 = getbeu16(buf, 11);           // vert uncertainty, meters
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 x91-04: mask x%x length %u eph %u epv %u\n",
+             u1, u2, u3, u4);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1:ssmask %s\n",
+             flags2str(u1, vss_mask1, buf2, sizeof(buf2)));
     return mask;
 }
 
@@ -1683,10 +1717,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
 {
     gps_mask_t mask = 0;
     unsigned sub_id, length, mode;
-    unsigned u1, u2, u3, u4;
+    unsigned u1, u2, u3;
     bool bad_len = false;
     unsigned char chksum;
-    char buf2[BUFSIZ];
 
     if (4 > len) {
         // should never happen
@@ -1773,11 +1806,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 6);               // status
-        u2 = getbeu32(buf, 7);            // reserved
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x91-02: status %u res x%04x\n",
-                 u1, u2);
+        mask = decode_x91_02(session, buf);
         break;
     case 0x9103:
         // Timing Configuration, x91-03
@@ -1793,16 +1822,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);               // self-survey mask
-        u2 = getbeu32(buf, 5);            // self-survey length, # fixes
-        u3 = getbeu16(buf, 9);            // horz uncertainty, meters
-        u4 = getbeu16(buf, 11);           // vert uncertainty, meters
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x91-04: mask x%x length %u eph %u epv %u\n",
-                 u1, u2, u3, u4);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1:ssmask %s\n",
-                 flags2str(u1, vss_mask1, buf2, sizeof(buf2)));
+        mask = decode_x91_04(session, buf);
         break;
     case 0x9105:
         //  Receiver Configuration, xx91-05
