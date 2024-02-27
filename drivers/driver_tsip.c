@@ -1343,6 +1343,24 @@ static gps_mask_t decode_xa1_00(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode packet xa1-02
+static gps_mask_t decode_xa1_02(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    double d1 = getbef32(buf, 6);               // DAC voltage
+    unsigned u1 = getbeu16(buf, 10);            // DAC value
+    unsigned u2 = getub(buf, 12);               // holdover status
+    unsigned u3 = getbeu32(buf, 13);            // holdover time
+
+    session->newdata.temp = getbef32(buf, 17);  // Temperature, degrees C
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 xa1-02: DAC voltage %f value %u Holdover status %u "
+             "time %u temp %f\n",
+             d1, u1, u2, u3, session->newdata.temp);
+    return mask;
+}
+
 // Decode packet Position Information, xa1-11
 static gps_mask_t decode_xa1_11(struct gps_device_t *session, const char *buf)
 {
@@ -1666,7 +1684,6 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     gps_mask_t mask = 0;
     unsigned sub_id, length, mode;
     unsigned u1, u2, u3, u4;
-    double d1;
     bool bad_len = false;
     unsigned char chksum;
     char buf2[BUFSIZ];
@@ -1852,15 +1869,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        d1 = getbef32(buf, 6);            // DAC voltage
-        u1 = getbeu16(buf, 10);           // DAC value
-        u2 = getub(buf, 12);              // holdover status
-        u3 = getbeu32(buf, 13);           // holdover time
-        session->newdata.temp = getbef32(buf, 17);  // Temperature, degrees C
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 xa1-02: DAC voltage %f value %u Holdover status %u "
-                 "time %u temp %f\n",
-                 d1, u1, u2, u3, session->newdata.temp);
+        mask = decode_xa1_02(session, buf);
         break;
 
     case 0xa111:
