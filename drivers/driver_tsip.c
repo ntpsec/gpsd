@@ -1263,6 +1263,17 @@ static gps_mask_t decode_x91_05(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode x92-01
+static gps_mask_t decode_x92_01(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    unsigned u1 = getub(buf, 6);               // reset cause
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "TSIPv1 x92-01: cause %u\n", u1);
+    return mask;
+}
+
 // Decode Production Information, x93-00
 static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
 {
@@ -1752,6 +1763,18 @@ static gps_mask_t decode_xa3_21(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// decode packet xd0-00
+static gps_mask_t decode_xd0_00(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned u1 = getub(buf, 6);               // debug output type
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "TSIPv1 xd0-00: debug %u\n", u1);
+
+    return mask;
+}
+
 // decode packet xd0-01
 static gps_mask_t decode_xd0_01(struct gps_device_t *session, const char *buf)
 {
@@ -1899,9 +1922,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 6);               // reset cause
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1 x92-01: cause %u\n", u1);
+        mask = decode_x92_01(session, buf);
         break;
     case 0x9300:
         // Production Information, x93-00
@@ -1992,9 +2013,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 6);               // debug output type
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1 xd0-00: debug %u\n", u1);
+        mask = decode_xd0_00(session, buf);
         break;
     case 0xd001:
         // Trimble Debug config packet, xd0-01
