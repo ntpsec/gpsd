@@ -1068,6 +1068,24 @@ static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
     return gnssid;
 }
 
+// Decode x90-00
+static gps_mask_t decode_x90_00(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned u1 = getub(buf, 4);              // NMEA Major version
+    unsigned u2 = getub(buf, 5);              // NMEA Minor version
+    unsigned u3 = getub(buf, 6);              // TSIP version
+    unsigned u4 = getub(buf, 7);              // Trimble NMEA version
+    unsigned u6 = getbeu32(buf, 8);           // reserved
+    unsigned u7 = getub(buf, 12);             // reserved
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 x90-00: NMEA %u.%u TSIP %u TNMEA %u "
+             "res x%04x x%02x \n",
+             u1, u2, u3, u4, u6, u7);
+    return mask;
+}
+
 /* Receiver Version Information, x90-01
  * Received in response to TSIPv1 probe
  */
@@ -1428,7 +1446,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
     timespec_t ts_tow;
-    unsigned u1, u2, u3, u4, u5, u6, u7;
+    unsigned u1, u2, u3, u4, u5;
     int s1;
     double d1, d2, d3, d4;
     struct tm date = {0};
@@ -1489,16 +1507,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);              // NMEA Major version
-        u2 = getub(buf, 5);              // NMEA Minor version
-        u3 = getub(buf, 6);              // TSIP version
-        u4 = getub(buf, 7);              // Trimble NMEA version
-        u6 = getbeu32(buf, 8);           // reserved
-        u7 = getub(buf, 12);             // reserved
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x90-00: NMEA %u.%u TSIP %u TNMEA %u "
-                 "res x%04x x%02x \n",
-                 u1, u2, u3, u4, u6, u7);
+        mask = decode_x90_00(session, buf);
         break;
     case 0x9001:
         /* Receiver Version Information, x90-01
