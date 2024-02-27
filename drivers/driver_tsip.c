@@ -1752,6 +1752,19 @@ static gps_mask_t decode_xa3_21(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// decode packet xd0-01
+static gps_mask_t decode_xd0_01(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned u1 = getub(buf, 6);               // debug type
+    unsigned u2 = getub(buf, 7);               // debug level
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "TSIPv1 xd0-01: debug type %u level %u\n", u1, u2);
+
+    return mask;
+}
 
 /* parse TSIP v1 packages.
 * Currently only in RES720 devices, from 2020 onward.
@@ -1765,7 +1778,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
 {
     gps_mask_t mask = 0;
     unsigned sub_id, length, mode;
-    unsigned u1, u2;
+    unsigned u1;
     bool bad_len = false;
     unsigned char chksum;
 
@@ -1989,10 +2002,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 6);               // debug type
-        u2 = getub(buf, 7);               // debug level
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1 xd0-01: debug type %u level %u\n", u1, u2);
+        mask = decode_xd0_01(session, buf);
         break;
     case 0xd040:
         // Trimble Raw GNSS Debug Output packet. xd0-40
