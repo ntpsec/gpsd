@@ -1158,6 +1158,33 @@ static gps_mask_t decode_x91_00(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode x91-01
+static gps_mask_t decode_x91_01(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    char buf2[BUFSIZ];
+
+    /* constellations, 0 to 26, mashup of constellation and signal
+     * ignore if 0xffffffff */
+    unsigned cons = getbeu32(buf, 4);          // constellations
+    double d1 = getbef32(buf, 8);              // elevation mask
+    double d2 = getbef32(buf, 12);             // signal mask
+    double d3 = getbef32(buf, 16);             // PDOP mask
+    unsigned u2 = getub(buf, 20);              // anti-jamming
+    unsigned u3 = getub(buf, 21);              // fix rate
+    double d4 = getbef32(buf, 22);             // Antenna CAble delay, seconds
+    unsigned u4 = getbeu32(buf, 26);           // reserved
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 x91-01 cons x%x el %f signal %f PDOP %f jam %u "
+             "rate %u delay %f res x%04x\n",
+             cons, d1, d2, d3, u2, u3, d4, u4);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: cons %s\n",
+             flags2str(cons, vsv_types1, buf2, sizeof(buf2)));
+    return mask;
+}
+
 // Decode x91-03
 static gps_mask_t decode_x91_03(struct gps_device_t *session, const char *buf)
 {
@@ -1336,6 +1363,89 @@ static gps_mask_t decode_xa1_11(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// decode packet xa2-00
+static gps_mask_t decode_xa2_00(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    unsigned char gnssid, sigid;
+    char buf2[BUFSIZ];
+
+    unsigned u1 = getub(buf, 4);               // message number, 1 to X
+
+    // SV type, 0 to 26, mashup of constellation and signal
+    unsigned u2 = getub(buf, 5);
+    unsigned u3 = getub(buf, 6);               // PRN (svid) 1 to 32 (99)
+    double d1 = getbef32(buf, 7);              // azimuth, degrees
+    double d2 = getbef32(buf, 11);             // elevation, degrees
+    double d3 = getbef32(buf, 15);             // signal level, db-Hz
+    unsigned u4 = getbeu32(buf, 19);           // Flags
+    // TOW of measurement, not current TOW!
+    unsigned tow = getbeu32(buf, 23);          // TOW, seconds
+
+    if (1 == u1) {
+        // message number starts at 1, no way to know last number
+        gpsd_zero_satellites(&session->gpsdata);
+        // start of new cycle, save last count
+        session->gpsdata.satellites_visible =
+            session->driver.tsip.last_chan_seen;
+    }
+    session->driver.tsip.last_chan_seen = u1;
+    session->driver.tsip.last_a200 = tow;
+    ts_tow.tv_sec = tow;
+    ts_tow.tv_nsec = 0;
+    session->gpsdata.skyview_time =
+            gpsd_gpstime_resolv(session, session->context->gps_week,
+                                ts_tow);
+
+    // convert svtype to gnssid and svid
+    gnssid = tsipv1_svtype(u2, &sigid);
+    session->gpsdata.skyview[u1 - 1].gnssid = gnssid;
+    session->gpsdata.skyview[u1 - 1].svid = u3;
+    session->gpsdata.skyview[u1 - 1].sigid = sigid;
+    // "real" NMEA 4.0 (not 4.10 ir 4.11) PRN
+    session->gpsdata.skyview[u1 - 1].PRN = ubx2_to_prn(gnssid, u3);
+    if (0 != (1 & u4)) {
+        if (90.0 >= fabs(d2)) {
+            session->gpsdata.skyview[u1 - 1].elevation = d2;
+        }
+        if (360.0 >= d1 &&
+            0.0 <= d1) {
+            session->gpsdata.skyview[u1 - 1].azimuth = d1;
+        }
+    }
+    session->gpsdata.skyview[u1 - 1].ss = d3;
+    if (0 != (6 & u4)) {
+        session->gpsdata.skyview[u1 - 1].used = true;
+    }
+
+    if ((int)u1 >= session->gpsdata.satellites_visible) {
+        /* Last of the series? Assume same number of sats as
+         * last cycle.
+         * This will cause extra SKY if this set has more
+         * sats than the last set.  Will cause drop outs when
+         * number of sats decreases. */
+        if (10 < llabs(session->driver.tsip.last_a311 -
+                       session->driver.tsip.last_a200)) {
+            // no xa3-11 in 10 seconds, so push out now
+            mask |= SATELLITE_SET;
+            session->driver.tsip.last_a200 = 0;
+        }
+    }
+    /* If this series has fewer than last series there will
+     * be no SKY, unless the cycle ender pushes the SKY */
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIPv1 xa2-00: num %u type %u (gnss %u sigid %u) PRN %u "
+             "az %f el %f snr %f sflags x%0x4 tow %u\n",
+             u1, u2, gnssid, sigid, u3, d1, d2, d3, u4, tow);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: svtype:%s flags:%s\n",
+             val2str(u2, vsv_type1),
+             flags2str(u4, vsflags1, buf2, sizeof(buf2)));
+    return mask;
+}
+
+
 // decode packet xa3-00
 static gps_mask_t decode_xa3_00(struct gps_device_t *session, const char *buf)
 {
@@ -1384,6 +1494,7 @@ static gps_mask_t decode_xa3_11(struct gps_device_t *session, const char *buf)
     unsigned rec_mode = getub(buf, 4);                // receiver mode
     unsigned rec_status = getub(buf, 5);              // status
     unsigned ssp = getub(buf, 6);              // self survey progress 0 - 100
+
     session->gpsdata.dop.pdop = getbef32(buf, 7);     // PDOP
     session->gpsdata.dop.hdop = getbef32(buf, 11);    // HDOP
     session->gpsdata.dop.vdop = getbef32(buf, 15);    // VDOP
@@ -1489,15 +1600,13 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     unsigned sub_id, length, mode;
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
-    timespec_t ts_tow;
     unsigned u1, u2, u3, u4;
     int s1;
-    double d1, d2, d3, d4;
+    double d1, d2, d3;
     struct tm date = {0};
     bool bad_len = false;
     unsigned char chksum;
     char buf2[BUFSIZ];
-    unsigned char gnssid, sigid;
 
     if (4 > len) {
         // should never happen
@@ -1576,23 +1685,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        /* constellations, 0 to 26, mashup of constellation and signal
-         * ignore if 0xffffffff */
-        u1 = getbeu32(buf, 4);            // constellation
-        d1 = getbef32(buf, 8);            // elevation mask
-        d2 = getbef32(buf, 12);           // signal mask
-        d3 = getbef32(buf, 16);           // PDOP mask
-        u2 = getub(buf, 20);              // anti-jamming
-        u3 = getub(buf, 21);              // fix rate
-        d4 = getbef32(buf, 22);           // Antenna CAble delay, seconds
-        u4 = getbeu32(buf, 26);           // reserved
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x91-01: cons x%x el %f signal %f PDOP %f jam %u "
-                 "rate %u delay %f res x%04x\n",
-                 u1, d1, d2, d3, u2, u3, d4, u4);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: cons %s\n",
-                 flags2str(u1, vsv_types1, buf2, sizeof(buf2)));
+        mask = decode_x91_01(session, buf);
         break;
     case 0x9102:
         // NVS Configuration, x91-02
@@ -1773,76 +1866,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = getub(buf, 4);               // message number, 1 to X
-        if (1 == u1) {
-            // message number starts at 1, no way to know last number
-            gpsd_zero_satellites(&session->gpsdata);
-            // start of new cycle, save last count
-            session->gpsdata.satellites_visible =
-                session->driver.tsip.last_chan_seen;
-        }
-        session->driver.tsip.last_chan_seen = u1;
-
-        // SV type, 0 to 26, mashup of constellation and signal
-        u2 = getub(buf, 5);
-        u3 = getub(buf, 6);               // PRN (svid) 1 to 32 (99)
-        d1 = getbef32(buf, 7);            // azimuth, degrees
-        d2 = getbef32(buf, 11);           // elevation, degrees
-        d3 = getbef32(buf, 15);           // signal level, db-Hz
-        u4 = getbeu32(buf, 19);           // Flags
-        // TOW of measurement, not current TOW!
-        tow = getbeu32(buf, 23);          // TOW, seconds
-        session->driver.tsip.last_a200 = tow;
-        ts_tow.tv_sec = tow;
-        ts_tow.tv_nsec = 0;
-        session->gpsdata.skyview_time =
-                gpsd_gpstime_resolv(session, session->context->gps_week,
-                                    ts_tow);
-
-        // convert svtype to gnssid and svid
-        gnssid = tsipv1_svtype(u2, &sigid);
-        session->gpsdata.skyview[u1 - 1].gnssid = gnssid;
-        session->gpsdata.skyview[u1 - 1].svid = u3;
-        session->gpsdata.skyview[u1 - 1].sigid = sigid;
-        // "real" NMEA 4.0 (not 4.10 ir 4.11) PRN
-        session->gpsdata.skyview[u1 - 1].PRN = ubx2_to_prn(gnssid, u3);
-        if (0 != (1 & u4)) {
-            if (90.0 >= fabs(d2)) {
-                session->gpsdata.skyview[u1 - 1].elevation = d2;
-            }
-            if (360.0 >= d1 &&
-                0.0 <= d1) {
-                session->gpsdata.skyview[u1 - 1].azimuth = d1;
-            }
-        }
-        session->gpsdata.skyview[u1 - 1].ss = d3;
-        if (0 != (6 & u4)) {
-            session->gpsdata.skyview[u1 - 1].used = true;
-        }
-
-        if ((int)u1 >= session->gpsdata.satellites_visible) {
-            /* Last of the series? Assume same number of sats as
-             * last cycle.
-             * This will cause extra SKY if this set has more
-             * sats than the last set.  Will cause drop outs when
-             * number of sats decreases. */
-            if (10 < llabs(session->driver.tsip.last_a311 -
-                           session->driver.tsip.last_a200)) {
-                // no xa3-11 in 10 seconds, so push out now
-                mask |= SATELLITE_SET;
-                session->driver.tsip.last_a200 = 0;
-            }
-        }
-        /* If this series has fewer than last series there will
-         * be no SKY, unless the cycle ender pushes the SKY */
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 xa2-00: num %u type %u (gnss %u sigid %u) PRN %u "
-                 "az %f el %f snr %f sflags x%0x4 tow %u\n",
-                 u1, u2, gnssid, sigid, u3, d1, d2, d3, u4, tow);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIPv1: svtype:%s flags:%s\n",
-                 val2str(u2, vsv_type1),
-                 flags2str(u4, vsflags1, buf2, sizeof(buf2)));
+        mask = decode_xa2_00(session, buf);
         break;
 
     case 0xa300:
