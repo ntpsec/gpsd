@@ -65,6 +65,22 @@ static struct vlist_t vdbits1[] = {
     {0, NULL},
 };
 
+/* Error Code Flags
+ * Used in xa3-21 */
+static struct vlist_t verr_codes1[] = {
+    {1, "Parameter Error"},
+    {2, "Length Error"},
+    {3, "Invalid Parket Format"},
+    {4, "Invalid Checksum"},
+    {5, "Bad TNL/User mode"},
+    {6, "Invalid Packet ID"},
+    {7, "Invalid Subacket ID"},
+    {8, "Update in Progress"},
+    {9, "Internal Error (div by 0)"},
+    {10, "Internal Error (failed queuing)"},
+    {0, NULL},
+};
+
 /* Fix Type v1
  * Used in xa1-11 */
 static struct vlist_t vfix_type1[] = {
@@ -315,9 +331,18 @@ static struct flist_t vtime_flags1[] = {
     {0, 0, NULL},
 };
 
-// End  TSIPv1 values and flags
+// End TSIPv1 values and flags
 
-// Start  TSIP values and flags
+// Start TSIP values and flags
+
+/* Error Code Flags
+ * Used in x46 */
+static struct flist_t verr_codes[] = {
+    {1, 1, "No Bat"},
+    {0x10, 0x30, "Ant Open"},
+    {0x30, 0x30, "Ant Short"},
+    {0, 0, NULL},
+};
 
 /* GNSS Decoding Status to string
  * Used in x46, x8f-ac */
@@ -336,6 +361,15 @@ static struct vlist_t vgnss_decode_status[] = {
     {0, NULL},
 };
 
+/* Packet Broadcast Mask
+ * Used in x8f-a3 */
+static struct flist_t vpbm_mask0[] = {
+    {1, 1, "x8f-ab"},
+    {4, 4, "x8f-ac"},
+    {0x40, 0x40, "Automatic"},
+    {0, 0, NULL},
+};
+
 /* Receiver Mode
  * Used in xbb, x8f-ac */
 static struct vlist_t vrec_mode[] = {
@@ -349,37 +383,28 @@ static struct vlist_t vrec_mode[] = {
     {0, NULL},
 };
 
-/* Error Code Flags
- * Used in x46 */
-static struct flist_t verr_codes[] = {
-    {1, 1, "No Bat"},
-    {0x10, 0x30, "Ant Open"},
-    {0x30, 0x30, "Ant Short"},
-    {0, 0, NULL},
-};
-
-/* Error Code Flags
- * Used in xa3-21 */
-static struct vlist_t verr_codes1[] = {
-    {1, "Parameter Error"},
-    {2, "Length Error"},
-    {3, "Invalid Parket Format"},
-    {4, "Invalid Checksum"},
-    {5, "Bad TNL/User mode"},
-    {6, "Invalid Packet ID"},
-    {7, "Invalid Subacket ID"},
-    {8, "Update in Progress"},
-    {9, "Internal Error (div by 0)"},
-    {10, "Internal Error (failed queuing)"},
-    {0, NULL},
-};
-
 /* Save Status
  * Used in x91-02 */
 static struct flist_t vsave_status1[] = {
     {0, 1, "Save failed"},
     {1, 1, "Save OK"},
     {0, 0, NULL},
+};
+
+/* Self-Survey Enable
+ * Used in x8f-a9 */
+static struct vlist_t vss_enable[] = {
+    {0, "SS Disabled"},
+    {1, "SS Eabled"},
+    {0, NULL},
+};
+
+/* Self-Survey Save
+ * Used in x8f-a9 */
+static struct vlist_t vss_save[] = {
+    {0, "Don't Save"},
+    {1, "Save at end"},
+    {0, NULL},
 };
 
 /* Status 1
@@ -395,6 +420,34 @@ static struct flist_t vstat1[] = {
 static struct flist_t vstat2[] = {
     {1, 1, "Superpackets"},      // x8f-20 (LFwEI)
     {2, 2, "Superpackets 2"},    // x8f-1b, x8f-ac
+    {0, 0, NULL},
+};
+
+/* SV Bad
+ * Used in x5d */
+static struct vlist_t vsv_bad[] = {
+    {0, "OK"},
+    {1, "Bad Parity"},
+    {2, "Bad Health"},
+    {0, NULL},
+};
+
+/* SV Type
+ * Used in x5d */
+static struct vlist_t vsv_type[] = {
+    {0, "GPS"},
+    {1, "GLO"},
+    {2, "BDS"},
+    {3, "GAL"},
+    {6, "QZSS"},
+    {0, NULL},
+};
+
+/* SV Used Flags
+ * Used in x5d */
+static struct flist_t vsv_used_flags[] = {
+    {1, 1, "Used in Timing"},
+    {2, 2, "Used in Position"},
     {0, 0, NULL},
 };
 
@@ -2200,6 +2253,26 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
+/* decode Packet Broadcast Mask: Superpacket x8f-ad
+ */
+static gps_mask_t decode_x8f_a5(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    uint16_t mask0, mask1;
+    char buf2[40];
+
+    mask0 = getbeu16(buf, 1);    // Mask 0
+    mask1 = getbeu16(buf, 3);    // Mask 1, reserved in ResSMT 360
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP x8f-a5: PBM: mask0 x%04x mask1 x%04x\n",
+             mask0, mask1);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIP: mask0::%s\n",
+             flags2str(mask0, vpbm_mask0, buf2, sizeof(buf2)));
+
+    return mask;
+}
+
 /* decode Superpacket x8f-ab
  * Oddly, no flag to say if the time is valid...
  */
@@ -2895,10 +2968,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   pre-2000 models
          *   Copernicus II (2009)
          *   ICM SMT 360 (2018)
-         *   RES SMT 360 (2018)
+         *   RES SMT 360 (2018) (deprecated, used x8f-ab or x8f-1c)
          *   Resolution SMTx
          *   all models?
-         * RES SMT 360 says use 0x8f-ab or 0x8f-ac instead
          */
         if (2 > len) {
             bad_len = 2;
@@ -3497,12 +3569,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         u9 = getub(buf, 24);    // Used flags
         u10 = getub(buf, 25);   // SV Type
 
-
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                "TSIP x5d: Satellite Tracking Status: Ch %2d Con %d PRN %3d "
-                "Acq %d Use %d SNR %4.1f LMT %.04f El %4.1f Az %5.1f Old %d "
-                "Int %d Bad %d Col %d TPF %d SVT %d\n",
-                i, u10, u1, u3, u4, f1, ftow, d1, d2, u5, u6, u7, u8, u9, u10);
         if (TSIP_CHANNELS > i) {
             session->gpsdata.skyview[i].PRN = (short)u1;
             session->gpsdata.skyview[i].ss = (double)f1;
@@ -3537,6 +3603,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             /* If this series has fewer than last series there will
              * be no SKY, unless the cycle ender pushes the SKY */
         }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                "TSIP x5d: Satellite Tracking Status: Ch %2d Con %d PRN %3d "
+                "Acq %d Use %d SNR %4.1f LMT %.04f El %4.1f Az %5.1f Old %d "
+                "Int %d Bad %d Col %d TPF %d SVT %d\n",
+                i, u10, u1, u3, u4, f1, ftow, d1, d2, u5, u6, u7, u8, u9, u10);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIP: bad:%s uflags:%s scons:%s\n",
+                 val2str(u7, vsv_bad),
+                 flags2str(u9, vsv_used_flags, buf2, sizeof(buf2)),
+                 val2str(u10, vsv_type));
         break;
     case 0x6c:
         /* Satellite Selection List (0x6c) polled by 0x24
@@ -4080,18 +4156,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   RES SMT 360: 05, 00
              *   Resolution SMTx: 05 00
              */
-            {
-                uint16_t mask0, mask1;
-                if (5 > len) {
-                    bad_len = 5;
-                    break;
-                }
-                mask0 = getbeu16(buf, 1);    // Mask 0
-                mask1 = getbeu16(buf, 3);    // Mask 1
-                GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "TSIP x8f-a5: PBM: mask0 x%04x mask1 x%04x\n",
-                         mask0, mask1);
+            if (5 > len) {
+                bad_len = 5;
+                break;
             }
+            mask = decode_x8f_a5(session, buf);
             break;
 
         case 0xa6:
@@ -4175,6 +4244,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "TSIP x8f-a9 SSP: sse %u psf %u length %d rex x%x \n",
                      u1, u2, u3, u4);
+            GPSD_LOG(LOG_IO, &session->context->errout,
+                     "TSIP: sse %s sssave %s\n",
+                     val2str(u1, vss_enable),
+                     val2str(u2, vss_save));
             break;
         case 0xab:
             /* Thunderbolt Timing Superpacket

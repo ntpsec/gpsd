@@ -759,6 +759,7 @@ struct gps_device_t {
 #define TSIP_RESSMT             3009
 // Part Number 99889-xx, Resolution SMTx
 #define TSIP_RES_SMTX           3017
+// Part Number 97975-xx, Res SMT 360
 #define TSIP_RESSMT360          3023
 #define TSIP_ICMSMT360          3026
 #define TSIP_RES36017x22        3031
