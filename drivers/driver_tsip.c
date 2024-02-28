@@ -1153,11 +1153,11 @@ static gps_mask_t decode_x90_00(struct gps_device_t *session, const char *buf)
     unsigned u2 = getub(buf, 5);              // NMEA Minor version
     unsigned u3 = getub(buf, 6);              // TSIP version
     unsigned u4 = getub(buf, 7);              // Trimble NMEA version
-    unsigned u6 = getbeu32(buf, 8);           // reserved
+    unsigned long u6 = getbeu32(buf, 8);      // reserved
     unsigned u7 = getub(buf, 12);             // reserved
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIPv1 x90-00: NMEA %u.%u TSIP %u TNMEA %u "
-             "res x%04x x%02x \n",
+             "res x%04lx x%02x \n",
              u1, u2, u3, u4, u6, u7);
     return mask;
 }
@@ -1215,12 +1215,12 @@ static gps_mask_t decode_x91_00(struct gps_device_t *session, const char *buf)
     unsigned u5 = getub(buf, 8);               // data bits
     unsigned u6 = getub(buf, 9);               // parity
     unsigned u7 = getub(buf, 10);              // stop bits
-    unsigned u8 = getbeu32(buf, 11);           // reserved
-    unsigned u9 = getbeu32(buf, 12);           // reserved
+    unsigned long u8 = getbeu32(buf, 11);      // reserved
+    unsigned long u9 = getbeu32(buf, 12);      // reserved
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIPv1 x91-00: port %u type %u proto %u baud %u bits %u "
-             "parity %u stop %u res x%04x %04x\n",
+             "parity %u stop %u res x%04lx %04lx\n",
              u1, u2, u3, u4, u5, u6, u7, u8, u9);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "TSIPv1: port:%s type:%s, proto:%s speed:%s bits:%s %s %s\n",
@@ -1242,18 +1242,18 @@ static gps_mask_t decode_x91_01(struct gps_device_t *session, const char *buf)
 
     /* constellations, 0 to 26, mashup of constellation and signal
      * ignore if 0xffffffff */
-    unsigned cons = getbeu32(buf, 4);          // constellations
+    unsigned long cons = getbeu32(buf, 4);     // constellations
     double d1 = getbef32(buf, 8);              // elevation mask
     double d2 = getbef32(buf, 12);             // signal mask
     double d3 = getbef32(buf, 16);             // PDOP mask
     unsigned u2 = getub(buf, 20);              // anti-jamming
     unsigned u3 = getub(buf, 21);              // fix rate
     double d4 = getbef32(buf, 22);             // Antenna CAble delay, seconds
-    unsigned u4 = getbeu32(buf, 26);           // reserved
+    unsigned long u4 = getbeu32(buf, 26);      // reserved
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "TSIPv1 x91-01 cons x%x el %f signal %f PDOP %f jam %u "
-             "frate %u delay %f res x%04x\n",
+             "TSIPv1 x91-01 cons x%lx el %f signal %f PDOP %f jam %u "
+             "frate %u delay %f res x%04lx\n",
              cons, d1, d2, d3, u2, u3, d4, u4);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "TSIPv1: cons %s\n",
@@ -1268,10 +1268,10 @@ static gps_mask_t decode_x91_02(struct gps_device_t *session, const char *buf)
     char buf2[20];
 
     unsigned u1 = getub(buf, 6);               // status
-    unsigned u2 = getbeu32(buf, 7);            // reserved
+    unsigned long u2 = getbeu32(buf, 7);            // reserved
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "TSIPv1 x91-02: status %u res x%04x\n",
+             "TSIPv1 x91-02: status %u res x%04lx\n",
              u1, u2);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "TSIPv1: Status:%s\n",
@@ -1310,12 +1310,12 @@ static gps_mask_t decode_x91_04(struct gps_device_t *session, const char *buf)
     char buf2[BUFSIZ];
 
     unsigned u1 = getub(buf, 4);               // self-survey mask
-    unsigned u2 = getbeu32(buf, 5);            // self-survey length, # fixes
+    unsigned long u2 = getbeu32(buf, 5);       // self-survey length, # fixes
     unsigned u3 = getbeu16(buf, 9);            // horz uncertainty, meters
     unsigned u4 = getbeu16(buf, 11);           // vert uncertainty, meters
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "TSIPv1 x91-04: mask x%x length %u eph %u epv %u\n",
+             "TSIPv1 x91-04: mask x%x length %lu eph %u epv %u\n",
              u1, u2, u3, u4);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "TSIPv1:ssmask %s\n",
@@ -1329,17 +1329,17 @@ static gps_mask_t decode_x91_05(struct gps_device_t *session, const char *buf)
     gps_mask_t mask = 0;
 
     unsigned port = getub(buf, 4);              // port
-    unsigned otype = getbeu32(buf, 5);           // type of output
-    unsigned res1 = getbeu32(buf, 9);           // reserved
-    unsigned res2 = getbeu32(buf, 13);          // reserved
-    unsigned res3 = getbeu32(buf, 17);          // reserved
+    unsigned long otype = getbeu32(buf, 5);     // type of output
+    unsigned long res1 = getbeu32(buf, 9);      // reserved
+    unsigned long res2 = getbeu32(buf, 13);     // reserved
+    unsigned long res3 = getbeu32(buf, 17);     // reserved
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "TSIPv1 x91-05: port %u type x%04x res x%04x x%04x x%04x\n",
+             "TSIPv1 x91-05: port %u type x%04lx res x%04lx x%04lx x%04lx\n",
              port, otype, res1, res2, res3);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIPv1: port %s xa1-00: %u xa1-03: %u xa1-11: %u "
-             "xa1-00: %u  xa3-00: %u  xa3-11: %u\n",
+             "TSIPv1: port %s xa1-00: %lu xa1-03: %lu xa1-11: %lu "
+             "xa1-00: %lu  xa3-00: %lu  xa3-11: %lu\n",
              val2str(port, vport_name1),
              otype & 3, (otype >> 2) & 3, (otype >> 4) & 3,
             (otype >> 6) & 3, (otype >> 8) & 3, (otype >> 10) & 3);
@@ -1367,21 +1367,21 @@ static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
     char buf2[BUFSIZ];
     char buf3[BUFSIZ];
 
-    unsigned u1 = getub(buf, 4);               // reserved. always 0xff
-    unsigned u2 = getbeu32(buf, 5);            // serial number
-    unsigned u3 = getbeu64(buf, 9);            // extended serial number
-    unsigned u4 = getbeu64(buf, 17);           // extended serial number
-    unsigned u5 = getub(buf, 25);              // build day
-    unsigned u6 = getub(buf, 26);              // build month
-    unsigned u7 = getbeu16(buf, 27);           // build year
-    unsigned u8 = getub(buf, 29);              // build hour
-    unsigned u9 = getbeu16(buf, 30);           // machine id
+    unsigned u1 = getub(buf, 4);                // reserved. always 0xff
+    unsigned long u2 = getbeu32(buf, 5);        // serial number
+    unsigned long long u3 = getbeu64(buf, 9);   // extended serial number
+    unsigned long long u4 = getbeu64(buf, 17);  // extended serial number
+    unsigned u5 = getub(buf, 25);               // build day
+    unsigned u6 = getub(buf, 26);               // build month
+    unsigned u7 = getbeu16(buf, 27);            // build year
+    unsigned u8 = getub(buf, 29);               // build hour
+    unsigned u9 = getbeu16(buf, 30);            // machine id
     // getbeu64(buf, 32);             // hardware ID string
     // getbeu64(buf, 40);             // hardware ID string
     // getbeu64(buf, 48);             // product ID string
     // getbeu64(buf, 56);             // product ID string
-    unsigned u10 = getbeu32(buf, 64);          // premium options
-    unsigned u11 = getbeu32(buf, 78);          // reserved
+    unsigned long u10 = getbeu32(buf, 64);       // premium options
+    unsigned long u11 = getbeu32(buf, 78);       // reserved
     // ignore 77 Osc search range, and 78–81 Osc offset, always 0xff
 
     (void)snprintf(session->subtype1, sizeof(session->subtype1),
@@ -1391,11 +1391,11 @@ static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
     // extended sernum seems to be zeros...
     (void)snprintf(session->gpsdata.dev.sernum,
                    sizeof(session->gpsdata.dev.sernum),
-                   "%x", u2);
+                   "%lx", u2);
     GPSD_LOG(LOG_WARN, &session->context->errout,
-             "TSIPv1 x93-00: res %u ser %s x%x-%x Build %u/%u/%u %u "
+             "TSIPv1 x93-00: res %u ser %s x%llx-%llx Build %u/%u/%u %u "
              "machine %u hardware %s product %s "
-             "options x%04x res x%04x\n",
+             "options x%04lx res x%04lx\n",
              u1, session->gpsdata.dev.sernum,
              u3, u4, u7, u6, u5, u8, u9,
              gpsd_packetdump(buf2, sizeof(buf2),
@@ -2253,6 +2253,117 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
+/* decode Superpacket x8f-20
+ */
+static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    double d1, d2, d3, d4;
+    timespec_t ts_tow;
+    char ts_buf[TIMESPEC_LEN];
+
+    int s1 = getbes16(buf, 2);                // east velocity
+    int s2 = getbes16(buf, 4);                // north velocity
+    int s3 = getbes16(buf, 6);                // up velocity
+    unsigned long tow = getbeu32(buf, 8);     // time in ms
+    long sl1 = getbes32(buf, 12);             // latitude
+    long ul2 = getbeu32(buf, 16);             // longitude
+    // Lassen iQ, and copernicus (ii) doc says this is always altHAE
+    long sl2 = getbes32(buf, 20);             // altitude
+    unsigned u1 = getub(buf, 24);             // velocity scaling
+    unsigned u2 = getub(buf, 27);             // fix flags
+    unsigned u3 = getub(buf, 28);             // num svs
+    unsigned u4 = getub(buf, 29);             // utc offset
+    unsigned week = getbeu16(buf, 30);        // tsip.gps_week
+
+    // PRN/IODE data follows
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP x8f-20: LFwEI: %d %d %d tow %lu %ld "
+             " %lu %lu %x %x %u leap %u week %d\n",
+             s1, s2, s3, tow, sl1, ul2, sl2, u1, u2, u3, u4, week);
+
+    if (0 != (u1 & 0x01)) {     // check velocity scaling
+        d4 = 0.02;
+    } else {
+        d4 = 0.005;
+    }
+
+    // 0x8000 is over-range
+    if ((int)0x8000 != s2) {
+        d2 = (double)s2 * d4;   // north velocity m/s
+        session->newdata.NED.velN = d2;
+    }
+    if ((int16_t)0x8000 != s1) {
+        d1 = (double)s1 * d4;   // east velocity m/s
+        session->newdata.NED.velE = d1;
+    }
+    if ((int16_t)0x8000 != s3) {
+        d3 = (double)s3 * d4;       // up velocity m/s
+        session->newdata.NED.velD = -d3;
+    }
+
+    session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
+    session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
+    if (180.0 < session->newdata.longitude) {
+        session->newdata.longitude -= 360.0;
+    }
+    // Lassen iQ doc says this is always altHAE in mm
+    session->newdata.altHAE = (double)sl2 * 1e-3;
+    mask |= ALTITUDE_SET;
+
+    session->newdata.status = STATUS_UNK;
+    session->newdata.mode = MODE_NO_FIX;
+    if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
+        session->newdata.status = STATUS_GPS;
+        if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
+            session->newdata.status = STATUS_DGPS;
+        }
+        if ((u2 & 0x04) != (uint8_t)0) {      // Fix Dimension
+            session->newdata.mode = MODE_2D;
+        } else {
+            session->newdata.mode = MODE_3D;
+        }
+    }
+    session->gpsdata.satellites_used = (int)u3;
+    if (10 < (int)u4) {
+        session->context->leap_seconds = (int)u4;
+        session->context->valid |= LEAP_SECOND_VALID;
+        /* check for week rollover
+         * Trimble uses 15 bit weeks, but can guess the epoch wrong
+         * Can not be in gpsd_gpstime_resolv() because that
+         * may see BUILD_LEAPSECONDS instead of leap_seconds
+         * from receiver.
+         */
+        if (17 < u4 &&
+            1930 > week) {
+            // leap second 18 added in gps week 1930
+            week += 1024;
+            if (1930 > week) {
+                // and again?
+                week += 1024;
+            }
+        }
+    }
+    MSTOTS(&ts_tow, tow);
+    session->newdata.time = gpsd_gpstime_resolv(session, week,
+                                                ts_tow);
+    mask |= TIME_SET | NTPTIME_IS | LATLON_SET |
+            STATUS_SET | MODE_SET | VNED_SET;
+    if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+        mask |= CLEAR_IS;
+        session->driver.tsip.last_tow = ts_tow;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP x8f-20: LFwEI: time=%s lat=%.2f lon=%.2f "
+             "altHAE=%.2f mode=%d status=%d\n",
+             timespec_str(&session->newdata.time, ts_buf,
+                          sizeof(ts_buf)),
+             session->newdata.latitude, session->newdata.longitude,
+             session->newdata.altHAE,
+             session->newdata.mode, session->newdata.status);
+    return mask;
+}
+
 /* decode Packet Broadcast Mask: Superpacket x8f-ad
  */
 static gps_mask_t decode_x8f_a5(struct gps_device_t *session, const char *buf)
@@ -2536,10 +2647,12 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
     gps_mask_t mask = 0;
     unsigned week;
     int bad_len = 0;
-    unsigned u1, u2, u3, u4, u5, u6, u7, u8, ul2;
-    int s1, s2, s3, s4, sl1, sl2, sl3;
+    unsigned u1, u2, u3, u4, u5;
+    unsigned long ul1, ul2, ul3;
+    int s1, s2, s3, s4;
+    long int sl1, sl2;
     double d1, d2, d3, d4, d5;
-    int32_t tow;             // time of week in milli seconds
+    unsigned long tow;             // time of week in milli seconds
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
 
@@ -2585,104 +2698,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
             bad_len = 56;
             break;
         }
-        s1 = getbes16(buf, 2);      // east velocity
-        s2 = getbes16(buf, 4);      // north velocity
-        s3 = getbes16(buf, 6);      // up velocity
-        tow = getbeu32(buf, 8);     // time in ms
-        sl1 = getbes32(buf, 12);    // latitude
-        ul2 = getbeu32(buf, 16);    // longitude
-        // Lassen iQ, and copernicus (ii) doc says this is always altHAE
-        sl2 = getbes32(buf, 20);    // altitude
-        u1 = getub(buf, 24);        // velocity scaling
-        u2 = getub(buf, 27);        // fix flags
-        u3 = getub(buf, 28);        // num svs
-        u4 = getub(buf, 29);        // utc offset
-        week = getbeu16(buf, 30);   // tsip.gps_week
-        // PRN/IODE data follows
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x8f-20: LFwEI: %d %d %d tow %u %d "
-                 " %u %u %x %x %u leap %u week %d\n",
-                 s1, s2, s3, tow, sl1, ul2, sl2, u1, u2, u3, u4, week);
-
-        if ((u1 & 0x01) != (uint8_t) 0) {     // check velocity scaling
-            d5 = 0.02;
-        } else {
-            d5 = 0.005;
-        }
-
-        // 0x8000 is over-range
-        if ((int16_t)0x8000 != s2) {
-            d2 = (double)s2 * d5;   // north velocity m/s
-            session->newdata.NED.velN = d2;
-        }
-        if ((int16_t)0x8000 != s1) {
-            d1 = (double)s1 * d5;   // east velocity m/s
-            session->newdata.NED.velE = d1;
-        }
-        if ((int16_t)0x8000 != s3) {
-            d3 = (double)s3 * d5;       // up velocity m/s
-            session->newdata.NED.velD = -d3;
-        }
-
-        session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
-        session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
-        if (180.0 < session->newdata.longitude) {
-            session->newdata.longitude -= 360.0;
-        }
-        // Lassen iQ doc says this is always altHAE in mm
-        session->newdata.altHAE = (double)sl2 * 1e-3;
-        mask |= ALTITUDE_SET;
-
-        session->newdata.status = STATUS_UNK;
-        session->newdata.mode = MODE_NO_FIX;
-        if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
-            session->newdata.status = STATUS_GPS;
-            if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
-                session->newdata.status = STATUS_DGPS;
-            }
-            if ((u2 & 0x04) != (uint8_t)0) {      // Fix Dimension
-                session->newdata.mode = MODE_2D;
-            } else {
-                session->newdata.mode = MODE_3D;
-            }
-        }
-        session->gpsdata.satellites_used = (int)u3;
-        if (10 < (int)u4) {
-            session->context->leap_seconds = (int)u4;
-            session->context->valid |= LEAP_SECOND_VALID;
-            /* check for week rollover
-             * Trimble uses 15 bit weeks, but can guess the epoch wrong
-             * Can not be in gpsd_gpstime_resolv() because that
-             * may see BUILD_LEAPSECONDS instead of leap_seconds
-             * from receiver.
-             */
-            if (17 < u4 &&
-                1930 > week) {
-                // leap second 18 added in gps week 1930
-                week += 1024;
-                if (1930 > week) {
-                    // and again?
-                    week += 1024;
-                }
-            }
-        }
-        MSTOTS(&ts_tow, tow);
-        session->newdata.time = gpsd_gpstime_resolv(session, week,
-                                                    ts_tow);
-        mask |= TIME_SET | NTPTIME_IS | LATLON_SET |
-                STATUS_SET | MODE_SET | VNED_SET;
-        if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-            mask |= CLEAR_IS;
-            session->driver.tsip.last_tow = ts_tow;
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x8f-20: LFwEI: time=%s lat=%.2f lon=%.2f "
-                 "altHAE=%.2f mode=%d status=%d\n",
-                 timespec_str(&session->newdata.time, ts_buf,
-                              sizeof(ts_buf)),
-                 session->newdata.latitude, session->newdata.longitude,
-                 session->newdata.altHAE,
-                 session->newdata.mode, session->newdata.status);
+        mask = decode_x8f_20(session, buf);
         break;
     case 0x23:
         /* Compact Super Packet (0x8f-23)
@@ -2707,14 +2723,15 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
         sl1 = getbes32(buf, 9);             // latitude
         ul2 = getbeu32(buf, 13);            // longitude
         // Copernicus (ii) doc says this is always altHAE in mm
-        sl3 = getbes32(buf, 17);    // altitude
+        sl2 = getbes32(buf, 17);    // altitude
         // set xNED here
         s2 = getbes16(buf, 21);     // east velocity
         s3 = getbes16(buf, 23);     // north velocity
         s4 = getbes16(buf, 25);     // up velocity
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x8f-23: CSP: %u %d %u %u %d %u %d %d %d %d\n",
-                 tow, week, u1, u2, sl1, ul2, sl3, s2, s3, s4);
+                 "TSIP x8f-23: CSP: tow %lu week %u %u %u %ld %lu %ld "
+                 " %d %d %d\n",
+                 tow, week, u1, u2, sl1, ul2, sl2, s2, s3, s4);
         if (10 < (int)u1) {
             session->context->leap_seconds = (int)u1;
             session->context->valid |= LEAP_SECOND_VALID;
@@ -2741,7 +2758,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
             session->newdata.longitude -= 360.0;
         }
         // Copernicus (ii) doc says this is always altHAE in mm
-        session->newdata.altHAE = (double)sl3 * 1e-3;
+        session->newdata.altHAE = (double)sl2 * 1e-3;
         mask |= ALTITUDE_SET;
         if ((u2 & 0x20) != (uint8_t)0) {     // check velocity scaling
             d5 = 0.02;
@@ -2788,15 +2805,15 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
         u1 = getub(buf, 1);                 // Production Options Prefix
         u2 = getub(buf, 2);                 // Production Number Extension
         u3 = getbeu16(buf, 3);              // Case Sernum Prefix
-        u4 = getbeu32(buf, 5);              // Case Sernum
-        u5 = getbeu32(buf, 9);              // Production Number
-        u6 = getbeu32(buf, 13);             // Resevered
-        u7 = getbeu16(buf, 15);             // Machine ID
-        u8 = getbeu16(buf, 17);             // Reserved
+        ul1 = getbeu32(buf, 5);             // Case Sernum
+        ul2 = getbeu32(buf, 9);             // Production Number
+        ul3 = getbeu32(buf, 13);            // Resevered
+        u4 = getbeu16(buf, 15);             // Machine ID
+        u5 = getbeu16(buf, 17);             // Reserved
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x8f-42: SPP: Prod x%x-%x Sernum %x-%x "
-                 "Prod %x  Res %x ID %x Res %x\n",
-                 u1, u2, u3, u4, u5, u6, u7, u8);
+                 "TSIP x8f-42: SPP: Prod x%x-%x Sernum %x-%lx "
+                 "Prod %lx  Res %lx ID %x Res %x\n",
+                 u1, u2, u3, ul1, ul2, ul3, u4, u5);
         break;
     case 0xa5:
         /* Packet Broadcast Mask (0x8f-a5) polled by 0x8e-a5
