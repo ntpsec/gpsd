@@ -63,10 +63,6 @@
                                     | getleu16_be(buf, (off)+2)))
 #define getleu32_be(buf, off)   (uint32_t)((((uint16_t)getleu16_be(buf, (off)) << 16) \
                                     | getleu16_be(buf, (off)+2)))
-#define getles64_be(buf, off)   (int64_t)((((uint64_t)getleu32_be(buf, (off)) << 32) \
-                                    | getleu32_be(buf, (off)+4)))
-#define getleu64_be(buf, off)   (uint64_t)((((uint64_t)getleu32_be(buf, (off)) << 32) \
-                                    | getleu32_be(buf, (off)+4)))
 #define getles3224_be(buf,off)     (int32_t)(((uint32_t)getub((buf), (off))<<24 \
                                     | (uint32_t)getub((buf), (off)+1)<<16 \
                                     | (uint32_t)getub((buf), (off)+2)<<8)>>8)
