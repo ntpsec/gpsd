@@ -34,8 +34,8 @@
 // little-endian access
 #define getles16(buf, off)      ((int16_t)(((uint16_t)getub((buf),   (off)+1) << 8) | (uint16_t)getub((buf), (off))))
 #define getleu16(buf, off)      ((uint16_t)(((uint16_t)getub((buf), (off)+1) << 8) | (uint16_t)getub((buf), (off))))
-#define getles32(buf, off)      ((int32_t)(((uint16_t)getleu16((buf),  (off)+2) << 16) | (uint16_t)getleu16((buf), (off))))
-#define getleu32(buf, off)      ((uint32_t)(((uint16_t)getleu16((buf),(off)+2) << 16) | (uint16_t)getleu16((buf), (off))))
+#define getles32(buf, off)      ((long)(((unsigned long)getleu16((buf),  (off)+2) << 16) | (unsigned long)getleu16((buf), (off))))
+#define getleu32(buf, off)      ((unsigned long)(((unsigned long)getleu16((buf),(off)+2) << 16) | (unsigned long)getleu16((buf), (off))))
 #define getles64(buf, off)      ((long long)(((unsigned long long)getleu32(buf, (off)+4) << 32) | getleu32(buf, (off))))
 #define getleu64(buf, off)      ((unsigned long long)(((unsigned long long)getleu32(buf, (off)+4) << 32) | getleu32(buf, (off))))
 extern float getlef32(const char *, int);

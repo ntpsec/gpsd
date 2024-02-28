@@ -479,7 +479,7 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
                      "Garmin: Alt: %.3f, sep: %.3f, eph: %.3f, Epv: %.3f, "
                      "Fix: %d, Gps_tow: %f, Lat: %.3f, Lon: %.3f, "
                      "velN: %.3f, velE: %.3f, velD: %.3f, geoidsep: %.3f, "
-                     "Leap: %d, GarminDays: %d\n",
+                     "Leap: %d, GarminDays: %ld\n",
                      session->newdata.altHAE,
                      session->newdata.sep,
                      session->newdata.eph,
@@ -531,7 +531,7 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
                  GPSD_LED64(rmd->rcvr_tow), GPSD_LE16TOH(rmd->rcvr_wn));
         for (i = 0; i < GARMIN_CHANNELS; i++) {
             GPSD_LOG(LOG_INF, &session->context->errout,
-                     "Garmin: PVT RMD Sat: %3u, cycles: %9u, pr: %16.6f, "
+                     "Garmin: PVT RMD Sat: %3u, cycles: %9lu, pr: %16.6f, "
                      "phase: %7.3f, slp_dtct: %3s, snr: %3u, Valid: %3s\n",
                      (int)rmd->sv[i].svid + 1,
                      GPSD_LE32TOH(rmd->sv[i].cycles),
