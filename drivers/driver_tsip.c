@@ -2529,6 +2529,960 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// decode Superpackets x8f-XX
+static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
+                             int len, int *pbad_len, time_t now)
+{
+    gps_mask_t mask = 0;
+    unsigned week;
+    int bad_len = 0;
+    unsigned u1, u2, u3, u4, u5, u6, u7, u8, ul2;
+    int s1, s2, s3, s4, sl1, sl2, sl3;
+    double d1, d2, d3, d4, d5;
+    int32_t tow;             // time of week in milli seconds
+    timespec_t ts_tow;
+    char ts_buf[TIMESPEC_LEN];
+
+    u1 = getub(buf, 0);
+    switch (u1) {           // sub-code ID
+    case 0x15:
+        /* Current Datum Values
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        if (43 != len) {
+            bad_len = 43;
+            break;
+        }
+        s1 = getbes16(buf, 1);              // Datum Index
+        d1 = getbed64(buf, 3);              // DX
+        d2 = getbed64(buf, 11);             // DY
+        d3 = getbed64(buf, 19);             // DZ
+        d4 = getbed64(buf, 27);             // A-axis
+        d5 = getbed64(buf, 35);             // Eccentricity Squared
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP x8f-15: Current Datum: %d %f %f %f %f %f\n",
+                 s1, d1, d2, d3, d4, d5);
+        break;
+
+    case 0x20:
+        /* Last Fix with Extra Information (binary fixed point) 0x8f-20
+         * Only output when fix is available.
+         * CSK sez "why does my Lassen SQ output oversize packets?"
+         * Present in:
+         *   pre-2000 models
+         *   ACE II
+         *   Copernicus, Copernicus II (64-bytes)
+         * Not present in:
+         *   ICM SMT 360
+         *   RES SMT 360
+         */
+        if (56 != (len) &&
+            64 != (len)) {
+            bad_len = 56;
+            break;
+        }
+        s1 = getbes16(buf, 2);      // east velocity
+        s2 = getbes16(buf, 4);      // north velocity
+        s3 = getbes16(buf, 6);      // up velocity
+        tow = getbeu32(buf, 8);     // time in ms
+        sl1 = getbes32(buf, 12);    // latitude
+        ul2 = getbeu32(buf, 16);    // longitude
+        // Lassen iQ, and copernicus (ii) doc says this is always altHAE
+        sl2 = getbes32(buf, 20);    // altitude
+        u1 = getub(buf, 24);        // velocity scaling
+        u2 = getub(buf, 27);        // fix flags
+        u3 = getub(buf, 28);        // num svs
+        u4 = getub(buf, 29);        // utc offset
+        week = getbeu16(buf, 30);   // tsip.gps_week
+        // PRN/IODE data follows
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP x8f-20: LFwEI: %d %d %d tow %u %d "
+                 " %u %u %x %x %u leap %u week %d\n",
+                 s1, s2, s3, tow, sl1, ul2, sl2, u1, u2, u3, u4, week);
+
+        if ((u1 & 0x01) != (uint8_t) 0) {     // check velocity scaling
+            d5 = 0.02;
+        } else {
+            d5 = 0.005;
+        }
+
+        // 0x8000 is over-range
+        if ((int16_t)0x8000 != s2) {
+            d2 = (double)s2 * d5;   // north velocity m/s
+            session->newdata.NED.velN = d2;
+        }
+        if ((int16_t)0x8000 != s1) {
+            d1 = (double)s1 * d5;   // east velocity m/s
+            session->newdata.NED.velE = d1;
+        }
+        if ((int16_t)0x8000 != s3) {
+            d3 = (double)s3 * d5;       // up velocity m/s
+            session->newdata.NED.velD = -d3;
+        }
+
+        session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
+        session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
+        if (180.0 < session->newdata.longitude) {
+            session->newdata.longitude -= 360.0;
+        }
+        // Lassen iQ doc says this is always altHAE in mm
+        session->newdata.altHAE = (double)sl2 * 1e-3;
+        mask |= ALTITUDE_SET;
+
+        session->newdata.status = STATUS_UNK;
+        session->newdata.mode = MODE_NO_FIX;
+        if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
+            session->newdata.status = STATUS_GPS;
+            if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
+                session->newdata.status = STATUS_DGPS;
+            }
+            if ((u2 & 0x04) != (uint8_t)0) {      // Fix Dimension
+                session->newdata.mode = MODE_2D;
+            } else {
+                session->newdata.mode = MODE_3D;
+            }
+        }
+        session->gpsdata.satellites_used = (int)u3;
+        if (10 < (int)u4) {
+            session->context->leap_seconds = (int)u4;
+            session->context->valid |= LEAP_SECOND_VALID;
+            /* check for week rollover
+             * Trimble uses 15 bit weeks, but can guess the epoch wrong
+             * Can not be in gpsd_gpstime_resolv() because that
+             * may see BUILD_LEAPSECONDS instead of leap_seconds
+             * from receiver.
+             */
+            if (17 < u4 &&
+                1930 > week) {
+                // leap second 18 added in gps week 1930
+                week += 1024;
+                if (1930 > week) {
+                    // and again?
+                    week += 1024;
+                }
+            }
+        }
+        MSTOTS(&ts_tow, tow);
+        session->newdata.time = gpsd_gpstime_resolv(session, week,
+                                                    ts_tow);
+        mask |= TIME_SET | NTPTIME_IS | LATLON_SET |
+                STATUS_SET | MODE_SET | VNED_SET;
+        if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+            mask |= CLEAR_IS;
+            session->driver.tsip.last_tow = ts_tow;
+        }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP x8f-20: LFwEI: time=%s lat=%.2f lon=%.2f "
+                 "altHAE=%.2f mode=%d status=%d\n",
+                 timespec_str(&session->newdata.time, ts_buf,
+                              sizeof(ts_buf)),
+                 session->newdata.latitude, session->newdata.longitude,
+                 session->newdata.altHAE,
+                 session->newdata.mode, session->newdata.status);
+        break;
+    case 0x23:
+        /* Compact Super Packet (0x8f-23)
+         * Present in:
+         *   Copernicus, Copernicus II
+         * Not present in:
+         *   pre-2000 models
+         *   Lassen iQ
+         *   ICM SMT 360
+         *   RES SMT 360
+         */
+        session->driver.tsip.req_compact = 0;
+        // CSK sez "i don't trust this to not be oversized either."
+        if (29 > len) {
+            bad_len = 29;
+            break;
+        }
+        tow = getbeu32(buf, 1);             // time in ms
+        week = getbeu16(buf, 5);            // tsip.gps_week
+        u1 = getub(buf, 7);                 // utc offset
+        u2 = getub(buf, 8);                 // fix flags
+        sl1 = getbes32(buf, 9);             // latitude
+        ul2 = getbeu32(buf, 13);            // longitude
+        // Copernicus (ii) doc says this is always altHAE in mm
+        sl3 = getbes32(buf, 17);    // altitude
+        // set xNED here
+        s2 = getbes16(buf, 21);     // east velocity
+        s3 = getbes16(buf, 23);     // north velocity
+        s4 = getbes16(buf, 25);     // up velocity
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP x8f-23: CSP: %u %d %u %u %d %u %d %d %d %d\n",
+                 tow, week, u1, u2, sl1, ul2, sl3, s2, s3, s4);
+        if (10 < (int)u1) {
+            session->context->leap_seconds = (int)u1;
+            session->context->valid |= LEAP_SECOND_VALID;
+        }
+        MSTOTS(&ts_tow, tow);
+        session->newdata.time =
+            gpsd_gpstime_resolv(session, week, ts_tow);
+        session->newdata.status = STATUS_UNK;
+        session->newdata.mode = MODE_NO_FIX;
+        if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
+            session->newdata.status = STATUS_GPS;
+            if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
+                session->newdata.status = STATUS_DGPS;
+            }
+            if ((u2 & 0x04) != (uint8_t)0) {       // Fix Dimension
+                session->newdata.mode = MODE_2D;
+            } else {
+                session->newdata.mode = MODE_3D;
+            }
+        }
+        session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
+        session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
+        if (180.0 < session->newdata.longitude) {
+            session->newdata.longitude -= 360.0;
+        }
+        // Copernicus (ii) doc says this is always altHAE in mm
+        session->newdata.altHAE = (double)sl3 * 1e-3;
+        mask |= ALTITUDE_SET;
+        if ((u2 & 0x20) != (uint8_t)0) {     // check velocity scaling
+            d5 = 0.02;
+        } else {
+            d5 = 0.005;
+        }
+        d1 = (double)s2 * d5;       // east velocity m/s
+        d2 = (double)s3 * d5;       // north velocity m/s
+        d3 = (double)s4 * d5;       // up velocity m/s
+        session->newdata.NED.velN = d2;
+        session->newdata.NED.velE = d1;
+        session->newdata.NED.velD = -d3;
+
+        mask |= TIME_SET | NTPTIME_IS | LATLON_SET |
+                STATUS_SET | MODE_SET | VNED_SET;
+        if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+            mask |= CLEAR_IS;
+            session->driver.tsip.last_tow = ts_tow;
+        }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP x8f-23: SP-CSP: time %s lat %.2f lon %.2f "
+                 "altHAE %.2f mode %d status %d\n",
+                 timespec_str(&session->newdata.time, ts_buf,
+                              sizeof(ts_buf)),
+                 session->newdata.latitude, session->newdata.longitude,
+                 session->newdata.altHAE,
+                 session->newdata.mode, session->newdata.status);
+        break;
+
+    case 0x42:
+        /* Stored production parameters
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         *   Resolution SMTx (2013)
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        if (19 > len) {
+            bad_len = 19;
+            break;
+        }
+        u1 = getub(buf, 1);                 // Production Options Prefix
+        u2 = getub(buf, 2);                 // Production Number Extension
+        u3 = getbeu16(buf, 3);              // Case Sernum Prefix
+        u4 = getbeu32(buf, 5);              // Case Sernum
+        u5 = getbeu32(buf, 9);              // Production Number
+        u6 = getbeu32(buf, 13);             // Resevered
+        u7 = getbeu16(buf, 15);             // Machine ID
+        u8 = getbeu16(buf, 17);             // Reserved
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP x8f-42: SPP: Prod x%x-%x Sernum %x-%x "
+                 "Prod %x  Res %x ID %x Res %x\n",
+                 u1, u2, u3, u4, u5, u6, u7, u8);
+        break;
+    case 0xa5:
+        /* Packet Broadcast Mask (0x8f-a5) polled by 0x8e-a5
+         *
+         * Present in:
+         *   ICM SMT 360
+         *   RES SMT 360
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         *
+         * Defaults:
+         *   RES SMT 360: 05, 00
+         *   Resolution SMTx: 05 00
+         */
+        if (5 > len) {
+            bad_len = 5;
+            break;
+        }
+        mask = decode_x8f_a5(session, buf);
+        break;
+
+    case 0xa6:
+        /* Self-Survey Command (0x8f-a6) polled by 0x8e-a6
+         *
+         * Present in:
+         *   ICM SMT 360
+         *   RES SMT 360
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        if (3 > len) {
+            bad_len = 3;
+            break;
+        }
+        u2 = getub(buf, 1);          // Command
+        u3 = getub(buf, 2);          // Status
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP x8f-a6: SSC: command x%x status x%x\n",
+                 u2, u3);
+        break;
+
+    case 0xa7:
+        /* Thunderbolt Individual Satellite Solutions
+         * partial decode
+         */
+        if (10 > len) {
+            bad_len = 10;
+            break;
+        }
+        // we assume the receiver not in some crazy mode, and is GPS time
+        tow = getbeu32(buf, 2);             // gpstime in seconds
+        ts_tow.tv_sec = tow;
+        ts_tow.tv_nsec = 0;
+        u1 = buf[1];                     // format, 0 Float, 1 Int
+
+        if (0 == u1) {
+            // floating point mode
+            d1 = getbef32(buf, 6);   // clock bias (combined)
+            d2 = getbef32(buf, 10);  // clock bias rate (combined)
+            // FIXME: decode the individual biases
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "TSIP x8f-a7: tow %llu mode %u bias %e "
+                     "bias rate %e\n",
+                     (long long unsigned)tow, u1, d1, d2);
+        } else if (1 == u1) {
+            // integer mode
+            s1 = getbeu16(buf, 6);    // Clock Bias (combined)
+            s2 = getbeu16(buf, 8);    // Clock Bias rate (combined)
+            // FIXME: decode the individual biases
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "TSIP x8f-a7: tow %llu mode %u bias %d "
+                     "bias rate %d\n",
+                     (long long unsigned)tow, u1, s1, s2);
+        } else {
+            // unknown mode
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "TSIP x8f-a7: tow %llu mode %u. Unnown mode\n",
+                     (long long unsigned)tow, u1);
+        }
+        break;
+    case 0xa9:
+        /* Self Survey Parameters
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         *   Resolution SMTx
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        if (11 > len) {
+            bad_len = 11;
+            break;
+        }
+        u1 = getub(buf, 1);         // Self Survey Enable
+        u2 = getub(buf, 2);         // Position Save Flag
+        u3 = getbeu32(buf, 3);      // Self Survey Length
+        u4 = getbeu32(buf, 7);      // Reserved
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIP x8f-a9 SSP: sse %u psf %u length %d rex x%x \n",
+                 u1, u2, u3, u4);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIP: sse %s sssave %s\n",
+                 val2str(u1, vss_enable),
+                 val2str(u2, vss_save));
+        break;
+    case 0xab:
+        /* Thunderbolt Timing Superpacket
+         * Present in:
+         *   Resolution SMTx
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        if (17 > len) {
+            bad_len = 17;
+            break;
+        }
+        session->driver.tsip.last_41 = now; // keep timestamp for request
+        mask = decode_x8f_ab(session, buf);
+        break;
+
+    case 0xac:
+        /* Supplemental Timing Packet (0x8f-ac)
+         * present in:
+         *   ThunderboltE
+         *   ICM SMT 360
+         *   RES SMT 360
+         *   Resolution SMTx
+         * Not Present in:
+         *   pre-2000 models
+         *   Lassen iQ
+         *   Copernicus II (2009)
+         */
+        if (68 != len) {
+            bad_len = 68;
+            break;
+        }
+        mask = decode_x8f_ac(session, buf);
+        break;
+
+    case 0x02:
+        /* UTC Information
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        FALLTHROUGH
+    case 0x21:
+        /* Request accuracy information
+         * Present in:
+         *   Copernicus II (2009)
+         * Not Present in:
+         *   pre-2000 models
+         */
+        FALLTHROUGH
+    case 0x2a:
+        /* Request Fix and Channel Tracking info, Type 1
+         * Present in:
+         *   Copernicus II (2009)
+         * Not Present in:
+         *   pre-2000 models
+         */
+        FALLTHROUGH
+    case 0x2b:
+        /* Request Fix and Channel Tracking info, Type 2
+         * Present in:
+         *   Copernicus II (2009)
+         * Not Present in:
+         *   pre-2000 models
+         */
+        FALLTHROUGH
+    case 0x41:
+        /* Stored manufacturing operating parameters
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        FALLTHROUGH
+    case 0x4a:
+        /* PPS characteristics
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         *   Copernicus II (2009)
+         * Not Present in:
+         *   pre-2000 models
+         */
+        FALLTHROUGH
+    case 0x4e:
+        /* PPS Output options
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        FALLTHROUGH
+    case 0x4f:
+        /* Set PPS Width
+         * Present in:
+         *   Copernicus II (2009)
+         * Not Present in:
+         *   pre-2000 models
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x60:
+        /* DR Calibration and Status Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x62:
+        /* GPS/DR Position/Velocity Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x64:
+        /* Firmware Version and Configuration Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x6b:
+        /* Last Gyroscope Readings Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x6d:
+        /* Last Odometer Readings Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x6f:
+        /* Firmware Version Name Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x70:
+        /* Beacon Channel Status Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x71:
+        /* DGPS Station Database Reports
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x73:
+        /* Beacon Channel Control Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x74:
+        /* Clear Beacon Database Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x75:
+        /* FFT Start Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x76:
+        /* FFT Stop Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x77:
+        /* FFT Reports
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x78:
+        /* RTCM Reports
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x79:
+        /* Beacon Station Attributes Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x7a:
+        /* Beacon Station Attributes Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x7b:
+        /* DGPS Receiver RAM Configuration Block Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x7c:
+        /* DGPS Receiver Configuration Block Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x7e:
+        /* Satellite Line-of-Sight (LOS) Message
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x7f:
+        /* DGPS Receiver ROM Configuration Block Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x80:
+        /* DGPS Service Provider System Information Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x81:
+        /* Decoder Station Information Report and Selection Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x82:
+        /* Decoder Diagnostic Information Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x84:
+        /* Satellite FFT Control Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x85:
+        /* DGPS Source Tracking Status Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x86:
+        /* Clear Satellite Database Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x87:
+        /* Network Statistics Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x88:
+        /* Diagnostic Output Options Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x89:
+        /* DGPS Source Control Report /Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x8a:
+        /* Service Provider Information Report and Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x8b:
+        /* Service Provider Activation Information Report & Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x8e:
+        /* Service Provider Data Load Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x8f:
+        /* Receiver Identity Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x90:
+        /* Guidance Status Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x91:
+        /* Guidance Configuration Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x92:
+        /* Lightbar Configuration Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x94:
+        /* Guidance Operation Acknowledgment
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x95:
+        /* Button Box Configuration Type Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x96:
+        /* Point Manipulation Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x97:
+        /* Utility Information Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x98:
+        /* Individual Button Configuration Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0x9a:
+        /* Differential Correction Information Report
+         * Present in:
+         *   pre-2000 models
+         * Not Present in:
+         *   Copernicus II (2009)
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         */
+        FALLTHROUGH
+    case 0xa0:
+        /* DAC value
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        FALLTHROUGH
+    case 0xa2:
+        /* UTC/GPS timing
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        FALLTHROUGH
+    case 0xa3:
+        /* Oscillator disciplining command
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        FALLTHROUGH
+    case 0xa8:
+        /* Oscillator disciplining parameters
+         * Present in:
+         *   ICM SMT 360 (2018)
+         *   RES SMT 360 (2018)
+         * Not Present in:
+         *   pre-2000 models
+         *   Copernicus II (2009)
+         */
+        FALLTHROUGH
+    default:
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIP x8f-%02x: Unhandled TSIP superpacket\n", u1);
+    }
+    *pbad_len = bad_len;
+
+    return mask;
+}
+
 /* This is the meat of parsing all the TSIP packets, except v1
  *
  * Return: mask
@@ -2540,16 +3494,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     unsigned int id;
     unsigned short week;
     uint8_t u1, u2, u3, u4, u5, u6, u7, u8, u9, u10;
-    int16_t s1, s2, s3, s4;
-    int32_t sl1, sl2, sl3;
     uint32_t ul1, ul2;
     float f1, f2, f3, f4;
-    double d1, d2, d3, d4, d5;
+    double d1, d2, d3;
     time_t now;
     char buf[BUFSIZ];
     char buf2[BUFSIZ];
     char buf3[BUFSIZ];
-    uint32_t tow;             // time of week in milli seconds
     double ftow;              // time of week in seconds
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
@@ -3789,7 +4740,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         session->newdata.ecef.x = getbed64(buf, 0);  // X
         session->newdata.ecef.y = getbed64(buf, 8);  // Y
         session->newdata.ecef.z = getbed64(buf, 16); // Z
-        d4 = getbed64(buf, 24);                      // clock bias
+        d3 = getbed64(buf, 24);                      // clock bias
         ftow = getbef32(buf, 32);                    // time-of-fix
         DTOTS(&ts_tow, ftow);
         session->newdata.time = gpsd_gpstime_resolv(session,
@@ -3814,7 +4765,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->newdata.ecef.x,
                  session->newdata.ecef.y,
                  session->newdata.ecef.z,
-                 d4, ftow,
+                 d3, ftow,
                  session->newdata.mode);
         mask |= ECEF_SET | TIME_SET | NTPTIME_IS;
         if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
@@ -3887,941 +4838,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360
          *   Resolution SMTx
          */
-        u1 = (uint8_t) getub(buf, 0);
-        switch (u1) {           // sub-code ID
-        case 0x15:
-            /* Current Datum Values
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            if (43 != len) {
-                bad_len = 43;
-                break;
-            }
-            s1 = getbes16(buf, 1);              // Datum Index
-            d1 = getbed64(buf, 3);              // DX
-            d2 = getbed64(buf, 11);             // DY
-            d3 = getbed64(buf, 19);             // DZ
-            d4 = getbed64(buf, 27);             // A-axis
-            d5 = getbed64(buf, 35);             // Eccentricity Squared
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-15: Current Datum: %d %f %f %f %f %f\n",
-                     s1, d1, d2, d3, d4, d5);
-            break;
-
-        case 0x20:
-            /* Last Fix with Extra Information (binary fixed point) 0x8f-20
-             * Only output when fix is available.
-             * CSK sez "why does my Lassen SQ output oversize packets?"
-             * Present in:
-             *   pre-2000 models
-             *   ACE II
-             *   Copernicus, Copernicus II (64-bytes)
-             * Not present in:
-             *   ICM SMT 360
-             *   RES SMT 360
-             */
-            if (56 != (len) &&
-                64 != (len)) {
-                bad_len = 56;
-                break;
-            }
-            s1 = getbes16(buf, 2);      // east velocity
-            s2 = getbes16(buf, 4);      // north velocity
-            s3 = getbes16(buf, 6);      // up velocity
-            tow = getbeu32(buf, 8);     // time in ms
-            sl1 = getbes32(buf, 12);    // latitude
-            ul2 = getbeu32(buf, 16);    // longitude
-            // Lassen iQ, and copernicus (ii) doc says this is always altHAE
-            sl2 = getbes32(buf, 20);    // altitude
-            u1 = getub(buf, 24);        // velocity scaling
-            u2 = getub(buf, 27);        // fix flags
-            u3 = getub(buf, 28);        // num svs
-            u4 = getub(buf, 29);        // utc offset
-            week = getbeu16(buf, 30);   // tsip.gps_week
-            // PRN/IODE data follows
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-20: LFwEI: %d %d %d tow %u %d "
-                     " %u %u %x %x %u leap %u week %d\n",
-                     s1, s2, s3, tow, sl1, ul2, sl2, u1, u2, u3, u4, week);
-
-            if ((u1 & 0x01) != (uint8_t) 0) {     // check velocity scaling
-                d5 = 0.02;
-            } else {
-                d5 = 0.005;
-            }
-
-            // 0x8000 is over-range
-            if ((int16_t)0x8000 != s2) {
-                d2 = (double)s2 * d5;   // north velocity m/s
-                session->newdata.NED.velN = d2;
-            }
-            if ((int16_t)0x8000 != s1) {
-                d1 = (double)s1 * d5;   // east velocity m/s
-                session->newdata.NED.velE = d1;
-            }
-            if ((int16_t)0x8000 != s3) {
-                d3 = (double)s3 * d5;       // up velocity m/s
-                session->newdata.NED.velD = -d3;
-            }
-
-            session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
-            session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
-            if (180.0 < session->newdata.longitude) {
-                session->newdata.longitude -= 360.0;
-            }
-            // Lassen iQ doc says this is always altHAE in mm
-            session->newdata.altHAE = (double)sl2 * 1e-3;
-            mask |= ALTITUDE_SET;
-
-            session->newdata.status = STATUS_UNK;
-            session->newdata.mode = MODE_NO_FIX;
-            if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
-                session->newdata.status = STATUS_GPS;
-                if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
-                    session->newdata.status = STATUS_DGPS;
-                }
-                if ((u2 & 0x04) != (uint8_t)0) {      // Fix Dimension
-                    session->newdata.mode = MODE_2D;
-                } else {
-                    session->newdata.mode = MODE_3D;
-                }
-            }
-            session->gpsdata.satellites_used = (int)u3;
-            if (10 < (int)u4) {
-                session->context->leap_seconds = (int)u4;
-                session->context->valid |= LEAP_SECOND_VALID;
-                /* check for week rollover
-                 * Trimble uses 15 bit weeks, but can guess the epoch wrong
-                 * Can not be in gpsd_gpstime_resolv() because that
-                 * may see BUILD_LEAPSECONDS instead of leap_seconds
-                 * from receiver.
-                 */
-                if (17 < u4 &&
-                    1930 > week) {
-                    // leap second 18 added in gps week 1930
-                    week += 1024;
-                    if (1930 > week) {
-                        // and again?
-                        week += 1024;
-                    }
-                }
-            }
-            MSTOTS(&ts_tow, tow);
-            session->newdata.time = gpsd_gpstime_resolv(session, week,
-                                                        ts_tow);
-            mask |= TIME_SET | NTPTIME_IS | LATLON_SET |
-                    STATUS_SET | MODE_SET | VNED_SET;
-            if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-                mask |= CLEAR_IS;
-                session->driver.tsip.last_tow = ts_tow;
-            }
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-20: LFwEI: time=%s lat=%.2f lon=%.2f "
-                     "altHAE=%.2f mode=%d status=%d\n",
-                     timespec_str(&session->newdata.time, ts_buf,
-                                  sizeof(ts_buf)),
-                     session->newdata.latitude, session->newdata.longitude,
-                     session->newdata.altHAE,
-                     session->newdata.mode, session->newdata.status);
-            break;
-        case 0x23:
-            /* Compact Super Packet (0x8f-23)
-             * Present in:
-             *   Copernicus, Copernicus II
-             * Not present in:
-             *   pre-2000 models
-             *   Lassen iQ
-             *   ICM SMT 360
-             *   RES SMT 360
-             */
-            session->driver.tsip.req_compact = 0;
-            // CSK sez "i don't trust this to not be oversized either."
-            if (29 > len) {
-                bad_len = 29;
-                break;
-            }
-            tow = getbeu32(buf, 1);             // time in ms
-            week = getbeu16(buf, 5);            // tsip.gps_week
-            u1 = getub(buf, 7);                 // utc offset
-            u2 = getub(buf, 8);                 // fix flags
-            sl1 = getbes32(buf, 9);             // latitude
-            ul2 = getbeu32(buf, 13);            // longitude
-            // Copernicus (ii) doc says this is always altHAE in mm
-            sl3 = getbes32(buf, 17);    // altitude
-            // set xNED here
-            s2 = getbes16(buf, 21);     // east velocity
-            s3 = getbes16(buf, 23);     // north velocity
-            s4 = getbes16(buf, 25);     // up velocity
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-23: CSP: %u %d %u %u %d %u %d %d %d %d\n",
-                     tow, week, u1, u2, sl1, ul2, sl3, s2, s3, s4);
-            if (10 < (int)u1) {
-                session->context->leap_seconds = (int)u1;
-                session->context->valid |= LEAP_SECOND_VALID;
-            }
-            MSTOTS(&ts_tow, tow);
-            session->newdata.time =
-                gpsd_gpstime_resolv(session, week, ts_tow);
-            session->newdata.status = STATUS_UNK;
-            session->newdata.mode = MODE_NO_FIX;
-            if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
-                session->newdata.status = STATUS_GPS;
-                if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
-                    session->newdata.status = STATUS_DGPS;
-                }
-                if ((u2 & 0x04) != (uint8_t)0) {       // Fix Dimension
-                    session->newdata.mode = MODE_2D;
-                } else {
-                    session->newdata.mode = MODE_3D;
-                }
-            }
-            session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
-            session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
-            if (180.0 < session->newdata.longitude) {
-                session->newdata.longitude -= 360.0;
-            }
-            // Copernicus (ii) doc says this is always altHAE in mm
-            session->newdata.altHAE = (double)sl3 * 1e-3;
-            mask |= ALTITUDE_SET;
-            if ((u2 & 0x20) != (uint8_t)0) {     // check velocity scaling
-                d5 = 0.02;
-            } else {
-                d5 = 0.005;
-            }
-            d1 = (double)s2 * d5;       // east velocity m/s
-            d2 = (double)s3 * d5;       // north velocity m/s
-            d3 = (double)s4 * d5;       // up velocity m/s
-            session->newdata.NED.velN = d2;
-            session->newdata.NED.velE = d1;
-            session->newdata.NED.velD = -d3;
-
-            mask |= TIME_SET | NTPTIME_IS | LATLON_SET |
-                    STATUS_SET | MODE_SET | VNED_SET;
-            if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-                mask |= CLEAR_IS;
-                session->driver.tsip.last_tow = ts_tow;
-            }
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-23: SP-CSP: time %s lat %.2f lon %.2f "
-                     "altHAE %.2f mode %d status %d\n",
-                     timespec_str(&session->newdata.time, ts_buf,
-                                  sizeof(ts_buf)),
-                     session->newdata.latitude, session->newdata.longitude,
-                     session->newdata.altHAE,
-                     session->newdata.mode, session->newdata.status);
-            break;
-
-        case 0x42:
-            /* Stored production parameters
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             *   Resolution SMTx (2013)
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            if (19 > len) {
-                bad_len = 19;
-                break;
-            }
-            u1 = getub(buf, 1);                 // Production Options Prefix
-            u2 = getub(buf, 2);                 // Production Number Extension
-            u3 = getbeu16(buf, 3);              // Case Sernum Prefix
-            u4 = getbeu32(buf, 5);              // Case Sernum
-            u5 = getbeu32(buf, 9);              // Production Number
-            u6 = getbeu32(buf, 13);             // Resevered
-            u7 = getbeu16(buf, 15);             // Machine ID
-            u8 = getbeu16(buf, 17);             // Reserved
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-42: SPP: Prod x%x-%x Sernum %x-%x "
-                     "Prod %x  Res %x ID %x Res %x\n",
-                     u1, u2, u3, u4, u5, u6, u7, u8);
-            break;
-        case 0xa5:
-            /* Packet Broadcast Mask (0x8f-a5) polled by 0x8e-a5
-             *
-             * Present in:
-             *   ICM SMT 360
-             *   RES SMT 360
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             *
-             * Defaults:
-             *   RES SMT 360: 05, 00
-             *   Resolution SMTx: 05 00
-             */
-            if (5 > len) {
-                bad_len = 5;
-                break;
-            }
-            mask = decode_x8f_a5(session, buf);
-            break;
-
-        case 0xa6:
-            /* Self-Survey Command (0x8f-a6) polled by 0x8e-a6
-             *
-             * Present in:
-             *   ICM SMT 360
-             *   RES SMT 360
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            if (3 > len) {
-                bad_len = 3;
-                break;
-            }
-            u2 = getub(buf, 1);          // Command
-            u3 = getub(buf, 2);          // Status
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-a6: SSC: command x%x status x%x\n",
-                     u2, u3);
-            break;
-
-        case 0xa7:
-            /* Thunderbolt Individual Satellite Solutions
-             * partial decode
-             */
-            if (10 > len) {
-                bad_len = 10;
-                break;
-            }
-            // we assume the receiver not in some crazy mode, and is GPS time
-            tow = getbeu32(buf, 2);             // gpstime in seconds
-            ts_tow.tv_sec = tow;
-            ts_tow.tv_nsec = 0;
-            u1 = buf[1];                     // format, 0 Float, 1 Int
-
-            if (0 == u1) {
-                // floating point mode
-                d1 = getbef32(buf, 6);   // clock bias (combined)
-                d2 = getbef32(buf, 10);  // clock bias rate (combined)
-                // FIXME: decode the individual biases
-                GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "TSIP x8f-a7: tow %llu mode %u bias %e "
-                         "bias rate %e\n",
-                         (long long unsigned)tow, u1, d1, d2);
-            } else if (1 == u1) {
-                // integer mode
-                s1 = getbeu16(buf, 6);    // Clock Bias (combined)
-                s2 = getbeu16(buf, 8);    // Clock Bias rate (combined)
-                // FIXME: decode the individual biases
-                GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "TSIP x8f-a7: tow %llu mode %u bias %d "
-                         "bias rate %d\n",
-                         (long long unsigned)tow, u1, s1, s2);
-            } else {
-                // unknown mode
-                GPSD_LOG(LOG_WARN, &session->context->errout,
-                         "TSIP x8f-a7: tow %llu mode %u. Unnown mode\n",
-                         (long long unsigned)tow, u1);
-            }
-            break;
-        case 0xa9:
-            /* Self Survey Parameters
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             *   Resolution SMTx
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            if (11 > len) {
-                bad_len = 11;
-                break;
-            }
-            u1 = getub(buf, 1);         // Self Survey Enable
-            u2 = getub(buf, 2);         // Position Save Flag
-            u3 = getbeu32(buf, 3);      // Self Survey Length
-            u4 = getbeu32(buf, 7);      // Reserved
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "TSIP x8f-a9 SSP: sse %u psf %u length %d rex x%x \n",
-                     u1, u2, u3, u4);
-            GPSD_LOG(LOG_IO, &session->context->errout,
-                     "TSIP: sse %s sssave %s\n",
-                     val2str(u1, vss_enable),
-                     val2str(u2, vss_save));
-            break;
-        case 0xab:
-            /* Thunderbolt Timing Superpacket
-             * Present in:
-             *   Resolution SMTx
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            if (17 > len) {
-                bad_len = 17;
-                break;
-            }
-            session->driver.tsip.last_41 = now; // keep timestamp for request
-            mask = decode_x8f_ab(session, buf);
-            break;
-
-        case 0xac:
-            /* Supplemental Timing Packet (0x8f-ac)
-             * present in:
-             *   ThunderboltE
-             *   ICM SMT 360
-             *   RES SMT 360
-             *   Resolution SMTx
-             * Not Present in:
-             *   pre-2000 models
-             *   Lassen iQ
-             *   Copernicus II (2009)
-             */
-            if (68 != len) {
-                bad_len = 68;
-                break;
-            }
-            mask = decode_x8f_ac(session, buf);
-            break;
-
-        case 0x02:
-            /* UTC Information
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            FALLTHROUGH
-        case 0x21:
-            /* Request accuracy information
-             * Present in:
-             *   Copernicus II (2009)
-             * Not Present in:
-             *   pre-2000 models
-             */
-            FALLTHROUGH
-        case 0x2a:
-            /* Request Fix and Channel Tracking info, Type 1
-             * Present in:
-             *   Copernicus II (2009)
-             * Not Present in:
-             *   pre-2000 models
-             */
-            FALLTHROUGH
-        case 0x2b:
-            /* Request Fix and Channel Tracking info, Type 2
-             * Present in:
-             *   Copernicus II (2009)
-             * Not Present in:
-             *   pre-2000 models
-             */
-            FALLTHROUGH
-        case 0x41:
-            /* Stored manufacturing operating parameters
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            FALLTHROUGH
-        case 0x4a:
-            /* PPS characteristics
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             *   Copernicus II (2009)
-             * Not Present in:
-             *   pre-2000 models
-             */
-            FALLTHROUGH
-        case 0x4e:
-            /* PPS Output options
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            FALLTHROUGH
-        case 0x4f:
-            /* Set PPS Width
-             * Present in:
-             *   Copernicus II (2009)
-             * Not Present in:
-             *   pre-2000 models
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x60:
-            /* DR Calibration and Status Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x62:
-            /* GPS/DR Position/Velocity Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x64:
-            /* Firmware Version and Configuration Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x6b:
-            /* Last Gyroscope Readings Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x6d:
-            /* Last Odometer Readings Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x6f:
-            /* Firmware Version Name Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x70:
-            /* Beacon Channel Status Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x71:
-            /* DGPS Station Database Reports
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x73:
-            /* Beacon Channel Control Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x74:
-            /* Clear Beacon Database Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x75:
-            /* FFT Start Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x76:
-            /* FFT Stop Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x77:
-            /* FFT Reports
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x78:
-            /* RTCM Reports
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x79:
-            /* Beacon Station Attributes Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x7a:
-            /* Beacon Station Attributes Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x7b:
-            /* DGPS Receiver RAM Configuration Block Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x7c:
-            /* DGPS Receiver Configuration Block Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x7e:
-            /* Satellite Line-of-Sight (LOS) Message
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x7f:
-            /* DGPS Receiver ROM Configuration Block Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x80:
-            /* DGPS Service Provider System Information Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x81:
-            /* Decoder Station Information Report and Selection Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x82:
-            /* Decoder Diagnostic Information Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x84:
-            /* Satellite FFT Control Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x85:
-            /* DGPS Source Tracking Status Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x86:
-            /* Clear Satellite Database Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x87:
-            /* Network Statistics Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x88:
-            /* Diagnostic Output Options Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x89:
-            /* DGPS Source Control Report /Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x8a:
-            /* Service Provider Information Report and Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x8b:
-            /* Service Provider Activation Information Report & Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x8e:
-            /* Service Provider Data Load Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x8f:
-            /* Receiver Identity Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x90:
-            /* Guidance Status Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x91:
-            /* Guidance Configuration Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x92:
-            /* Lightbar Configuration Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x94:
-            /* Guidance Operation Acknowledgment
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x95:
-            /* Button Box Configuration Type Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x96:
-            /* Point Manipulation Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x97:
-            /* Utility Information Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x98:
-            /* Individual Button Configuration Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0x9a:
-            /* Differential Correction Information Report
-             * Present in:
-             *   pre-2000 models
-             * Not Present in:
-             *   Copernicus II (2009)
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             */
-            FALLTHROUGH
-        case 0xa0:
-            /* DAC value
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            FALLTHROUGH
-        case 0xa2:
-            /* UTC/GPS timing
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            FALLTHROUGH
-        case 0xa3:
-            /* Oscillator disciplining command
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            FALLTHROUGH
-        case 0xa8:
-            /* Oscillator disciplining parameters
-             * Present in:
-             *   ICM SMT 360 (2018)
-             *   RES SMT 360 (2018)
-             * Not Present in:
-             *   pre-2000 models
-             *   Copernicus II (2009)
-             */
-            FALLTHROUGH
-        default:
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "TSIP x8f-%02x: Unhandled TSIP superpacket\n", u1);
-        }
+        mask = decode_x8f(session, buf, len, &bad_len, now);
         break;
 // Start of TSIP V1
     case 0x90:
