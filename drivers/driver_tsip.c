@@ -2508,6 +2508,66 @@ static gps_mask_t decode_x8f_a5(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+/* decode Superpacket x8f-a7
+ */
+static gps_mask_t decode_x8f_a7(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    double d1, d2;
+    int s1, s2;
+
+    // we assume the receiver not in some crazy mode, and is GPS time
+    unsigned long tow = getbeu32(buf, 2);          // gpstime in seconds
+    unsigned u1 = buf[1];                          // format, 0 Float, 1 Int
+
+    if (0 == u1) {
+	// floating point mode
+	d1 = getbef32(buf, 6);   // clock bias (combined)
+	d2 = getbef32(buf, 10);  // clock bias rate (combined)
+	// FIXME: decode the individual biases
+	GPSD_LOG(LOG_PROG, &session->context->errout,
+		 "TSIP x8f-a7: tow %llu mode %u bias %e "
+		 "bias rate %e\n",
+		 (long long unsigned)tow, u1, d1, d2);
+    } else if (1 == u1) {
+	// integer mode
+	s1 = getbeu16(buf, 6);    // Clock Bias (combined)
+	s2 = getbeu16(buf, 8);    // Clock Bias rate (combined)
+	// FIXME: decode the individual biases
+	GPSD_LOG(LOG_PROG, &session->context->errout,
+		 "TSIP x8f-a7: tow %llu mode %u bias %d "
+		 "bias rate %d\n",
+		 (long long unsigned)tow, u1, s1, s2);
+    } else {
+	// unknown mode
+	GPSD_LOG(LOG_WARN, &session->context->errout,
+		 "TSIP x8f-a7: tow %llu mode %u. Unnown mode\n",
+		 (long long unsigned)tow, u1);
+    }
+    return mask;
+}
+
+/* decode Superpacket x8f-a9
+ */
+static gps_mask_t decode_x8f_a9(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned u1 = getub(buf, 1);              // Self Survey Enable
+    unsigned u2 = getub(buf, 2);              // Position Save Flag
+    unsigned long u3 = getbeu32(buf, 3);      // Self Survey Length
+    unsigned long u4 = getbeu32(buf, 7);      // Reserved
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+	     "TSIP x8f-a9 SSP: sse %u psf %u length %ld rex x%lx \n",
+	     u1, u2, u3, u4);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "TSIP: sse %s sssave %s\n",
+                 val2str(u1, vss_enable),
+                 val2str(u2, vss_save));
+    return mask;
+}
+
 /* decode Superpacket x8f-ab
  * Oddly, no flag to say if the time is valid...
  */
@@ -2770,12 +2830,9 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
 {
     gps_mask_t mask = 0;
     int bad_len = 0;
-    unsigned u1, u2, u3, u4;
-    int s1, s2;
-    double d1, d2;
-    unsigned long tow;             // time of week in milli seconds
+    unsigned u2, u3;
 
-    u1 = getub(buf, 0);
+    unsigned u1 = getub(buf, 0);
     switch (u1) {           // sub-code ID
     case 0x15:
         /* Current Datum Values
@@ -2895,34 +2952,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
             bad_len = 10;
             break;
         }
-        // we assume the receiver not in some crazy mode, and is GPS time
-        tow = getbeu32(buf, 2);             // gpstime in seconds
-        u1 = buf[1];                     // format, 0 Float, 1 Int
-
-        if (0 == u1) {
-            // floating point mode
-            d1 = getbef32(buf, 6);   // clock bias (combined)
-            d2 = getbef32(buf, 10);  // clock bias rate (combined)
-            // FIXME: decode the individual biases
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-a7: tow %llu mode %u bias %e "
-                     "bias rate %e\n",
-                     (long long unsigned)tow, u1, d1, d2);
-        } else if (1 == u1) {
-            // integer mode
-            s1 = getbeu16(buf, 6);    // Clock Bias (combined)
-            s2 = getbeu16(buf, 8);    // Clock Bias rate (combined)
-            // FIXME: decode the individual biases
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x8f-a7: tow %llu mode %u bias %d "
-                     "bias rate %d\n",
-                     (long long unsigned)tow, u1, s1, s2);
-        } else {
-            // unknown mode
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "TSIP x8f-a7: tow %llu mode %u. Unnown mode\n",
-                     (long long unsigned)tow, u1);
-        }
+        mask = decode_x8f_a7(session, buf);
         break;
     case 0xa9:
         /* Self Survey Parameters
@@ -2938,17 +2968,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
             bad_len = 11;
             break;
         }
-        u1 = getub(buf, 1);         // Self Survey Enable
-        u2 = getub(buf, 2);         // Position Save Flag
-        u3 = getbeu32(buf, 3);      // Self Survey Length
-        u4 = getbeu32(buf, 7);      // Reserved
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIP x8f-a9 SSP: sse %u psf %u length %d rex x%x \n",
-                 u1, u2, u3, u4);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP: sse %s sssave %s\n",
-                 val2str(u1, vss_enable),
-                 val2str(u2, vss_save));
+        mask = decode_x8f_a9(session, buf);
         break;
     case 0xab:
         /* Thunderbolt Timing Superpacket
