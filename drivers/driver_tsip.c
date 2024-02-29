@@ -1187,15 +1187,101 @@ static gps_mask_t decode_x1c_81(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
+// decode Superpacket x1c-83
+static gps_mask_t decode_x1c_83(struct gps_device_t *session, const char *buf,
+                                int len)
+{
+    gps_mask_t mask = 0;
+    char buf2[BUFSIZ];
+    unsigned long ul1 = getbeu32(buf, 1);  // Serial number
+    unsigned bday = getub(buf, 5);         // Build day
+    unsigned bmon = getub(buf, 6);         // Build month
+    unsigned byr = getbeu16(buf, 7);       // Build year
+    unsigned u4 = getub(buf, 9);           // Build hour
+    unsigned u5 = getub(buf, 12);          // Length of Hardware ID
+
+    // Hardware Code
+    session->driver.tsip.hardware_code = getbeu16(buf, 10);
+
+    // check for valid module name length
+    // copernicus ii is 27 long
+    if (40 < u5) {
+	u5 = 40;
+    }
+    // check for valid module name length, again
+    if ((unsigned)(len - 13) < u5) {
+	u5 = len - 13;
+    }
+    memcpy(buf2, &buf[13], u5);
+    buf2[u5] = '\0';
+
+    (void)snprintf(session->gpsdata.dev.sernum,
+		   sizeof(session->gpsdata.dev.sernum),
+		   "%lx", ul1);
+    (void)snprintf(session->subtype1, sizeof(session->subtype1),
+		   "hw %02u/%02u/%04u %02u %04u %.40s",
+		   bmon, bday, byr, u4,
+		   session->driver.tsip.hardware_code,
+		   buf2);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x1c-83: Hardware vers %s Sernum %s\n",
+	     session->subtype1,
+	     session->gpsdata.dev.sernum);
+
+    mask |= DEVICEID_SET;
+    session->driver.tsip.subtype =
+	session->driver.tsip.hardware_code;
+
+    // Detecting device by Hardware Code
+    switch (session->driver.tsip.hardware_code) {
+    case 3001:            // Acutime Gold
+	configuration_packets_acutime_gold(session);
+	break;
+
+    // RES look-alikes
+    case 3002:            // TSIP_REST
+	FALLTHROUGH
+    case 3009:            // TSIP_RESSMT, Model 66266
+	FALLTHROUGH
+    case 3017:            // Resolution SMTx,  Model 99889
+	FALLTHROUGH
+    case 3023:            // RES SMT 360
+	FALLTHROUGH
+    case 3026:            // ICM SMT 360
+	FALLTHROUGH
+    case 3031:            // RES360 17x22
+	FALLTHROUGH
+    case 3100:            // TSIP_RES720
+	configuration_packets_res360(session);
+	break;
+
+    // Unknown
+    default:
+	GPSD_LOG(LOG_WARN, &session->context->errout,
+		 "TSIP x1c-83: Unknown hw code %x\n",
+		 session->driver.tsip.hardware_code);
+	FALLTHROUGH
+    case 1001:            // Lassen iQ
+	FALLTHROUGH
+    case 1002:            // Copernicus
+	FALLTHROUGH
+    case 1003:            // Copernicus II
+	FALLTHROUGH
+    case 3007:            // Thunderbolt E
+	FALLTHROUGH
+    case 3032:            // Acutime 360
+	configuration_packets_generic(session);
+	break;
+    }
+    return mask;
+}
+
 // decode Superpackets x1c-XX
 static gps_mask_t decode_x1c(struct gps_device_t *session, const char *buf,
                              int len, int *pbad_len)
 {
     gps_mask_t mask = 0;
     int bad_len = 0;
-    unsigned u2, u3, u4, u5;
-    unsigned long ul1, ul2;
-    char buf2[BUFSIZ];
     unsigned u1 = getub(buf, 0);
 
     // decode by sub-code
@@ -1226,84 +1312,7 @@ static gps_mask_t decode_x1c(struct gps_device_t *session, const char *buf,
             bad_len = 13;
             break;
         }
-	ul1 = getbeu32(buf, 1);  // Serial number
-	u2 = getub(buf, 5);      // Build day
-	u3 = getub(buf, 6);      // Build month
-	ul2 = getbeu16(buf, 7);  // Build year
-	u4 = getub(buf, 9);      // Build hour
-	// Hardware Code
-	session->driver.tsip.hardware_code = getbeu16(buf, 10);
-	u5 = getub(buf, 12);     // Length of Hardware ID
-	// check for valid module name length
-	// copernicus ii is 27 long
-	if (40 < u5) {
-	    u5 = 40;
-	}
-	// check for valid module name length, again
-	if ((unsigned)(len - 13) < u5) {
-	    u5 = len - 13;
-	}
-	memcpy(buf2, &buf[13], u5);
-	buf2[u5] = '\0';
-
-	(void)snprintf(session->gpsdata.dev.sernum,
-		       sizeof(session->gpsdata.dev.sernum),
-		       "%lx", ul1);
-	(void)snprintf(session->subtype1, sizeof(session->subtype1),
-		       "hw %02u/%02u/%04lu %02u %04u %.40s",
-		       u2, u3, ul2, u4,
-		       session->driver.tsip.hardware_code,
-		       buf2);
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "TSIP x1c-83: Hardware vers %s Sernum %s\n",
-		 session->subtype1,
-		 session->gpsdata.dev.sernum);
-
-	mask |= DEVICEID_SET;
-	session->driver.tsip.subtype =
-	    session->driver.tsip.hardware_code;
-
-	// Detecting device by Hardware Code
-	switch (session->driver.tsip.hardware_code) {
-	case 3001:            // Acutime Gold
-	    configuration_packets_acutime_gold(session);
-	    break;
-
-	// RES look-alikes
-	case 3002:            // TSIP_REST
-	    FALLTHROUGH
-	case 3009:            // TSIP_RESSMT, Model 66266
-	    FALLTHROUGH
-	case 3017:            // Resolution SMTx,  Model 99889
-	    FALLTHROUGH
-	case 3023:            // RES SMT 360
-	    FALLTHROUGH
-	case 3026:            // ICM SMT 360
-	    FALLTHROUGH
-	case 3031:            // RES360 17x22
-	    FALLTHROUGH
-	case 3100:            // TSIP_RES720
-	    configuration_packets_res360(session);
-	    break;
-
-	// Unknown
-	default:
-	    GPSD_LOG(LOG_WARN, &session->context->errout,
-		     "TSIP x1c-83: Unknown hw code %x\n",
-		     session->driver.tsip.hardware_code);
-	    FALLTHROUGH
-	case 1001:            // Lassen iQ
-	    FALLTHROUGH
-	case 1002:            // Copernicus
-	    FALLTHROUGH
-	case 1003:            // Copernicus II
-	    FALLTHROUGH
-	case 3007:            // Thunderbolt E
-	    FALLTHROUGH
-	case 3032:            // Acutime 360
-	    configuration_packets_generic(session);
-	    break;
-	}
+        mask = decode_x1c_83(session, buf, len);
 	break;
     default:
 	GPSD_LOG(LOG_WARN, &session->context->errout,
