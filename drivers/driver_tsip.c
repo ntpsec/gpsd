@@ -2466,6 +2466,28 @@ static gps_mask_t decode_x8f_23(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+/* decode Superpacket x8f-42
+ */
+static gps_mask_t decode_x8f_42(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+
+    unsigned u1 = getub(buf, 1);                 // Production Options Prefix
+    unsigned u2 = getub(buf, 2);                 // Production Number Extension
+    unsigned u3 = getbeu16(buf, 3);              // Case Sernum Prefix
+    unsigned long ul1 = getbeu32(buf, 5);        // Case Sernum
+    unsigned long ul2 = getbeu32(buf, 9);        // Production Number
+    unsigned long ul3 = getbeu32(buf, 13);       // Resevered
+    unsigned u4 = getbeu16(buf, 15);             // Machine ID
+    unsigned u5 = getbeu16(buf, 17);             // Reserved
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x8f-42: SPP: Prod x%x-%x Sernum %x-%lx "
+	     "Prod %lx  Res %lx ID %x Res %x\n",
+	     u1, u2, u3, ul1, ul2, ul3, u4, u5);
+    return mask;
+}
+
 /* decode Packet Broadcast Mask: Superpacket x8f-ad
  */
 static gps_mask_t decode_x8f_a5(struct gps_device_t *session, const char *buf)
@@ -2748,8 +2770,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
 {
     gps_mask_t mask = 0;
     int bad_len = 0;
-    unsigned u1, u2, u3, u4, u5;
-    unsigned long ul1, ul2, ul3;
+    unsigned u1, u2, u3, u4;
     int s1, s2;
     double d1, d2;
     unsigned long tow;             // time of week in milli seconds
@@ -2822,18 +2843,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
             bad_len = 19;
             break;
         }
-        u1 = getub(buf, 1);                 // Production Options Prefix
-        u2 = getub(buf, 2);                 // Production Number Extension
-        u3 = getbeu16(buf, 3);              // Case Sernum Prefix
-        ul1 = getbeu32(buf, 5);             // Case Sernum
-        ul2 = getbeu32(buf, 9);             // Production Number
-        ul3 = getbeu32(buf, 13);            // Resevered
-        u4 = getbeu16(buf, 15);             // Machine ID
-        u5 = getbeu16(buf, 17);             // Reserved
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x8f-42: SPP: Prod x%x-%x Sernum %x-%lx "
-                 "Prod %lx  Res %lx ID %x Res %x\n",
-                 u1, u2, u3, ul1, ul2, ul3, u4, u5);
+        mask = decode_x8f_42(session, buf);
         break;
     case 0xa5:
         /* Packet Broadcast Mask (0x8f-a5) polled by 0x8e-a5
