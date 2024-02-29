@@ -1646,6 +1646,187 @@ static gps_mask_t decode_x5c(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode x5d
+static gps_mask_t decode_x5d(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    char buf2[BUFSIZ];
+    unsigned char u1 = getub(buf, 0);           // PRN
+    int i = getub(buf, 1);                      // chan
+    unsigned u3 = getub(buf, 2);                // Acquisition flag
+    unsigned u4 = getub(buf, 3);                // used?
+    double f1 = getbef32(buf, 4);               // SNR
+    // This can be one second behind the TPV on RES SMT 360
+    double ftow = getbef32(buf, 8);             // time of Last measurement
+    double d1 = getbef32(buf, 12) * RAD_2_DEG;  // Elevation
+    double d2 = getbef32(buf, 16) * RAD_2_DEG;  // Azimuth
+    unsigned u5 = getub(buf, 20);               // old measurement flag
+    unsigned u6 = getub(buf, 21);               // integer msec flag
+    unsigned u7 = getub(buf, 22);               // bad data flag
+    unsigned u8 = getub(buf, 23);               // data collection flag
+    unsigned u9 = getub(buf, 24);               // Used flags
+    unsigned u10 = getub(buf, 25);              // SV Type
+
+    /* Channel number, bits 0-2 reserved/unused as of 1999.
+     * Seems to always start series at zero and increment to last one.
+     * No way to know how many there will be.
+     * Save current channel to check for last 0x5d message
+     */
+    if (0 == i) {
+	// start of new cycle, save last count
+	session->gpsdata.satellites_visible =
+	    session->driver.tsip.last_chan_seen;
+    }
+    session->driver.tsip.last_chan_seen = i;
+
+    if (TSIP_CHANNELS > i) {
+	session->gpsdata.skyview[i].PRN = u1;
+	session->gpsdata.skyview[i].ss = f1;
+	session->gpsdata.skyview[i].elevation = d1;
+	session->gpsdata.skyview[i].azimuth = d2;
+	session->gpsdata.skyview[i].used = (bool)u4;
+	session->gpsdata.skyview[i].gnssid = tsip_gnssid(u10, u1,
+	    &session->gpsdata.skyview[i].svid);
+	if (0 == u7) {
+	    session->gpsdata.skyview[i].health = SAT_HEALTH_OK;
+	} else {
+	    session->gpsdata.skyview[i].health = SAT_HEALTH_BAD;
+	}
+
+	/* when polled by 0x3c, all the skyview times will be the same
+	 * in one cluster */
+	if (0.0 < ftow) {
+	    DTOTS(&ts_tow, ftow);
+	    session->gpsdata.skyview_time =
+		gpsd_gpstime_resolv(session, session->context->gps_week,
+				    ts_tow);
+	    /* do not save in session->driver.tsip.last_tow
+	     * as this is skyview time, not fix time */
+	}
+	if (++i >= session->gpsdata.satellites_visible) {
+	    /* Last of the series?
+	     * This will cause extra SKY if this set has more
+	     * sats than the last set */
+	    mask |= SATELLITE_SET;
+	    session->gpsdata.satellites_visible = i;
+	}
+	/* If this series has fewer than last series there will
+	 * be no SKY, unless the cycle ender pushes the SKY */
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	    "TSIP x5d: Satellite Tracking Status: Ch %2d Con %d PRN %3d "
+	    "Acq %d Use %d SNR %4.1f LMT %.04f El %4.1f Az %5.1f Old %d "
+	    "Int %d Bad %d Col %d TPF %d SVT %d\n",
+	    i, u10, u1, u3, u4, f1, ftow, d1, d2, u5, u6, u7, u8, u9, u10);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "TSIP: bad:%s uflags:%s scons:%s\n",
+	     val2str(u7, vsv_bad),
+             flags2str(u9, vsv_used_flags, buf2, sizeof(buf2)),
+             val2str(u10, vsv_type));
+    return mask;
+}
+
+// Decode x6c
+static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
+                             int len, int *pbad_len)
+{
+    gps_mask_t mask = 0;
+    char buf2[80];
+    int i;
+    int bad_len = 0;
+    unsigned u1 = getub(buf, 0);          // fix dimension, mode
+    int count = getub(buf, 17);
+    if ((18 + count) != len) {
+	bad_len = 18 + count;
+	*pbad_len = bad_len;
+	return mask;
+    }
+
+    /*
+     * This looks right, but it sets a spurious mode value when
+     * the satellite constellation looks good to the chip but no
+     * actual fix has yet been acquired.  We should set the mode
+     * field (which controls gpsd's fix reporting) only from sentences
+     * that convey actual fix information, like 0x8f-20, but some
+     * TSIP do not support 0x8f-20, and 0x6c may be all we got.
+     */
+    switch (u1 & 7) {       // dimension
+    case 1:       // clock fix (surveyed in)
+	FALLTHROUGH
+    case 5:       // Overdetermined clock fix
+	session->newdata.status = STATUS_TIME;
+	session->newdata.mode = MODE_3D;
+	break;
+    case 3:
+	session->newdata.mode = MODE_2D;
+	break;
+    case 4:
+	session->newdata.mode = MODE_3D;
+	break;
+    case 6:
+	// Accutime
+	session->newdata.status = STATUS_DGPS;
+	session->newdata.mode = MODE_3D;
+	break;
+    case 0:
+	// Sometimes this is No Fix, sometimes Auto....
+	FALLTHROUGH
+    case 2:
+	FALLTHROUGH
+    case 7:
+	FALLTHROUGH
+    default:
+	session->newdata.mode = MODE_NO_FIX;
+	break;
+    }
+    if (8 == (u1 & 8)) {
+	// Surveyed in
+	session->newdata.status = STATUS_TIME;
+    }
+    if (STATUS_UNK < session->newdata.status) {
+	mask |= STATUS_SET;
+    }
+    mask |= MODE_SET;
+
+    session->gpsdata.satellites_used = count;
+    session->gpsdata.dop.pdop = getbef32(buf, 1);
+    session->gpsdata.dop.hdop = getbef32(buf, 5);
+    session->gpsdata.dop.vdop = getbef32(buf, 9);
+    // RES SMT 360 and ICM SMT 360 always report tdop == 1
+    session->gpsdata.dop.tdop = getbef32(buf, 13);
+    mask |= DOP_SET;
+
+    memset(session->driver.tsip.sats_used, 0,
+	    sizeof(session->driver.tsip.sats_used));
+    buf2[0] = '\0';
+    for (i = 0; i < count; i++) {
+	// negative PRN means sat unhealthy why use an unhealthy sat??
+	session->driver.tsip.sats_used[i] = getsb(buf, 18 + i);
+	if (LOG_PROG <= session->context->errout.debug) {
+	    str_appendf(buf2, sizeof(buf2),
+			   " %d", session->driver.tsip.sats_used[i]);
+	}
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x6c: AIVSS: mode %d status %d used %d "
+	     "pdop %.1f hdop %.1f vdop %.1f tdop %.1f Used %s fixd x%x\n",
+	     session->newdata.mode,
+	     session->newdata.status,
+	     session->gpsdata.satellites_used,
+	     session->gpsdata.dop.pdop,
+	     session->gpsdata.dop.hdop,
+	     session->gpsdata.dop.vdop,
+	     session->gpsdata.dop.tdop,
+	     buf2, u1);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "TSIP: fixd:%s\n",
+	     flags2str(u1, vfix, buf2, sizeof(buf2)));
+    mask |= USED_IS;
+    *pbad_len = bad_len;
+    return mask;
+}
+
 // Decode Protocol Version: x90-00
 static gps_mask_t decode_x90_00(struct gps_device_t *session, const char *buf)
 {
@@ -2652,20 +2833,19 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
 
 // decode packet x6d
 static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
-                           int len)
+                             int len, int *pbad_len)
 {
     gps_mask_t mask = 0;
-    int i, count;
-    unsigned fix_dim;
+    int i;
     char buf2[BUFSIZ];
 
-    fix_dim = getub(buf, 0);     // nsvs/dimension
-    count = (int)((fix_dim >> 4) & 0x0f);
+    unsigned fix_dim = getub(buf, 0);     // nsvs/dimension
+    int count = (int)((fix_dim >> 4) & 0x0f);
     if ((17 + count) != len) {
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "TSIP: x6d: bad length %d s/b %d\n", len, 17 + count);
-        return 0;
+	*pbad_len = 17 + count;
+        return mask;
     }
+    *pbad_len = 0;
 
     /*
      * This looks right, but it sets a spurious mode value when
@@ -4068,10 +4248,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     int i, j, len, count;
     gps_mask_t mask = 0;
     unsigned int id;
-    uint8_t u1, u2, u3, u4, u5, u6, u7, u8, u9, u10;
+    uint8_t u1, u2, u3, u4, u5, u6;
     uint32_t ul1, ul2;
     float f1, f2, f3, f4;
-    double d1, d2, d3;
+    double d1, d3;
     time_t now;
     char buf[BUFSIZ];
     char buf2[BUFSIZ];
@@ -4750,79 +4930,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 26;
             break;
         }
-        u1 = getub(buf, 0);     // PRN
-
-        /* Channel number, bits 0-2 reserved/unused as of 1999.
-         * Seems to always start series at zero and increment to last one.
-         * No way to know how many there will be.
-         * Save current channel to check for last 0x5d message
-         */
-        i = getub(buf, 1);     // chan
-        if (0 == i) {
-            // start of new cycle, save last count
-            session->gpsdata.satellites_visible =
-                session->driver.tsip.last_chan_seen;
-        }
-        session->driver.tsip.last_chan_seen = i;
-
-        u3 = getub(buf, 2);       // Acquisition flag
-        u4 = getub(buf, 3);       // SV used in Position or Time calculation
-        f1 = getbef32(buf, 4);    // Signal level
-        // This can be one second behind the TPV on RES SMT 360
-        ftow = getbef32(buf, 8);  // time of Last measurement
-        d1 = getbef32(buf, 12) * RAD_2_DEG;     // Elevation
-        d2 = getbef32(buf, 16) * RAD_2_DEG;     // Azimuth
-        u5 = getub(buf, 20);    // old measurement flag
-        u6 = getub(buf, 21);    // integer msec flag
-        u7 = getub(buf, 22);    // bad data flag
-        u8 = getub(buf, 23);    // data collection flag
-        u9 = getub(buf, 24);    // Used flags
-        u10 = getub(buf, 25);   // SV Type
-
-        if (TSIP_CHANNELS > i) {
-            session->gpsdata.skyview[i].PRN = (short)u1;
-            session->gpsdata.skyview[i].ss = (double)f1;
-            session->gpsdata.skyview[i].elevation = (double)d1;
-            session->gpsdata.skyview[i].azimuth = (double)d2;
-            session->gpsdata.skyview[i].used = (bool)u4;
-            session->gpsdata.skyview[i].gnssid = tsip_gnssid(u10, u1,
-                &session->gpsdata.skyview[i].svid);
-            if (0 == u7) {
-                session->gpsdata.skyview[i].health = SAT_HEALTH_OK;
-            } else {
-                session->gpsdata.skyview[i].health = SAT_HEALTH_BAD;
-            }
-
-            /* when polled by 0x3c, all the skyview times will be the same
-             * in one cluster */
-            if (0.0 < ftow) {
-                DTOTS(&ts_tow, ftow);
-                session->gpsdata.skyview_time =
-                    gpsd_gpstime_resolv(session, session->context->gps_week,
-                                        ts_tow);
-                /* do not save in session->driver.tsip.last_tow
-                 * as this is skyview time, not fix time */
-            }
-            if (++i >= session->gpsdata.satellites_visible) {
-                /* Last of the series?
-                 * This will cause extra SKY if this set has more
-                 * sats than the last set */
-                mask |= SATELLITE_SET;
-                session->gpsdata.satellites_visible = i;
-            }
-            /* If this series has fewer than last series there will
-             * be no SKY, unless the cycle ender pushes the SKY */
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                "TSIP x5d: Satellite Tracking Status: Ch %2d Con %d PRN %3d "
-                "Acq %d Use %d SNR %4.1f LMT %.04f El %4.1f Az %5.1f Old %d "
-                "Int %d Bad %d Col %d TPF %d SVT %d\n",
-                i, u10, u1, u3, u4, f1, ftow, d1, d2, u5, u6, u7, u8, u9, u10);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP: bad:%s uflags:%s scons:%s\n",
-                 val2str(u7, vsv_bad),
-                 flags2str(u9, vsv_used_flags, buf2, sizeof(buf2)),
-                 val2str(u10, vsv_type));
+        mask = decode_x5d(session, buf);
         break;
     case 0x6c:
         /* Satellite Selection List (0x6c) polled by 0x24
@@ -4840,95 +4948,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 18;
             break;
         }
-        u1 = getub(buf, 0);          // fix dimension, mode
-        count = (int)getub(buf, 17);
-        if ((18 + count) != len) {
-            bad_len = 18 + count;
-            break;
-        }
-
         // why same as 6d?
         session->driver.tsip.last_6d = now;     // keep timestamp for request
-        /*
-         * This looks right, but it sets a spurious mode value when
-         * the satellite constellation looks good to the chip but no
-         * actual fix has yet been acquired.  We should set the mode
-         * field (which controls gpsd's fix reporting) only from sentences
-         * that convey actual fix information, like 0x8f-20, but some
-         * TSIP do not support 0x8f-20, and 0x6c may be all we got.
-         */
-        switch (u1 & 7) {       // dimension
-        case 1:       // clock fix (surveyed in)
-            FALLTHROUGH
-        case 5:       // Overdetermined clock fix
-            session->newdata.status = STATUS_TIME;
-            session->newdata.mode = MODE_3D;
-            break;
-        case 3:
-            session->newdata.mode = MODE_2D;
-            break;
-        case 4:
-            session->newdata.mode = MODE_3D;
-            break;
-        case 6:
-            // Accutime
-            session->newdata.status = STATUS_DGPS;
-            session->newdata.mode = MODE_3D;
-            break;
-        case 0:
-            // Sometimes this is No Fix, sometimes Auto....
-            FALLTHROUGH
-        case 2:
-            FALLTHROUGH
-        case 7:
-            FALLTHROUGH
-        default:
-            session->newdata.mode = MODE_NO_FIX;
-            break;
-        }
-        if (8 == (u1 & 8)) {
-            // Surveyed in
-            session->newdata.status = STATUS_TIME;
-        }
-        if (STATUS_UNK < session->newdata.status) {
-            mask |= STATUS_SET;
-        }
-        mask |= MODE_SET;
-
-        session->gpsdata.satellites_used = count;
-        session->gpsdata.dop.pdop = getbef32(buf, 1);
-        session->gpsdata.dop.hdop = getbef32(buf, 5);
-        session->gpsdata.dop.vdop = getbef32(buf, 9);
-        // RES SMT 360 and ICM SMT 360 always report tdop == 1
-        session->gpsdata.dop.tdop = getbef32(buf, 13);
-        mask |= DOP_SET;
-
-        memset(session->driver.tsip.sats_used, 0,
-                sizeof(session->driver.tsip.sats_used));
-        buf2[0] = '\0';
-        for (i = 0; i < count; i++) {
-            // negative PRN means sat unhealthy why use an unhealthy sat??
-            session->driver.tsip.sats_used[i] = getsb(buf, 18 + i);
-            if (LOG_PROG <= session->context->errout.debug) {
-                str_appendf(buf2, sizeof(buf2),
-                               " %d", session->driver.tsip.sats_used[i]);
-            }
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP xcc: AIVSS: mode %d status %d used %d "
-                 "pdop %.1f hdop %.1f vdop %.1f tdop %.1f Used %s fixd x%x\n",
-                 session->newdata.mode,
-                 session->newdata.status,
-                 session->gpsdata.satellites_used,
-                 session->gpsdata.dop.pdop,
-                 session->gpsdata.dop.hdop,
-                 session->gpsdata.dop.vdop,
-                 session->gpsdata.dop.tdop,
-                 buf2, u1);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP: fixd:%s\n",
-                 flags2str(u1, vfix, buf2, sizeof(buf2)));
-        mask |= USED_IS;
+        mask = decode_x6c(session, buf, len, &bad_len);
         break;
     case 0x6d:
         /* All-In-View Satellite Selection (0x6d) polled by 0x24
@@ -4950,8 +4972,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
         }
         session->driver.tsip.last_6d = now;     // keep timestamp for request
-
-        mask = decode_x6d(session, buf, len);
+        mask = decode_x6d(session, buf, len, &bad_len);
         break;
     case 0x82:
         /* Differential Position Fix Mode (0x82) poll with 0x62-ff
