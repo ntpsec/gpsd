@@ -1144,6 +1144,63 @@ static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
     return gnssid;
 }
 
+// decode Packet x13
+static gps_mask_t decode_x13(struct gps_device_t *session, const char *buf,
+                             int len)
+{
+    gps_mask_t mask = 0;
+    unsigned u1 = getub(buf, 0);         // Packet ID of non-parsable packet
+    unsigned u2 = 0;
+
+    if (2 <= len) {
+	u2 = getub(buf, 1);     // Data byte 0 of non-parsable packet
+    }
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+	     "TSIP x13: Report Packet: request x%02x %02x "
+	     "cannot be parsed\n",
+	     u1, u2);
+    // ignore the rest of the bad data
+    if (0x8e == (int)u1 &&
+	0x23 == (int)u2) {
+	// no Compact Super Packet 0x8e-23
+	GPSD_LOG(LOG_WARN, &session->context->errout,
+		 "TSIP x8e-23: not available, use LFwEI (0x8f-20)\n");
+
+	/* Request LFwEI Super Packet instead
+	 * SMT 360 does not support 0x8e-20 either */
+	(void)tsip_write1(session, "\x8e\x20\x01", 3);
+    }
+    return mask;
+}
+
+// decode Packet x41
+static gps_mask_t decode_x41(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    char ts_buf[TIMESPEC_LEN];
+    double ftow = getbef32(buf, 0);                // gpstime
+    unsigned week = getbes16(buf, 4);              // week, yes, signed!
+    double f2 = getbef32(buf, 6);                  // leap seconds, fractional!
+
+    if (0.0 <= ftow &&
+	10.0 < f2) {
+	session->context->leap_seconds = (int)round(f2);
+	session->context->valid |= LEAP_SECOND_VALID;
+	DTOTS(&ts_tow, ftow);
+	session->newdata.time =
+	    gpsd_gpstime_resolv(session, week, ts_tow);
+	mask |= TIME_SET | NTPTIME_IS;
+	/* Note: this is not the time of current fix
+	 * Do not use in tsip.last_tow */
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x41: GPS Time: tow %.2f week %u ls %.1f %s\n",
+	     ftow, week, f2,
+	     timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
+    return mask;
+}
+
 // decode Superpacket x1c-81
 static gps_mask_t decode_x1c_81(struct gps_device_t *session, const char *buf,
                                 int len)
@@ -3829,27 +3886,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 1;
             break;
         }
-        u1 = getub(buf, 0);         // Packet ID of non-parsable packet
-        if (2 <= len) {
-            u2 = getub(buf, 1);     // Data byte 0 of non-parsable packet
-        } else {
-            u2 = 0;
-        }
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIP x13: Report Packet: request x%02x %02x "
-                 "cannot be parsed\n",
-                 u1, u2);
-        // ignore the rest of the bad data
-        if (0x8e == (int)u1 &&
-            0x23 == (int)u2) {
-            // no Compact Super Packet 0x8e-23
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "TSIP x8e-23: not available, use LFwEI (0x8f-20)\n");
-
-            /* Request LFwEI Super Packet instead
-             * SMT 360 does not support 0x8e-20 either */
-            (void)tsip_write1(session, "\x8e\x20\x01", 3);
-        }
+        mask = decode_x13(session, buf, len);
         break;
 
     case 0x1c:        // Hardware/Software Version Information
@@ -3887,24 +3924,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
         }
         session->driver.tsip.last_41 = now;     // keep timestamp for request
-        ftow = getbef32(buf, 0);                // gpstime
-        week = getbes16(buf, 4);                // week, yes, signed!
-        f2 = getbef32(buf, 6);                  // leap seconds
-        if (0.0 <= ftow &&
-            10.0 < f2) {
-            session->context->leap_seconds = (int)round(f2);
-            session->context->valid |= LEAP_SECOND_VALID;
-            DTOTS(&ts_tow, ftow);
-            session->newdata.time =
-                gpsd_gpstime_resolv(session, week, ts_tow);
-            mask |= TIME_SET | NTPTIME_IS;
-            /* Note: this is not the time of current fix
-             * Do not use in tsip.last_tow */
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x41: GPS Time: tow %.2f week %u ls %.1f %s\n",
-                 ftow, week, f2,
-                 timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
+        mask = decode_x41(session, buf);
         break;
     case 0x42:
         /* Single-Precision Position Fix, XYZ ECEF
