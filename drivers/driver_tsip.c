@@ -2253,6 +2253,24 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
+/* decode Superpacket x8f-15
+ */
+static gps_mask_t decode_x8f_15(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    int s1 = getbes16(buf, 1);                 // Datum Index
+    double d1 = getbed64(buf, 3);              // DX
+    double d2 = getbed64(buf, 11);             // DY
+    double d3 = getbed64(buf, 19);             // DZ
+    double d4 = getbed64(buf, 27);             // A-axis
+    double d5 = getbed64(buf, 35);             // Eccentricity Squared
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x8f-15: Current Datum: %d %f %f %f %f %f\n",
+	     s1, d1, d2, d3, d4, d5);
+    return mask;
+}
+
 /* decode Superpacket x8f-20
  */
 static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
@@ -2651,7 +2669,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
     unsigned long ul1, ul2, ul3;
     int s1, s2, s3, s4;
     long int sl1, sl2;
-    double d1, d2, d3, d4, d5;
+    double d1, d2, d3, d5;
     unsigned long tow;             // time of week in milli seconds
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
@@ -2670,15 +2688,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
             bad_len = 43;
             break;
         }
-        s1 = getbes16(buf, 1);              // Datum Index
-        d1 = getbed64(buf, 3);              // DX
-        d2 = getbed64(buf, 11);             // DY
-        d3 = getbed64(buf, 19);             // DZ
-        d4 = getbed64(buf, 27);             // A-axis
-        d5 = getbed64(buf, 35);             // Eccentricity Squared
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x8f-15: Current Datum: %d %f %f %f %f %f\n",
-                 s1, d1, d2, d3, d4, d5);
+        mask = decode_x8f_15(session, buf);
         break;
 
     case 0x20:
