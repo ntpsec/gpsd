@@ -505,6 +505,16 @@ static struct vlist_t vx57_fmode[] = {
     {0,NULL},
 };
 
+/* x82 Mode Timing
+ * Used in x82 */
+static struct vlist_t vx82_mode[] = {
+    {0, "Man DGPS Off"},      // No DPGS ever
+    {1, "Man DGPS OOn"},      // Only DPGS ever
+    {2, "Auto DGPS Off"},     // DGPS unavailable
+    {3, "Auto DGPS On"},      // DGPS available, and in use
+    {4, NULL},
+};
+
 /* Fis Dimension, Fix Mode
  * Used in x6c, x6d */
 static struct flist_t vfix[] = {
@@ -2935,6 +2945,28 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
+// decode packet x82
+static gps_mask_t decode_x82(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    // differential position fix mode
+    unsigned mode = getub(buf, 0);
+    if (1 == (mode & 1)) {
+	/* mode 1 (manual DGPS), output fixes only w/ SGPS,
+         * or
+	 * mode 3 (auto DGPS) and have DGPS */
+	session->newdata.status = STATUS_DGPS;
+	mask |= STATUS_SET;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x82: DPFM: mode %d status=%d\n",
+	     mode, session->newdata.status);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "TSIP: mode:%s\n",
+             val2str(mode, vx82_mode));
+    return mask;
+}
+
 /* decode Superpacket x8f-15
  */
 static gps_mask_t decode_x8f_15(struct gps_device_t *session, const char *buf)
@@ -3259,8 +3291,8 @@ static gps_mask_t decode_x8f_a9(struct gps_device_t *session, const char *buf)
 	     u1, u2, u3, u4);
     GPSD_LOG(LOG_IO, &session->context->errout,
 	     "TSIP: sse:%s sssave:%s\n",
-                 val2str(u1, vss_enable),
-                 val2str(u2, vss_save));
+             val2str(u1, vss_enable),
+             val2str(u2, vss_save));
     return mask;
 }
 
@@ -4992,16 +5024,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 1;
             break;
         }
-        // differential position fix mode
-        u1 = getub(buf, 0);
-        if (3 == (u1 & 3)) {
-            // currently mode 3 (auto DGPS) and so have DGPS
-            session->newdata.status = STATUS_DGPS;
-            mask |= STATUS_SET;
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x82: DPFM: mode %d status=%d\n",
-                 u1, session->newdata.status);
+        mask = decode_x82(session, buf);
         break;
     case 0x83:
         /* Double-Precision XYZ Position Fix and Bias Information
