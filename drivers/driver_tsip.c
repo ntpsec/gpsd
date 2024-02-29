@@ -451,6 +451,40 @@ static struct flist_t vsv_used_flags[] = {
     {0, 0, NULL},
 };
 
+/* x55 auxiliary
+ * Used in x55 */
+static struct flist_t vx55_aux[] = {
+    {1, 1, "x5a On"},
+    {0, 0, NULL},
+};
+
+/* x55 Position
+ * Used in x55 */
+static struct flist_t vx55_pos[] = {
+    {1, 1, "ECEF On"},
+    {2, 2, "LLA On"},
+    {0, 4, "HAE"},
+    {4, 4, "MSL"},
+    {0, 0x10, "Single Precision"},
+    {0x10, 0x104, "Double Position"},
+    {0, 0, NULL},
+};
+
+/* x55 Timing
+ * Used in x55 */
+static struct flist_t vx55_timing[] = {
+    {1, 1, "Use x8e-a2"},
+    {0, 0, NULL},
+};
+
+/* x55 Velocity
+ * Used in x55 */
+static struct flist_t vx55_vel[] = {
+    {1, 1, "ECEF On"},
+    {2, 2, "ENU On"},
+    {0, 0, NULL},
+};
+
 /* Fis Dimension, Fix Mode
  * Used in x6c, x6d */
 static struct flist_t vfix[] = {
@@ -1172,35 +1206,6 @@ static gps_mask_t decode_x13(struct gps_device_t *session, const char *buf,
     }
     return mask;
 }
-
-// decode Packet x41
-static gps_mask_t decode_x41(struct gps_device_t *session, const char *buf)
-{
-    gps_mask_t mask = 0;
-    timespec_t ts_tow;
-    char ts_buf[TIMESPEC_LEN];
-    double ftow = getbef32(buf, 0);                // gpstime
-    unsigned week = getbes16(buf, 4);              // week, yes, signed!
-    double f2 = getbef32(buf, 6);                  // leap seconds, fractional!
-
-    if (0.0 <= ftow &&
-	10.0 < f2) {
-	session->context->leap_seconds = (int)round(f2);
-	session->context->valid |= LEAP_SECOND_VALID;
-	DTOTS(&ts_tow, ftow);
-	session->newdata.time =
-	    gpsd_gpstime_resolv(session, week, ts_tow);
-	mask |= TIME_SET | NTPTIME_IS;
-	/* Note: this is not the time of current fix
-	 * Do not use in tsip.last_tow */
-    }
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "TSIP x41: GPS Time: tow %.2f week %u ls %.1f %s\n",
-	     ftow, week, f2,
-	     timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
-    return mask;
-}
-
 // decode Superpacket x1c-81
 static gps_mask_t decode_x1c_81(struct gps_device_t *session, const char *buf,
                                 int len)
@@ -1379,6 +1384,84 @@ static gps_mask_t decode_x1c(struct gps_device_t *session, const char *buf,
     *pbad_len = bad_len;
     // request x8f-42 Stored Production Parameters
     (void)tsip_write1(session, "\x8e\x42", 2);
+    return mask;
+}
+
+// decode Packet x41
+static gps_mask_t decode_x41(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    char ts_buf[TIMESPEC_LEN];
+    double ftow = getbef32(buf, 0);                // gpstime
+    unsigned week = getbes16(buf, 4);              // week, yes, signed!
+    double f2 = getbef32(buf, 6);                  // leap seconds, fractional!
+
+    if (0.0 <= ftow &&
+	10.0 < f2) {
+	session->context->leap_seconds = (int)round(f2);
+	session->context->valid |= LEAP_SECOND_VALID;
+	DTOTS(&ts_tow, ftow);
+	session->newdata.time =
+	    gpsd_gpstime_resolv(session, week, ts_tow);
+	mask |= TIME_SET | NTPTIME_IS;
+	/* Note: this is not the time of current fix
+	 * Do not use in tsip.last_tow */
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x41: GPS Time: tow %.2f week %u ls %.1f %s\n",
+	     ftow, week, f2,
+	     timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
+    return mask;
+}
+
+// Decode Protocol Version: x55
+static gps_mask_t decode_x55(struct gps_device_t *session, const char *buf,
+                             time_t now)
+{
+    gps_mask_t mask = 0;
+    char buf2[80];
+    char buf3[80];
+    char buf4[80];
+    char buf5[80];
+
+    unsigned u1 = getub(buf, 0);     // Position
+    unsigned u2 = getub(buf, 1);     // Velocity
+    /* Timing
+     * bit 0 - reserved use 0x8e-a2 ?
+     */
+    unsigned u3 = getub(buf, 2);
+    /* Aux
+     * bit 0 - packet 0x5a (raw data)
+     * bit 3 -- Output dbHz
+     */
+    unsigned u4 = getub(buf, 3);
+
+    // decode HAE/MSL from Position byte
+    if (IO1_MSL == (IO1_MSL & u1)) {
+	session->driver.tsip.alt_is_msl = 1;
+    } else {
+	session->driver.tsip.alt_is_msl = 0;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x55: IO Options: %02x %02x %02x %02x\n",
+	     u1, u2, u3, u4);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIPv1: pos:%s vel:%s timing:%s aus:%s\n",
+             flags2str(u1, vx55_pos, buf2, sizeof(buf2)),
+             flags2str(u2, vx55_vel, buf3, sizeof(buf3)),
+             flags2str(u3, vx55_timing, buf4, sizeof(buf4)),
+             flags2str(u4, vx55_aux, buf5, sizeof(buf5)));
+    if ((u1 & 0x20) != (uint8_t) 0) {
+	/* Try to get Super Packets
+	 * Turn off 0x8f-20 LFwEI Super Packet */
+	(void)tsip_write1(session, "\x8e\x20\x00", 3);
+
+	// Turn on Compact Super Packet 0x8f-23
+	(void)tsip_write1(session, "\x8e\x23\x01", 3);
+	session->driver.tsip.req_compact = now;
+    }
     return mask;
 }
 
@@ -4407,35 +4490,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 4;
             break;
         }
-        u1 = getub(buf, 0);     // Position
-        // decode HAE/MSL from Position byte
-        if (IO1_MSL == (IO1_MSL & u1)) {
-            session->driver.tsip.alt_is_msl = 1;
-        } else {
-            session->driver.tsip.alt_is_msl = 0;
-        }
-        u2 = getub(buf, 1);     // Velocity
-        /* Timing
-         * bit 0 - reserved use 0x8e-a2 ?
-         */
-        u3 = getub(buf, 2);
-        /* Aux
-         * bit 0 - packet 0x5a (raw data)
-         * bit 3 -- Output dbHz
-         */
-        u4 = getub(buf, 3);
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x55: IO Options: %02x %02x %02x %02x\n",
-                 u1, u2, u3, u4);
-        if ((u1 & 0x20) != (uint8_t) 0) {
-            /* Try to get Super Packets
-             * Turn off 0x8f-20 LFwEI Super Packet */
-            (void)tsip_write1(session, "\x8e\x20\x00", 3);
-
-            // Turn on Compact Super Packet 0x8f-23
-            (void)tsip_write1(session, "\x8e\x23\x01", 3);
-            session->driver.tsip.req_compact = now;
-        }
+        mask = decode_x55(session, buf, now);
         break;
     case 0x56:
         /* Velocity Fix, East-North-Up (ENU)
@@ -4805,7 +4860,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->gpsdata.dop.tdop,
                  buf2, u1);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP: fixd %s\n",
+                 "TSIP: fixd:%s\n",
                  flags2str(u1, vfix, buf2, sizeof(buf2)));
         mask |= USED_IS;
         break;
