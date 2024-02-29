@@ -485,6 +485,25 @@ static struct flist_t vx55_vel[] = {
     {0, 0, NULL},
 };
 
+/* x57 Source of Info
+ * Used in x57 */
+static struct flist_t vx57_info[] = {
+    {0, 1, "Old Fix"},
+    {1, 1, "New Fix"},
+    {0, 0, NULL},
+};
+
+/* x57 Fix Mode
+ * Used in x6c, x57, yet another decode of the same data... */
+static struct vlist_t vx57_fmode[] = {
+    {0, "No Fix"},
+    {1, "Time"},             // Time only 1SV/2D
+    {3, "2D Fix"},
+    {4, "3D Fix"},
+    {5, "OD Fix"},
+    {0,NULL},
+};
+
 /* Fis Dimension, Fix Mode
  * Used in x6c, x6d */
 static struct flist_t vfix[] = {
@@ -1462,6 +1481,66 @@ static gps_mask_t decode_x55(struct gps_device_t *session, const char *buf,
 	(void)tsip_write1(session, "\x8e\x23\x01", 3);
 	session->driver.tsip.req_compact = now;
     }
+    return mask;
+}
+
+// Decode x56
+static gps_mask_t decode_x56(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+
+    float f1 = getbef32(buf, 0);     // East velocity
+    float f2 = getbef32(buf, 4);     // North velocity
+    float f3 = getbef32(buf, 8);     // Up velocity
+    float f4 = getbef32(buf, 12);    // clock bias rate
+    float ftow = getbef32(buf, 16);  // time-of-fix
+    DTOTS(&ts_tow, ftow);
+    session->newdata.time = gpsd_gpstime_resolv(session,
+						session->context->gps_week,
+						ts_tow);
+    session->newdata.NED.velN = f2;
+    session->newdata.NED.velE = f1;
+    session->newdata.NED.velD = -f3;
+    mask |= VNED_SET | TIME_SET | NTPTIME_IS;
+    if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+	mask |= CLEAR_IS;
+	session->driver.tsip.last_tow = ts_tow;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x56: Vel ENU: %f %f %f %f ftow %f\n",
+	     f1, f2, f3, f4, ftow);
+    return mask;
+}
+
+// Decode x57
+static gps_mask_t decode_x57(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    char buf2[80];
+    unsigned u1 = getub(buf, 0);                     // Source of information
+    unsigned u2 = getub(buf, 1);                     // Mfg. diagnostic
+    double ftow = getbef32(buf, 2);                  // gps_time
+    unsigned week = getbeu16(buf, 6);                // tsip.gps_week
+
+    if (0x01 == u1) {
+	// good current fix
+	DTOTS(&ts_tow, ftow);
+	(void)gpsd_gpstime_resolv(session, week, ts_tow);
+	mask |= TIME_SET | NTPTIME_IS;
+	if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+	    mask |= CLEAR_IS;
+	    session->driver.tsip.last_tow = ts_tow;
+	}
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x57: Fix info: %02x %02x %u %f\n",
+	     u1, u2, week, ftow);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIP: info:%s fmode:%s\n",
+             flags2str(u1, vx57_info, buf2, sizeof(buf2)),
+             val2str(u1, vx57_fmode));
     return mask;
 }
 
@@ -3887,7 +3966,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     int i, j, len, count;
     gps_mask_t mask = 0;
     unsigned int id;
-    unsigned short week;
     uint8_t u1, u2, u3, u4, u5, u6, u7, u8, u9, u10;
     uint32_t ul1, ul2;
     float f1, f2, f3, f4;
@@ -4504,26 +4582,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 20;
             break;
         }
-        f1 = getbef32(buf, 0);     // East velocity
-        f2 = getbef32(buf, 4);     // North velocity
-        f3 = getbef32(buf, 8);     // Up velocity
-        f4 = getbef32(buf, 12);    // clock bias rate
-        ftow = getbef32(buf, 16);  // time-of-fix
-        DTOTS(&ts_tow, ftow);
-        session->newdata.time = gpsd_gpstime_resolv(session,
-                                                    session->context->gps_week,
-                                                    ts_tow);
-        session->newdata.NED.velN = f2;
-        session->newdata.NED.velE = f1;
-        session->newdata.NED.velD = -f3;
-        mask |= VNED_SET | TIME_SET | NTPTIME_IS;
-        if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-            mask |= CLEAR_IS;
-            session->driver.tsip.last_tow = ts_tow;
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x56: Vel ENU: %f %f %f %f ftow %f\n",
-                 f1, f2, f3, f4, ftow);
+        mask = decode_x56(session, buf);
         break;
     case 0x57:
         /* Information About Last Computed Fix
@@ -4537,23 +4596,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 8;
             break;
         }
-        u1 = getub(buf, 0);                     // Source of information
-        u2 = getub(buf, 1);                     // Mfg. diagnostic
-        ftow = getbef32(buf, 2);                // gps_time
-        week = getbeu16(buf, 6);                // tsip.gps_week
-        if (0x01 == getub(buf, 0)) {
-            // good current fix
-            DTOTS(&ts_tow, ftow);
-            (void)gpsd_gpstime_resolv(session, week, ts_tow);
-            mask |= TIME_SET | NTPTIME_IS;
-            if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-                mask |= CLEAR_IS;
-                session->driver.tsip.last_tow = ts_tow;
-            }
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x57: Fix info: %02x %02x %u %f\n",
-                 u1, u2, week, ftow);
+        mask = decode_x57(session, buf);
         break;
     case 0x5a:
         /* Raw Measurement Data
