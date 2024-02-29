@@ -2508,6 +2508,20 @@ static gps_mask_t decode_x8f_a5(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+/* decode Superpacket x8f-a6
+ */
+static gps_mask_t decode_x8f_a6(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    unsigned u1 = getub(buf, 1);          // Command
+    unsigned u2 = getub(buf, 2);          // Status
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x8f-a6: SSC: command x%x status x%x\n",
+	     u1, u2);
+    return mask;
+}
+
 /* decode Superpacket x8f-a7
  */
 static gps_mask_t decode_x8f_a7(struct gps_device_t *session, const char *buf)
@@ -2830,9 +2844,8 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
 {
     gps_mask_t mask = 0;
     int bad_len = 0;
-    unsigned u2, u3;
-
     unsigned u1 = getub(buf, 0);
+
     switch (u1) {           // sub-code ID
     case 0x15:
         /* Current Datum Values
@@ -2937,11 +2950,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
             bad_len = 3;
             break;
         }
-        u2 = getub(buf, 1);          // Command
-        u3 = getub(buf, 2);          // Status
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x8f-a6: SSC: command x%x status x%x\n",
-                 u2, u3);
+        mask = decode_x8f_a6(session, buf);
         break;
 
     case 0xa7:
