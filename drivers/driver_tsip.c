@@ -454,6 +454,7 @@ static struct flist_t vsv_used_flags[] = {
 /* x55 auxiliary
  * Used in x55 */
 static struct flist_t vx55_aux[] = {
+    {0, 1, "x5a Off"},
     {1, 1, "x5a On"},
     {0, 0, NULL},
 };
@@ -1467,7 +1468,7 @@ static gps_mask_t decode_x55(struct gps_device_t *session, const char *buf,
 	     "TSIP x55: IO Options: %02x %02x %02x %02x\n",
 	     u1, u2, u3, u4);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIPv1: pos:%s vel:%s timing:%s aus:%s\n",
+             "TSIPv1: pos:%s vel:%s timing:%s auss%s\n",
              flags2str(u1, vx55_pos, buf2, sizeof(buf2)),
              flags2str(u2, vx55_vel, buf3, sizeof(buf3)),
              flags2str(u3, vx55_timing, buf4, sizeof(buf4)),
@@ -1541,6 +1542,107 @@ static gps_mask_t decode_x57(struct gps_device_t *session, const char *buf)
              "TSIP: info:%s fmode:%s\n",
              flags2str(u1, vx57_info, buf2, sizeof(buf2)),
              val2str(u1, vx57_fmode));
+    return mask;
+}
+
+// Decode x5a
+static gps_mask_t decode_x5a(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    // Useless without the pseudorange...
+    unsigned u1 = getub(buf, 0);             // PRN 1-237
+    float f1 = getbef32(buf, 1);             // sample length
+    float f2 = getbef32(buf, 5);             // Signal Level, dbHz
+    float f3 = getbef32(buf, 9);             // Code phase, 1/16th chip
+    float f4 = getbef32(buf, 13);            // Doppler, Hz @ L1
+    double d1 = getbed64(buf, 17);           // Time of Measurement
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x5a: Raw Measurement Data: PRN %d len %f SNR %f chip %f "
+             "doppler %f tom %f\n",
+	     u1, f1, f2, f3, f4, d1);
+    return mask;
+}
+
+// Decode x5c
+static gps_mask_t decode_x5c(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    int i, j;
+    // Useless without the pseudorange...
+    unsigned char u1 = getub(buf, 0);            // PRN 1-32
+    unsigned u2 = getub(buf, 1);                 // slot:chan
+    unsigned u3 = getub(buf, 2);                 // Acquisition flag
+    unsigned u4 = getub(buf, 3);                 // Ephemeris flag
+    double f1 = getbef32(buf, 4);                // Signal level
+    // time of skyview, not current time, nor time of fix
+    double ftow = getbef32(buf, 8);
+
+    double d1 = getbef32(buf, 12) * RAD_2_DEG;   // Elevation
+    double d2 = getbef32(buf, 16) * RAD_2_DEG;   // Azimuth
+
+    unsigned u5 = getub(buf, 20);                // Old Meassurement flag
+
+    DTOTS(&session->gpsdata.skyview_time, ftow);
+    /* Channel number, bits 0-2 reserved/unused as of 1999.
+     * Seems to always start series at zero and increment to last one.
+     * No way to know how many there will be.
+     * Save current channel to check for last 0x5c message
+     */
+    i = (int)(u2 >> 3);     // channel number, starting at 0
+    if (0 == i) {
+	// start of new cycle, save last count
+	session->gpsdata.satellites_visible =
+	    session->driver.tsip.last_chan_seen;
+    }
+    session->driver.tsip.last_chan_seen = i;
+
+    if (i < TSIP_CHANNELS) {
+	session->gpsdata.skyview[i].PRN = u1;
+	session->gpsdata.skyview[i].svid = u1;
+	session->gpsdata.skyview[i].gnssid = GNSSID_GPS;
+	session->gpsdata.skyview[i].ss = f1;
+	session->gpsdata.skyview[i].elevation = d1;
+	session->gpsdata.skyview[i].azimuth = d2;
+	session->gpsdata.skyview[i].used = false;
+	session->gpsdata.skyview[i].gnssid = tsip_gnssid(0, u1,
+	    &session->gpsdata.skyview[i].svid);
+	if (0.1 < f1) {
+	    // check used list, if ss is non-zero
+	    // FIXME: what about negative PRN?
+	    for (j = 0; j < session->gpsdata.satellites_used; j++) {
+		if (session->gpsdata.skyview[i].PRN != 0 &&
+		    session->driver.tsip.sats_used[j] != 0) {
+		    session->gpsdata.skyview[i].used = true;
+		}
+	    }
+	}
+	/* when polled by 0x3c, all the skyview times will be the same
+	 * in one cluster */
+	if (0.0 < ftow) {
+	    DTOTS(&ts_tow, ftow);
+	    session->gpsdata.skyview_time =
+		gpsd_gpstime_resolv(session, session->context->gps_week,
+				    ts_tow);
+	    /* do not save in session->driver.tsip.last_tow
+	     * as this is skyview time, not fix time */
+	}
+	if (++i >= session->gpsdata.satellites_visible) {
+	    /* Last of the series?
+	     * This will cause extra SKY if this set has more
+	     * sats than the last set */
+	    mask |= SATELLITE_SET;
+	    session->gpsdata.satellites_visible = i;
+	}
+	/* If this series has fewer than last series there will
+	 * be no SKY, unless the cycle ender pushes the SKY */
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x5c: Satellite Tracking Status: Ch %2d PRN %3d "
+	     "es %d Acq %d Eph %2d SNR %4.1f LMT %.04f El %4.1f Az %5.1f "
+	     "omf %u\n",
+	     i, u1, u2 & 7, u3, u4, f1, ftow, d1, d2, u5);
     return mask;
 }
 
@@ -2976,7 +3078,7 @@ static gps_mask_t decode_x8f_a9(struct gps_device_t *session, const char *buf)
 	     "TSIP x8f-a9 SSP: sse %u psf %u length %ld rex x%lx \n",
 	     u1, u2, u3, u4);
     GPSD_LOG(LOG_IO, &session->context->errout,
-	     "TSIP: sse %s sssave %s\n",
+	     "TSIP: sse:%s sssave:%s\n",
                  val2str(u1, vss_enable),
                  val2str(u2, vss_save));
     return mask;
@@ -4610,16 +4712,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 25;
             break;
         }
-        // Useless without the pseudorange...
-        u1 = getub(buf, 0);             // PRN 1-237
-        f1 = getbef32(buf, 1);          // sample length
-        f2 = getbef32(buf, 5);          // Signal Level, dbHz
-        f3 = getbef32(buf, 9);          // Code phase, 1/16th chip
-        f4 = getbef32(buf, 13);         // Doppler, Hz @ L1
-        d1 = getbed64(buf, 17);         // Time of Measurement
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x5a: Raw Measurement Data: %d %f %f %f %f %f\n",
-                 u1, f1, f2, f3, f4, d1);
+        mask = decode_x5a(session, buf);
         break;
     case 0x5c:
         /* Satellite Tracking Status (0x5c) polled by 0x3c
@@ -4637,77 +4730,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 24;
             break;
         }
-        u1 = getub(buf, 0);                 // PRN 1-32
-        u2 = getub(buf, 1);                 // slot:chan
-        u3 = getub(buf, 2);                 // Acquisition flag
-        u4 = getub(buf, 3);                 // Ephemeris flag
-        f1 = getbef32(buf, 4);              // Signal level
-        // time of skyview, not current time, or time of fix
-        ftow = getbef32(buf, 8);
-        DTOTS(&session->gpsdata.skyview_time, ftow);
-
-        d1 = getbef32(buf, 12) * RAD_2_DEG;     // Elevation
-        d2 = getbef32(buf, 16) * RAD_2_DEG;     // Azimuth
-
-        u5 = getub(buf, 20);                    // Old Meassurement flag
-        /* Channel number, bits 0-2 reserved/unused as of 1999.
-         * Seems to always start series at zero and increment to last one.
-         * No way to know how many there will be.
-         * Save current channel to check for last 0x5c message
-         */
-        i = (int)(u2 >> 3);     // channel number, starting at 0
-        if (0 == i) {
-            // start of new cycle, save last count
-            session->gpsdata.satellites_visible =
-                session->driver.tsip.last_chan_seen;
-        }
-        session->driver.tsip.last_chan_seen = i;
-
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x5c: Satellite Tracking Status: Ch %2d PRN %3d "
-                 "es %d Acq %d Eph %2d SNR %4.1f LMT %.04f El %4.1f Az %5.1f "
-                 "omf %u\n",
-                 i, u1, u2 & 7, u3, u4, f1, ftow, d1, d2, u5);
-        if (i < TSIP_CHANNELS) {
-            session->gpsdata.skyview[i].PRN = (short)u1;
-            session->gpsdata.skyview[i].svid = (unsigned char)u1;
-            session->gpsdata.skyview[i].gnssid = GNSSID_GPS;
-            session->gpsdata.skyview[i].ss = (double)f1;
-            session->gpsdata.skyview[i].elevation = (double)d1;
-            session->gpsdata.skyview[i].azimuth = (double)d2;
-            session->gpsdata.skyview[i].used = false;
-            session->gpsdata.skyview[i].gnssid = tsip_gnssid(0, u1,
-                &session->gpsdata.skyview[i].svid);
-            if (0.1 < f1) {
-                // check used list, if ss is non-zero
-                // FIXME: what about negative PRN?
-                for (j = 0; j < session->gpsdata.satellites_used; j++) {
-                    if (session->gpsdata.skyview[i].PRN != 0 &&
-                        session->driver.tsip.sats_used[j] != 0) {
-                        session->gpsdata.skyview[i].used = true;
-                    }
-                }
-            }
-            /* when polled by 0x3c, all the skyview times will be the same
-             * in one cluster */
-            if (0.0 < ftow) {
-                DTOTS(&ts_tow, ftow);
-                session->gpsdata.skyview_time =
-                    gpsd_gpstime_resolv(session, session->context->gps_week,
-                                        ts_tow);
-                /* do not save in session->driver.tsip.last_tow
-                 * as this is skyview time, not fix time */
-            }
-            if (++i >= session->gpsdata.satellites_visible) {
-                /* Last of the series?
-                 * This will cause extra SKY if this set has more
-                 * sats than the last set */
-                mask |= SATELLITE_SET;
-                session->gpsdata.satellites_visible = i;
-            }
-            /* If this series has fewer than last series there will
-             * be no SKY, unless the cycle ender pushes the SKY */
-        }
+        mask = decode_x5c(session, buf);
         break;
 
      case 0x5d:
