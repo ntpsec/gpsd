@@ -2382,6 +2382,90 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+/* decode Packet Broadcast Mask: Superpacket x8f-23
+ */
+static gps_mask_t decode_x8f_23(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    double d1, d2, d3, d5;
+    timespec_t ts_tow;
+    char ts_buf[TIMESPEC_LEN];
+
+    unsigned long tow = getbeu32(buf, 1);    // time in ms
+    unsigned week = getbeu16(buf, 5);        // tsip.gps_week
+    unsigned u1 = getub(buf, 7);             // utc offset
+    unsigned u2 = getub(buf, 8);             // fix flags
+    long sl1 = getbes32(buf, 9);             // latitude
+    long ul2 = getbeu32(buf, 13);            // longitude
+    // Copernicus (ii) doc says this is always altHAE in mm
+    long sl2 = getbes32(buf, 17);            // altitude
+    // set xNED here
+    int s2 = getbes16(buf, 21);              // east velocity
+    int s3 = getbes16(buf, 23);              // north velocity
+    int s4 = getbes16(buf, 25);              // up velocity
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x8f-23: CSP: tow %lu week %u %u %u %ld %lu %ld "
+	     " %d %d %d\n",
+	     tow, week, u1, u2, sl1, ul2, sl2, s2, s3, s4);
+    if (10 < (int)u1) {
+	session->context->leap_seconds = (int)u1;
+	session->context->valid |= LEAP_SECOND_VALID;
+    }
+    MSTOTS(&ts_tow, tow);
+    session->newdata.time =
+	gpsd_gpstime_resolv(session, week, ts_tow);
+    session->newdata.status = STATUS_UNK;
+    session->newdata.mode = MODE_NO_FIX;
+    if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
+	session->newdata.status = STATUS_GPS;
+	if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
+	    session->newdata.status = STATUS_DGPS;
+	}
+	if ((u2 & 0x04) != (uint8_t)0) {       // Fix Dimension
+	    session->newdata.mode = MODE_2D;
+	} else {
+	    session->newdata.mode = MODE_3D;
+	}
+    }
+    session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
+    session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
+    if (180.0 < session->newdata.longitude) {
+	session->newdata.longitude -= 360.0;
+    }
+    // Copernicus (ii) doc says this is always altHAE in mm
+    session->newdata.altHAE = (double)sl2 * 1e-3;
+    mask |= ALTITUDE_SET;
+    if ((u2 & 0x20) != (uint8_t)0) {     // check velocity scaling
+	d5 = 0.02;
+    } else {
+	d5 = 0.005;
+    }
+    d1 = (double)s2 * d5;       // east velocity m/s
+    d2 = (double)s3 * d5;       // north velocity m/s
+    d3 = (double)s4 * d5;       // up velocity m/s
+    session->newdata.NED.velN = d2;
+    session->newdata.NED.velE = d1;
+    session->newdata.NED.velD = -d3;
+
+    mask |= TIME_SET | NTPTIME_IS | LATLON_SET |
+	    STATUS_SET | MODE_SET | VNED_SET;
+    if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+	mask |= CLEAR_IS;
+	session->driver.tsip.last_tow = ts_tow;
+    }
+    session->driver.tsip.req_compact = 0;
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x8f-23: SP-CSP: time %s lat %.2f lon %.2f "
+	     "altHAE %.2f mode %d status %d\n",
+	     timespec_str(&session->newdata.time, ts_buf,
+			  sizeof(ts_buf)),
+	     session->newdata.latitude, session->newdata.longitude,
+	     session->newdata.altHAE,
+	     session->newdata.mode, session->newdata.status);
+    return mask;
+}
+
 /* decode Packet Broadcast Mask: Superpacket x8f-ad
  */
 static gps_mask_t decode_x8f_a5(struct gps_device_t *session, const char *buf)
@@ -2408,7 +2492,7 @@ static gps_mask_t decode_x8f_a5(struct gps_device_t *session, const char *buf)
 static gps_mask_t decode_x8f_ab(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
-    uint32_t tow;                 // time of week in milli seconds
+    unsigned long tow;                 // time of week in milli seconds
     timespec_t ts_tow;
     unsigned short week;
     char ts_buf[TIMESPEC_LEN];
@@ -2453,7 +2537,7 @@ static gps_mask_t decode_x8f_ab(struct gps_device_t *session, const char *buf)
     /* since we compute time from weeks and tow, we ignore the
      * supplied H:M:S M/D/Y */
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "TSIP x8f-ab: SP-TTS: tow %u wk %u ls %d flag x%x "
+             "TSIP x8f-ab: SP-TTS: tow %lu wk %u ls %d flag x%x "
              "time %s mask %s\n",
              tow, week, session->context->leap_seconds, time_flag,
              timespec_str(&session->newdata.time, ts_buf,
@@ -2663,16 +2747,12 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
                              int len, int *pbad_len, time_t now)
 {
     gps_mask_t mask = 0;
-    unsigned week;
     int bad_len = 0;
     unsigned u1, u2, u3, u4, u5;
     unsigned long ul1, ul2, ul3;
-    int s1, s2, s3, s4;
-    long int sl1, sl2;
-    double d1, d2, d3, d5;
+    int s1, s2;
+    double d1, d2;
     unsigned long tow;             // time of week in milli seconds
-    timespec_t ts_tow;
-    char ts_buf[TIMESPEC_LEN];
 
     u1 = getub(buf, 0);
     switch (u1) {           // sub-code ID
@@ -2720,82 +2800,12 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
          *   ICM SMT 360
          *   RES SMT 360
          */
-        session->driver.tsip.req_compact = 0;
         // CSK sez "i don't trust this to not be oversized either."
         if (29 > len) {
             bad_len = 29;
             break;
         }
-        tow = getbeu32(buf, 1);             // time in ms
-        week = getbeu16(buf, 5);            // tsip.gps_week
-        u1 = getub(buf, 7);                 // utc offset
-        u2 = getub(buf, 8);                 // fix flags
-        sl1 = getbes32(buf, 9);             // latitude
-        ul2 = getbeu32(buf, 13);            // longitude
-        // Copernicus (ii) doc says this is always altHAE in mm
-        sl2 = getbes32(buf, 17);    // altitude
-        // set xNED here
-        s2 = getbes16(buf, 21);     // east velocity
-        s3 = getbes16(buf, 23);     // north velocity
-        s4 = getbes16(buf, 25);     // up velocity
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x8f-23: CSP: tow %lu week %u %u %u %ld %lu %ld "
-                 " %d %d %d\n",
-                 tow, week, u1, u2, sl1, ul2, sl2, s2, s3, s4);
-        if (10 < (int)u1) {
-            session->context->leap_seconds = (int)u1;
-            session->context->valid |= LEAP_SECOND_VALID;
-        }
-        MSTOTS(&ts_tow, tow);
-        session->newdata.time =
-            gpsd_gpstime_resolv(session, week, ts_tow);
-        session->newdata.status = STATUS_UNK;
-        session->newdata.mode = MODE_NO_FIX;
-        if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
-            session->newdata.status = STATUS_GPS;
-            if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
-                session->newdata.status = STATUS_DGPS;
-            }
-            if ((u2 & 0x04) != (uint8_t)0) {       // Fix Dimension
-                session->newdata.mode = MODE_2D;
-            } else {
-                session->newdata.mode = MODE_3D;
-            }
-        }
-        session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
-        session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
-        if (180.0 < session->newdata.longitude) {
-            session->newdata.longitude -= 360.0;
-        }
-        // Copernicus (ii) doc says this is always altHAE in mm
-        session->newdata.altHAE = (double)sl2 * 1e-3;
-        mask |= ALTITUDE_SET;
-        if ((u2 & 0x20) != (uint8_t)0) {     // check velocity scaling
-            d5 = 0.02;
-        } else {
-            d5 = 0.005;
-        }
-        d1 = (double)s2 * d5;       // east velocity m/s
-        d2 = (double)s3 * d5;       // north velocity m/s
-        d3 = (double)s4 * d5;       // up velocity m/s
-        session->newdata.NED.velN = d2;
-        session->newdata.NED.velE = d1;
-        session->newdata.NED.velD = -d3;
-
-        mask |= TIME_SET | NTPTIME_IS | LATLON_SET |
-                STATUS_SET | MODE_SET | VNED_SET;
-        if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-            mask |= CLEAR_IS;
-            session->driver.tsip.last_tow = ts_tow;
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x8f-23: SP-CSP: time %s lat %.2f lon %.2f "
-                 "altHAE %.2f mode %d status %d\n",
-                 timespec_str(&session->newdata.time, ts_buf,
-                              sizeof(ts_buf)),
-                 session->newdata.latitude, session->newdata.longitude,
-                 session->newdata.altHAE,
-                 session->newdata.mode, session->newdata.status);
+        mask = decode_x8f_23(session, buf);
         break;
 
     case 0x42:
@@ -2877,8 +2887,6 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
         }
         // we assume the receiver not in some crazy mode, and is GPS time
         tow = getbeu32(buf, 2);             // gpstime in seconds
-        ts_tow.tv_sec = tow;
-        ts_tow.tv_nsec = 0;
         u1 = buf[1];                     // format, 0 Float, 1 Int
 
         if (0 == u1) {
