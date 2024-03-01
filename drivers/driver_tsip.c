@@ -1660,6 +1660,152 @@ static gps_mask_t decode_x47(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
+// Decode x4a
+static gps_mask_t decode_x4a(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    char ts_buf[TIMESPEC_LEN];
+    double lat = getbef32(buf, 0) * RAD_2_DEG;  // lat
+    double lon = getbef32(buf, 4) * RAD_2_DEG;  // lon
+    double d1 = getbef32(buf, 8);               // alt
+    double f1 = getbef32(buf, 12);              // clock bias
+    double ftow = getbef32(buf, 16);            // time-of-fix
+
+    session->newdata.latitude = lat;
+    session->newdata.longitude = lon;
+    // depending on GPS config, could be either WGS84 or MSL
+    if (0 == session->driver.tsip.alt_is_msl) {
+	session->newdata.altHAE = d1;
+    } else {
+	session->newdata.altMSL = d1;
+    }
+
+    if (0 != (session->context->valid & GPS_TIME_VALID)) {
+	DTOTS(&ts_tow, ftow);
+	session->newdata.time =
+	    gpsd_gpstime_resolv(session, session->context->gps_week,
+				ts_tow);
+	mask |= TIME_SET | NTPTIME_IS;
+	if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+	    mask |= CLEAR_IS;
+	    session->driver.tsip.last_tow = ts_tow;
+	}
+    }
+    // this seems to be often first in cycle
+    // REPORT_IS here breaks reports in read-only mode
+    mask |= LATLON_SET | ALTITUDE_SET;
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x4a: SP-LLA: time=%s lat=%.2f lon=%.2f "
+	     "alt=%.2f cbias %.2f\n",
+	     timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+	     session->newdata.latitude,
+	     session->newdata.longitude, d1, f1);
+    return mask;
+}
+
+// Decode x4b
+static gps_mask_t decode_x4b(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    char buf2[80];
+    char buf3[80];
+    unsigned u1 = getub(buf, 0);  // Machine ID
+    /* Status 1
+     * bit 1 -- No RTC at power up
+     * bit 3 -- almanac not complete and current */
+    unsigned u2 = getub(buf, 1);     // status 1
+    unsigned u3 = getub(buf, 2);     // Status 2/Superpacket Support
+
+    session->driver.tsip.machine_id = u1;  // Machine ID
+
+    if ('\0' == session->subtype[0]) {
+	const char *name;
+	// better than nothing
+	switch (session->driver.tsip.machine_id) {
+	case 1:
+	    // should use better name from superpacket
+	    name = " SMT 360";
+	    /* request actual subtype from 0x1c-81
+	     * which in turn requests 0x1c-83 */
+	    (void)tsip_write1(session, "\x1c\x01", 2);
+	    break;
+	case 0x32:
+	    name = " Acutime 360";
+	    break;
+	case 0x5a:
+	    name = " Lassen iQ";
+	    /* request actual subtype from 0x1c-81
+	     * which in turn requests 0x1c-83.
+	     * Only later firmware Lassen iQ supports this */
+	    (void)tsip_write1(session, "\x1c\x01", 2);
+	    break;
+	case 0x61:
+	    name = " Acutime 2000";
+	    break;
+	case 0x62:
+	    name = " ACE UTC";
+	    break;
+	case 0x96:
+	    // Also Copernicus II
+	    name = " Copernicus, Thunderbolt E";
+	    /* so request actual subtype from 0x1c-81
+	     * which in turn requests 0x1c-83 */
+	    (void)tsip_write1(session, "\x1c\x01", 2);
+	    break;
+	case 0:
+	    // Resolution SMTx
+	    FALLTHROUGH
+	default:
+	     name = "";
+	}
+	(void)snprintf(session->subtype, sizeof(session->subtype),
+		       "Machine ID x%x(%s)",
+		       session->driver.tsip.machine_id, name);
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x4b: Machine ID: %02x %02x %02x\n",
+	     session->driver.tsip.machine_id,
+	     u2, u3);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "TSIP: stat1:%s stat2:%s\n",
+	     flags2str(u2, vstat1, buf2, sizeof(buf2)),
+	     flags2str(u3, vstat2, buf3, sizeof(buf3)));
+
+    if (u3 != session->driver.tsip.superpkt) {
+	session->driver.tsip.superpkt = u3;
+	GPSD_LOG(LOG_PROG, &session->context->errout,
+		 "TSIP: Switching to Super Packet mode %d\n", u3);
+	switch (u3){
+	default:
+	    FALLTHROUGH
+	case 0:
+	    // old Trimble, no superpackets
+	    break;
+	case 1:
+	    // 1 == superpacket is acutime 360, support 0x8f-20
+
+	    /* set I/O Options for Super Packet output
+	     * Position: 8F20, ECEF, DP */
+	    buf2[0] = 0x35;
+	    buf2[1] = IO1_8F20|IO1_DP|IO1_ECEF;
+	    buf2[2] = 0x00;          // Velocity: none (via SP)
+	    buf2[3] = 0x00;          // Time: GPS
+	    buf2[4] = IO4_DBHZ;      // Aux: dBHz
+	    (void)tsip_write1(session, buf2, 5);
+	    break;
+	case 2:
+	    /* 2 == SMT 360, or Resolution SMTx
+	     * no 0x8f-20, or x8f-23.
+	     * request x8f-a5 */
+	    (void)tsip_write1(session, "\x8e\xa5", 2);
+	    break;
+	}
+    }
+
+    return mask;
+}
+
 // Decode Protocol Version: x55
 static gps_mask_t decode_x55(struct gps_device_t *session, const char *buf,
                              time_t now)
@@ -4627,16 +4773,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     int i, len;
     gps_mask_t mask = 0;
     unsigned int id;
-    uint8_t u1, u2, u3;
+    uint8_t u1;
     float f1, f2, f3, f4;
-    double d1;
     time_t now;
     char buf[BUFSIZ];
     char buf2[BUFSIZ];
-    char buf3[BUFSIZ];
     double ftow;              // time of week in seconds
     timespec_t ts_tow;
-    char ts_buf[TIMESPEC_LEN];
     int bad_len = 0;
 
     if (TSIP_PACKET != session->lexer.type) {
@@ -4853,38 +4996,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 20;
             break;
         }
-        session->newdata.latitude = getbef32(buf, 0) * RAD_2_DEG;
-        session->newdata.longitude = getbef32(buf, 4) * RAD_2_DEG;
-        // depending on GPS config, could be either WGS84 or MSL
-        d1 = getbef32(buf, 8);
-        if (0 == session->driver.tsip.alt_is_msl) {
-            session->newdata.altHAE = d1;
-        } else {
-            session->newdata.altMSL = d1;
-        }
-
-        //f1 = getbef32(buf, 12);       // clock bias
-        ftow = getbef32(buf, 16);       // time-of-fix
-        if (0 != (session->context->valid & GPS_TIME_VALID)) {
-            DTOTS(&ts_tow, ftow);
-            session->newdata.time =
-                gpsd_gpstime_resolv(session, session->context->gps_week,
-                                    ts_tow);
-            mask |= TIME_SET | NTPTIME_IS;
-            if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-                mask |= CLEAR_IS;
-                session->driver.tsip.last_tow = ts_tow;
-            }
-        }
-        // this seems to be often first in cycle
-        // REPORT_IS here breaks reports in read-only mode
-        mask |= LATLON_SET | ALTITUDE_SET;
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x4a: SP-LLA: time=%s lat=%.2f lon=%.2f "
-                 "alt=%.2f\n",
-                 timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
-                 session->newdata.latitude,
-                 session->newdata.longitude, d1);
+        mask = decode_x4a(session, buf);
         break;
     case 0x4b:
         /* Machine/Code ID and Additional Status (0x4b)
@@ -4905,95 +5017,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 3;
             break;
         }
-        session->driver.tsip.machine_id = getub(buf, 0);  // Machine ID
-        /* Status 1
-         * bit 1 -- No RTC at power up
-         * bit 3 -- almanac not complete and current */
-        u2 = getub(buf, 1);     // status 1
-        u3 = getub(buf, 2);     // Status 2/Superpacket Support
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x4b: Machine ID: %02x %02x %02x\n",
-                 session->driver.tsip.machine_id,
-                 u2, u3);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP: stat1:%s stat2:%s\n",
-                 flags2str(u2, vstat1, buf2, sizeof(buf2)),
-                 flags2str(u3, vstat2, buf3, sizeof(buf3)));
-
-        if ('\0' == session->subtype[0]) {
-            const char *name;
-            // better than nothing
-            switch (session->driver.tsip.machine_id) {
-            case 1:
-                // should use better name from superpacket
-                name = " SMT 360";
-                /* request actual subtype from 0x1c-81
-                 * which in turn requests 0x1c-83 */
-                (void)tsip_write1(session, "\x1c\x01", 2);
-                break;
-            case 0x32:
-                name = " Acutime 360";
-                break;
-            case 0x5a:
-                name = " Lassen iQ";
-                /* request actual subtype from 0x1c-81
-                 * which in turn requests 0x1c-83.
-                 * Only later firmware Lassen iQ supports this */
-                (void)tsip_write1(session, "\x1c\x01", 2);
-                break;
-            case 0x61:
-                name = " Acutime 2000";
-                break;
-            case 0x62:
-                name = " ACE UTC";
-                break;
-            case 0x96:
-                // Also Copernicus II
-                name = " Copernicus, Thunderbolt E";
-                /* so request actual subtype from 0x1c-81
-                 * which in turn requests 0x1c-83 */
-                (void)tsip_write1(session, "\x1c\x01", 2);
-                break;
-            case 0:
-                // Resolution SMTx
-                FALLTHROUGH
-            default:
-                 name = "";
-            }
-            (void)snprintf(session->subtype, sizeof(session->subtype),
-                           "Machine ID x%x(%s)",
-                           session->driver.tsip.machine_id, name);
-        }
-        if (u3 != session->driver.tsip.superpkt) {
-            session->driver.tsip.superpkt = u3;
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP: Switching to Super Packet mode %d\n", u3);
-            switch (u3){
-            default:
-                FALLTHROUGH
-            case 0:
-                // old Trimble, no superpackets
-                break;
-            case 1:
-                // 1 == superpacket is acutime 360, support 0x8f-20
-
-                /* set I/O Options for Super Packet output
-                 * Position: 8F20, ECEF, DP */
-                buf[0] = 0x35;
-                buf[1] = IO1_8F20|IO1_DP|IO1_ECEF;
-                buf[2] = 0x00;          // Velocity: none (via SP)
-                buf[3] = 0x00;          // Time: GPS
-                buf[4] = IO4_DBHZ;      // Aux: dBHz
-                (void)tsip_write1(session, buf, 5);
-                break;
-            case 2:
-                /* 2 == SMT 360, or Resolution SMTx
-                 * no 0x8f-20, or x8f-23.
-                 * request x8f-a5 */
-                (void)tsip_write1(session, "\x8e\xa5", 2);
-                break;
-            }
-        }
+        mask = decode_x4b(session, buf);
         break;
     case 0x4c:
         /* Operating Parameters Report (0x4c).  Polled by 0x2c
