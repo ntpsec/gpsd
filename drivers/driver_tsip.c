@@ -1445,6 +1445,69 @@ static gps_mask_t decode_x41(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// decode Packet x42
+static gps_mask_t decode_x42(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    double ecefx = getbef32(buf, 0);                  // X
+    double ecefy = getbef32(buf, 4);                  // Y
+    double ecefz = getbef32(buf, 8);                  // Z
+    double ftow = getbef32(buf, 12);           // time-of-fix
+
+    session->newdata.ecef.x = ecefx;
+    session->newdata.ecef.y = ecefy;
+    session->newdata.ecef.z = ecefz;
+    DTOTS(&ts_tow, ftow);
+    session->newdata.time = gpsd_gpstime_resolv(session,
+						session->context->gps_week,
+						ts_tow);
+    mask = ECEF_SET | TIME_SET | NTPTIME_IS;
+    if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+	mask |= CLEAR_IS;
+	session->driver.tsip.last_tow = ts_tow;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x42: SP-XYZ: %f %f %f ftow %f\n",
+	     session->newdata.ecef.x,
+	     session->newdata.ecef.y,
+	     session->newdata.ecef.z,
+	     ftow);
+    return mask;
+}
+
+// Decode Protocol Version: x43
+static gps_mask_t decode_x43(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    double vx = getbef32(buf, 0);       // X velocity
+    double vy = getbef32(buf, 4);       // Y velocity
+    double vz = getbef32(buf, 8);       // Z velocity
+    double f4 = getbef32(buf, 12);      // bias rate
+    double ftow = getbef32(buf, 16);    // time-of-fix
+
+    session->newdata.ecef.vx = vx;
+    session->newdata.ecef.vy = vy;
+    session->newdata.ecef.vz = vz;
+    DTOTS(&ts_tow, ftow);
+    session->newdata.time = gpsd_gpstime_resolv(session,
+						session->context->gps_week,
+						ts_tow);
+    mask = VECEF_SET | TIME_SET | NTPTIME_IS;
+    if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+	mask |= CLEAR_IS;
+	session->driver.tsip.last_tow = ts_tow;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x43: Vel XYZ: %f %f %f %f ftow %f\n",
+	     session->newdata.ecef.vx,
+	     session->newdata.ecef.vy,
+	     session->newdata.ecef.vz,
+	     f4, ftow);
+    return mask;
+}
+
 // Decode Protocol Version: x55
 static gps_mask_t decode_x55(struct gps_device_t *session, const char *buf,
                              time_t now)
@@ -4547,25 +4610,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 16;
             break;
         }
-        session->newdata.ecef.x = getbef32(buf, 0);  // X
-        session->newdata.ecef.y = getbef32(buf, 4);  // Y
-        session->newdata.ecef.z = getbef32(buf, 8);  // Z
-        ftow = getbef32(buf, 12);                    // time-of-fix
-        DTOTS(&ts_tow, ftow);
-        session->newdata.time = gpsd_gpstime_resolv(session,
-                                                    session->context->gps_week,
-                                                    ts_tow);
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x42: SP-XYZ: %f %f %f ftow %f\n",
-                 session->newdata.ecef.x,
-                 session->newdata.ecef.y,
-                 session->newdata.ecef.z,
-                 ftow);
-        mask = ECEF_SET | TIME_SET | NTPTIME_IS;
-        if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-            mask |= CLEAR_IS;
-            session->driver.tsip.last_tow = ts_tow;
-        }
+        mask = decode_x42(session, buf);
         break;
     case 0x43:
         /* Velocity Fix, XYZ ECEF
@@ -4580,26 +4625,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 20;
             break;
         }
-        session->newdata.ecef.vx = getbef32(buf, 0);  // X velocity
-        session->newdata.ecef.vy = getbef32(buf, 4);  // Y velocity
-        session->newdata.ecef.vz = getbef32(buf, 8);  // Z velocity
-        f4 = getbef32(buf, 12);                       // bias rate
-        ftow = getbef32(buf, 16);                     // time-of-fix
-        DTOTS(&ts_tow, ftow);
-        session->newdata.time = gpsd_gpstime_resolv(session,
-                                                    session->context->gps_week,
-                                                    ts_tow);
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x43: Vel XYZ: %f %f %f %f ftow %f\n",
-                 session->newdata.ecef.vx,
-                 session->newdata.ecef.vy,
-                 session->newdata.ecef.vz,
-                 f4, ftow);
-        mask = VECEF_SET | TIME_SET | NTPTIME_IS;
-        if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-            mask |= CLEAR_IS;
-            session->driver.tsip.last_tow = ts_tow;
-        }
+        mask = decode_x43(session, buf);
         break;
     case 0x45:
         /* Software Version Information (0x45)
