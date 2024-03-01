@@ -1545,6 +1545,121 @@ static gps_mask_t decode_x45(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode x46
+static gps_mask_t decode_x46(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    char buf2[80];
+    // Status code, see vgnss_decode_status
+    unsigned u1 = getub(buf, 0);
+    unsigned u2 = getub(buf, 1);
+
+    switch (u1) {
+    case 0:         //  "Doing Fixes"
+	session->newdata.mode = MODE_3D;
+	break;
+    case 9:          // "1 usable sat"
+	session->newdata.mode = MODE_2D;
+	break;
+    case 10:         // "2 usable sats"
+	session->newdata.mode = MODE_2D;
+	break;
+    case 11:         // "3 usable sats"
+	session->newdata.mode = MODE_2D;
+	break;
+    case 1:          // "No GPS time"
+	FALLTHROUGH
+    case 2:          // "Needs Init"
+	FALLTHROUGH
+    case 3:          // "PDOP too high"
+	FALLTHROUGH
+    case 8:          // "0 usable sats"
+	FALLTHROUGH
+    case 12:         // "chosen sat unusable"
+	FALLTHROUGH
+    case 16:         // "TRAIM rejected"
+	session->newdata.mode = MODE_NO_FIX;
+	break;
+    case 0xbb:       // "GPS Time Fix (OD mode)"
+	session->newdata.status = STATUS_TIME;
+	session->newdata.mode = MODE_3D;
+	break;
+     }
+
+    /* Error codes, model dependent
+     * 0x01 -- no battery, always set on RES SMT 360
+     * 0x10 -- antenna is open
+     * 0x30 -- antenna is shorted
+     */
+    switch (u2 & 0x30) {
+    case 0x10:
+	session->newdata.ant_stat = ANT_OPEN;
+	break;
+    case 0x30:
+	session->newdata.ant_stat = ANT_SHORT;
+	break;
+    default:
+	session->newdata.ant_stat = ANT_OK;
+	break;
+    }
+
+    if (STATUS_UNK != session->newdata.status) {
+	mask |= STATUS_SET;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x46: Receiver Health: mode %d status %d  gds:x%x "
+	     "ec:x%x\n",
+	    session->newdata.status,
+	    session->newdata.mode,
+	    u1, u2);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "TSIP: gds:%s ec:%s\n",
+	     val2str(u1, vgnss_decode_status),
+	     flags2str(u2, verr_codes, buf2, sizeof(buf2)));
+    return mask;
+}
+
+// Decode x47
+static gps_mask_t decode_x47(struct gps_device_t *session, const char *buf,
+                             int len, int *pbad_len)
+{
+    gps_mask_t mask = 0;
+    char buf2[BUFSIZ];
+    int i, j;
+    short u1;          // PRN
+    double f1;         // SNR
+
+    // satellite count, RES SMT 360 doc says 12 max
+    int count = getub(buf, 0);
+
+    // Status code, see vgnss_decode_status
+    gpsd_zero_satellites(&session->gpsdata);
+
+    if ((5 * count + 1) != len) {
+	*pbad_len = 5 * count + 1;
+	return mask;
+    }
+    *pbad_len = 0;
+    buf2[0] = '\0';
+    for (i = 0; i < count; i++) {
+	u1 = getub(buf, 5 * i + 1);
+	if (0 > (f1 = getbef32(buf, 5 * i + 2))) {
+	    f1 = 0.0;
+	}
+	for (j = 0; j < TSIP_CHANNELS; j++) {
+	    if (session->gpsdata.skyview[j].PRN == u1) {
+		session->gpsdata.skyview[j].ss = f1;
+		break;
+	    }
+	}
+	str_appendf(buf2, sizeof(buf2), " %u=%.1f", u1, f1);
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x47: Signal Levels: (%d):%s\n", count, buf2);
+    mask |= SATELLITE_SET;
+    return mask;
+}
+
 // Decode Protocol Version: x55
 static gps_mask_t decode_x55(struct gps_device_t *session, const char *buf,
                              time_t now)
@@ -1578,7 +1693,7 @@ static gps_mask_t decode_x55(struct gps_device_t *session, const char *buf,
 	     "TSIP x55: IO Options: %02x %02x %02x %02x\n",
 	     u1, u2, u3, u4);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIPv1: pos:%s vel:%s timing:%s auss%s\n",
+             "TSIPv1: pos:%s vel:%s timing:%s aux:%s\n",
              flags2str(u1, vx55_pos, buf2, sizeof(buf2)),
              flags2str(u2, vx55_vel, buf3, sizeof(buf3)),
              flags2str(u3, vx55_timing, buf4, sizeof(buf4)),
@@ -1844,14 +1959,13 @@ static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
     gps_mask_t mask = 0;
     char buf2[80];
     int i;
-    int bad_len = 0;
     unsigned u1 = getub(buf, 0);          // fix dimension, mode
     int count = getub(buf, 17);
     if ((18 + count) != len) {
-	bad_len = 18 + count;
-	*pbad_len = bad_len;
+	*pbad_len = 18 + count;
 	return mask;
     }
+    *pbad_len = 0;
 
     /*
      * This looks right, but it sets a spurious mode value when
@@ -1933,7 +2047,6 @@ static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
 	     "TSIP: fixd:%s\n",
 	     flags2str(u1, vfix, buf2, sizeof(buf2)));
     mask |= USED_IS;
-    *pbad_len = bad_len;
     return mask;
 }
 
@@ -4511,7 +4624,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
  */
 static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 {
-    int i, j, len, count;
+    int i, len;
     gps_mask_t mask = 0;
     unsigned int id;
     uint8_t u1, u2, u3;
@@ -4698,71 +4811,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
         }
         session->driver.tsip.last_46 = now;
-        // Status code, see vgnss_decode_status
-        u1 = getub(buf, 0);
-        switch (u1) {
-        case 0:         //  "Doing Fixes"
-            session->newdata.mode = MODE_3D;
-            break;
-        case 9:          // "1 usable sat"
-            session->newdata.mode = MODE_2D;
-            break;
-        case 10:         // "2 usable sats"
-            session->newdata.mode = MODE_2D;
-            break;
-        case 11:         // "3 usable sats"
-            session->newdata.mode = MODE_2D;
-            break;
-        case 1:          // "No GPS time"
-            FALLTHROUGH
-        case 2:          // "Needs Init"
-            FALLTHROUGH
-        case 3:          // "PDOP too high"
-            FALLTHROUGH
-        case 8:          // "0 usable sats"
-            FALLTHROUGH
-        case 12:         // "chosen sat unusable"
-            FALLTHROUGH
-        case 16:         // "TRAIM rejected"
-            session->newdata.mode = MODE_NO_FIX;
-            break;
-        case 0xbb:       // "GPS Time Fix (OD mode)"
-            session->newdata.status = STATUS_TIME;
-            session->newdata.mode = MODE_3D;
-            break;
-         }
-
-        /* Error codes, model dependent
-         * 0x01 -- no battery, always set on RES SMT 360
-         * 0x10 -- antenna is open
-         * 0x30 -- antenna is shorted
-         */
-        u2 = getub(buf, 1);
-        switch (u2 & 0x30) {
-        case 0x10:
-            session->newdata.ant_stat = ANT_OPEN;
-            break;
-        case 0x30:
-            session->newdata.ant_stat = ANT_SHORT;
-            break;
-        default:
-            session->newdata.ant_stat = ANT_OK;
-            break;
-        }
-
-        if (STATUS_UNK != session->newdata.status) {
-            mask |= STATUS_SET;
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x46: Receiver Health: mode %d status %d  gds:x%x "
-                 "ec:x%x\n",
-                session->newdata.status,
-                session->newdata.mode,
-                u1, u2);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP: gds:%s ec:%s\n",
-                 val2str(u1, vgnss_decode_status),
-                 flags2str(u2, verr_codes, buf2, sizeof(buf2)));
+        mask = decode_x46(session, buf);
         break;
     case 0x47:
         /* Signal Levels for all Satellites
@@ -4776,30 +4825,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 1;
             break;
         }
-        gpsd_zero_satellites(&session->gpsdata);
-        // satellite count, RES SMT 360 doc says 12 max
-        count = (int)getub(buf, 0);
-        if ((5 * count + 1) != len) {
-            bad_len = 5 * count + 1;
-            break;
-        }
-        buf2[0] = '\0';
-        for (i = 0; i < count; i++) {
-            u1 = getub(buf, 5 * i + 1);
-            if (0 > (f1 = getbef32(buf, 5 * i + 2))) {
-                f1 = 0.0;
-            }
-            for (j = 0; j < TSIP_CHANNELS; j++) {
-                if (session->gpsdata.skyview[j].PRN == (short)u1) {
-                    session->gpsdata.skyview[j].ss = f1;
-                    break;
-                }
-            }
-            str_appendf(buf2, sizeof(buf2), " %d=%.1f", (int)u1, f1);
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x47: Signal Levels: (%d):%s\n", count, buf2);
-        mask |= SATELLITE_SET;
+        mask = decode_x47(session, buf, len, &bad_len);
         break;
     case 0x48:
         /* GPS System Message
