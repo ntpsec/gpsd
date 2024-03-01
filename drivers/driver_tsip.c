@@ -451,6 +451,15 @@ static struct flist_t vsv_used_flags[] = {
     {0, 0, NULL},
 };
 
+/* x4c Dynamics Code
+ * Used in x4c */
+static struct vlist_t vx4c_dyncode[] = {
+    {1, "Land"},             // < 120 knots
+    {2, "Sea"},              // < 50 knots
+    {3, "Air"},              // > 800 knots
+    {0,NULL},
+};
+
 /* x55 auxiliary
  * Used in x55 */
 static struct flist_t vx55_aux[] = {
@@ -1803,6 +1812,49 @@ static gps_mask_t decode_x4b(struct gps_device_t *session, const char *buf)
 	}
     }
 
+    return mask;
+}
+
+// Decode x4c
+static gps_mask_t decode_x4c(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    unsigned u1 = getub(buf, 0);                  // Dynamics Code
+    double f1 = getbef32(buf, 1) * RAD_2_DEG;     // Elevation Mask
+    double f2 = getbef32(buf, 5);                 // Signal Level Mask
+    double f3 = getbef32(buf, 9);                 // PDOP Mask
+    double f4 = getbef32(buf, 13);                // PDOP Switch
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x4c: OP: Dyn x%02x El %f Sig %f PDOP %f %f\n",
+	     u1, f1, f2, f3, f4);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "TSIP: Dynamics:%s\n",
+	     val2str(u1, vx4c_dyncode));
+    return mask;
+}
+
+// Decode x54
+static gps_mask_t decode_x54(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    double bias = getbef32(buf, 0);         // Bias
+    double bias_rate = getbef32(buf, 4);    // Bias rate
+    double ftow = getbef32(buf, 8);         // tow
+
+    DTOTS(&ts_tow, ftow);
+    session->newdata.time =
+	gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
+    if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+	mask |= CLEAR_IS;
+	session->driver.tsip.last_tow = ts_tow;
+    }
+    mask |= TIME_SET | NTPTIME_IS;
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	    "TSIP x54: BBRR: Bias %f brate %f tow %f\n",
+            bias, bias_rate, ftow);
     return mask;
 }
 
@@ -4773,13 +4825,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     int i, len;
     gps_mask_t mask = 0;
     unsigned int id;
-    uint8_t u1;
-    float f1, f2, f3, f4;
     time_t now;
     char buf[BUFSIZ];
     char buf2[BUFSIZ];
-    double ftow;              // time of week in seconds
-    timespec_t ts_tow;
     int bad_len = 0;
 
     if (TSIP_PACKET != session->lexer.type) {
@@ -5033,14 +5081,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 17;
             break;
         }
-        u1 = getub(buf, 0);               // Dynamics Code
-        f1 = getbef32(buf, 1);            // Elevation Mask
-        f2 = getbef32(buf, 5);            // Signal Level Mask
-        f3 = getbef32(buf, 9);            // PDOP Mask
-        f4 = getbef32(buf, 13);           // PDOP Switch
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x4c: Operating Params: x%02x %f %f %f %f\n",
-                 u1, f1, f2, f3, f4);
+        mask = decode_x4c(session, buf);
         break;
     case 0x54:
         /* Bias and Bias Rate Report (0x54)
@@ -5052,25 +5093,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Not Present in:
          *   Copernicus II (2009)
          */
-         {
-            float  bias, bias_rate;
-            bias = getbef32(buf, 0);         // Bias
-            bias_rate = getbef32(buf, 4);    // Bias rate
-            ftow = getbef32(buf, 8);         // tow
-            DTOTS(&ts_tow, ftow);
-            session->newdata.time =
-                gpsd_gpstime_resolv(session, session->context->gps_week,
-                                    ts_tow);
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIP x54: Bias and Bias Rate Report: %f %f %f\n",
-                     bias, bias_rate, ftow);
-            mask |= TIME_SET | NTPTIME_IS;
-            if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-                mask |= CLEAR_IS;
-                session->driver.tsip.last_tow = ts_tow;
-            }
-         }
-         break;
+         mask = decode_x54(session, buf);
+        break;
     case 0x55:
         /* IO Options (0x55), polled by 0x35
          * Present in:
