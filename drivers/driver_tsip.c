@@ -1508,6 +1508,43 @@ static gps_mask_t decode_x43(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// Decode x45
+static gps_mask_t decode_x45(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    unsigned nmaj = getub(buf, 0);
+    unsigned nmin = getub(buf, 1);
+    unsigned nmon = getub(buf, 2);
+    unsigned nday = getub(buf, 3);
+    unsigned nyr = getub(buf, 4) + 1900;
+    unsigned fmaj = getub(buf, 5);
+    unsigned fmin = getub(buf, 6);
+    unsigned fmon = getub(buf, 7);
+    unsigned fday = getub(buf, 8);
+    unsigned fyr = getub(buf, 9) + 2000;
+
+    /* ACE calls these "NAV processor firmware" and
+     * "SIG processor firmware".
+     * RES SMT 360 calls these "application" and "GPS core".
+     */
+    (void)snprintf(session->subtype, sizeof(session->subtype),
+		   "sw %u.%u %02u/%02u/%04u hw %u.%u %02u/%02u/%04u",
+		   nmaj, nmin, nmon, nday, nyr,
+		   fmaj, fmin, fmon, fday, fyr);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x45: Software version: %s\n", session->subtype);
+    mask |= DEVICEID_SET;
+
+    // request I/O Options (0x55)
+    (void)tsip_write1(session, "\x35", 1);
+
+    /* request actual subtype using x1c-01, returns x1c-81
+     * which in turn requests 0x1c-83
+     * then requests x8f-42 */
+    (void)tsip_write1(session, "\x1c\x01", 2);
+    return mask;
+}
+
 // Decode Protocol Version: x55
 static gps_mask_t decode_x55(struct gps_device_t *session, const char *buf,
                              time_t now)
@@ -4478,7 +4515,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     gps_mask_t mask = 0;
     unsigned int id;
     uint8_t u1, u2, u3;
-    uint32_t ul1, ul2;
     float f1, f2, f3, f4;
     double d1;
     time_t now;
@@ -4645,46 +4681,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 10;
             break;
         }
-        // convert 2 digit years to 4 digit years
-        ul1 = getub(buf, 3);
-        if (80 > ul1) {
-            ul1 += 2000;
-        } else {
-            ul1 += 1900;
-        }
-        ul2 = getub(buf, 8);
-        if (80 > ul2) {
-            ul2 += 2000;
-        } else {
-            ul2 += 1900;
-        }
-        /* ACE calls these "NAV processor firmware" and
-         * "SIG processor firmware".
-         * RES SMT 360 calls these "application" and "GPS core".
-         */
-        (void)snprintf(session->subtype, sizeof(session->subtype),
-                       "sw %u.%u %02u/%02u/%04u hw %u.%u %02u/%02u/%04u",
-                       getub(buf, 0),
-                       getub(buf, 1),
-                       getub(buf, 4),
-                       getub(buf, 2),
-                       ul1,
-                       getub(buf, 5),
-                       getub(buf, 6),
-                       getub(buf, 9),
-                       getub(buf, 7),
-                       ul2);
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x45: Software version: %s\n", session->subtype);
-        mask |= DEVICEID_SET;
-
-        // request I/O Options (0x55)
-        (void)tsip_write1(session, "\x35", 1);
-
-        /* request actual subtype using x1c-01, returns x1c-81
-         * which in turn requests 0x1c-83
-         * then requests x8f-42 */
-        (void)tsip_write1(session, "\x1c\x01", 2);
+        mask = decode_x45(session, buf);
         break;
     case 0x46:
         /* Health of Receiver (0x46).  Poll with 0x26
