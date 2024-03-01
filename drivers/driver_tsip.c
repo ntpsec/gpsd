@@ -2967,8 +2967,55 @@ static gps_mask_t decode_x82(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
+// decode packet x83
+static gps_mask_t decode_x83(struct gps_device_t *session, const char *buf)
+{
+    gps_mask_t mask = 0;
+    timespec_t ts_tow;
+    // differential position fix mode
+    double ecefx = getbed64(buf, 0);            // X
+    double ecefy = getbed64(buf, 8);            // Y
+    double ecefz = getbed64(buf, 16);           // Z
+    double d3 = getbed64(buf, 24);              // clock bias
+    double ftow = getbef32(buf, 32);            // time-of-fix
+
+    session->newdata.ecef.x = ecefx;
+    session->newdata.ecef.y = ecefy;
+    session->newdata.ecef.z = ecefz;
+    DTOTS(&ts_tow, ftow);
+    session->newdata.time = gpsd_gpstime_resolv(session,
+						session->context->gps_week,
+						ts_tow);
+    /* No fix mode info!! That comes later in 0x6d.
+     * This message only sent when there is 2D or 3D fix.
+     * This is a problem as gpsd will send a report with no mode.
+     * Steal mode from last fix.
+     * The last fix is likely lastfix, not oldfix, as this is likely
+     * a new time and starts a new cycle! */
+    session->newdata.status = session->lastfix.status;
+    if (MODE_2D > session->oldfix.mode) {
+	session->newdata.mode = MODE_2D;  // At least 2D
+    } else {
+	session->newdata.mode = session->lastfix.mode;
+    }
+    mask |= STATUS_SET | MODE_SET | ECEF_SET | TIME_SET | NTPTIME_IS;
+    if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+	// New time, so new fix.
+	mask |= CLEAR_IS;
+	session->driver.tsip.last_tow = ts_tow;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+	     "TSIP x83: DP-XYZ: %f %f %f %f tow %f mode %u\n",
+	     session->newdata.ecef.x,
+	     session->newdata.ecef.y,
+	     session->newdata.ecef.z,
+	     d3, ftow,
+	     session->newdata.mode);
+    return mask;
+}
+
 /* decode Superpacket x8f-15
- */
+*/
 static gps_mask_t decode_x8f_15(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -4283,7 +4330,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     uint8_t u1, u2, u3, u4, u5, u6;
     uint32_t ul1, ul2;
     float f1, f2, f3, f4;
-    double d1, d3;
+    double d1;
     time_t now;
     char buf[BUFSIZ];
     char buf2[BUFSIZ];
@@ -5040,42 +5087,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 36;
             break;
         }
-        session->newdata.ecef.x = getbed64(buf, 0);  // X
-        session->newdata.ecef.y = getbed64(buf, 8);  // Y
-        session->newdata.ecef.z = getbed64(buf, 16); // Z
-        d3 = getbed64(buf, 24);                      // clock bias
-        ftow = getbef32(buf, 32);                    // time-of-fix
-        DTOTS(&ts_tow, ftow);
-        session->newdata.time = gpsd_gpstime_resolv(session,
-                                                    session->context->gps_week,
-                                                    ts_tow);
-        /* No fix mode info!! That comes later in 0x6d.
-         * This message only sent when there is 2D or 3D fix.
-         * This is a problem as gpsd will send a report with no mode.
-         * Steal mode from last fix.
-         * The last fix is likely lastfix, not oldfix, as this is likely
-         * a new time and starts a new cycle! */
-        session->newdata.status = session->lastfix.status;
-        if (MODE_2D > session->oldfix.mode) {
-            session->newdata.mode = MODE_2D;  // At least 2D
-        } else {
-            session->newdata.mode = session->lastfix.mode;
-        }
-        mask |= STATUS_SET | MODE_SET;
-
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x83: DP-XYZ: %f %f %f %f tow %f mode %u\n",
-                 session->newdata.ecef.x,
-                 session->newdata.ecef.y,
-                 session->newdata.ecef.z,
-                 d3, ftow,
-                 session->newdata.mode);
-        mask |= ECEF_SET | TIME_SET | NTPTIME_IS;
-        if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
-            // New time, so new fix.
-            mask |= CLEAR_IS;
-            session->driver.tsip.last_tow = ts_tow;
-        }
+        mask = decode_x83(session, buf);
         break;
     case 0x84:
         /* Double-Precision LLA Position Fix and Bias Information
