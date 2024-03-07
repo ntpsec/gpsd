@@ -514,6 +514,26 @@ static struct vlist_t vx57_fmode[] = {
     {0,NULL},
 };
 
+/* x5c Acquisition Flag
+ * Used in x5c */
+static struct vlist_t vx5c_acq[] = {
+    {0, "Never"},
+    {1, "Yes"},
+    {2, "Search"},
+    {0,NULL},
+};
+
+/* x5c Ephemeris Flag
+ * Used in x5c */
+static struct vlist_t vx5c_eflag[] = {
+    {0, "none"},
+    {1, "Decoded"},
+    {3, "Decoded/Healthy"},
+    {19, "Used"},
+    {51, "Used/DGPS"},
+    {0,NULL},
+};
+
 /* x82 Mode Timing
  * Used in x82 */
 static struct vlist_t vx82_mode[] = {
@@ -2016,25 +2036,27 @@ static gps_mask_t decode_x5a(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
-// Decode x5c
+// Decode Satellite Tracking Status, packet x5c
 static gps_mask_t decode_x5c(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
     timespec_t ts_tow;
-    int i, j;
+    int i;
     // Useless without the pseudorange...
-    unsigned char u1 = getub(buf, 0);            // PRN 1-32
+    int PRN = getub(buf, 0);                     // PRN 1-32
+    // slot unused in Lassen IQ
     unsigned u2 = getub(buf, 1);                 // slot:chan
-    unsigned u3 = getub(buf, 2);                 // Acquisition flag
-    unsigned u4 = getub(buf, 3);                 // Ephemeris flag
-    double f1 = getbef32(buf, 4);                // Signal level
+    unsigned acq = getub(buf, 2);                // Acquisition flag
+    unsigned eflag = getub(buf, 3);              // Ephemeris flag
+    double snr = getbef32(buf, 4);               // Signal level
     // time of skyview, not current time, nor time of fix
     double ftow = getbef32(buf, 8);
 
-    double d1 = getbef32(buf, 12) * RAD_2_DEG;   // Elevation
-    double d2 = getbef32(buf, 16) * RAD_2_DEG;   // Azimuth
+    double el = getbef32(buf, 12) * RAD_2_DEG;   // Elevation
+    double az = getbef32(buf, 16) * RAD_2_DEG;   // Azimuth
 
-    unsigned u5 = getub(buf, 20);                // Old Meassurement flag
+    // Old Meassurement flag, unused in Lassen IQ
+    unsigned omf = getub(buf, 20);
 
     DTOTS(&session->gpsdata.skyview_time, ftow);
     /* Channel number, bits 0-2 reserved/unused as of 1999.
@@ -2051,25 +2073,29 @@ static gps_mask_t decode_x5c(struct gps_device_t *session, const char *buf)
     session->driver.tsip.last_chan_seen = i;
 
     if (i < TSIP_CHANNELS) {
-	session->gpsdata.skyview[i].PRN = u1;
-	session->gpsdata.skyview[i].svid = u1;
+	session->gpsdata.skyview[i].PRN = PRN;
+	session->gpsdata.skyview[i].svid = PRN;
 	session->gpsdata.skyview[i].gnssid = GNSSID_GPS;
-	session->gpsdata.skyview[i].ss = f1;
-	session->gpsdata.skyview[i].elevation = d1;
-	session->gpsdata.skyview[i].azimuth = d2;
-	session->gpsdata.skyview[i].used = false;
-	session->gpsdata.skyview[i].gnssid = tsip_gnssid(0, u1,
+	session->gpsdata.skyview[i].ss = snr;
+	session->gpsdata.skyview[i].elevation = el;
+	session->gpsdata.skyview[i].azimuth = az;
+	session->gpsdata.skyview[i].gnssid = tsip_gnssid(0, PRN,
 	    &session->gpsdata.skyview[i].svid);
-	if (0.1 < f1) {
-	    // check used list, if ss is non-zero
-	    // FIXME: what about negative PRN?
-	    for (j = 0; j < session->gpsdata.satellites_used; j++) {
-		if (session->gpsdata.skyview[i].PRN != 0 &&
-		    session->driver.tsip.sats_used[j] != 0) {
-		    session->gpsdata.skyview[i].used = true;
-		}
-	    }
-	}
+        if (2 == (2 & eflag)) {
+            session->gpsdata.skyview[i].health = SAT_HEALTH_OK;
+        } else if (1 == eflag) {
+            session->gpsdata.skyview[i].health = SAT_HEALTH_BAD;
+        } // else, unknown
+
+        if (0x10 == (0x10 & eflag)) {
+            session->gpsdata.skyview[i].used = true;
+            if (51 == eflag) {
+                session->newdata.status = STATUS_DGPS;
+                mask |= STATUS_SET;
+            }
+	} else {
+            session->gpsdata.skyview[i].used = false;
+        }
 	/* when polled by 0x3c, all the skyview times will be the same
 	 * in one cluster */
 	if (0.0 < ftow) {
@@ -2080,21 +2106,29 @@ static gps_mask_t decode_x5c(struct gps_device_t *session, const char *buf)
 	    /* do not save in session->driver.tsip.last_tow
 	     * as this is skyview time, not fix time */
 	}
-	if (++i >= session->gpsdata.satellites_visible) {
+	if ((i + 1) >= session->gpsdata.satellites_visible) {
 	    /* Last of the series?
 	     * This will cause extra SKY if this set has more
 	     * sats than the last set */
 	    mask |= SATELLITE_SET;
-	    session->gpsdata.satellites_visible = i;
+	    session->gpsdata.satellites_visible = i + 1;
 	}
 	/* If this series has fewer than last series there will
 	 * be no SKY, unless the cycle ender pushes the SKY */
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIP x5c: Satellite Tracking Status: Ch %2d PRN %3d "
+                 "es %d Acq %d Eph %2d SNR %4.1f LMT %.04f El %.1f Az %.1f "
+                 "omf %u hlth %u\n",
+                 i, PRN, u2 & 7, acq, eflag, snr, ftow, el, az, omf,
+                session->gpsdata.skyview[i].health);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TSIP: acq:%s eflag:%s\n",
+                 val2str(acq, vx5c_acq),
+                 val2str(eflag, vx5c_eflag));
+    } else {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIP x5c: Satellite Tracking Status: Too many chans %d\n", i);
     }
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "TSIP x5c: Satellite Tracking Status: Ch %2d PRN %3d "
-	     "es %d Acq %d Eph %2d SNR %4.1f LMT %.04f El %4.1f Az %5.1f "
-	     "omf %u\n",
-	     i, u1, u2 & 7, u3, u4, f1, ftow, d1, d2, u5);
     return mask;
 }
 
@@ -2531,15 +2565,18 @@ static gps_mask_t decode_x8f_15(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
-/* decode Superpacket x8f-20
+/* decode Last Fix with Extra Information, Superpacket x8f-20
  */
-static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
+static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf,
+                                const int length)
 {
     gps_mask_t mask = 0;
     double d1, d2, d3, d4;
     timespec_t ts_tow;
     char buf2[80];
+    char buf3[160];
     char ts_buf[TIMESPEC_LEN];
+    int i;
 
     int s1 = getbes16(buf, 2);                // east velocity
     int s2 = getbes16(buf, 4);                // north velocity
@@ -2630,11 +2667,30 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
         session->driver.tsip.last_tow = ts_tow;
     }
 
+    memset(session->driver.tsip.sats_used, 0,
+	    sizeof(session->driver.tsip.sats_used));
+    buf3[0] = '\0';
+    for (i = 0; i < numSV; i++) {
+        if (length < (33 + (i * 2))) {
+            // too short
+            break;
+        }
+        // bits 0 to 5, junk in 5 to 7
+        int PRN = getub(buf, 32 + (i * 2)) & 0x1f;
+        int IODE = getub(buf, 33 + (i * 2));
+
+	session->driver.tsip.sats_used[i] = PRN;
+	if (LOG_PROG <= session->context->errout.debug) {
+	    str_appendf(buf3, sizeof(buf3),
+			   " %d (%d)", session->driver.tsip.sats_used[i], IODE);
+	}
+    }
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIP x8f-20: LFwEI: %d %d %d tow %lu %ld "
-             " %lu %lu %x fflags %x numSV %u ls %u week %d datum %u\n",
+             " %lu %lu %x fflags %x numSV %u ls %u week %d datum %u used:%s\n",
              s1, s2, s3, tow, sl1, ul2, sl2, u1, fflags, numSV,
-             ls, week, datum);
+             ls, week, datum, buf3);
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIP x8f-20: LFwEI: time=%s lat=%.2f lon=%.2f "
              "altHAE=%.2f mode=%d status=%d\n",
@@ -3148,7 +3204,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
             bad_len = 56;
             break;
         }
-        mask = decode_x8f_20(session, buf);
+        mask = decode_x8f_20(session, buf, len);
         break;
     case 0x23:
         /* Compact Super Packet (0x8f-23)
