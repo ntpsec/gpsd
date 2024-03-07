@@ -524,6 +524,18 @@ static struct vlist_t vx82_mode[] = {
     {4, NULL},
 };
 
+/* x8f-20 Fix Flags
+ * Used in x8f-20 */
+static struct flist_t vx8f_20_fflags[] = {
+    {0, 1, "Fix Yes"},
+    {2, 2, "DGPS"},
+    {0, 4, "3D"},
+    {4, 4, "2D"},
+    {8, 8, "Alt Holdt"},
+    {0x10, 0x10, "Filtered"},
+    {0, 0, NULL},
+};
+
 /* Fis Dimension, Fix Mode
  * Used in x6c, x6d */
 static struct flist_t vfix[] = {
@@ -1426,7 +1438,8 @@ static gps_mask_t decode_x1c(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
-// decode Packet x41
+/* decode GPS Time, Packet x41
+ * This is "current" time, not the time of a fix */
 static gps_mask_t decode_x41(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -1443,14 +1456,18 @@ static gps_mask_t decode_x41(struct gps_device_t *session, const char *buf)
 	DTOTS(&ts_tow, ftow);
 	session->newdata.time =
 	    gpsd_gpstime_resolv(session, week, ts_tow);
-	mask |= TIME_SET | NTPTIME_IS;
-	/* Note: this is not the time of current fix
+	mask |= TIME_SET | NTPTIME_IS | CLEAR_IS;
+	/* Note: this is not the time of current fix. So we do a clear
+         * so the previous fix data does not get attached to this time.
 	 * Do not use in tsip.last_tow */
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "TSIP x41: GPS Time: tow %.2f week %u ls %.1f %s\n",
+	     "TSIP x41: GPS Time: tow %.3f week %u ls %.1f %s\n",
 	     ftow, week, f2,
 	     timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "TSIP: %s",
+             ctime(&session->newdata.time.tv_sec));
     return mask;
 }
 
@@ -1554,7 +1571,7 @@ static gps_mask_t decode_x45(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
-// Decode x46
+// Decode Health of Receiver, x46
 static gps_mask_t decode_x46(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -1565,7 +1582,12 @@ static gps_mask_t decode_x46(struct gps_device_t *session, const char *buf)
 
     switch (status) {
     case 0:         //  "Doing Fixes"
-	session->newdata.mode = MODE_3D;
+        // could be 2D or 3D.  So check the last setting.
+        if (MODE_2D >= session->oldfix.mode) {
+            session->newdata.mode = MODE_2D;  // At least 2D
+        } else {
+            session->newdata.mode = MODE_3D;
+        }
 	break;
     case 9:          // "1 usable sat"
 	session->newdata.mode = MODE_2D;
@@ -1620,8 +1642,8 @@ static gps_mask_t decode_x46(struct gps_device_t *session, const char *buf)
     GPSD_LOG(LOG_PROG, &session->context->errout,
 	     "TSIP x46: Receiver Health: mode %d status %d  gds:x%x "
 	     "ec:x%x\n",
-	    session->newdata.status,
 	    session->newdata.mode,
+	    session->newdata.status,
 	    status, ec);
     GPSD_LOG(LOG_IO, &session->context->errout,
 	     "TSIP: gds:%s ec:%s\n",
@@ -1910,17 +1932,19 @@ static gps_mask_t decode_x55(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
-// Decode x56
+// Decode Velocity Fix, Easst-North-Up, packet x56
 static gps_mask_t decode_x56(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
     timespec_t ts_tow;
 
-    float f1 = getbef32(buf, 0);     // East velocity
-    float f2 = getbef32(buf, 4);     // North velocity
-    float f3 = getbef32(buf, 8);     // Up velocity
-    float f4 = getbef32(buf, 12);    // clock bias rate
-    float ftow = getbef32(buf, 16);  // time-of-fix
+    float f1 = getbef32(buf, 0);        // East velocity
+    float f2 = getbef32(buf, 4);        // North velocity
+    float f3 = getbef32(buf, 8);        // Up velocity
+    float cbias = getbef32(buf, 12);    // clock bias rate, m/s
+    float ftow = getbef32(buf, 16);     // time-of-fix
+
+    // Could be GPS, or UTC...
     DTOTS(&ts_tow, ftow);
     session->newdata.time = gpsd_gpstime_resolv(session,
 						session->context->gps_week,
@@ -1934,8 +1958,11 @@ static gps_mask_t decode_x56(struct gps_device_t *session, const char *buf)
 	session->driver.tsip.last_tow = ts_tow;
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "TSIP x56: Vel ENU: %f %f %f %f ftow %f\n",
-	     f1, f2, f3, f4, ftow);
+	     "TSIP x56: Vel ENU: %f %f %f cbias %f ftow %f\n",
+	     f1, f2, f3, cbias, ftow);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "TSIP: %s",
+             ctime(&session->newdata.time.tv_sec));
     return mask;
 }
 
@@ -2257,7 +2284,7 @@ static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
     return mask;
 }
 
-// decode packet x6d
+// decode All-in-view Satellite Selection, x6d
 static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
                              int len, int *pbad_len)
 {
@@ -2269,7 +2296,7 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
     int count = (int)((fix_dim >> 4) & 0x0f);
     if ((17 + count) != len) {
 	*pbad_len = 17 + count;
-        return mask;
+        return 0;
     }
     *pbad_len = 0;
 
@@ -2281,42 +2308,41 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
      * that convey actual fix information, like 0x8f-20, but some
      * TSIP do not support 0x8f-20, and 0x6c may be all we got.
      */
-    if (0 != isfinite(session->gpsdata.fix.longitude)) {
-        // have a fix?
-        switch (fix_dim & 7) {   // dimension
-        case 1:       // clock fix (surveyed in)
-            FALLTHROUGH
-        case 5:       // Overdetermined clock fix
-            session->newdata.status = STATUS_TIME;
-            session->newdata.mode = MODE_3D;
-            break;
-        case 3:
-            // Copernicus ii can output this for OD mode.
-            session->newdata.mode = MODE_2D;
-            break;
-        case 4:
-            // SMTx can output this for OD mode.
-            session->newdata.mode = MODE_3D;
-            break;
-        case 6:
-            // Accutime
-            session->newdata.status = STATUS_DGPS;
-            session->newdata.mode = MODE_3D;
-            break;
-        case 2:
-            FALLTHROUGH
-        case 7:
-            FALLTHROUGH
-        default:
-            session->newdata.mode = MODE_NO_FIX;
-            break;
-        }
-        if (0 == count) {
-            // reports a fix even ith no sats!
-            session->newdata.status = STATUS_DR;
-        }
-    } else {
+    switch (fix_dim & 7) {   // dimension
+    case 1:
+        // clock fix (surveyed in), not in Lassen IQ
+        FALLTHROUGH
+    case 5:       // Overdetermined clock fix, not in Lassen IQ
+        session->newdata.status = STATUS_TIME;
+        session->newdata.mode = MODE_3D;
+        break;
+    case 3:
+        // Copernicus ii can output this for OD mode.
+        session->newdata.mode = MODE_2D;
+        break;
+    case 4:
+        // SMTx can output this for OD mode.
+        session->newdata.mode = MODE_3D;
+        break;
+    case 6:
+        // Accutime, not in Lassen IQ
+        session->newdata.status = STATUS_DGPS;
+        session->newdata.mode = MODE_3D;
+        break;
+    case 2:              // not in Lassen IQ
+        FALLTHROUGH
+    case 7:              // not in Lassen IQ
+        FALLTHROUGH
+    default:             // huh?
         session->newdata.mode = MODE_NO_FIX;
+        break;
+    }
+    if (0 >= count &&
+        0 != isfinite(session->oldfix.longitude)) {
+        // use oldfix, as this may be the 1st message in an epoch.
+
+        // reports a fix even ith no sats!
+        session->newdata.status = STATUS_DR;
     }
     if (STATUS_UNK < session->newdata.status) {
         mask |= STATUS_SET;
@@ -2440,6 +2466,7 @@ static gps_mask_t decode_x84(struct gps_device_t *session, const char *buf)
     double lon = getbed64(buf, 8) * RAD_2_DEG;   // lon
     // depending on GPS config, could be either WGS84 or MSL
     double d1 = getbed64(buf, 16);               // altitude
+    double cbias = getbed64(buf, 16);            // clock bias, meters
     double ftow = getbef32(buf, 32);             // time-of-fix
 
     session->newdata.latitude = lat;
@@ -2473,11 +2500,16 @@ static gps_mask_t decode_x84(struct gps_device_t *session, const char *buf)
     mask |= STATUS_SET | MODE_SET;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "TSIP x84: DP-LLA: time=%s lat=%.2f lon=%.2f alt=%.2f %s\n",
+	     "TSIP x84: DP-LLA: time=%s lat=%.2f lon=%.2f alt=%.2f %s "
+             "cbias %.2f\n",
 	     timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
 	     session->newdata.latitude,
 	     session->newdata.longitude, d1,
-             session->driver.tsip.alt_is_msl ? "MSL" : "HAE");
+             session->driver.tsip.alt_is_msl ? "MSL" : "HAE", cbias);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIP: mode:%s status:%s\n",
+             val2str(session->newdata.mode, vmode_str),
+             val2str(session->newdata.status, vstatus_str));
     return mask;
 }
 
@@ -2506,6 +2538,7 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
     gps_mask_t mask = 0;
     double d1, d2, d3, d4;
     timespec_t ts_tow;
+    char buf2[80];
     char ts_buf[TIMESPEC_LEN];
 
     int s1 = getbes16(buf, 2);                // east velocity
@@ -2517,16 +2550,13 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
     // Lassen iQ, and copernicus (ii) doc says this is always altHAE
     long sl2 = getbes32(buf, 20);             // altitude
     unsigned u1 = getub(buf, 24);             // velocity scaling
-    unsigned u2 = getub(buf, 27);             // fix flags
-    unsigned u3 = getub(buf, 28);             // num svs
-    unsigned u4 = getub(buf, 29);             // utc offset
+    unsigned datum = getub(buf, 26);          // Datum + 1
+    unsigned fflags = getub(buf, 27);         // fix flags
+    int numSV = getub(buf, 28);               // num svs
+    unsigned ls = getub(buf, 29);             // utc offset (leap seconds)
     unsigned week = getbeu16(buf, 30);        // tsip.gps_week
 
     // PRN/IODE data follows
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "TSIP x8f-20: LFwEI: %d %d %d tow %lu %ld "
-             " %lu %lu %x %x %u leap %u week %d\n",
-             s1, s2, s3, tow, sl1, ul2, sl2, u1, u2, u3, u4, week);
 
     if (0 != (u1 & 0x01)) {     // check velocity scaling
         d4 = 0.02;
@@ -2559,20 +2589,20 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
 
     session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
-    if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
+    if ((uint8_t)0 == (fflags & 0x01)) {          // Fix Available
         session->newdata.status = STATUS_GPS;
-        if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
+        if ((uint8_t)0 != (fflags & 0x02)) {      // DGPS Corrected
             session->newdata.status = STATUS_DGPS;
         }
-        if ((u2 & 0x04) != (uint8_t)0) {      // Fix Dimension
+        if ((uint8_t)0 != (fflags & 0x04)) {      // Fix Dimension
             session->newdata.mode = MODE_2D;
         } else {
             session->newdata.mode = MODE_3D;
         }
     }
-    session->gpsdata.satellites_used = (int)u3;
-    if (10 < (int)u4) {
-        session->context->leap_seconds = (int)u4;
+    session->gpsdata.satellites_used = numSV;
+    if (10 < ls) {
+        session->context->leap_seconds = ls;
         session->context->valid |= LEAP_SECOND_VALID;
         /* check for week rollover
          * Trimble uses 15 bit weeks, but can guess the epoch wrong
@@ -2580,7 +2610,7 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
          * may see BUILD_LEAPSECONDS instead of leap_seconds
          * from receiver.
          */
-        if (17 < u4 &&
+        if (17 < ls &&
             1930 > week) {
             // leap second 18 added in gps week 1930
             week += 1024;
@@ -2599,6 +2629,12 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
         mask |= CLEAR_IS;
         session->driver.tsip.last_tow = ts_tow;
     }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP x8f-20: LFwEI: %d %d %d tow %lu %ld "
+             " %lu %lu %x fflags %x numSV %u ls %u week %d datum %u\n",
+             s1, s2, s3, tow, sl1, ul2, sl2, u1, fflags, numSV,
+             ls, week, datum);
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIP x8f-20: LFwEI: time=%s lat=%.2f lon=%.2f "
              "altHAE=%.2f mode=%d status=%d\n",
@@ -2607,6 +2643,9 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf)
              session->newdata.latitude, session->newdata.longitude,
              session->newdata.altHAE,
              session->newdata.mode, session->newdata.status);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIP: ff;ags:%s\n",
+             flags2str(fflags, vx8f_20_fflags, buf2, sizeof(buf2)));
     return mask;
 }
 
@@ -3279,7 +3318,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
          */
         FALLTHROUGH
     case 0x41:
-        /* Stored manufacturing operating parameters
+        /* Stored manufacturing operating parameters x8f-41
          * Present in:
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
@@ -3359,7 +3398,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
          */
         FALLTHROUGH
     case 0x6d:
-        /* Last Odometer Readings Report
+        /* Last Odometer Readings Report x8f-6d
          * Present in:
          *   pre-2000 models
          * Not Present in:
@@ -3549,7 +3588,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
          */
         FALLTHROUGH
     case 0x84:
-        /* Satellite FFT Control Acknowledgment
+        /* Satellite FFT Control Acknowledgment x8f-84
          * Present in:
          *   pre-2000 models
          * Not Present in:
