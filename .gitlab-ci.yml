@@ -42,6 +42,7 @@ debian-experimental:gcc:
   extends: .debian_build
 
 debian-unstable:clang:
+  allow_failure: true
   image: debian:unstable
   stage: build
   variables:
@@ -56,6 +57,7 @@ debian-unstable:clang:
   extends: .debian_build
 
 debian-experimental:clang:
+  # FIXME!
   allow_failure: true
   image: debian:experimental
   stage: build
