@@ -18,7 +18,7 @@ static char enableBb[] = { 'B', 'b', 1 };
 static char getfirmware[] = { 'C', 'j' };
 /*static char enableEn[] =
     { 'E', 'n', 1, 0, 100, 100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };*/
-/*static char enableAt2[]       = { 'A', 't', 2, };*/
+// static char enableAt2[]       = { 'A', 't', 2, };*/
 static unsigned char pollAs[] =
     { 'A', 's', 0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff,
     0xff, 0xff, 0xff
@@ -175,8 +175,9 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     struct tm unpacked_date;
     char ts_buf[TIMESPEC_LEN];
 
-    if (data_len != 76)
+    if (76 != data_len) {
         return 0;
+    }
 
     mask = ONLINE_SET;
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -255,12 +256,12 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
         mask |= LATLON_SET | SPEED_SET | TRACK_SET;
     }
     if (MODE_3D <= session->newdata.mode) {
-        session->newdata.altHAE = alt;  /* is WGS84 */
+        session->newdata.altHAE = alt;  // is WGS84
         mask |= ALTITUDE_SET;
     }
 
     gpsd_zero_satellites(&session->gpsdata);
-    /* Merge the satellite information from the Bb message. */
+    // Merge the satellite information from the Bb message.
     Bbused = 0;
     nsv = 0;
     for (i = st = 0; i < 8; i++) {
@@ -279,7 +280,7 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
         if (sn) {
             session->gpsdata.skyview[st].PRN = (short)sv;
             session->gpsdata.skyview[st].ss = (double)sn;
-            for (j = 0; (int)j < session->driver.oncore.visible; j++)
+            for (j = 0; (int)j < session->driver.oncore.visible; j++) {
                 if (session->driver.oncore.PRN[j] == sv) {
                     session->gpsdata.skyview[st].elevation =
                         (double)session->driver.oncore.elevation[j];
@@ -288,15 +289,17 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
                     Bbused |= 1 << j;
                     break;
                 }
-            /* bit 7 of the status word: sat used for position */
+            }
+            // bit 7 of the status word: sat used for position
             session->gpsdata.skyview[st].used = false;
             if (status & 0x80) {
                 session->gpsdata.skyview[st].used = true;
                 nsv++;
             }
-            /* bit 2 of the status word: using for time solution */
-            if (status & 0x02)
+            // bit 2 of the status word: using for time solution
+            if (status & 0x02) {
                 mask |= NTPTIME_IS | GOODTIME_IS;
+            }
             /*
              * The GOODTIME_IS mask bit exists distinctly from TIME_SET exactly
              * so an OnCore running in time-service mode (and other GPS clocks)
@@ -354,18 +357,20 @@ oncore_msg_utc_offset(struct gps_device_t *session, unsigned char *buf,
 {
     int utc_offset;
 
-    if (data_len != 8)
+    if (8 != data_len) {
         return 0;
+    }
 
     utc_offset = (int)getub(buf, 4);
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "oncore UTCTIME - leap seconds: %d\n", utc_offset);
-    if (utc_offset == 0)
-        return 0;               /* that part of almanac not received yet */
+    if (0 == utc_offset) {
+        return 0;               // that part of almanac not received yet
+    }
 
     session->context->leap_seconds = utc_offset;
     session->context->valid |= LEAP_SECOND_VALID;
-    return 0;                   /* no flag for leap seconds update */
+    return 0;                   // no flag for leap seconds update
 }
 
 /**
@@ -381,14 +386,15 @@ oncore_msg_pos_hold_mode(struct gps_device_t *session, unsigned char *buf,
 {
     int pos_hold_mode;
 
-    if (data_len != 8)
+    if (8 != data_len) {
         return 0;
+    }
 
     pos_hold_mode = (int)getub(buf, 4);
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "oncore pos hold mode: %d\n", pos_hold_mode);
 
-    /* Add 1 to distinguish an unknown (not set) value from mode off. */
+    // Add 1 to distinguish an unknown (not set) value from mode off.
     session->driver.oncore.pos_hold_mode = pos_hold_mode + 1;
     return 0;
 }
@@ -402,8 +408,9 @@ oncore_msg_pps_offset(struct gps_device_t *session, unsigned char *buf,
 {
     int pps_offset_ns;
 
-    if (data_len != 11)
+    if (11 != data_len) {
         return 0;
+    }
 
     pps_offset_ns = (int)getbes32(buf, 4);
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -422,8 +429,9 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
 {
     unsigned int i, nchan;
 
-    if (data_len != 92)
+    if (92 != data_len) {
         return 0;
+    }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "oncore SVINFO - satellite data\n");
@@ -431,8 +439,9 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "oncore SVINFO - %d satellites:\n", nchan);
     // Then we clamp the value to not read outside the table.
-    if (nchan > 12)
+    if (12 < nchan) {
         nchan = 12;
+    }
     session->driver.oncore.visible = (int)nchan;
     for (i = 0; i < nchan; i++) {
         // get info for one channel/satellite
@@ -467,8 +476,9 @@ static gps_mask_t oncore_msg_time_mode(struct gps_device_t *session UNUSED,
 {
     int time_mode;
 
-    if (data_len != 8)
+    if (8 != data_len) {
         return 0;
+    }
 
     time_mode = (int)getub(buf, 4);
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -486,8 +496,9 @@ static gps_mask_t oncore_msg_time_raim(struct gps_device_t *session UNUSED,
 {
     int sawtooth_ns;
 
-    if (data_len != 69)
+    if (69 != data_len) {
         return 0;
+    }
 
     sawtooth_ns = (int)getub(buf, 25);
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -542,7 +553,7 @@ gps_mask_t oncore_dispatch(struct gps_device_t * session, unsigned char *buf,
     case ONCTYPE('B', 'o'):
         return oncore_msg_utc_offset(session, buf, len);
     case ONCTYPE('A', 's'):
-        return 0;               /* position hold position */
+        return 0;               // position hold position
     case ONCTYPE('A', 't'):
         return oncore_msg_pos_hold_mode(session, buf, len);
     case ONCTYPE('A', 'w'):
@@ -551,7 +562,7 @@ gps_mask_t oncore_dispatch(struct gps_device_t * session, unsigned char *buf,
         return oncore_msg_pps_offset(session, buf, len);
 
     default:
-        /* FIX-ME: This gets noisy in a hurry. Change once your driver works */
+        // FIXME: This gets noisy in a hurry. Change once your driver works
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "unknown packet id @@%c%c length %zd\n",
                  type >> 8, type & 0xff, len);
@@ -593,30 +604,33 @@ static ssize_t oncore_control_send(struct gps_device_t *session,
 
 static void oncore_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (session->context->readonly)
+    if (session->context->readonly) {
         return;
+    }
 
     /*
      * Some oncore VP variants that have not been used after long
      * power-down will be silent on startup.  Provoke
      * identification by requesting the firmware version.
      */
-    if (event == event_wakeup)
+    if (event == event_wakeup) {
         (void)oncore_control_send(session, getfirmware, sizeof(getfirmware));
+    }
 
     if (session->context->passive) {
         return;
     }
     /*
-     * FIX-ME: It might not be necessary to call this on reactivate.
+     * FIXME: It might not be necessary to call this on reactivate.
      * Experiment to see if the holds its settings through a close.
      */
-    if (event == event_identified || event == event_reactivate) {
+    if (event == event_identified ||
+        event == event_reactivate) {
         (void)oncore_control_send(session, enableEa, sizeof(enableEa));
         (void)oncore_control_send(session, enableBb, sizeof(enableBb));
-        /*(void)oncore_control_send(session, enableEn, sizeof(enableEn)); */
-        /*(void)oncore_control_send(session,enableAt2,sizeof(enableAt2)); */
-        /*(void)oncore_control_send(session,pollAs,sizeof(pollAs)); */
+        // (void)oncore_control_send(session, enableEn, sizeof(enableEn));
+        // (void)oncore_control_send(session,enableAt2,sizeof(enableAt2));
+        // (void)oncore_control_send(session,pollAs,sizeof(pollAs));
         (void)oncore_control_send(session, (char*)pollBo, sizeof(pollBo));
     }
 }
