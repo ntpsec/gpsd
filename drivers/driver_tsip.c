@@ -54,7 +54,7 @@
 #define IO4_RAW 1
 #define IO4_DBHZ 8
 
-#define SEMI_2_DEG      (180.0 / 2147483647)    // 2^-31 semicircle to deg
+#define SEMI_2_DEG      (180.0 / 2147483647L)    // 2^-31 semicircle to deg
 
 // Start TSIPv1 values and flags
 
@@ -2582,10 +2582,10 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf,
     int s2 = getbes16(buf, 4);                // north velocity
     int s3 = getbes16(buf, 6);                // up velocity
     unsigned long tow = getbeu32(buf, 8);     // time in ms
-    long sl1 = getbes32(buf, 12);             // latitude
-    long ul2 = getbeu32(buf, 16);             // longitude
+    long lat = getbes32(buf, 12);             // latitude
+    unsigned long lon = getbeu32(buf, 16);    // longitude
     // Lassen iQ, and copernicus (ii) doc says this is always altHAE
-    long sl2 = getbes32(buf, 20);             // altitude
+    long alt = getbes32(buf, 20);             // altitude
     unsigned u1 = getub(buf, 24);             // velocity scaling
     unsigned datum = getub(buf, 26);          // Datum + 1
     unsigned fflags = getub(buf, 27);         // fix flags
@@ -2615,13 +2615,14 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf,
         session->newdata.NED.velD = -d3;
     }
 
-    session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
-    session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
+    session->newdata.latitude = (double)lat * SEMI_2_DEG;
+    session->newdata.longitude = (double)lon * SEMI_2_DEG;
+
     if (180.0 < session->newdata.longitude) {
         session->newdata.longitude -= 360.0;
     }
     // Lassen iQ doc says this is always altHAE in mm
-    session->newdata.altHAE = (double)sl2 * 1e-3;
+    session->newdata.altHAE = (double)alt * 1e-3;
     mask |= ALTITUDE_SET;
 
     session->newdata.status = STATUS_UNK;
@@ -2689,7 +2690,7 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIP x8f-20: LFwEI: %d %d %d tow %lu %ld "
              " %lu %lu %x fflags %x numSV %u ls %u week %d datum %u used:%s\n",
-             s1, s2, s3, tow, sl1, ul2, sl2, u1, fflags, numSV,
+             s1, s2, s3, tow, lat, lon, alt, u1, fflags, numSV,
              ls, week, datum, buf3);
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIP x8f-20: LFwEI: time=%s lat=%.2f lon=%.2f "
@@ -2718,10 +2719,10 @@ static gps_mask_t decode_x8f_23(struct gps_device_t *session, const char *buf)
     unsigned week = getbeu16(buf, 5);        // tsip.gps_week
     unsigned u1 = getub(buf, 7);             // utc offset
     unsigned u2 = getub(buf, 8);             // fix flags
-    long sl1 = getbes32(buf, 9);             // latitude
-    long ul2 = getbeu32(buf, 13);            // longitude
+    long lat = getbes32(buf, 9);             // latitude
+    unsigned long lon = getbeu32(buf, 13);   // longitude
     // Copernicus (ii) doc says this is always altHAE in mm
-    long sl2 = getbes32(buf, 17);            // altitude
+    long alt = getbes32(buf, 17);            // altitude
     // set xNED here
     int s2 = getbes16(buf, 21);              // east velocity
     int s3 = getbes16(buf, 23);              // north velocity
@@ -2730,7 +2731,7 @@ static gps_mask_t decode_x8f_23(struct gps_device_t *session, const char *buf)
     GPSD_LOG(LOG_PROG, &session->context->errout,
 	     "TSIP x8f-23: CSP: tow %lu week %u %u %u %ld %lu %ld "
 	     " %d %d %d\n",
-	     tow, week, u1, u2, sl1, ul2, sl2, s2, s3, s4);
+	     tow, week, u1, u2, lat, lon, alt, s2, s3, s4);
     if (10 < (int)u1) {
 	session->context->leap_seconds = (int)u1;
 	session->context->valid |= LEAP_SECOND_VALID;
@@ -2751,13 +2752,13 @@ static gps_mask_t decode_x8f_23(struct gps_device_t *session, const char *buf)
 	    session->newdata.mode = MODE_3D;
 	}
     }
-    session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
-    session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
+    session->newdata.latitude = (double)lat * SEMI_2_DEG;
+    session->newdata.longitude = (double)lon * SEMI_2_DEG;
     if (180.0 < session->newdata.longitude) {
 	session->newdata.longitude -= 360.0;
     }
     // Copernicus (ii) doc says this is always altHAE in mm
-    session->newdata.altHAE = (double)sl2 * 1e-3;
+    session->newdata.altHAE = (double)alt * 1e-3;
     mask |= ALTITUDE_SET;
     if ((u2 & 0x20) != (uint8_t)0) {     // check velocity scaling
 	d5 = 0.02;
