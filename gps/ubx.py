@@ -4715,18 +4715,29 @@ u-blox 8, protVer 15 and up
 
     def mon_hw(self, buf):
         """UBX-MON-HW decode, Hardware Status
-
-extended in protVer 34
-
-Deprecated in protVer 34.00
+Present from Antaris (4) to M10
+68 bytes in 6-series
+60 bytes in 8-series and 9-series
+56 bytes in protVer 34 (10-series)
+Deprecated on M9, use MON-H# and MON-RF
+Deprecated. and undocumented,  on M10, use MON-H# and MON-RF
 """
 
+        # FIXME!  This is only the 60 byte decode
         u = struct.unpack_from('<LLLLHHBBBBLBBBBBBBBBBBBBBBBBBBBLLL', buf, 0)
         s = ('  pinSel %#x pinBank %#x pinDir %#x pinVal %#x noisePerMS %u\n'
              '  agcCnt %u aStatus %u aPower %u flags %#x reserved1 %u\n'
              '  usedMask %#x\n'
              '  VP %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u\n'
              '  jamInd %u reserved2 %u %u pinIrq %#x pullH %#x pullL %#x' % u)
+
+        # flags:
+        # 5 only has rtcCalib
+        # 6 adds safeBoot and jammingState
+        # 9 adds xtalAbsent
+        # VP
+        # 17 bytes on protVer 15+
+        # VP, 25 bytes on u-blox 6
 
         if gps.VERB_DECODE <= self.verbosity:
             s += ("\n    aStatus (%s) aPower (%s) flags (%s) "
