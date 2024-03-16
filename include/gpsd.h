@@ -111,7 +111,7 @@ extern "C" {
  *      change lexer_init() prototype
  *      Change RTCM_MAX to RTCM2_MAX to avoid confusiotn, and make it 4 longer.
  *      add shm_clock_lastsec and shm_pps_lastsec to gps_device_t;
- *      add queue to gps_device_t.tsip
+ *      add queue to gps_device_t
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -613,6 +613,7 @@ struct gps_device_t {
     struct gps_fix_t newdata;           // where drivers put their data
     struct gps_fix_t lastfix;           // not quite yet ready for oldfix
     struct gps_fix_t oldfix;            // previous fix for error modeling
+    int queue;                          // Next item in init queue to request.
     struct {
         unsigned short sats_used[MAXCHANNELS];
         int part, await;                // for tracking GSV parts
@@ -769,7 +770,6 @@ struct gps_device_t {
             uint8_t alt_is_msl;         // 0 if alt is HAE, 1 if MSL
             timespec_t last_tow;        // used to find cycle start
             int last_chan_seen;         // from 0x5c or 0x5d
-            int queue;                  // Next item in TSIPv1 queue to request.
         } tsip;
 #endif  // TSIP_ENABLE
 #ifdef GARMIN_ENABLE    // private housekeeping stuff for the Garmin driver

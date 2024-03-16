@@ -1036,15 +1036,15 @@ static void tsipv1_query(struct gps_device_t *session)
     char snd_buf[24];         // send buffer
 
     // advance to next queue item.
-    session->driver.tsip.queue++;
+    session->queue++;
     // allow it to repeat every x1000 packets
-    session->driver.tsip.queue &= 0x0ffff;
+    session->queue &= 0x0ffff;
 
-    if (0 != (session->driver.tsip.queue % 4)) {
+    if (0 != (session->queue % 4)) {
         // once every 4 messages
         return;
     }
-    switch (session->driver.tsip.queue / 4) {
+    switch (session->queue / 4) {
     case 1:
         // x90-00, query protocol version
         snd_buf[0] = 0x90;             // id
