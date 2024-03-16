@@ -1416,6 +1416,58 @@ ubx_msg_log_retrievestring(struct gps_device_t *session,
     return mask;
 }
 
+/* UBX-MON-HW
+ * Present from Antaris (4) to M10
+ * 68 bytes in 6-series
+ * 60 bytes in 8-series and 9-series
+ * 56 bytes in protVer 34 (10-series)
+ * Deprecated on M9, use MON-H# and MON-RF
+ * Deprecated. and undocumented,  on M10, use MON-H# and MON-RF
+ */
+static gps_mask_t
+ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
+                  size_t data_len)
+{
+    unsigned int noisePerMs;
+    unsigned int agcCnt;
+    unsigned int aStatus;
+    unsigned int aPower;
+    unsigned int flags;
+    unsigned int jamInd;
+
+    if (60 > data_len) {
+        // Doc says 68, but 8-series can have 60
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-MON-HW message, runt payload len %zd\n", data_len);
+        return 0;
+    }
+    noisePerMs = getleu16(buf, 16);
+    agcCnt = getleu16(buf, 18);         // 0 to 8191
+    aStatus = getub(buf, 20);
+    aPower = getub(buf, 21);
+    // 5 only has rtcCalib
+    // 6 adds safeBoot and jammingState
+    // 9 adds xtalAbsent
+    flags = getub(buf, 22);
+    // VP, 17 bytes on protVer 15+
+    // VP, 25 bytes on u-blox 6
+    // jamInd, on 5 this is reserved
+    if (68 == data_len) {
+        jamInd = getub(buf, 53);
+    } else if (60 == data_len) {
+        jamInd = getub(buf, 40);
+    } else {
+        // probably 56 == data_len, undocuemted in M10
+        jamInd = 0;   // WTF?
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "MON-HW: noisePerMs %u, agcCmt %u aStatus %u aPower %u "
+             "flags x%x jamInd %u\n",
+             noisePerMs, agcCnt, aStatus, aPower, flags, jamInd);
+    return 0;
+}
+
 /* UBX-MON-RXBUF
  * Present in u-blox 5+ through at least protVer 23.01
  * Supported but deprecated in M9P protVer 27.11
@@ -3805,7 +3857,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-GNSS\n");
         break;
     case UBX_MON_HW:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-HW\n");
+        ubx_msg_mon_hw(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_HW2:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-HW2\n");
