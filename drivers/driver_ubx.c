@@ -80,6 +80,35 @@
 #define UBX_CFG_LEN             20
 #define outProtoMask            14
 
+// UBX-MON-HW flags
+static struct flist_t vflags[] = {
+    {1, 1, "RTC Calibrated"},
+    {2, 2, "Safeboot Active"},
+    {0x04, 0x0c, "Jam OK"},
+    {0x08, 0x0c, "Jam Warn"},
+    {0x0c, 0x0c, "Jam Critical"},
+    {0x10, 0x10, "xtal Absent"},
+    {0, 0, NULL},
+};
+
+// UBX-MON-HW aPower
+static struct vlist_t vaPower[] = {
+    {0, "Off Fix"},
+    {1, "On"},
+    {2, "DK"},
+    {0, NULL},
+};
+
+// UBX-MON-HW aStatus
+static struct vlist_t vaStatus[] = {
+    {0, "Init Fix"},
+    {1, "Unk"},
+    {2, "OK"},
+    {3, "Short"},
+    {4, "Open"},
+    {0, NULL},
+};
+
 static gps_mask_t ubx_msg_inf(struct gps_device_t *session, unsigned char *buf,
                               size_t data_len);
 static gps_mask_t ubx_msg_log_batch(struct gps_device_t *session,
@@ -1428,6 +1457,7 @@ static gps_mask_t
 ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
                   size_t data_len)
 {
+    char buf2[80];
     unsigned int noisePerMs;
     unsigned int agcCnt;
     unsigned int aStatus;
@@ -1461,10 +1491,35 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
         jamInd = 0;   // WTF?
     }
 
+    switch (aStatus) {
+    case 2:
+	session->newdata.ant_stat = ANT_OK;
+        break;
+    case 3:
+	session->newdata.ant_stat = ANT_SHORT;
+	break;
+    case 4:
+	session->newdata.ant_stat = ANT_OPEN;
+	break;
+    case 0:
+        // Init
+        FALLTHROUGH
+    case 1:
+        // Unknown
+        FALLTHROUGH
+    default:
+        // Dunno...
+	break;
+    }
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "MON-HW: noisePerMs %u, agcCmt %u aStatus %u aPower %u "
              "flags x%x jamInd %u\n",
              noisePerMs, agcCnt, aStatus, aPower, flags, jamInd);
+    GPSD_LOG(LOG_INF, &session->context->errout,
+             "aStatus:%s aPower:%s flags:%s\n",
+	     val2str(aStatus, vaStatus),
+	     val2str(aPower, vaPower),
+	     flags2str(flags, vflags, buf2, sizeof(buf2)));
     return 0;
 }
 
