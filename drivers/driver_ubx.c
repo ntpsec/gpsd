@@ -1545,8 +1545,7 @@ ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
         unsigned int peakUsage = getub(buf, 18 + i);
 
         GPSD_LOG(LOG_INF, &session->context->errout,
-                 "RXBUF: target %d, pending %4u bytes, "
-                 "usage %3u%%, peakUsage %3d%%\n",
+                 "RXBUF: tgt%d pending %4u usage %3u%% peakUsage %3d%%\n",
                  i, pending, usage, peakUsage);
     }
     return 0;
@@ -1578,8 +1577,8 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
         unsigned int peakUsage = getub(buf, 18 + i);
 
         GPSD_LOG(LOG_INF, &session->context->errout,
-                 "TXBUF: target %d, limit %u, pending %4u bytes, "
-                 "usage %3u%%, peakUsage %3d%%\n",
+                 "TXBUF: tgt %d limit %u pending %4u "
+                 "usage %3u%% peakUsage %3d%%\n",
                  i, limit & 1, pending, usage, peakUsage);
         limit = limit >> 1;
     }
@@ -4283,6 +4282,15 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 msg[2] = 0x04;          // every 4
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
+            break;
+        case 95:
+            // Check the TXbuf for overflow
+            (void)ubx_write(session, UBX_CLASS_MON, 0x08, NULL, 0);
+            break;
+        case 99:
+            /* finish up by checking if we overflowed the input buffer
+             * request MON-RXBUF */
+            (void)ubx_write(session, UBX_CLASS_MON, 0x07, NULL, 0);
             break;
         default:
             break;
