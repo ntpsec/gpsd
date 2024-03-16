@@ -1485,7 +1485,7 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
     if (68 == data_len) {
         jamInd = getub(buf, 53);
     } else if (60 == data_len) {
-        jamInd = getub(buf, 40);
+        jamInd = getub(buf, 45);
     } else {
         // probably 56 == data_len, undocuemted in M10
         jamInd = 0;   // WTF?
@@ -1686,22 +1686,6 @@ static gps_mask_t ubx_msg_mon_ver(struct gps_device_t *session,
              session->subtype, session->subtype1,
              session->driver.ubx.protver);
 
-    // Done with MON-VER, should we, can we, get UNIQID?
-
-    // Do we already have UNIQID?
-    if ('\0' != session->gpsdata.dev.sernum[0]) {
-        return 0;
-    }
-    // can we query for UNIQID?
-    if (session->context->readonly) {
-        return 0;
-    }
-    if (18 > session->driver.ubx.protver) {
-        // No UNIQ-ID before PROTVER 18
-        return 0;
-    }
-    // UBX-SEC-UNIQID: query for uniq id
-    (void)ubx_write(session, UBX_CLASS_SEC, 0x03, NULL, 0);
 
     return 0;
 }
@@ -4262,8 +4246,49 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                  session->driver.ubx.protver,
                  session->driver.ubx.last_protver);
         session->driver.ubx.last_protver = session->driver.ubx.protver;
+        // restart init queue
+        session->queue = 0;
     }
 
+    if (!session->context->readonly &&
+        0 <= session->queue &&
+        100 > session->queue &&
+        0 < session->driver.ubx.protver) {
+        unsigned char msg[4] = {0};
+
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "UBX: queue %d\n", session->queue);
+
+        // handle the init queue
+        // let the initial rush pass
+        switch (session->queue) {
+        case 70:
+            if (18 <= session->driver.ubx.protver) {
+                // No UNIQ-ID before PROTVER 18
+                // UBX-SEC-UNIQID: query for uniq id
+                (void)ubx_write(session, UBX_CLASS_SEC, 0x03, NULL, 0);
+            }
+            break;
+        case 74:
+            if (!session->context->passive) {
+                // do nothing
+            } else if (27 > session->driver.ubx.protver) {
+                msg[0] = 0x0a;          // class, UBX-MON
+                msg[1] = 0x09;          // MON-HW
+                msg[2] = 0x04;          // every 4
+                (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+            } else {
+                msg[0] = 0x0a;          // class, UBX-MON
+                msg[1] = 0x38;          // MON-RF
+                msg[2] = 0x04;          // every 4
+                (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+            }
+            break;
+        default:
+            break;
+        }
+        session->queue++;
+    }
     return mask | ONLINE_SET;
 }
 
@@ -4537,6 +4562,9 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
             0x61,          // msg id = NAV-EOE
         };
 
+        // turn off init queue
+        session->queue = 0;
+
         // enable NMEA first, in case we over-run receiver input buffer.
 
         // turn on rate one NMEA
@@ -4694,6 +4722,9 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
             msg[1] = nmea_off[i];          // msg id to turn off
             (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         }
+
+        // turn on init queue
+        session->queue = 1;
     }
     return 0;
 }
