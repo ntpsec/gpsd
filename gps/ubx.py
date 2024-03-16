@@ -4722,30 +4722,52 @@ Present from Antaris (4) to M10
 Deprecated on M9, use MON-H# and MON-RF
 Deprecated. and undocumented,  on M10, use MON-H# and MON-RF
 """
+        m_len = len(buf)
 
-        # FIXME!  This is only the 60 byte decode
-        u = struct.unpack_from('<LLLLHHBBBBLBBBBBBBBBBBBBBBBBBBBLLL', buf, 0)
-        s = ('  pinSel %#x pinBank %#x pinDir %#x pinVal %#x noisePerMS %u\n'
-             '  agcCnt %u aStatus %u aPower %u flags %#x reserved1 %u\n'
-             '  usedMask %#x\n'
-             '  VP %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u\n'
-             '  jamInd %u reserved2 %u %u pinIrq %#x pullH %#x pullL %#x' % u)
+        # the common part to 60 and 68 byte
+        u = struct.unpack_from('<LLLLHHBBBBL', buf, 0)
+        s = ('  pinSel x%x pinBank x%x pinDir x%x pinVal x%x noisePerMS %u\n'
+             '  agcCnt %u aStatus %u aPower %u flags x%x reserved1 %u\n'
+             '  usedMask x%x\n' % u)
+        aStatus = u[6]
+        aPower = u[7]
+        flags = u[8]
+        jammingState = (u[6] >> 2) & 0x03    # 8-series +
+        xtalAbsent = (u[6] >> 4) & 1         # 9-series +
+        jamInd = 0
+
+        # VP
+        # 17 bytes on protVer 15+
+        # VP, 25 bytes on u-blox 6
+        if 60 == m_len:
+            u = struct.unpack_from('<BBBBBBBBBBBBBBBBBBBBLLL', buf, 28)
+            s += ('  VP %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\n'
+                  '  jamInd %u reserved2 %u %u pinIrq x%x pullH x%x '
+                  'pullL x%x' % u)
+            jamInd = u[17]
+        elif 68 == m_len:
+            u = struct.unpack_from('<BBBBBBBBBBBBBBBBBBBBBBBBBBBBLLL', buf, 28)
+            s += ('  VP %x %x %x %x %x %x %x %x %x %x %x %x %x\n'
+                  '  VP %x %x %x %x %x %x %x %x %x %x %x %x\n'
+                  '  jamInd %u reserved2 %u %u pinIrq x%x pullH x%x '
+                  'pullL x%x' % u)
+            jamInd = u[25]
+        else:
+            s += '   invalid message length %d\n' % mlen
 
         # flags:
         # 5 only has rtcCalib
         # 6 adds safeBoot and jammingState
-        # 9 adds xtalAbsent
-        # VP
-        # 17 bytes on protVer 15+
-        # VP, 25 bytes on u-blox 6
+        # protVer 18 (9+) adds xtalAbsent
 
         if gps.VERB_DECODE <= self.verbosity:
             s += ("\n    aStatus (%s) aPower (%s) flags (%s) "
-                  "jammingState (%s)" %
-                  (index_s(u[6], self.mon_rf_antstat),
-                   index_s(u[7], self.mon_hw_aPower),
-                   index_s(u[8], self.mon_hw_flags),
-                   index_s((u[6] >> 2) & 0x03, self.jammingState)))
+                  "jammingState (%s) jamInd %u xtalAbsent (%s)" %
+                  (index_s(aStatus, self.mon_rf_antstat),
+                   index_s(aPower, self.mon_hw_aPower),
+                   index_s(flags, self.mon_hw_flags),
+                   index_s(jammingState, self.jammingState),
+                   jamInd, 'Yes' if xtalAbsent else 'No'))
         return s
 
     mon_hw2_cfgSource = {
@@ -5692,7 +5714,7 @@ Present in 9 and 10, protVer 32 and up
             u = struct.unpack_from('<BBBBhBBBBHL', buf, 8 + (i * 16))
             s += ('\n   gnssId %u svId %u sigId %u freqId %u prRes %d cno %u '
                   'qualityInd %u\n'
-                  '    corrSource %u ionoModel %u sigFlags %#x reserved2 %u' %
+                  '    corrSource %u ionoModel %u sigFlags x%x reserved2 %u' %
                   u)
 
             if gps.VERB_DECODE <= self.verbosity:
