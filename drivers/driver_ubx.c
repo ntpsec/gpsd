@@ -81,7 +81,7 @@
 #define outProtoMask            14
 
 // UBX-MON-HW flags
-static struct flist_t vflags[] = {
+static struct flist_t vmon_hw_flags[] = {
     {1, 1, "RTC Calibrated"},
     {2, 2, "Safeboot Active"},
     {0x04, 0x0c, "Jam OK"},
@@ -93,19 +93,28 @@ static struct flist_t vflags[] = {
 
 // UBX-MON-HW aPower
 static struct vlist_t vaPower[] = {
-    {0, "Off Fix"},
+    {0, "Off"},
     {1, "On"},
-    {2, "DK"},
+    {2, "Unk"},
     {0, NULL},
 };
 
 // UBX-MON-HW aStatus
 static struct vlist_t vaStatus[] = {
-    {0, "Init Fix"},
+    {0, "Init"},
     {1, "Unk"},
     {2, "OK"},
     {3, "Short"},
     {4, "Open"},
+    {0, NULL},
+};
+
+// UBX-MON-RF flags
+static struct vlist_t vmon_rf_flags[] = {
+    {0, "Jam Unk"},
+    {1, "Jam OK"},
+    {2, "Jam Warn"},
+    {3, "Jam Crit"},
     {0, NULL},
 };
 
@@ -1515,11 +1524,71 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
              "MON-HW: noisePerMs %u, agcCmt %u aStatus %u aPower %u "
              "flags x%x jamInd %u\n",
              noisePerMs, agcCnt, aStatus, aPower, flags, jamInd);
-    GPSD_LOG(LOG_INF, &session->context->errout,
+    GPSD_LOG(LOG_IO, &session->context->errout,
              "aStatus:%s aPower:%s flags:%s\n",
 	     val2str(aStatus, vaStatus),
 	     val2str(aPower, vaPower),
-	     flags2str(flags, vflags, buf2, sizeof(buf2)));
+	     flags2str(flags, vmon_hw_flags, buf2, sizeof(buf2)));
+    return 0;
+}
+
+/* UBX-MON-RF
+ * Present in protVer 27+ (9-series)
+ * Partually replaces MON-H#
+ */
+static gps_mask_t
+ubx_msg_mon_rf(struct gps_device_t *session, unsigned char *buf,
+                  size_t data_len)
+{
+    unsigned i;
+    unsigned version = getub(buf, 0);
+    unsigned nBlocks = getub(buf, 1);
+
+    if (4 > data_len) {
+        // 4 + (nBlocks * 24)
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "MON-RF message, runt payload len %zd\n", data_len);
+        return 0;
+    }
+    if (0 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "MON-RF unkwnown version %u\n", version);
+        return 0;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "MON-RF: version %u, nblocks %u\n", version, nBlocks);
+    for (i = 0; (i < nBlocks) && ((4 + (i * 24)) < data_len); i++){
+        /* ZED-F9N 1 == nBlock
+         * ZED-F9P 2 == nBlock
+         * what to do with with two jamInd and two antStatus? */
+        unsigned off = i * 24;
+        unsigned blockId = getub(buf, 4 + off);
+        unsigned flags =  getub(buf, 5 + off);
+        unsigned jammingState = flags & 3;
+        unsigned antStatus = getub(buf, 6 + off);
+        unsigned antPower = getub(buf, 7 + off);
+        unsigned long postStatus = getleu32(buf, 8 + off);
+        unsigned agcCnt = getleu16(buf, 18 + off);         // 0 to 8191
+        unsigned jamInd = getub(buf, 20 + off);
+        int ofsI = getsb(buf, 21 + off);
+        unsigned magI = getub(buf, 22 + off);
+        int ofsQ = getsb(buf, 23 + off);
+        unsigned magQ = getub(buf, 24 + off);
+
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "MON-RF: blk %u flags x%x jammingState %u antStatus %u "
+                 "antPower %u\n"
+                 "MON-RF: postStatus %lu ageCnt %u jamInd %u "
+                 "ofsI %d magI %u ofsI %d magQ %u\n",
+                 blockId, flags, jammingState, antStatus, antPower,
+                 postStatus, agcCnt, jamInd,
+                 ofsI, magI, ofsQ, magQ);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "     antStatus:%s antPower:%s flags:%s\n",
+                 val2str(antStatus, vaStatus),
+                 val2str(antPower, vaPower),
+                 val2str(flags, vmon_rf_flags));
+    }
     return 0;
 }
 
@@ -3916,7 +3985,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-PATCH\n");
         break;
     case UBX_MON_RF:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-RF\n");
+        ubx_msg_mon_rf(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_RXBUF:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-RXBUF\n");
@@ -4255,7 +4324,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         0 < session->driver.ubx.protver) {
         unsigned char msg[4] = {0};
 
-        GPSD_LOG(LOG_IO, &session->context->errout,
+        GPSD_LOG(LOG_DATA, &session->context->errout,
                  "UBX: queue %d\n", session->queue);
 
         // handle the init queue
@@ -4269,7 +4338,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             }
             break;
         case 74:
-            if (!session->context->passive) {
+            if (session->context->passive) {
                 // do nothing
             } else if (27 > session->driver.ubx.protver) {
                 msg[0] = 0x0a;          // class, UBX-MON
