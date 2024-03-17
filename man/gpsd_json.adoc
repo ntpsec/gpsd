@@ -206,6 +206,9 @@ the receiver does not supply a geoid separation. The *gpsd* computed
 geoidSep is usually within one meter of the "true" value, but can be
 off as much as 12 meters.
 
+|jam |No |numeric |Jamming Indicator +
+0 (no jamming) to 255 (severe jamming). -1 means unset.
+
 |lat |No |numeric |Latitude in degrees: +/- signifies North/South.
 
 |leapseconds |No |integer |Current leap seconds.

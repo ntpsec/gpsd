@@ -102,7 +102,7 @@ extern "C" {
  *       Add fixsource_t and watch_t to gps_data_t
  *       move privdata_t here from libgps/gps_sock.c
  *       Add rot (Rate Of Turn), mheading, to struct attitude_t
- *       Add wtemp, temp, and ant_stat to gps_fix_t
+ *       Add wtemp, temp, ant_stat and jam to gps_fix_t
  *       Add rtcm3_4076_hdr
  *       change gps_data_t.gps_fd to type gps_fd_t.
  *       devconfig_t add sernum[]
@@ -250,6 +250,10 @@ struct gps_fix_t {
 #define ANT_OK 1
 #define ANT_OPEN 2
 #define ANT_SHORT 3
+    /* jamming indicator, 0 == None to 255 == real bad
+     * Some receviers on report No/Yes, or 0 to 3.  Those are mapped to
+     * 0 to 255. -1 is unset */
+    int jam;
 
     // ECEF data, all data in meters, and meters/second, or NaN
     struct {

@@ -180,7 +180,7 @@ static const fw_protver_map_entry_t fw_protver_map[] = {
     {"6.00", 12.00},          // u-blox 5 and 6
     {"6.02", 12.02},          // u-blox 5 and 6
     {"7.01", 13.01},          // u-blox 7
-    {"7.03", 13.03},          // u-blox 7
+    {"7.03", 13.03},          // u-blox 6 and 7
     {"1.00", 14.00},          // u-blox 6 w/ GLONASS, and 7
     // protVer >14 should carry explicit protVer in MON-VER extension
     {NULL, 0.0},
@@ -1456,7 +1456,7 @@ ubx_msg_log_retrievestring(struct gps_device_t *session,
 
 /* UBX-MON-HW
  * Present from Antaris (4) to M10
- * 68 bytes in 6-series
+ * 68 bytes in protVer 12 ( 6-series)
  * 60 bytes in 8-series and 9-series
  * 56 bytes in protVer 34 (10-series)
  * Deprecated on M9, use MON-H# and MON-RF
@@ -1484,9 +1484,12 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
     agcCnt = getleu16(buf, 18);         // 0 to 8191
     aStatus = getub(buf, 20);
     aPower = getub(buf, 21);
-    // 5 only has rtcCalib
-    // 6 adds safeBoot and jammingState
-    // 9 adds xtalAbsent
+    /* flags:
+     * 5 only has rtcCalib
+     * 6 (6.03) adds safeBoot
+     * 6 (7.03) adds jammingState
+     * 9 adds xtalAbsent
+     */
     flags = getub(buf, 22);
     // VP, 17 bytes on protVer 15+
     // VP, 25 bytes on u-blox 6
@@ -1520,6 +1523,8 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
         // Dunno...
 	break;
     }
+    session->newdata.jam = jamInd;
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "MON-HW: noisePerMs %u, agcCmt %u aStatus %u aPower %u "
              "flags x%x jamInd %u\n",
@@ -1574,6 +1579,14 @@ ubx_msg_mon_rf(struct gps_device_t *session, unsigned char *buf,
         unsigned magI = getub(buf, 22 + off);
         int ofsQ = getsb(buf, 23 + off);
         unsigned magQ = getub(buf, 24 + off);
+
+        // use the highest ant_stat and jamInd
+        if ((unsigned)session->newdata.ant_stat < antStatus) {
+            session->newdata.ant_stat = antStatus;
+        }
+        if ((unsigned)session->newdata.jam < jamInd) {
+            session->newdata.jam = jamInd;
+        }
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "MON-RF: blk %u flags x%x jammingState %u antStatus %u "
