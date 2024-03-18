@@ -3985,7 +3985,8 @@ static gps_mask_t decode_x91_01(struct gps_device_t *session, const char *buf)
     double d1 = getbef32(buf, 8);              // elevation mask
     double d2 = getbef32(buf, 12);             // signal mask
     double d3 = getbef32(buf, 16);             // PDOP mask
-    unsigned u2 = getub(buf, 20);              // anti-jamming
+    // anti-jamming, always enabled in RES 720
+    unsigned u2 = getub(buf, 20);
     unsigned u3 = getub(buf, 21);              // fix rate
     double d4 = getbef32(buf, 22);             // Antenna CAble delay, seconds
     unsigned long u4 = getbeu32(buf, 26);      // reserved
@@ -4431,7 +4432,7 @@ static gps_mask_t decode_xa2_00(struct gps_device_t *session, const char *buf)
 }
 
 
-// decode packet xa3-00
+// decode System Alarms,  packet xa3-00
 static gps_mask_t decode_xa3_00(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -4443,14 +4444,6 @@ static gps_mask_t decode_xa3_00(struct gps_device_t *session, const char *buf)
     unsigned major_alarm = getbeu32(buf, 12);           // Major Alarms
     unsigned res2 = getbeu32(buf, 16);                  // reserved
 
-    if (1 == (major_alarm & 1)) {
-        // not tracking sats, assume surveyed-in
-        session->newdata.status = STATUS_DR;
-    } else {
-        session->newdata.status = STATUS_GPS;
-    }
-    mask |= STATUS_SET;
-
     if (1 & minor_alarm) {
         session->newdata.ant_stat = ANT_OPEN;
     } else if (2 & minor_alarm) {
@@ -4458,6 +4451,22 @@ static gps_mask_t decode_xa3_00(struct gps_device_t *session, const char *buf)
     } else {
         session->newdata.ant_stat = ANT_OK;
     }
+
+    if (1 == (major_alarm & 1)) {
+        // not tracking sats, assume surveyed-in
+        session->newdata.status = STATUS_DR;
+    } else {
+        session->newdata.status = STATUS_GPS;
+    }
+    if (0x80 == (major_alarm & 0x80)) {
+        // jamming
+        session->newdata.jam = 255;
+    } else if (0x40 == (major_alarm & 0x40)) {
+        // spoofing/multipath
+        session->newdata.jam = 128;
+    }
+    mask |= STATUS_SET;
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIPv1 xa3-00: Minor x%04x res x%04x Major x%04x "
              "res x%04u status %d\n",
