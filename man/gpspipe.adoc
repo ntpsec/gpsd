@@ -135,7 +135,7 @@ TPV message, print it to stdout, then exit:
 $ gpspipe -x 5 -w|sed -n '/TPV/{p;q}'
 ----
 
-Use *gpspipe* and "socat* to serve NMEA from the local *gpsd* on tcp
+Use *gpspipe* and *socat* to serve NMEA from the local *gpsd* on tcp
 port 2948:
 
 ----
@@ -143,7 +143,7 @@ $ socat EXEC:'gpspipe -r' TCP-LISTEN:2948,reuseaddr,fork
 ----
 
 The paranoid may wish to have *socat* run as user 'nobody' and only
-accept connections from the local network.  Using the *-B" option to
+accept connections from the local network.  Using the *-B* option to
 *gpspipe* will reduce latency and jitter  The "su=nobody" means
 this must be run as root:
 
