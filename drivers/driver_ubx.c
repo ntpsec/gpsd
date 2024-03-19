@@ -118,6 +118,16 @@ static struct vlist_t vmon_rf_flags[] = {
     {0, NULL},
 };
 
+// UBX-MON-RXBUF, UBX-MON-TXBUF, target
+static struct vlist_t vtarget[] = {
+    {0, "UART1"},
+    {1, "UART2"},
+    {2, "U2C"},
+    {3, "USB"},
+    {4, "Rsrvd"},
+    {0, NULL},
+};
+
 static gps_mask_t ubx_msg_inf(struct gps_device_t *session, unsigned char *buf,
                               size_t data_len);
 static gps_mask_t ubx_msg_log_batch(struct gps_device_t *session,
@@ -1454,6 +1464,45 @@ ubx_msg_log_retrievestring(struct gps_device_t *session,
     return mask;
 }
 
+/* UBX-MON-COMMS
+ * Replacement for MON-RXBUF and MON-TXBUF
+ */
+static gps_mask_t
+ubx_msg_mon_comms(struct gps_device_t *session, unsigned char *buf,
+                  size_t data_len)
+{
+    gps_mask_t mask = 0;
+    unsigned version;
+    unsigned nPorts;
+    unsigned txErrors;
+
+    if (8 > data_len) {
+        // 8 + (nPorts * 40)
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-MON-COMMS message, runt payload len %zd\n", data_len);
+        return 0;
+    }
+    version = getub(buf, 0);
+    if (0 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-MON-COMMS unkwnown version %u\n", version);
+        return 0;
+    }
+    nPorts = getub(buf, 1);
+    if ((8 + (nPorts * 40)) > data_len) {
+        // 8 + (nPorts * 40)
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-MON-COMMS unkwnown runt %zd\n", data_len);
+        return 0;
+    }
+    txErrors = getub(buf, 2);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "MON-COMMS: version %u, nPorts %u txErrors x%x\n",
+             version, nPorts, txErrors);
+    return mask;
+}
+
 /* UBX-MON-HW
  * 68 bytes in protVer 12 ( 6-series)
  *    Present from Antaris (4-series)
@@ -1642,6 +1691,9 @@ ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
         unsigned int usage =  getub(buf, 12 + i);
         unsigned int peakUsage = getub(buf, 18 + i);
 
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TXBUF: tgt:%s\n",
+                 val2str(i, vtarget));
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "RXBUF: tgt%d pending %4u usage %3u%% peakUsage %3d%%\n",
                  i, pending, usage, peakUsage);
@@ -1674,6 +1726,9 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
         unsigned int usage =  getub(buf, 12 + i);
         unsigned int peakUsage = getub(buf, 18 + i);
 
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "TXBUF: tgt:%s\n",
+                 val2str(i, vtarget));
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "TXBUF: tgt %d limit %u pending %4u "
                  "usage %3u%% peakUsage %3d%%\n",
@@ -3986,6 +4041,9 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_MON_BATCH:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-BATCH\n");
         break;
+    case UBX_MON_COMMS:
+        mask = ubx_msg_mon_comms(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
     case UBX_MON_EXCEPT:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-EXCEPT\n");
         break;
@@ -4391,6 +4449,10 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
              * request MON-RXBUF */
             // FIXME: Use MON-COMMS for protVer > 27
             (void)ubx_write(session, UBX_CLASS_MON, 0x07, NULL, 0);
+            if (27 <= session->driver.ubx.protver) {
+                // MON-COMMS
+                (void)ubx_write(session, UBX_CLASS_MON, 0x36, NULL, 0);
+            }
             break;
         default:
             break;

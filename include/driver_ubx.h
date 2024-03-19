@@ -6,22 +6,22 @@
 #define _GPSD_UBX_H_
 
 typedef enum {
-    UBX_CLASS_NAV = 0x01,     /**< Navigation */
-    UBX_CLASS_RXM = 0x02,     /**< Receiver Manager */
-    UBX_CLASS_INF = 0x04,     /**< Informative text messages */
-    UBX_CLASS_ACK = 0x05,     /**< (Not) Acknowledges for cfg messages */
-    UBX_CLASS_CFG = 0x06,     /**< Configuration requests */
-    UBX_CLASS_UPD = 0x09,     /**< Firmware updates */
-    UBX_CLASS_MON = 0x0a,     /**< System monitoring */
-    UBX_CLASS_AID = 0x0b,     /**< AGPS (Deprecated) */
-    UBX_CLASS_TIM = 0x0d,     /**< Time */
-    UBX_CLASS_ESF = 0x10,     /**< External Sensor Fusion */
-    UBX_CLASS_MGA = 0x13,     /**< Multi GNSS Assistance */
-    UBX_CLASS_LOG = 0x21,     /**< Log */
-    UBX_CLASS_SEC = 0x27,     /**< Security */
-    UBX_CLASS_HNR = 0x28,     /**< High Rate Nav Results  */
-    UBX_CLASS_NMEA = 0xf0,    /**< NMEA, for configuring */
-    UBX_CLASS_RTCM3 = 0xf5,   /**< RTCM3, for configuring */
+    UBX_CLASS_NAV = 0x01,     // Navigation
+    UBX_CLASS_RXM = 0x02,     // Receiver Manager
+    UBX_CLASS_INF = 0x04,     // Informative text messages
+    UBX_CLASS_ACK = 0x05,     // (Not) Acknowledges for cfg messages
+    UBX_CLASS_CFG = 0x06,     // Configuration requests
+    UBX_CLASS_UPD = 0x09,     // Firmware updates
+    UBX_CLASS_MON = 0x0a,     // System monitoring
+    UBX_CLASS_AID = 0x0b,     // AGPS (Deprecated)
+    UBX_CLASS_TIM = 0x0d,     // Time
+    UBX_CLASS_ESF = 0x10,     // External Sensor Fusion
+    UBX_CLASS_MGA = 0x13,     // Multi GNSS Assistance
+    UBX_CLASS_LOG = 0x21,     // Log
+    UBX_CLASS_SEC = 0x27,     // Security
+    UBX_CLASS_HNR = 0x28,     // High Rate Nav Results 
+    UBX_CLASS_NMEA = 0xf0,    // NMEA, for configuring
+    UBX_CLASS_RTCM3 = 0xf5,   // RTCM3, for configuring
 } ubx_classes_t;
 
 #define UBX_MSGID(cls_, id_) (((cls_)<<8)|(id_))
@@ -88,7 +88,7 @@ typedef enum {
     UBX_INF_ERROR       = UBX_MSGID(UBX_CLASS_INF, 0X00),
     UBX_INF_NOTICE      = UBX_MSGID(UBX_CLASS_INF, 0x02),
     UBX_INF_TEST        = UBX_MSGID(UBX_CLASS_INF, 0x03),
-    /* where is UBX-INF-USER documented? */
+    // where is UBX-INF-USER documented?
     UBX_INF_USER        = UBX_MSGID(UBX_CLASS_INF, 0x07),
     UBX_INF_WARNING     = UBX_MSGID(UBX_CLASS_INF, 0X01),
 
@@ -116,6 +116,7 @@ typedef enum {
     UBX_MGA_QZSS        = UBX_MSGID(UBX_CLASS_MGA, 0x05),
 
     UBX_MON_BATCH       = UBX_MSGID(UBX_CLASS_MON, 0x32),
+    UBX_MON_COMMS       = UBX_MSGID(UBX_CLASS_MON, 0x36),
     UBX_MON_EXCEPT      = UBX_MSGID(UBX_CLASS_MON, 0x05),
     UBX_MON_GNSS        = UBX_MSGID(UBX_CLASS_MON, 0x28),
     UBX_MON_HW2         = UBX_MSGID(UBX_CLASS_MON, 0x0b),
@@ -210,12 +211,12 @@ typedef enum {
 } ubx_message_t;
 
 typedef enum {
-    UBX_MODE_NOFIX  = 0x00,     /* no fix available */
-    UBX_MODE_DR     = 0x01,     /* Dead reckoning */
-    UBX_MODE_2D     = 0x02,     /* 2D fix */
-    UBX_MODE_3D     = 0x03,     /* 3D fix */
-    UBX_MODE_GPSDR  = 0x04,     /* GPS + dead reckoning */
-    UBX_MODE_TMONLY = 0x05,     /* Time-only fix */
+    UBX_MODE_NOFIX  = 0x00,     // no fix available
+    UBX_MODE_DR     = 0x01,     // Dead reckoning
+    UBX_MODE_2D     = 0x02,     // 2D fix 
+    UBX_MODE_3D     = 0x03,     // 3D fix
+    UBX_MODE_GPSDR  = 0x04,     // GPS + dead reckoning
+    UBX_MODE_TMONLY = 0x05,     // Time-only fix
 } ubx_mode_t;
 
 #define UBX_LOG_BATCH_VALID_DATE      0x01
@@ -234,7 +235,7 @@ typedef enum {
 #define UBX_TIMEGPS_VALID_WEEK        0x02
 #define UBX_TIMEGPS_VALID_LEAP_SECOND 0x04
 
-/* from UBX_NAV_SVINFO */
+// from UBX_NAV_SVINFO
 #define UBX_SAT_USED 0x01
 #define UBX_SAT_DGPS 0x02
 #define UBX_SAT_EPHALM 0x04
@@ -263,5 +264,5 @@ typedef enum {
 #define UBX_NAV_PVT_FLAG_RTK_FLT    0x40
 #define UBX_NAV_PVT_FLAG_RTK_FIX    0x80
 
-#endif /* _GPSD_UBX_H_ */
+#endif // _GPSD_UBX_H
 // vim: set expandtab shiftwidth=4
