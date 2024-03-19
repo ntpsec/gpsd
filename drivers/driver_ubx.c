@@ -260,15 +260,15 @@ static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
 
 // UBX-CFG-RATE
 // Deprecated in u-blox 10
-static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
-                             size_t data_len)
+static gps_mask_t ubx_msg_cfg_rate(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
 {
     uint16_t measRate, navRate, timeRef;
 
     if (6 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-CFG-RATE message, runt payload len %zd", data_len);
-        return;
+        return 0;
     }
 
     measRate = getleu16(buf, 0);  // Measurement rate (ms)
@@ -284,7 +284,7 @@ static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
     // Update our notion of what the device's measurement rate is
     MSTOTS(&session->gpsdata.dev.cycle, measRate);
 
-    return;
+    return 0;
 }
 
 // UBX-INF-*
@@ -1455,12 +1455,15 @@ ubx_msg_log_retrievestring(struct gps_device_t *session,
 }
 
 /* UBX-MON-HW
- * Present from Antaris (4) to M10
  * 68 bytes in protVer 12 ( 6-series)
+ *    Present from Antaris (4-series)
  * 60 bytes in 8-series and 9-series
+ *    Deprecated on M9, use MON-HW and MON-RF
  * 56 bytes in protVer 34 (10-series)
- * Deprecated on M9, use MON-H# and MON-RF
- * Deprecated. and undocumented,  on M10, use MON-H# and MON-RF
+ *    Deprecated. and undocumented,  on M10, use MON-HW and MON-RF
+ *
+ * Oddly, UBX-MON-HW is output after NAV-EOE.  So too lare for the one
+ * TPV for that epoch, and too early for the next epoch.
  */
 static gps_mask_t
 ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
@@ -1473,6 +1476,7 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
     unsigned int aPower;
     unsigned int flags;
     unsigned int jamInd;
+    gps_mask_t mask = 0;
 
     if (60 > data_len) {
         // Doc says 68, but 8-series can have 60
@@ -1502,6 +1506,7 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
         // probably 56 == data_len, undocuemted in M10
         jamInd = 0;   // WTF?
     }
+    session->newdata.jam = jamInd;
 
     switch (aStatus) {
     case 2:
@@ -1523,7 +1528,10 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
         // Dunno...
 	break;
     }
-    session->newdata.jam = jamInd;
+    if (0 < jamInd ||
+        ANT_OK <= session->newdata.ant_stat) {
+        mask |= REPORT_IS;           // force a new, extra, TPV.
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "MON-HW: noisePerMs %u, agcCmt %u aStatus %u aPower %u "
@@ -1534,18 +1542,22 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
 	     val2str(aStatus, vaStatus),
 	     val2str(aPower, vaPower),
 	     flags2str(flags, vmon_hw_flags, buf2, sizeof(buf2)));
-    return 0;
+    return mask;
 }
 
 /* UBX-MON-RF
  * Present in protVer 27+ (9-series)
  * Partually replaces MON-H#
+ *
+ * Oddly, UBX-MON-RF is output after NAV-EOE.  So too lare for the one
+ * TPV for that epoch, and too early for the next epoch.
  */
 static gps_mask_t
 ubx_msg_mon_rf(struct gps_device_t *session, unsigned char *buf,
                   size_t data_len)
 {
     unsigned i;
+    gps_mask_t mask = 0;
     unsigned version = getub(buf, 0);
     unsigned nBlocks = getub(buf, 1);
 
@@ -1602,12 +1614,16 @@ ubx_msg_mon_rf(struct gps_device_t *session, unsigned char *buf,
                  val2str(antPower, vaPower),
                  val2str(flags, vmon_rf_flags));
     }
-    return 0;
+    if (0 < session->newdata.jam ||
+        ANT_OK <= session->newdata.ant_stat) {
+        mask |= REPORT_IS;           // force a new, extra, TPV.
+    }
+    return mask;
 }
 
 /* UBX-MON-RXBUF
  * Present in u-blox 5+ through at least protVer 23.01
- * Supported but deprecated in M9P protVer 27.11
+ * Supported but deprecated in M9P protVer 27.11, use MON-COMMS
  * Supported but deprecated in M9N protVer 32.00 */
 static gps_mask_t
 ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
@@ -3899,7 +3915,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_CFG_RATE:
         // deprecated in u-blox 10
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-RATE\n");
-        ubx_msg_cfg_rate(session, &buf[UBX_PREFIX_LEN], data_len);
+        mask = ubx_msg_cfg_rate(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
     case UBX_ESF_ALG:
@@ -3977,7 +3993,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-GNSS\n");
         break;
     case UBX_MON_HW:
-        ubx_msg_mon_hw(session, &buf[UBX_PREFIX_LEN], data_len);
+        mask = ubx_msg_mon_hw(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_HW2:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-HW2\n");
@@ -3998,11 +4014,11 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-PATCH\n");
         break;
     case UBX_MON_RF:
-        ubx_msg_mon_rf(session, &buf[UBX_PREFIX_LEN], data_len);
+        mask = ubx_msg_mon_rf(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_RXBUF:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-RXBUF\n");
-        ubx_msg_mon_rxbuf(session, &buf[UBX_PREFIX_LEN], data_len);
+        mask = ubx_msg_mon_rxbuf(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_RXR:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-RXR\n");
@@ -4018,7 +4034,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_MON_TXBUF:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-TXBUF\n");
-        ubx_msg_mon_txbuf(session, &buf[UBX_PREFIX_LEN], data_len);
+        mask = ubx_msg_mon_txbuf(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_USB:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-USB\n");
@@ -4367,11 +4383,13 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             break;
         case 95:
             // Check the TXbuf for overflow
+            // FIXME: Use MON-COMMS for protVer > 27
             (void)ubx_write(session, UBX_CLASS_MON, 0x08, NULL, 0);
             break;
         case 99:
             /* finish up by checking if we overflowed the input buffer
              * request MON-RXBUF */
+            // FIXME: Use MON-COMMS for protVer > 27
             (void)ubx_write(session, UBX_CLASS_MON, 0x07, NULL, 0);
             break;
         default:
