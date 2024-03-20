@@ -2,6 +2,9 @@
 
 3.25.1~dev: WIP
   Handle NTRIPv2 that comes in "chunks".
+  Add UBX-MON-COMMS, UB-MON-RXBUF, and UBX-MON-TXBUF decodes.
+  Improve TSIP and UBX intitalization.
+  Gather Antenna Status (ant_stat) and Jamming (jam) and send to JSON.
   
   Note: The new "chunk" code led to a short lived bug that led to
         CVE-2023-43628, a buffer overrun.  That bug never appeared in

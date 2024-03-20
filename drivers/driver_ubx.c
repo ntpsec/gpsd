@@ -80,6 +80,30 @@
 #define UBX_CFG_LEN             20
 #define outProtoMask            14
 
+// UBX-MON-COMMS protIds
+static struct vlist_t vprotIds[] = {
+    {0, "UBX"},
+    {1, "NMEA"},
+    {2, "RTCM2"},
+    {5, "RTCM3"},
+    {255, "None"},
+    {0, NULL},
+};
+
+// UBX-MON-COMMS txErrors
+static struct flist_t vmon_comms_txerrors[] = {
+    {1, 1, "mem"},
+    {2, 2, "alloc"},
+    {0, 0, NULL},
+};
+
+// UBX-MON-TXBUF errors
+static struct flist_t vmon_txbuf_errors[] = {
+    {0x40, 0x40, "mem"},
+    {0x80, 0x80, "alloc"},
+    {0, 0, NULL},
+};
+
 // UBX-MON-HW flags
 static struct flist_t vmon_hw_flags[] = {
     {1, 1, "RTC Calibrated"},
@@ -118,13 +142,18 @@ static struct vlist_t vmon_rf_flags[] = {
     {0, NULL},
 };
 
-// UBX-MON-RXBUF, UBX-MON-TXBUF, target
+// Names for portID values in:
+//  UBX-CFG-PRT, UBX-MON-IO, UBX-MON-RXBUF, UBX-MON-TXBUF, target
 static struct vlist_t vtarget[] = {
-    {0, "UART1"},
-    {1, "UART2"},
-    {2, "U2C"},
+    {0, "DDC"},             // The license free name for I2C
+    {1, "UART1"},
+    {2, "UART2"},
     {3, "USB"},
-    {4, "Rsrvd"},
+    {4, "SPI"},
+    {0x100, "UART1"},       // MON-COMMS
+    {0x200, "UART2"},       // MON-COMMS
+    {0x300, "USB"},         // MON-COMMS
+    {0x400, "SPI"},         // MON-COMMS
     {0, NULL},
 };
 
@@ -1472,9 +1501,12 @@ ubx_msg_mon_comms(struct gps_device_t *session, unsigned char *buf,
                   size_t data_len)
 {
     gps_mask_t mask = 0;
+    char buf2[80];
+    unsigned i;
     unsigned version;
     unsigned nPorts;
     unsigned txErrors;
+    unsigned protIds[4];
 
     if (8 > data_len) {
         // 8 + (nPorts * 40)
@@ -1496,10 +1528,50 @@ ubx_msg_mon_comms(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
     txErrors = getub(buf, 2);
+    for (i = 0; i < 4; i++) {
+        protIds[i] = getub(buf, 3 + i);
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "MON-COMMS: version %u, nPorts %u txErrors x%x\n",
-             version, nPorts, txErrors);
+             "MON-COMMS: version %u, nPorts %u txErrors x%x  "
+             "protIds %u %u %u %u\n",
+             version, nPorts, txErrors, protIds[0], protIds[1], protIds[2],
+             protIds[3]);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "MON-COMMS: txErrors:%s protIds %s %s %s %s\n",
+	     flags2str(txErrors, vmon_comms_txerrors, buf2, sizeof(buf2)),
+             val2str(protIds[0], vprotIds),
+             val2str(protIds[1], vprotIds),
+             val2str(protIds[2], vprotIds),
+             val2str(protIds[3], vprotIds));
+
+    for (i = 0; i < nPorts; i++) {
+        unsigned portId = getleu16(buf, 8 + (i * 40));
+        unsigned txPending = getleu16(buf, 10 + (i * 40));
+        unsigned long txBytes = getleu32(buf, 12 + (i * 40));
+        unsigned txUsage = getub(buf, 16 + (i * 40));
+        unsigned txPeakUsage = getub(buf, 17 + (i * 40));
+        unsigned rxPending = getleu16(buf, 18 + (i * 40));
+        unsigned long rxBytes = getleu32(buf, 20 + (i * 40));
+        unsigned rxUsage = getub(buf, 24 + (i * 40));
+        unsigned rxPeakUsage = getub(buf, 25 + (i * 40));
+        unsigned overrunErrs = getleu16(buf, 26 + (i * 40));
+        unsigned long msgs = getleu32(buf, 28 + (i * 40));
+        unsigned long skipped = getleu32(buf, 44 + (i * 40));
+
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "MON-COMMS: portId:%s\n",
+                 val2str(portId, vtarget));
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "MON-COMMS: portId x%x, "
+                 "txPending %u txBytes %lu txUsage %u%% txPeakUsage %u%% "
+                 "rxPending %u rxBytes %lu rxUsage %u%% rxPeakUsage %u%% "
+                 "overrunErrs %u msgs %lu skipped %lu\n",
+                 portId,
+                 txPending, txBytes, txUsage, txPeakUsage,
+                 rxPending, rxBytes, rxUsage, rxPeakUsage,
+                 overrunErrs, msgs, skipped);
+    }
     return mask;
 }
 
@@ -1682,7 +1754,7 @@ ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
 
     if (24 != data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-MON-RXBUF message, runt payload len %zd\n", data_len);
+                 "MON-RXBUF message, runt payload len %zd\n", data_len);
         return 0;
     }
 
@@ -1692,10 +1764,10 @@ ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
         unsigned int peakUsage = getub(buf, 18 + i);
 
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TXBUF: tgt:%s\n",
+                 "MON-RXBUF: tgt:%s\n",
                  val2str(i, vtarget));
         GPSD_LOG(LOG_INF, &session->context->errout,
-                 "RXBUF: tgt%d pending %4u usage %3u%% peakUsage %3d%%\n",
+                 "MON-RXBUF: tgt%d pending %4u usage %3u%% peakUsage %3d%%\n",
                  i, pending, usage, peakUsage);
     }
     return 0;
@@ -1709,8 +1781,9 @@ static gps_mask_t
 ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
                   size_t data_len)
 {
-    unsigned int tUsage, tPeakusage;
-    unsigned char errors, limit, reserved1;
+    char buf2[80];
+    unsigned tUsage, tPeakusage;
+    unsigned errors, limit, reserved1;
     int i;
 
     if (28 != data_len) {
@@ -1727,10 +1800,10 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
         unsigned int peakUsage = getub(buf, 18 + i);
 
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TXBUF: tgt:%s\n",
+                 "MON-RXBUF: tgt:%s\n",
                  val2str(i, vtarget));
         GPSD_LOG(LOG_INF, &session->context->errout,
-                 "TXBUF: tgt %d limit %u pending %4u "
+                 "MON-TXBUF: tgt %d limit %u pending %4u "
                  "usage %3u%% peakUsage %3d%%\n",
                  i, limit & 1, pending, usage, peakUsage);
         limit = limit >> 1;
@@ -1744,11 +1817,9 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
              "reserved1 0x%02x\n",
              tUsage, tPeakusage, errors, reserved1);
 
-    if ((errors & 0x40) == 0x40 || (errors & 0x80) == 0x80) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-             "TXBUF: alloc %u, mem %u\n",
-             errors >> 7, (errors >> 6) & 1);
-    }
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "MON-TXBUF: errors:%s\n",
+	     flags2str(errors, vmon_txbuf_errors, buf2, sizeof(buf2)));
     return 0;
 }
 
@@ -4439,17 +4510,14 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
             break;
-        case 95:
-            // Check the TXbuf for overflow
-            // FIXME: Use MON-COMMS for protVer > 27
-            (void)ubx_write(session, UBX_CLASS_MON, 0x08, NULL, 0);
-            break;
-        case 99:
+        case 90:
             /* finish up by checking if we overflowed the input buffer
-             * request MON-RXBUF */
-            // FIXME: Use MON-COMMS for protVer > 27
-            (void)ubx_write(session, UBX_CLASS_MON, 0x07, NULL, 0);
-            if (27 <= session->driver.ubx.protver) {
+             * request MON-RXBUF/TXBUFF, or MON-COMMS */
+            if (27 > session->driver.ubx.protver) {
+                // MON-RXBUF and MON-TXBUF
+                (void)ubx_write(session, UBX_CLASS_MON, 0x08, NULL, 0);
+                (void)ubx_write(session, UBX_CLASS_MON, 0x07, NULL, 0);
+            } else {
                 // MON-COMMS
                 (void)ubx_write(session, UBX_CLASS_MON, 0x36, NULL, 0);
             }
