@@ -80,6 +80,16 @@
 #define UBX_CFG_LEN             20
 #define outProtoMask            14
 
+// UBX-INF-* inf_ids
+static struct vlist_t vinf_ids[] = {
+    {UBX_INF_DEBUG, "INF-DEBUG"},
+    {UBX_INF_TEST, "INF-TEST"},
+    {UBX_INF_NOTICE, "INF-NOTICE"},
+    {UBX_INF_WARNING, "INF-WARNING"},
+    {UBX_INF_ERROR, " INF-ERROR"},
+    {0, NULL},
+};
+
 // UBX-MON-COMMS protIds
 static struct vlist_t vprotIds[] = {
     {0, "UBX"},
@@ -384,40 +394,20 @@ static gps_mask_t
 ubx_msg_inf(struct gps_device_t *session, unsigned char *buf, size_t data_len)
 {
     unsigned short msgid;
-    static char txtbuf[MAX_PACKET_LENGTH];
 
     // No minimum payload length
 
     msgid = (unsigned short)((buf[2] << 8) | buf[3]);
-    if (data_len > MAX_PACKET_LENGTH - 1)
+    if (data_len > MAX_PACKET_LENGTH - 1) {
         data_len = MAX_PACKET_LENGTH - 1;
-
-    (void)strlcpy(txtbuf, (char *)buf + UBX_PREFIX_LEN, sizeof(txtbuf));
-    txtbuf[data_len] = '\0';
-    switch (msgid) {
-    case UBX_INF_DEBUG:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: INF-DEBUG: %s\n",
-                 txtbuf);
-        break;
-    case UBX_INF_TEST:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: INF-TEST: %s\n",
-                 txtbuf);
-        break;
-    case UBX_INF_NOTICE:
-        GPSD_LOG(LOG_INF, &session->context->errout, "UBX: INF-NOTICE: %s\n",
-                 txtbuf);
-        break;
-    case UBX_INF_WARNING:
-        GPSD_LOG(LOG_WARN, &session->context->errout, "UBX: INF-WARNING: %s\n",
-                 txtbuf);
-        break;
-    case UBX_INF_ERROR:
-        GPSD_LOG(LOG_WARN, &session->context->errout, "UBX: INF-ERROR: %s\n",
-                 txtbuf);
-        break;
-    default:
-        break;
     }
+    if (INT_MAX < data_len) {
+        data_len = INT_MAX;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: %s: %.*s\n",
+             val2str(msgid, vinf_ids),
+             (int)data_len, (char *)buf + UBX_PREFIX_LEN);
     return 0;
 }
 
