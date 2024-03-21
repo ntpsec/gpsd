@@ -157,6 +157,14 @@ static struct vlist_t vtarget[] = {
     {0, NULL},
 };
 
+// UBX-NAV-TIMEGPS valid
+static struct flist_t vtimegps_valid[] = {
+    {1, 1, "towValid"},
+    {2, 2, "weekValid"},
+    {4, 4, "leapSValid"},
+    {0, 0, NULL},
+};
+
 // nmea to turn off
 const unsigned char nmea_off[] = {
     0x00,          // msg id  = GGA
@@ -3177,11 +3185,19 @@ ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
 
 /**
  * GPS Leap Seconds - UBX-NAV-TIMEGPS
+ * Present in:
+ *     protVer 8 (Antaris 4)
+ *     protVer 27 (F9P)
+ *     protVer 34 (M10)
+ *
+ * Not in:
+ *     protVer 24 (NEO-D9S)
  */
 static gps_mask_t
 ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
                     size_t data_len)
 {
+    char buf2[80];
     uint8_t valid;         // Validity Flags
     gps_mask_t mask = 0;
     char ts_buf[TIMESPEC_LEN];
@@ -3220,8 +3236,12 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "TIMEGPS: time=%s mask={TIME}\n",
-             timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
+             "NAV-TIMEGPS: time=%s mask={TIME} calid x%x\n",
+             timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+             valid);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "NAV-TIMEGPS: valid %s\n",
+	     flags2str(valid, vtimegps_valid, buf2, sizeof(buf2)));
     return mask;
 }
 /**
