@@ -360,7 +360,7 @@ static gps_mask_t ubx_msg_cfg_rate(struct gps_device_t *session,
 
     if (6 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-CFG-RATE message, runt payload len %zd", data_len);
+                 "UBX: CFG-RATE, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -369,8 +369,7 @@ static gps_mask_t ubx_msg_cfg_rate(struct gps_device_t *session,
     timeRef = getleu16(buf, 4);   // Time system, e.g. UTC, GPS, ...
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-CFG-RATE: measRate %ums, navRate %u cycle(s), "
-             "timeRef %u\n",
+             "UBX: CFG-RATE: measRate %ums, navRate %u cycle(s), timeRef %u\n",
              (unsigned)measRate, (unsigned)navRate,
              (unsigned)timeRef);
 
@@ -397,23 +396,23 @@ ubx_msg_inf(struct gps_device_t *session, unsigned char *buf, size_t data_len)
     txtbuf[data_len] = '\0';
     switch (msgid) {
     case UBX_INF_DEBUG:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-INF-DEBUG: %s\n",
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: INF-DEBUG: %s\n",
                  txtbuf);
         break;
     case UBX_INF_TEST:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-INF-TEST: %s\n",
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: INF-TEST: %s\n",
                  txtbuf);
         break;
     case UBX_INF_NOTICE:
-        GPSD_LOG(LOG_INF, &session->context->errout, "UBX-INF-NOTICE: %s\n",
+        GPSD_LOG(LOG_INF, &session->context->errout, "UBX: INF-NOTICE: %s\n",
                  txtbuf);
         break;
     case UBX_INF_WARNING:
-        GPSD_LOG(LOG_WARN, &session->context->errout, "UBX-INF-WARNING: %s\n",
+        GPSD_LOG(LOG_WARN, &session->context->errout, "UBX: INF-WARNING: %s\n",
                  txtbuf);
         break;
     case UBX_INF_ERROR:
-        GPSD_LOG(LOG_WARN, &session->context->errout, "UBX-INF-ERROR: %s\n",
+        GPSD_LOG(LOG_WARN, &session->context->errout, "UBX: INF-ERROR: %s\n",
                  txtbuf);
         break;
     default:
@@ -439,7 +438,7 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-ESF-ALG message, runt payload len %zd", data_len);
+                 "UBX: ESF-ALG message, runt payload len %zd", data_len);
         return mask;
     }
 
@@ -474,7 +473,7 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
             gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-ESF-ALG: iTOW %lld version %u flags x%x error x%x"
+             "UBX: ESF-ALG: iTOW %lld version %u flags x%x error x%x"
              " reserved1 x%x yaw %ld pitch %u roll %u\n",
             (long long)session->driver.ubx.iTOW, version, flags, error,
             reserved1, yaw, pitch, roll);
@@ -501,7 +500,7 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-ESF-INS message, runt payload len %zd", data_len);
+                 "UBX: ESF-INS message, runt payload len %zd", data_len);
         return mask;
     }
 
@@ -555,7 +554,7 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
             gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-ESF-INS: bitfield0 %llu, reserved1 %llu iTOW %lld"
+             "UBX: ESF-INS: bitfield0 %llu, reserved1 %llu iTOW %lld"
              " xAngRate %ld yAngRate %ld zAngRate %ld"
              " xAccel %ld yAccel %ld zAccel %ld\n",
             bitfield0, reserved1,
@@ -586,7 +585,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
 
     if (8 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-ESF-MEAS message, runt payload len %zd", data_len);
+                 "UBX: ESF-MEAS message, runt payload len %zd", data_len);
         return mask;
     }
     // do not acumulate IMU data
@@ -603,13 +602,13 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     }
     if (expected_len != data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-ESF-MEAS: bad length.  Got %zd, expected %u",
+                 "UBX: ESF-MEAS: bad length.  Got %zd, expected %u",
                  data_len, expected_len);
         return 0;
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-ESF-MEAS: timeTag %lu flags x%x (numMeas %u) id %u\n",
+             "UBX: ESF-MEAS: timeTag %lu flags x%x (numMeas %u) id %u\n",
              datap->timeTag, flags, numMeas, id);
 
     for (i = 0; i < numMeas; i++) {
@@ -669,7 +668,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
         }
 
         GPSD_LOG(LOG_PROG + 1, &session->context->errout,
-                 "UBX-ESF-MEAS: dataType %2u dataField %9ld\n",
+                 "UBX: ESF-MEAS: dataType %2u dataField %9ld\n",
                  dataType, dataF);
     }
 
@@ -699,20 +698,20 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
 
     if (4 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-ESF-RAW message, runt payload len %zd", data_len);
+                 "UBX: ESF-RAW message, runt payload len %zd", data_len);
         return mask;
     }
 
     reserved1 = getleu32(buf, 0);  // reserved1
     if (0 != ((data_len - 4) % 8)) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-ESF-RAW message, weird payload len %zd", data_len);
+                 "UBX: ESF-RAW message, weird payload len %zd", data_len);
         return mask;
     }
     blocks = (data_len - 4) / 8;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-ESF-RAW: reserved1 x%lx, blocks %u\n",
+             "UBX: ESF-RAW: reserved1 x%lx, blocks %u\n",
              reserved1, blocks);
 
     // loop over all blocks, use the next imu[] when time changes.
@@ -727,7 +726,7 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
             cur_imu++;
             if (max_imu <= cur_imu) {
                 GPSD_LOG(LOG_WARN, &session->context->errout,
-                         "UBX-ESF-RAW message, too many imu max %d block %u\n",
+                         "UBX: ESF-RAW message, too many imu max %d block %u\n",
                          max_imu, i);
                 break;
             }
@@ -795,7 +794,7 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
         }
 
         GPSD_LOG(LOG_PROG + 1, &session->context->errout,
-                 "UBX-ESF-RAW: dataType %2u dataField %9ld sTtag %lu\n",
+                 "UBX: ESF-RAW: dataType %2u dataField %9ld sTtag %lu\n",
                  dataType, dataF, datap->timeTag);
     }
     return mask;
@@ -811,7 +810,7 @@ ubx_msg_esf_status(struct gps_device_t *session, unsigned char *buf,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-ESF-STATUS message, runt payload len %zd", data_len);
+                 "UBX: ESF-STATUS message, runt payload len %zd", data_len);
         return mask;
     }
 
@@ -823,13 +822,13 @@ ubx_msg_esf_status(struct gps_device_t *session, unsigned char *buf,
 
     if (expected_len != data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-ESF-STATUS: bad length.  Expected %u got %zd",
+                 "UBX: ESF-STATUS: bad length.  Expected %u got %zd",
                  expected_len, data_len);
         return mask;
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-ESF-STATUS: iTOW %lld version %u fusionMode %u numSens %u\n",
+             "UBX: ESF-STATUS: iTOW %lld version %u fusionMode %u numSens %u\n",
             (long long)session->driver.ubx.iTOW, version, fusionMode, numSens);
 
     return mask;
@@ -853,7 +852,7 @@ ubx_msg_hnr_att(struct gps_device_t *session, unsigned char *buf,
 
     if (32 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-HNR-ATT message, runt payload len %zd", data_len);
+                 "UBX: HNR-ATT message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -904,7 +903,7 @@ ubx_msg_hnr_ins(struct gps_device_t *session, unsigned char *buf,
 
     if (36 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-HNR-INS message, runt payload len %zd", data_len);
+                 "UBX: HNR-INS message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -996,7 +995,7 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
 
     if (72 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-HNR-PVT message, runt payload len %zd", data_len);
+                 "UBX: HNR-PVT message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -1168,7 +1167,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
     // u-blox 8 100 bytes payload
     if (100 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-LOG-BATCH: runt len %zd", data_len);
+                 "UBX: LOG-BATCH: runt len %zd", data_len);
         return 0;
     }
     timeValid = getub(buf, 15);
@@ -1221,7 +1220,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
     session->gpsdata.log.hAcc = 1.0e-3 * getleu32(buf, 44);
 
     GPSD_LOG(LOG_INF, &session->context->errout,
-            "UBX-LOG-BATCH: time=%s index_cnt=%u fixType=%u lon=%.7f lat=%.7f"
+            "UBX: LOG-BATCH: time=%s index_cnt=%u fixType=%u lon=%.7f lat=%.7f"
              " gSpeed=%.3f heading=%.5f altHae=%.3f psmState=%u hAcc=%.3f\n",
              timespec_str(&session->gpsdata.log.then, ts_buf, sizeof(ts_buf)),
              session->gpsdata.log.index_cnt, session->gpsdata.log.fixType,
@@ -1245,7 +1244,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
         session->gpsdata.log.headAcc = 1.0e-5 * getleu32(buf, 76);
         session->gpsdata.log.pDOP = 1.0e-2 * getleu32(buf, 80);
         GPSD_LOG(LOG_INF, &session->context->errout,
-                "UBX-LOG-BATCH extraPVT: time=%s index_cnt=%d"
+                "UBX: LOG-BATCH extraPVT: time=%s index_cnt=%d"
                  " tAcc=%.2f numSV=%d altMSL=%.3f hAcc=%.2f vAcc=%.3f"
                  " velN=%.3f velE=%.3f velD=%.3f sAcc=%.3f headAcc=%.5f"
                  " pDOP=%.5f\n",
@@ -1265,7 +1264,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
         session->gpsdata.log.totalDistance = getleu32(buf, 88);
         session->gpsdata.log.distanceStd = getleu32(buf, 92);
         GPSD_LOG(LOG_INF, &session->context->errout,
-                 "UBX-LOG-BATCH extraOdo: time=%s index_cnt=%d distance=%.0f"
+                 "UBX: LOG-BATCH extraOdo: time=%s index_cnt=%d distance=%.0f"
                  " totalDistance=%.0f distanceStd=%.0f\n",
                  timespec_str(&session->gpsdata.log.then, ts_buf,
                               sizeof(ts_buf)),
@@ -1304,7 +1303,7 @@ ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
     // u-blox 7/8/9 48 bytes payload
     if (48 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-LOG-INFO: runt len %zd", data_len);
+                 "UBX: LOG-INFO: runt len %zd", data_len);
         return 0;
     }
     // u-blox 7/8/9 version 1
@@ -1342,7 +1341,7 @@ ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
     }
 
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-LOG-INFO: version=%u status=x%x Cap=%lu MaxSize=%lu "
+             "UBX: LOG-INFO: version=%u status=x%x Cap=%lu MaxSize=%lu "
              "Size=%lu cnt=%lu oldest=%s newest=%s\n",
              version, status,
              filestoreCapacity,
@@ -1373,7 +1372,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
     // u-blox 40 bytes payload
     if (40 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-LOG-RETRIEVEPOS: runt len %zd", data_len);
+                 "UBX: LOG-RETRIEVEPOS: runt len %zd", data_len);
         return 0;
     }
     unpacked_date.tm_year = getleu16(buf, 30);
@@ -1432,7 +1431,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
 
     // (long long) because of time_t
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-LOG-RETRIEVEPOS: time=%lld entryIndex=%d"
+             "UBX: LOG-RETRIEVEPOS: time=%lld entryIndex=%d"
              " lon=%.7f lat=%.7f altMSL=%.3f hAcc=%.3f"
              " gspeed=%.3f heading=%.5f fixType=%d numSV=%d\n",
              (long long)session->gpsdata.log.then.tv_sec,
@@ -1463,7 +1462,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
     // u-blox 32 bytes payload
     if (32 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-LOG-RETRIEVEPOSEXTRA: runt len %zd", data_len);
+                 "UBX: LOG-RETRIEVEPOSEXTRA: runt len %zd", data_len);
         return 0;
     }
 
@@ -1486,7 +1485,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
 
     // (long long) because of time_t
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-LOG-RETRIEVEPOSEXTRA:"
+             "UBX: LOG-RETRIEVEPOSEXTRA:"
              " time=%lld entryindex=%u distance=%.0f\n",
              (long long)session->gpsdata.log.then.tv_sec,
              session->gpsdata.log.index_cnt, session->gpsdata.log.distance);
@@ -1512,7 +1511,7 @@ ubx_msg_log_retrievestring(struct gps_device_t *session,
     // u-blox 16+ bytes payload
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-LOG-RETRIEVESTRING: runt len %zd", data_len);
+                 "UBX: LOG-RETRIEVESTRING: runt len %zd", data_len);
         return 0;
     }
 
@@ -1537,7 +1536,7 @@ ubx_msg_log_retrievestring(struct gps_device_t *session,
                   sizeof(session->gpsdata.log.string));
     // (long long) because of time_t
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-LOG-RETRIEVESTRING:"
+             "UBX: LOG-RETRIEVESTRING:"
              " time=%lld entryindex=%u byteCount=%u string=%s\n",
              (long long)session->gpsdata.log.then.tv_sec,
              session->gpsdata.log.index_cnt,
@@ -1565,20 +1564,20 @@ ubx_msg_mon_comms(struct gps_device_t *session, unsigned char *buf,
     if (8 > data_len) {
         // 8 + (nPorts * 40)
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-MON-COMMS message, runt payload len %zd\n", data_len);
+                 "UBX: MON-COMMS message, runt payload len %zd\n", data_len);
         return 0;
     }
     version = getub(buf, 0);
     if (0 != version) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-MON-COMMS unkwnown version %u\n", version);
+                 "UBX: MON-COMMS unkwnown version %u\n", version);
         return 0;
     }
     nPorts = getub(buf, 1);
     if ((8 + (nPorts * 40)) > data_len) {
         // 8 + (nPorts * 40)
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-MON-COMMS unkwnown runt %zd\n", data_len);
+                 "UBX: MON-COMMS unkwnown runt %zd\n", data_len);
         return 0;
     }
     txErrors = getub(buf, 2);
@@ -1656,7 +1655,7 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
     if (60 > data_len) {
         // Doc says 68, but 8-series can have 60
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-MON-HW message, runt payload len %zd\n", data_len);
+                 "UBX: MON-HW message, runt payload len %zd\n", data_len);
         return 0;
     }
     noisePerMs = getleu16(buf, 16);
@@ -1842,7 +1841,7 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
 
     if (28 != data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-MON-TXBUF message, runt payload len %zd\n", data_len);
+                 "UBX: MON-TXBUF message, runt payload len %zd\n", data_len);
         return 0;
     }
 
@@ -1895,7 +1894,7 @@ static gps_mask_t ubx_msg_mon_ver(struct gps_device_t *session,
 
     if (40 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-MON-VER message, runt payload len %zd", data_len);
+                 "UBX: MON-VER message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -1959,7 +1958,7 @@ static gps_mask_t ubx_msg_mon_ver(struct gps_device_t *session,
 
     // output SW and HW Version at LOG_INF
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-MON-VER: %s %s PROTVER %u\n",
+             "UBX: MON-VER: %s %s PROTVER %u\n",
              session->subtype, session->subtype1,
              session->driver.ubx.protver);
 
@@ -1981,7 +1980,7 @@ ubx_msg_nav_clock(struct gps_device_t *session, unsigned char *buf,
 
     if (20 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-CLOCK message, runt payload len %zd", data_len);
+                 "UBX: NAV-CLOCK message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2010,7 +2009,7 @@ static gps_mask_t ubx_msg_nav_dgps(struct gps_device_t *session,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-DGPS message, runt payload len %zd", data_len);
+                 "UBX: NAV-DGPS message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2098,7 +2097,7 @@ ubx_msg_nav_eell(struct gps_device_t *session, unsigned char *buf,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-EELL message, runt payload len %zd", data_len);
+                 "UBX: NAV-EELL message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2112,7 +2111,7 @@ ubx_msg_nav_eell(struct gps_device_t *session, unsigned char *buf,
     errEllipseMajor = getleu32(buf, 8);
     errEllipseMinor = getleu32(buf, 12);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-NAV-EELL: iTOW %lld version %u errEllipseOrient %u "
+             "UBX: NAV-EELL: iTOW %lld version %u errEllipseOrient %u "
              "errEllipseMajor %lu errEllipseMinor %lu\n",
              (long long)session->driver.ubx.iTOW, version, errEllipseOrient,
              errEllipseMajor, errEllipseMinor);
@@ -2161,7 +2160,7 @@ ubx_msg_nav_hpposecef(struct gps_device_t *session, unsigned char *buf,
 
     if (28 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-HPPOSECEF message, runt payload len %zd", data_len);
+                 "UBX: NAV-HPPOSECEF message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2174,7 +2173,7 @@ ubx_msg_nav_hpposecef(struct gps_device_t *session, unsigned char *buf,
     session->newdata.ecef.pAcc = getleu32(buf, 24) / (double)10000.0;
     // (long long) cast for 32-bit compat
     GPSD_LOG(LOG_PROG, &session->context->errout,
-        "UBX-NAV-HPPOSECEF: version %d iTOW=%lld ECEF x=%.4f y=%.4f z=%.4f "
+        "UBX: NAV-HPPOSECEF: version %d iTOW=%lld ECEF x=%.4f y=%.4f z=%.4f "
         "pAcc=%.4f\n",
         version,
         (long long)session->driver.ubx.iTOW,
@@ -2203,7 +2202,7 @@ ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
 
     if (36 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-HPPOSLLH message, runt payload len %zd", data_len);
+                 "UBX: NAV-HPPOSLLH message, runt payload len %zd", data_len);
         return mask;
     }
 
@@ -2225,7 +2224,7 @@ ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
     session->newdata.epv = getleu32(buf, 32) * (double)1e-4;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-        "UBX-NAV-HPPOSLLH: version %d iTOW=%lld lat=%.4f lon=%.4f "
+        "UBX: NAV-HPPOSLLH: version %d iTOW=%lld lat=%.4f lon=%.4f "
         "altHAE=%.4f\n",
         version,
         (long long)session->driver.ubx.iTOW,
@@ -2248,7 +2247,7 @@ ubx_msg_nav_posecef(struct gps_device_t *session, unsigned char *buf,
 
     if (20 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-POSECEF message, runt payload len %zd", data_len);
+                 "UBX: NAV-POSECEF message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2261,7 +2260,7 @@ ubx_msg_nav_posecef(struct gps_device_t *session, unsigned char *buf,
 
     // (long long) cast for 32-bit compat
     GPSD_LOG(LOG_PROG, &session->context->errout,
-        "UBX-NAV-POSECEF: iTOW=%lld ECEF x=%.2f y=%.2f z=%.2f pAcc=%.2f\n",
+        "UBX: NAV-POSECEF: iTOW=%lld ECEF x=%.2f y=%.2f z=%.2f pAcc=%.2f\n",
         (long long)session->driver.ubx.iTOW,
         session->newdata.ecef.x,
         session->newdata.ecef.y,
@@ -2285,7 +2284,7 @@ ubx_msg_nav_posllh(struct gps_device_t *session, unsigned char *buf,
 
     if (28 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-POSLLH message, runt payload len %zd", data_len);
+                 "UBX: NAV-POSLLH message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2304,7 +2303,7 @@ ubx_msg_nav_posllh(struct gps_device_t *session, unsigned char *buf,
     session->newdata.epv = getleu32(buf, 24) * 1e-3;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-        "UBX-NAV-POSLLH: iTOW=%lld lat=%.3f lon=%.3f altHAE=%.3f "
+        "UBX: NAV-POSLLH: iTOW=%lld lat=%.3f lon=%.3f altHAE=%.3f "
         "eph %.3f epv %.3f\n",
         (long long)session->driver.ubx.iTOW,
         session->newdata.latitude,
@@ -2340,7 +2339,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
     // u-blox 6 and 7 are 84 bytes, u-blox 8 and 9 are 92 bytes
     if (84 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-PVT message, runt payload len %zd", data_len);
+                 "UBX: NAV-PVT message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2516,7 +2515,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
 
     if (40 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-RELPOSNED:0 message, runt payload len %zd",
+                 "UBX: NAV-RELPOSNED:0 message, runt payload len %zd",
                  data_len);
         return mask;
     }
@@ -2533,7 +2532,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
         if (1 != (1 & flags)) {
             // not gnssFixOK
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "UBX-NAV-RELPOSNED:0 no fix");
+                     "UBX: NAV-RELPOSNED:0 no fix");
             return mask;
         }
         if (4 & flags) {
@@ -2551,7 +2550,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
         // assume version 1
         if (64 > data_len) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "UBX-NAV-RELPOSNED:1 message, runt payload len %zd",
+                     "UBX: NAV-RELPOSNED:1 message, runt payload len %zd",
                      data_len);
             return mask;
         }
@@ -2559,7 +2558,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
         if (1 != (1 & flags)) {
             // not gnssFixOK
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "UBX-NAV-RELPOSNED:1 no fix");
+                     "UBX: NAV-RELPOSNED:1 no fix");
             return mask;
         }
         if (4 & flags) {
@@ -2584,9 +2583,9 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-        "UBX-NAV-RELPOSNED: version %d iTOW=%lld refStationId %u flags x%x\n"
-        "UBX-NAV-RELPOSNED: relPos N=%.4f E=%.4f D=%.4f\n"
-        "UBX-NAV-RELPOSNED: acc N=%.4f E=%.4f D=%.4f L=%.4f H=%.4f\n",
+        "UBX: NAV-RELPOSNED: version %d iTOW=%lld refStationId %u flags x%x\n"
+        "UBX: NAV-RELPOSNED: relPos N=%.4f E=%.4f D=%.4f\n"
+        "UBX: NAV-RELPOSNED: acc N=%.4f E=%.4f D=%.4f L=%.4f H=%.4f\n",
         version,
         (long long)session->driver.ubx.iTOW,
         session->newdata.dgps_station,
@@ -2616,7 +2615,7 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-NAV-SAT runt datalen %zd\n", data_len);
+                 "UBX: NAV-SAT runt datalen %zd\n", data_len);
         return 0;
     }
 
@@ -2638,7 +2637,7 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
     nchan = (unsigned int)getub(buf, 5);
     if (nchan > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-SAT message, runt >%d reported visible",
+                 "UBX: NAV-SAT message, runt >%d reported visible",
                  MAXCHANNELS);
         return 0;
     }
@@ -2721,7 +2720,7 @@ ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
 
     if (12 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-SBAS message, runt payload len %zd", data_len);
+                 "UBX: NAV-SBAS message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2729,7 +2728,7 @@ ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
     ubx_PRN = getub(buf, 4);
     cnt = getub(buf, 8);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-NAV-SBAS iTOW %lu geo %u mode %u sys %u service x%x "
+             "UBX: NAV-SBAS iTOW %lu geo %u mode %u sys %u service x%x "
              "cnt %u\n",
              (unsigned long)session->driver.ubx.iTOW,
              ubx_PRN, (unsigned)getub(buf, 5),
@@ -2743,7 +2742,7 @@ ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
     if (data_len < (12 + (12 * cnt))) {
         // length check, pacify coverity
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-SBAS message, bad message length %zd", data_len);
+                 "UBX: NAV-SBAS message, bad message length %zd", data_len);
     }
     for (i = 0; i < cnt; i++) {
         int off = 12 + (12 * i);
@@ -2756,7 +2755,7 @@ ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
         int prc = getles16(buf, off + 6);
         int ic = getles16(buf, off + 10);
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-NAV-SBAS SV%3u flags x%02x udre %u svSys %2d "
+                 "UBX: NAV-SBAS SV%3u flags x%02x udre %u svSys %2d "
                  "svService x%x prc %d ic %d\n",
                  svID, flags, udre, svSys, svService, prc, ic);
     }
@@ -2769,7 +2768,7 @@ ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
 #ifdef __UNUSED
     // debug
     GPSD_LOG(LOG_ERROR, &session->context->errout,
-             "UBX-NAV-SBAS ubx_prn %d gnssid %d, svid %d nmea_PRN %d\n",
+             "UBX: NAV-SBAS ubx_prn %d gnssid %d, svid %d nmea_PRN %d\n",
              ubx_PRN, gnssid, svid, nmea_PRN);
 #endif  // __UNUSED
     session->driver.ubx.sbas_in_use = nmea_PRN;
@@ -2795,7 +2794,7 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-NAV-SIG runt datalen %zd\n", data_len);
+                 "UBX: NAV-SIG runt datalen %zd\n", data_len);
         return 0;
     }
 
@@ -2817,7 +2816,7 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
     nchan = (unsigned int)getub(buf, 5);
     if (nchan > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-SIG message, runt >%d reported visible",
+                 "UBX: NAV-SIG message, runt >%d reported visible",
                  MAXCHANNELS);
         return 0;
     }
@@ -2925,7 +2924,7 @@ static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
 
     if (52 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-SOL message, runt payload len %zd", data_len);
+                 "UBX: NAV-SOL message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3004,7 +3003,7 @@ static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
     mask |= REPORT_IS;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-NAV-SOL: time=%s ecef x:%.2f y:%.2f z:%.2f track=%.2f "
+             "UBX: NAV-SOL: time=%s ecef x:%.2f y:%.2f z:%.2f track=%.2f "
              "speed=%.2f mode=%d status=%d used=%d\n",
              timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
              session->newdata.ecef.x,
@@ -3041,7 +3040,7 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-STATUS message, runt payload len %zd", data_len);
+                 "UBX: NAV-STATUS message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3140,7 +3139,7 @@ ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-NAV-SVINFO runt datalen %zd\n", data_len);
+                 "UBX: NAV-SVINFO runt datalen %zd\n", data_len);
         return 0;
     }
 
@@ -3152,7 +3151,7 @@ ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
     nchan = (unsigned int)getub(buf, 4);
     if (nchan > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV SVINFO message, runt >%d reported visible",
+                 "UBX: NAV SVINFO message, runt >%d reported visible",
                  MAXCHANNELS);
         return 0;
     }
@@ -3396,7 +3395,7 @@ ubx_msg_nav_timeutc(struct gps_device_t *session, unsigned char *buf,
 
     if (20 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-TIMEUTC message, runt payload len %zd", data_len);
+                 "UBX: NAV-TIMEUTC message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3423,7 +3422,7 @@ ubx_msg_nav_timeutc(struct gps_device_t *session, unsigned char *buf,
         mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-NAV-TIMEUTC: iTOW=%lld valid=%02x %04d-%02d-%02d "
+                 "UBX: NAV-TIMEUTC: iTOW=%lld valid=%02x %04d-%02d-%02d "
                  "%02d:%02d:%02d.%09d tAcc=%llu time %lld.%09lld\n",
                  (long long)session->driver.ubx.iTOW,
                  valid, date.tm_year + 1900, date.tm_mon + 1, date.tm_mday,
@@ -3451,7 +3450,7 @@ ubx_msg_nav_velecef(struct gps_device_t *session, unsigned char *buf,
 
     if (20 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-VELECEF message, runt payload len %zd", data_len);
+                 "UBX: NAV-VELECEF message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3461,7 +3460,7 @@ ubx_msg_nav_velecef(struct gps_device_t *session, unsigned char *buf,
     session->newdata.ecef.vz = getles32(buf, 12) / 100.0;
     session->newdata.ecef.vAcc = getleu32(buf, 16) / 100.0;
     GPSD_LOG(LOG_PROG, &session->context->errout,
-        "UBX-NAV-VELECEF: iTOW=%lld ECEF vx=%.2f vy=%.2f vz=%.2f vAcc=%.2f\n",
+        "UBX: NAV-VELECEF: iTOW=%lld ECEF vx=%.2f vy=%.2f vz=%.2f vAcc=%.2f\n",
         (long long)session->driver.ubx.iTOW,
         session->newdata.ecef.vx,
         session->newdata.ecef.vy,
@@ -3482,7 +3481,7 @@ ubx_msg_nav_velned(struct gps_device_t *session, unsigned char *buf,
 
     if (36 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-VELNED message, runt payload len %zd", data_len);
+                 "UBX: NAV-VELNED message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3492,7 +3491,7 @@ ubx_msg_nav_velned(struct gps_device_t *session, unsigned char *buf,
     session->newdata.NED.velD = getles32(buf, 12) / 100.0;
     // ignore speed for now
     GPSD_LOG(LOG_PROG, &session->context->errout,
-        "UBX-NAV-VELNED: iTOW=%lld NED velN=%.2f velE=%.2f velD=%.2f\n",
+        "UBX: NAV-VELNED: iTOW=%lld NED velN=%.2f velE=%.2f velD=%.2f\n",
          (long long)session->driver.ubx.iTOW,
         session->newdata.NED.velN,
         session->newdata.NED.velE,
@@ -3522,7 +3521,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-RXM-RAWX message, runt payload len %zd", data_len);
+                 "UBX: RXM-RAWX message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3537,7 +3536,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
     version = getub(buf, 13);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-RXM-RAWX: rcvTow %f week %u leapS %d numMeas %u recStat %d"
+             "UBX: RXM-RAWX: rcvTow %f week %u leapS %d numMeas %u recStat %d"
              " version %u\n",
              rcvTow, week, leapS, numMeas, recStat, version);
 
@@ -3558,7 +3557,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
 
     if (numMeas > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-RXM-RAWX message, too many measurements (%u)",
+                 "UBX: RXM-RAWX message, too many measurements (%u)",
                  numMeas);
         return 0;
     }
@@ -3756,14 +3755,14 @@ static gps_mask_t ubx_msg_rxm_sfrb(struct gps_device_t *session,
 
     if (42 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-RXM-SFRB message, runt payload len %zd", data_len);
+                 "UBX: RXM-SFRB message, runt payload len %zd", data_len);
         return 0;
     }
 
     chan = (unsigned int)getub(buf, 0);
     svid = (unsigned int)getub(buf, 1);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-RXM-SFRB: %u %u\n", chan, svid);
+             "UBX: RXM-SFRB: %u %u\n", chan, svid);
 
     // UBX does all the parity checking, but still bad data gets through
     for (i = 0; i < 10; i++) {
@@ -3791,7 +3790,7 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
 
     if (8 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-RXM-SFRBX message, runt payload len %zd", data_len);
+                 "UBX: RXM-SFRBX message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3800,7 +3799,7 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
         16 < numWords) {
         // test numwords directly to shut up Coverity
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-RXM-SFRBX message, wrong payload len %zd, numwords %u "
+                 "UBX: RXM-SFRBX message, wrong payload len %zd, numwords %u "
                  "s/b %u",
                  data_len, 8 + (4 * numWords), numWords);
         return 0;
@@ -3820,7 +3819,7 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-RXM-SFRBX: version %u gnssId %u %s %u svId %u "
+             "UBX: RXM-SFRBX: version %u gnssId %u %s %u svId %u "
              "freqId %u words %u\n",
              version, gnssId, chn_s, chn, svId, freqId, numWords);
 
@@ -3854,7 +3853,7 @@ ubx_msg_rxm_svsi(struct gps_device_t *session, unsigned char *buf,
 
     if (8 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-RXM-SVSI message, runt payload len %zd", data_len);
+                 "UBX: RXM-SVSI message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3883,7 +3882,7 @@ static gps_mask_t ubx_msg_sec_uniqid(struct gps_device_t *session,
 
     if (9 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-SEC-UNIQID message, runt payload len %zd\n", data_len);
+                 "UBX: SEC-UNIQID message, runt payload len %zd\n", data_len);
         return 0;
     }
 
@@ -3919,13 +3918,13 @@ static gps_mask_t ubx_msg_sec_uniqid(struct gps_device_t *session,
     default:
         // unknown version
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-SEC-UNIQID message bad version\n");
+                 "UBX: SEC-UNIQID message bad version\n");
         return 0;
     }
 
     // output chip id at LOG_INF
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-SEC-UNIQID: %s\n",
+             "UBX: SEC-UNIQID: %s\n",
              session->gpsdata.dev.sernum);
     return 0;
 }
@@ -3950,7 +3949,7 @@ ubx_msg_tim_svin(struct gps_device_t *session, unsigned char *buf,
 
     if (28 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-TIM-SVIN message, runt payload len %zd", data_len);
+                 "UBX: TIM-SVIN message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3991,7 +3990,7 @@ ubx_msg_tim_tp(struct gps_device_t *session, unsigned char *buf,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-TIM-TP message, runt payload len %zd", data_len);
+                 "UBX: TIM-TP message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -4068,7 +4067,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_ACK_ACK:
         if (2 <= data_len) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "UBX-ACK-ACK, class: %02x, id: %02x\n",
+                     "UBX: ACK-ACK, class: %02x, id: %02x\n",
                      buf[UBX_PREFIX_LEN],
                      buf[UBX_PREFIX_LEN + 1]);
         }
@@ -4076,7 +4075,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_ACK_NAK:
         if (2 <= data_len) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "UBX-ACK-NAK, class: %02x, id: %02x\n",
+                     "UBX: ACK-NAK, class: %02x, id: %02x\n",
                      buf[UBX_PREFIX_LEN],
                      buf[UBX_PREFIX_LEN + 1]);
         }
@@ -4084,23 +4083,23 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
 
     case UBX_CFG_NAV5:
         // deprecated in u-blox 10
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-NAV5\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: CFG-NAV5\n");
         break;
     case UBX_CFG_NAVX5:
         // deprecated in u-blox 10
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-NAVX5\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: CFG-NAVX5\n");
         break;
     case UBX_CFG_PRT:
         // deprecated in u-blox 10
         if (session->driver.ubx.port_id != buf[UBX_PREFIX_LEN + 0] ) {
             session->driver.ubx.port_id = buf[UBX_PREFIX_LEN + 0];
             GPSD_LOG(LOG_INF, &session->context->errout,
-                     "UBX-CFG-PRT: port %d\n", session->driver.ubx.port_id);
+                     "UBX: CFG-PRT: port %d\n", session->driver.ubx.port_id);
         }
         break;
     case UBX_CFG_RATE:
         // deprecated in u-blox 10
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-RATE\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: CFG-RATE\n");
         mask = ubx_msg_cfg_rate(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
@@ -4145,99 +4144,99 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
 
     case UBX_LOG_BATCH:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-LOG-BATCH\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: LOG-BATCH\n");
         mask = ubx_msg_log_batch(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_LOG_INFO:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-LOG-INFO\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: LOG-INFO\n");
         mask = ubx_msg_log_info(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_LOG_RETRIEVEPOS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-LOG-RETRIEVEPOS\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: LOG-RETRIEVEPOS\n");
         mask = ubx_msg_log_retrievepos(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_LOG_RETRIEVEPOSEXTRA:
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-LOG-RETRIEVEPOSEXTRA\n");
+                 "UBX: LOG-RETRIEVEPOSEXTRA\n");
         mask = ubx_msg_log_retrieveposextra(session, &buf[UBX_PREFIX_LEN],
                                             data_len);
         break;
     case UBX_LOG_RETRIEVESTRING:
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-LOG-RETRIEVESTRING\n");
+                 "UBX: LOG-RETRIEVESTRING\n");
         mask = ubx_msg_log_retrievestring(session, &buf[UBX_PREFIX_LEN],
                                           data_len);
         break;
 
     case UBX_MON_BATCH:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-BATCH\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-BATCH\n");
         break;
     case UBX_MON_COMMS:
         mask = ubx_msg_mon_comms(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_EXCEPT:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-EXCEPT\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-EXCEPT\n");
         break;
     case UBX_MON_GNSS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-GNSS\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-GNSS\n");
         break;
     case UBX_MON_HW:
         mask = ubx_msg_mon_hw(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_HW2:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-HW2\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-HW2\n");
         break;
     case UBX_MON_HW3:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-HW3\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-HW3\n");
         break;
     case UBX_MON_IO:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-IO\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-IO\n");
         break;
     case UBX_MON_IPC:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-IPC\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-IPC\n");
         break;
     case UBX_MON_MSGPP:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-MSGPP\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-MSGPP\n");
         break;
     case UBX_MON_PATCH:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-PATCH\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-PATCH\n");
         break;
     case UBX_MON_RF:
         mask = ubx_msg_mon_rf(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_RXBUF:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-RXBUF\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-RXBUF\n");
         mask = ubx_msg_mon_rxbuf(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_RXR:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-RXR\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-RXR\n");
         break;
     case UBX_MON_SCHED:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-SCHED\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-SCHED\n");
         break;
     case UBX_MON_SMGR:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-SMGR\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-SMGR\n");
         break;
     case UBX_MON_SPAN:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-SPAN\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-SPAN\n");
         break;
     case UBX_MON_TXBUF:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-TXBUF\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-TXBUF\n");
         mask = ubx_msg_mon_txbuf(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_USB:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-USB\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-USB\n");
         break;
     case UBX_MON_VER:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-VER\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-VER\n");
         mask = ubx_msg_mon_ver(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
     case UBX_NAV_AOPSTATUS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-AOPSTATUS\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-AOPSTATUS\n");
         break;
     case UBX_NAV_ATT:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-ATT\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-ATT\n");
         break;
     case UBX_NAV_CLOCK:
         mask = ubx_msg_nav_clock(session, &buf[UBX_PREFIX_LEN], data_len);
@@ -4253,54 +4252,54 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_nav_eell(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_EKFSTATUS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-EKFSTATUS\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-EKFSTATUS\n");
         break;
     case UBX_NAV_EOE:
         mask = ubx_msg_nav_eoe(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_GEOFENCE:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-GEOFENCE\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-GEOFENCE\n");
         break;
     case UBX_NAV_HPPOSECEF:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-HPPOSECEF\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-HPPOSECEF\n");
         mask = ubx_msg_nav_hpposecef(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_HPPOSLLH:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-HPPOSLLH\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-HPPOSLLH\n");
         mask = ubx_msg_nav_hpposllh(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_ODO:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-ODO\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-ODO\n");
         break;
     case UBX_NAV_ORB:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-ORB\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-ORB\n");
         break;
     case UBX_NAV_POSECEF:
         mask = ubx_msg_nav_posecef(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_POSLLH:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-POSLLH\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-POSLLH\n");
         mask = ubx_msg_nav_posllh(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_POSUTM:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-POSUTM\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-POSUTM\n");
         break;
     case UBX_NAV_PVT:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-PVT\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-PVT\n");
         mask = ubx_msg_nav_pvt(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_RELPOSNED:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-RELPOSNED\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-RELPOSNED\n");
         mask = ubx_msg_nav_relposned(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_RESETODO:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-RESETODO\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-RESETODO\n");
         break;
     case UBX_NAV_SAT:
         mask = ubx_msg_nav_sat(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SBAS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SBAS\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-SBAS\n");
         mask = ubx_msg_nav_sbas(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SIG:
@@ -4309,7 +4308,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_NAV_SOL:
         /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9 and 10.
          * Use UBX-NAV-PVT instead */
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SOL\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-SOL\n");
         mask = ubx_msg_nav_sol(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_STATUS:
@@ -4320,7 +4319,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_NAV_SVINFO:
         // UBX-NAV-SVINFO deprecated, use UBX-NAV-SAT instead
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SVINFO\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-SVINFO\n");
         mask = ubx_msg_nav_svinfo(session, &buf[UBX_PREFIX_LEN], data_len);
 
         /* this is a hack to move some initialization until after we
@@ -4334,13 +4333,13 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
 
         break;
     case UBX_NAV_TIMEBDS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-TIMEBDS\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-TIMEBDS\n");
         break;
     case UBX_NAV_TIMEGAL:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-TIMEGAL\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-TIMEGAL\n");
         break;
     case UBX_NAV_TIMEGLO:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-TIMEGLO\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-TIMEGLO\n");
         break;
     case UBX_NAV_TIMEGPS:
         mask = ubx_msg_nav_timegps(session, &buf[UBX_PREFIX_LEN], data_len);
@@ -4349,56 +4348,56 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_nav_timels(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_TIMEQZSS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-TIMEQZSS\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-TIMEQZSS\n");
         break;
     case UBX_NAV_TIMEUTC:
         mask = ubx_msg_nav_timeutc(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_VELECEF:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-VELECEF\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-VELECEF\n");
         mask = ubx_msg_nav_velecef(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_VELNED:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-VELNED\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-VELNED\n");
         mask = ubx_msg_nav_velned(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
     case UBX_MGA_ACK:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MGA-ACK\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MGA-ACK\n");
         break;
     case UBX_MGA_DBD:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MGA-DBD\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MGA-DBD\n");
         break;
 
     case UBX_RXM_ALM:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-ALM\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-ALM\n");
         break;
     case UBX_RXM_EPH:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-EPH\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-EPH\n");
         break;
     case UBX_RXM_IMES:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-IMES\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-IMES\n");
         break;
     case UBX_RXM_MEASX:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-MEASX\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-MEASX\n");
         break;
     case UBX_RXM_PMREQ:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-PMREQ\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-PMREQ\n");
         break;
     case UBX_RXM_POSREQ:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-POSREQ\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-POSREQ\n");
         break;
     case UBX_RXM_RAW:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-RAW\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-RAW\n");
         break;
     case UBX_RXM_RAWX:
         mask = ubx_msg_rxm_rawx(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_RLM:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-RLM\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-RLM\n");
         break;
     case UBX_RXM_RTCM:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-RTCM\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-RTCM\n");
         break;
     case UBX_RXM_SFRB:
         mask = ubx_msg_rxm_sfrb(session, &buf[UBX_PREFIX_LEN], data_len);
@@ -4416,43 +4415,43 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     //     GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-SEC-SESSID\n");
     //     break;
     case UBX_SEC_SIGN:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX_SEC_SIGN\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: SEC_SIGN\n");
         break;
     case UBX_SEC_UNIQID:
         mask = ubx_msg_sec_uniqid(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_TIM_DOSC:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-DOSC\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-DOSC\n");
         break;
     case UBX_TIM_FCHG:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-FCHG\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-FCHG\n");
         break;
     case UBX_TIM_HOC:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-HOC\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-HOC\n");
         break;
     case UBX_TIM_SMEAS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-SMEAS\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-SMEAS\n");
         break;
     case UBX_TIM_SVIN:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-SVIN\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-SVIN\n");
         break;
     case UBX_TIM_TM:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-TM\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-TM\n");
         break;
     case UBX_TIM_TM2:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-TM2\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-TM2\n");
         break;
     case UBX_TIM_TP:
         mask = ubx_msg_tim_tp(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_TIM_TOS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-TOS\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-TOS\n");
         break;
     case UBX_TIM_VCOCAL:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-VCOCAL\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-VCOCAL\n");
         break;
     case UBX_TIM_VRFY:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-VRFY\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-VRFY\n");
         break;
 
     default:
