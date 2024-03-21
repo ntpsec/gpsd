@@ -165,6 +165,38 @@ static struct flist_t vtimegps_valid[] = {
     {0, 0, NULL},
 };
 
+// UBX-NAV-TIMELS srcOfCurrLs
+static struct vlist_t vsrcOfCurrLs[] = {
+    {0, "firmware"},
+    {1, "GPS GLONASS difference"},
+    {2, "GPS"},
+    {3, "SBAS"},
+    {4, "BeiDou"},
+    {5, "Galileo"},
+    {6, "Aided data"},
+    {7, "Configured"},
+    {0, NULL},
+};
+
+// UBX-NAV-TIMELS srcOfLsChange
+static struct vlist_t vsrcOfLsChange[] = {
+    {0, "No Source"},
+    {1, "Undefined"},
+    {2, "GPS"},
+    {3, "SBAS"},
+    {4, "BeiDou"},
+    {5, "Galileo"},
+    {6, "GLONASS"},
+    {0, NULL},
+};
+
+// UBX-NAV-TIMELS valid
+static struct flist_t vtimels_valid[] = {
+    {1, 1, "validCurrLs"},
+    {2, 2, "validTimeToLsEvent"},
+    {0, 0, NULL},
+};
+
 // nmea to turn off
 const unsigned char nmea_off[] = {
     0x00,          // msg id  = GGA
@@ -239,6 +271,7 @@ static const fw_protver_map_entry_t fw_protver_map[] = {
     {"5.00", 11.00},          // u-blox 5 and antaris 4
     {"6.00", 12.00},          // u-blox 5 and 6
     {"6.02", 12.02},          // u-blox 5 and 6
+    {"6.02", 12.03},          // u-blox 5 and 6
     {"7.01", 13.01},          // u-blox 7
     {"7.03", 13.03},          // u-blox 6 and 7
     {"1.00", 14.00},          // u-blox 6 w/ GLONASS, and 7
@@ -1991,6 +2024,8 @@ static gps_mask_t ubx_msg_nav_dgps(struct gps_device_t *session,
 
 /**
  * Dilution of precision message
+ *
+ * Present in all u-blox (4 to 10)
  */
 static gps_mask_t
 ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
@@ -2001,7 +2036,7 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
 
     if (18 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-DOP message, runt payload len %zd", data_len);
+                 "UBX: NAV-DOP message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2038,7 +2073,7 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
         mask |= DOP_SET;
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NAV-DOP: gdop=%.2f pdop=%.2f "
+             "UBX: NAV-DOP: gdop=%.2f pdop=%.2f "
              "hdop=%.2f vdop=%.2f tdop=%.2f mask={DOP}\n",
              session->gpsdata.dop.gdop,
              session->gpsdata.dop.hdop,
@@ -2087,7 +2122,8 @@ ubx_msg_nav_eell(struct gps_device_t *session, unsigned char *buf,
 /**
  * End of Epoch
  * Not in u-blox 5, 6 or 7
- * Present in u-blox 8 and 9
+ * Present in:
+ *    protVer 18 (8-series, 9)
  */
 static gps_mask_t
 ubx_msg_nav_eoe(struct gps_device_t *session, unsigned char *buf,
@@ -2095,7 +2131,7 @@ ubx_msg_nav_eoe(struct gps_device_t *session, unsigned char *buf,
 {
     if (4 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-EOE message, runt payload len %zd", data_len);
+                 "UBX: NAV-EOE: runt payload len %zd", data_len);
         return 0;
     }
 
@@ -2104,7 +2140,7 @@ ubx_msg_nav_eoe(struct gps_device_t *session, unsigned char *buf,
         session->driver.ubx.protver = 18;
     }
     session->driver.ubx.iTOW = getleu32(buf, 0);
-    GPSD_LOG(LOG_PROG, &session->context->errout, "NAV-EOE: iTOW=%lld\n",
+    GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-EOE: iTOW=%lld\n",
              (long long)session->driver.ubx.iTOW);
     // nothing to report, but the iTOW for cycle ender is good
     return 0;
@@ -3204,7 +3240,7 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-TIMEGPS message, runt payload len %zd", data_len);
+                 "UBX: NAV-TIMEGPS message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -3236,11 +3272,11 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NAV-TIMEGPS: time=%s mask={TIME} calid x%x\n",
+             "UBX: NAV-TIMEGPS: time=%s mask={TIME} calid x%x\n",
              timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
              valid);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "NAV-TIMEGPS: valid %s\n",
+             "UBX: NAV-TIMEGPS: valid %s\n",
 	     flags2str(valid, vtimegps_valid, buf2, sizeof(buf2)));
     return mask;
 }
@@ -3248,14 +3284,20 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
  * Navigation time to leap second: UBX-NAV-TIMELS
  *
  * Sets leap_notify if leap second is < 23 hours away.
- * Not in u-blox 5
+ * Present in:
+ *     protVer 15 (8-series)
+ * Not in:
+ *     protVer 12 (5-series)
+ *     protVer 13 (6-series)
+ *     protVer 14 (6-series / GLONASS, 6-series)
  */
 static gps_mask_t
 ubx_msg_nav_timels(struct gps_device_t *session, unsigned char *buf,
                    size_t data_len)
 {
-    int version;
-    unsigned int flags;
+    char buf2[80];
+    unsigned version;
+    unsigned valid;
     int valid_curr_ls;
     int valid_time_to_ls_event;
 
@@ -3264,93 +3306,78 @@ ubx_msg_nav_timels(struct gps_device_t *session, unsigned char *buf,
 
     if (24 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-TIMELS: unexpected length %zd, expecting 24\n",
+                 "UBX: NAV-TIMELS: runt %zd, expecting 24\n",
                  data_len);
         return 0;
     }
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
-    version = getsb(buf, 4);
+    version = getub(buf, 4);
     // Only version 0 is defined up to ub-blox 9
-    flags = (unsigned int)getub(buf, 23);
+    if (0 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: NAV-TIMELS: unknown version $u %u", version);
+        return 0;
+    }
+    valid = getub(buf, 23);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-NAV-TIMELS: flags 0x%x message version %d\n",
-             flags, version);
-    valid_curr_ls = flags & UBX_TIMELS_VALID_CURR_LS;
-    valid_time_to_ls_event = flags & UBX_TIMELS_VALID_TIME_LS_EVT;
+             "UBX: NAV-TIMELS: valid x%x version %d\n", valid, version);
+    GPSD_LOG(LOG_INF, &session->context->errout,
+             "UBX: NAV-TIMELS: valid %s\n",
+	     flags2str(valid, vtimels_valid, buf2, sizeof(buf2)));
+
+    valid_curr_ls = valid & UBX_TIMELS_VALID_CURR_LS;
+    valid_time_to_ls_event = valid & UBX_TIMELS_VALID_TIME_LS_EVT;
     if (valid_curr_ls) {
         unsigned int src_of_curr_ls = getub(buf,8);
         int curr_ls = getsb(buf,9);
-        char *src = "Unknown";
-        static char *srcOfCurrLs[] = {
-            "firmware",
-            "GPS GLONASS difference",
-            "GPS",
-            "SBAS",
-            "BeiDou",
-            "Galileo",
-            "Aided data",
-            "Configured"
-        };
-
-        if (src_of_curr_ls < (sizeof(srcOfCurrLs) / sizeof(srcOfCurrLs[0])))
-            src = srcOfCurrLs[src_of_curr_ls];
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-NAV-TIMELS: source_of_current_leapsecond=%u:%s "
-                 "curr_ls=%d\n",
-                 src_of_curr_ls, src,curr_ls);
+                 "UBX: NAV-TIMELS: srcOfCurrLs %u(%s) curr_ls %d\n",
+                 src_of_curr_ls,
+                 val2str(src_of_curr_ls, vsrcOfCurrLs),
+                 curr_ls);
         session->context->leap_seconds = curr_ls;
         session->context->valid |= LEAP_SECOND_VALID;
     }  // Valid current leap second
 
     if (valid_time_to_ls_event) {
-        char *src = "Unknown";
         unsigned int src_of_ls_change;
         unsigned short dateOfLSGpsWn, dateOfLSGpsDn;
         int lsChange = getsb(buf, 11);
         int timeToLsEvent = getles32(buf, 12);
-        static char *srcOfLsChange[] = {
-            "No Source",
-            "Undefined",
-            "GPS",
-            "SBAS",
-            "BeiDou",
-            "Galileo",
-            "GLONASS",
-        };
 
         src_of_ls_change = getub(buf,10);
-        if (src_of_ls_change <
-            (sizeof(srcOfLsChange) / sizeof(srcOfLsChange[0]))) {
-            src = srcOfLsChange[src_of_ls_change];
-        }
 
         dateOfLSGpsWn = getles16(buf,16);
         dateOfLSGpsDn = getles16(buf,18);
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-NAV-TIMELS: source_of_leapsecond_change %u:%s "
-                 "leapSecondChage %d timeToLsEvent %d\n",
-                 src_of_ls_change,src,lsChange,timeToLsEvent);
-
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX-NAV-TIMELS: dateOfLSGpsWn=%d dateOfLSGpsDn=%d\n",
+                 "UBX: NAV-TIMELS: srcOfCurLsChange %u(%s) lsChange %d "
+                 "timeToLsEvent %d dateOfLSGpsWn %d dateOfLSGpsDn %d\n",
+                 src_of_ls_change,
+                 val2str(src_of_ls_change, vsrcOfLsChange),
+                 lsChange, timeToLsEvent,
                  dateOfLSGpsWn,dateOfLSGpsDn);
+
         if ((0 != lsChange) && (0 < timeToLsEvent) &&
             ((60 * 60 * 23) > timeToLsEvent)) {
             if (1 == lsChange) {
                 session->context->leap_notify = LEAP_ADDSECOND;
-                GPSD_LOG(LOG_INF, &session->context->errout,
-                         "UBX-NAV-TIMELS: Positive leap second today\n");
+                GPSD_LOG(LOG_WARN, &session->context->errout,
+                         "UBX: NAV-TIMELS: leap_notify %d "
+                         "Positive leap second today\n",
+                         session->context->leap_notify);
             } else if (-1 == lsChange) {
                 session->context->leap_notify = LEAP_DELSECOND;
-                GPSD_LOG(LOG_INF, &session->context->errout,
-                         "UBX-NAV-TIMELS: Negative leap second today\n");
+                GPSD_LOG(LOG_WARN, &session->context->errout,
+                         "UBX: NAV-TIMELS:leap_notify %d "
+                         " Negative leap second today\n",
+                         session->context->leap_notify);
             }
         } else {
             session->context->leap_notify = LEAP_NOWARNING;
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "UBX-NAV-TIMELS: leap_notify %d, none today\n",
+                     "UBX: NAV-TIMELS: leap_notify %d, none today\n",
                      session->context->leap_notify);
         }
     }
@@ -4537,6 +4564,23 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         }
 
         switch (session->queue) {
+        case 79:
+            if (15 <= session->driver.ubx.protver) {
+                // good cycle ender, except when it is not the ender...
+                msg[0] = 0x01;          // class
+                msg[1] = 0x61;          // msg id  = UBX-NAV-EOE
+                msg[2] = 0x01;          // every cycle
+                (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+            }
+            break;
+        case 82:
+            if (15 <= session->driver.ubx.protver) {
+                msg[0] = 0x01;          // class
+                msg[1] = 0x26;          // msg id  = UBX-NAV-TIMELS
+                msg[2] = 0xff;          // about every 4 mins if nav rate is 1Hz
+                (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+            }
+            break;
         case 85:
             if (18 <= session->driver.ubx.protver) {
                 // No UNIQ-ID before PROTVER 18
@@ -4910,7 +4954,6 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
             0x11,              // msg id = NAV-VELECEF
             0x35,              // msg id = NAV-SAT
             0x43,              // msg id = NAV-SIG
-            0x61,              // msg id = NAV-EOE, first in protver 18
         };
 
         /*
@@ -4932,6 +4975,9 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
         // request SW and HW Versions, prolly already requested at detection
         // ask again
         (void)ubx_write(session, UBX_CLASS_MON, 0x04, msg, 0);
+
+        GPSD_LOG(LOG_IO, &session->context->errout, "UBX: init protVer %u\n",
+                 session->driver.ubx.protver);
 
         // turn on common UBX-NAV
         msg[0] = 0x01;          // class, UBX-NAV
@@ -4984,11 +5030,6 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
                 }
             }
         }
-
-        msg[0] = 0x01;          // class
-        msg[1] = 0x26;          // msg id  = UBX-NAV-TIMELS
-        msg[2] = 0xff;          // about every 4 minutes if nav rate is 1Hz
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         // turn on init queue
         session->queue = 1;
