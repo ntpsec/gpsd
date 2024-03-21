@@ -80,6 +80,13 @@
 #define UBX_CFG_LEN             20
 #define outProtoMask            14
 
+// UBX-ACK-* ids
+static struct vlist_t vack_ids[] = {
+    {UBX_ACK_ACK, "ACK-ACK"},
+    {UBX_ACK_NAK, "ACK-NAK"},
+    {0, NULL},
+};
+
 // UBX-INF-* inf_ids
 static struct vlist_t vinf_ids[] = {
     {UBX_INF_DEBUG, "INF-DEBUG"},
@@ -361,6 +368,26 @@ static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
     return ubx2_to_prn(*gnssId, *svId);
 }
 
+// UBX-ACK-ACK, UBX-ACK-NAK
+static gps_mask_t ubx_msg_ack(struct gps_device_t *session,
+                              unsigned char *buf, size_t data_len)
+{
+    unsigned msgid = getbes16(buf, 2);
+
+    if (2 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: %s-: runt payload len %zd",
+                 val2str(msgid, vack_ids), data_len);
+        return 0;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX: %s: class: %02x, id: %02x\n",
+             val2str(msgid, vack_ids),
+             buf[UBX_PREFIX_LEN],
+             buf[UBX_PREFIX_LEN + 1]);
+    return 0;
+}
+
 // UBX-CFG-RATE
 // Deprecated in u-blox 10
 static gps_mask_t ubx_msg_cfg_rate(struct gps_device_t *session,
@@ -393,11 +420,10 @@ static gps_mask_t ubx_msg_cfg_rate(struct gps_device_t *session,
 static gps_mask_t
 ubx_msg_inf(struct gps_device_t *session, unsigned char *buf, size_t data_len)
 {
-    unsigned short msgid;
+    unsigned msgid = getbes16(buf, 2);
 
     // No minimum payload length
 
-    msgid = (unsigned short)((buf[2] << 8) | buf[3]);
     if (data_len > MAX_PACKET_LENGTH - 1) {
         data_len = MAX_PACKET_LENGTH - 1;
     }
@@ -4053,25 +4079,16 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     session->driver.ubx.iTOW = -1;        // set by decoder
 
     // extract message id and length
-    msgid = (buf[2] << 8) | buf[3];
+    msgid = getbes16(buf, 2);
     data_len = (size_t) getles16(buf, 4);
 
+    /* FIXME: make each case just call one function.
+     / then this switch can be turned into a table. */
     switch (msgid) {
     case UBX_ACK_ACK:
-        if (2 <= data_len) {
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "UBX: ACK-ACK, class: %02x, id: %02x\n",
-                     buf[UBX_PREFIX_LEN],
-                     buf[UBX_PREFIX_LEN + 1]);
-        }
-        break;
+        FALLTHROUGH
     case UBX_ACK_NAK:
-        if (2 <= data_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "UBX: ACK-NAK, class: %02x, id: %02x\n",
-                     buf[UBX_PREFIX_LEN],
-                     buf[UBX_PREFIX_LEN + 1]);
-        }
+        mask = ubx_msg_ack(session, buf, data_len);
         break;
 
     case UBX_CFG_NAV5:
