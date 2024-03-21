@@ -157,6 +157,19 @@ static struct vlist_t vtarget[] = {
     {0, NULL},
 };
 
+// nmea to turn off
+const unsigned char nmea_off[] = {
+    0x00,          // msg id  = GGA
+    0x01,          // msg id  = GLL
+    0x02,          // msg id  = GSA
+    0x03,          // msg id  = GSV
+    0x04,          // msg id  = RMC
+    0x05,          // msg id  = VTG
+    0x07,          // msg id  = GST
+    0x08,          // msg id  = ZDA
+    0x09,          // msg id  = GBS
+};
+
 static gps_mask_t ubx_msg_inf(struct gps_device_t *session, unsigned char *buf,
                               size_t data_len);
 static gps_mask_t ubx_msg_log_batch(struct gps_device_t *session,
@@ -4485,17 +4498,33 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "UBX: queue %d\n", session->queue);
 
-        // handle the init queue
-        // let the initial rush pass
+        /* handle the init queue.  Some u-blox parts get cranky when they
+         * get too many configuration changes at once.
+         */
+
+        if (50 <= session->queue) {
+            // turn off common NMEA, every 3rd queue turn.
+            int i = session->queue - 50;
+            if (0 == (i % 3)) {
+                int j = i / 3;
+                if (j < (int)sizeof(nmea_off)) {
+                    msg[0] = 0xf0;          // class, NMEA
+                    msg[2] = 0x00;          // rate, off
+                    msg[1] = nmea_off[j];    // msg id to turn off
+                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                }
+            }
+        }
+
         switch (session->queue) {
-        case 70:
+        case 85:
             if (18 <= session->driver.ubx.protver) {
                 // No UNIQ-ID before PROTVER 18
                 // UBX-SEC-UNIQID: query for uniq id
                 (void)ubx_write(session, UBX_CLASS_SEC, 0x03, NULL, 0);
             }
             break;
-        case 74:
+        case 90:
             if (session->context->passive) {
                 // do nothing
             } else if (27 > session->driver.ubx.protver) {
@@ -4510,7 +4539,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
             break;
-        case 90:
+        case 93:
             /* finish up by checking if we overflowed the input buffer
              * request MON-RXBUF/TXBUFF, or MON-COMMS */
             if (27 > session->driver.ubx.protver) {
@@ -4822,18 +4851,6 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
         }
 
     } else {    // MODE_BINARY
-        // nmea to turn off
-        const unsigned char nmea_off[] = {
-            0x00,          // msg id  = GGA
-            0x01,          // msg id  = GLL
-            0x02,          // msg id  = GSA
-            0x03,          // msg id  = GSV
-            0x04,          // msg id  = RMC
-            0x05,          // msg id  = VTG
-            0x07,          // msg id  = GST
-            0x08,          // msg id  = ZDA
-            0x09,          // msg id  = GBS
-        };
 
         const unsigned char ubx_nav_on[] = {
             0x04,          // msg id = UBX-NAV-DOP
@@ -4952,14 +4969,6 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
         msg[1] = 0x26;          // msg id  = UBX-NAV-TIMELS
         msg[2] = 0xff;          // about every 4 minutes if nav rate is 1Hz
         (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        // turn off common NMEA
-        msg[0] = 0xf0;          // class, NMEA
-        msg[2] = 0x00;          // rate, off
-        for (i = 0; i < sizeof(nmea_off); i++) {
-            msg[1] = nmea_off[i];          // msg id to turn off
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        }
 
         // turn on init queue
         session->queue = 1;
