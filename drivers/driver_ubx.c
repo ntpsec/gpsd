@@ -227,6 +227,12 @@ const unsigned char nmea_off[] = {
     0x09,          // msg id  = GBS
 };
 
+// UBX-NAV for protver < 15
+const unsigned char ubx_14_nav_on[] = {
+    0x06,              // msg id = NAV-SOL
+    0x30,              // msg id = NAV-SVINFO
+};
+
 static gps_mask_t ubx_msg_inf(struct gps_device_t *session, unsigned char *buf,
                               size_t data_len);
 static gps_mask_t ubx_msg_log_batch(struct gps_device_t *session,
@@ -4565,8 +4571,10 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         }
 
         switch (session->queue) {
-        case 79:
-            if (15 <= session->driver.ubx.protver) {
+        case 78:
+            if (session->context->passive) {
+                // do nothing
+            } else if (15 <= session->driver.ubx.protver) {
                 // good cycle ender, except when it is not the ender...
                 msg[0] = 0x01;          // class
                 msg[1] = 0x61;          // msg id  = UBX-NAV-EOE
@@ -4574,22 +4582,24 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
             break;
-        case 82:
-            if (15 <= session->driver.ubx.protver) {
+        case 81:
+            if (session->context->passive) {
+                // do nothing
+            } else if (15 <= session->driver.ubx.protver) {
                 msg[0] = 0x01;          // class
                 msg[1] = 0x26;          // msg id  = UBX-NAV-TIMELS
                 msg[2] = 0xff;          // about every 4 mins if nav rate is 1Hz
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
             break;
-        case 85:
+        case 84:
             if (18 <= session->driver.ubx.protver) {
                 // No UNIQ-ID before PROTVER 18
                 // UBX-SEC-UNIQID: query for uniq id
                 (void)ubx_write(session, UBX_CLASS_SEC, 0x03, NULL, 0);
             }
             break;
-        case 90:
+        case 87:
             if (session->context->passive) {
                 // do nothing
             } else if (27 > session->driver.ubx.protver) {
@@ -4602,6 +4612,22 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 msg[1] = 0x38;          // MON-RF
                 msg[2] = 0x04;          // every 4
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+            }
+            break;
+        case 90:
+            // Turn off some clutter, no need to do it early
+            if (session->context->passive) {
+                // do nothing
+            } else if (15 <= session->driver.ubx.protver) {
+                // protver 15 or more, turn off 14 and below UBX-NAV
+                unsigned i;
+
+                msg[0] = 0x01;          // class, UBX-NAV
+                msg[2] = 0x00;          // rate, off
+                for (i = 0; i < sizeof(ubx_14_nav_on); i++) {
+                    msg[1] = ubx_14_nav_on[i];          // msg id to turn off
+                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                }
             }
             break;
         case 93:
@@ -4941,12 +4967,6 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
          *
          * UBX-NAV-EOE makes a good cycle ender */
 
-        // UBX for protver < 15
-        const unsigned char ubx_14_nav_on[] = {
-            0x06,              // msg id = NAV-SOL
-            0x30,              // msg id = NAV-SVINFO
-        };
-
         // UBX for protver >= 15
         const unsigned char ubx_15_nav_on[] = {
             // Need NAV-POSECEF, NAV-VELECEF and NAV-PVT to replace NAV-SOL
@@ -5020,15 +5040,6 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
             for (i = 0; i < sizeof(ubx_15_nav_on); i++) {
                 msg[1] = ubx_15_nav_on[i];          // msg id to turn on
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-            }
-            if (15 <= session->driver.ubx.protver) {
-                // protver 15 or more, turn off 14 and below UBX-NAV
-                msg[0] = 0x01;          // class, UBX-NAV
-                msg[2] = 0x00;          // rate, off
-                for (i = 0; i < sizeof(ubx_14_nav_on); i++) {
-                    msg[1] = ubx_14_nav_on[i];          // msg id to turn off
-                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-                }
             }
         }
 
