@@ -416,36 +416,14 @@ static gps_mask_t ubx_msg_cfg_rate(struct gps_device_t *session,
     return 0;
 }
 
-// UBX-INF-*
-static gps_mask_t
-ubx_msg_inf(struct gps_device_t *session, unsigned char *buf, size_t data_len)
-{
-    unsigned msgid = getbes16(buf, 2);
-
-    // No minimum payload length
-
-    if (data_len > MAX_PACKET_LENGTH - 1) {
-        data_len = MAX_PACKET_LENGTH - 1;
-    }
-    if (INT_MAX < data_len) {
-        data_len = INT_MAX;
-    }
-
-    GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: %s: %.*s\n",
-             val2str(msgid, vinf_ids),
-             (int)data_len, (char *)buf + UBX_PREFIX_LEN);
-    return 0;
-}
-
 /* UBX-ESF-ALG
  *
  * UBX-ESF-ALG, and UBX-ESF-INS are synchronous to the GNSS epoch.
  * They need to be combined and reported together with the rest of
  * the epoch.
  */
-static gps_mask_t
-ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_esf_alg(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     unsigned version, flags, error, reserved1;
     unsigned long yaw;
@@ -505,9 +483,8 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
  * They need to be combined and reported together with the rest of
  * the epoch.
  */
-static gps_mask_t
-ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_esf_ins(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     unsigned long long bitfield0, reserved1;
     long xAngRate, yAngRate, zAngRate;
@@ -589,9 +566,8 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
  * Needs to be reported immediately.
  *
  */
-static gps_mask_t
-ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
-                 size_t data_len)
+static gps_mask_t ubx_msg_esf_meas(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
 {
     unsigned flags, id, numMeas, expected_len;
     gps_mask_t mask = 0;
@@ -700,9 +676,8 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
  * Needs to be reported immediately.
  *
  */
-static gps_mask_t
-ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_esf_raw(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     unsigned long reserved1, last_sTtag = 0;
     unsigned i;
@@ -817,9 +792,8 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
 }
 
 // UBX-ESF-STATUS
-static gps_mask_t
-ubx_msg_esf_status(struct gps_device_t *session, unsigned char *buf,
-                   size_t data_len)
+static gps_mask_t ubx_msg_esf_status(struct gps_device_t *session,
+                                     unsigned char *buf, size_t data_len)
 {
     unsigned version, fusionMode, numSens, expected_len;
     static gps_mask_t mask = 0;
@@ -857,9 +831,8 @@ ubx_msg_esf_status(struct gps_device_t *session, unsigned char *buf,
  * Not before u-blox 8, protVer 19.2 and up.
  * only on ADR, and UDR
  */
-static gps_mask_t
-ubx_msg_hnr_att(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_hnr_att(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     uint8_t version;
     int64_t iTOW;
@@ -909,9 +882,8 @@ ubx_msg_hnr_att(struct gps_device_t *session, unsigned char *buf,
  * Not before u-blox 8, protVer 19.1 and up.
  * only on ADR, and UDR
  */
-static gps_mask_t
-ubx_msg_hnr_ins(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_hnr_ins(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     uint8_t version;
     uint32_t bitfield0;
@@ -996,9 +968,8 @@ ubx_msg_hnr_ins(struct gps_device_t *session, unsigned char *buf,
  * Not before u-blox 8, protVer 19 and up.
  * only on ADR, and UDR
  */
-static gps_mask_t
-ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     char ts_buf[TIMESPEC_LEN];
     gps_mask_t mask = 0;
@@ -1167,13 +1138,43 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
     return mask;
 }
 
+/* UBX-INF-*
+ *
+ * Present in:
+ *   protVer 13 (6-series)
+ *   to
+ *   protVer 34 (10-series)
+ */
+static gps_mask_t ubx_msg_inf(struct gps_device_t *session,
+                              unsigned char *buf, size_t data_len)
+{
+    unsigned msgid = getbes16(buf, 2);
+
+    // No minimum payload length
+
+    if (data_len > MAX_PACKET_LENGTH - 1) {
+        data_len = MAX_PACKET_LENGTH - 1;
+    }
+    if (INT_MAX < data_len) {
+        data_len = INT_MAX;
+    }
+    if (13 > session->driver.ubx.protver) {
+        // we are at least 13
+        session->driver.ubx.protver = 13;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: %s: %.*s\n",
+             val2str(msgid, vinf_ids),
+             (int)data_len, (char *)buf + UBX_PREFIX_LEN);
+    return 0;
+}
+
 /**
  * UBX-LOG-BATCH entry only part of UBX protocol
  * Used for GPS standalone operation (internal batch retrieval)
  */
-static gps_mask_t
-ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
-                  size_t data_len)
+static gps_mask_t ubx_msg_log_batch(struct gps_device_t *session,
+                                    unsigned char *buf UNUSED, size_t data_len)
 {
     struct tm unpacked_date = {0};
     unsigned char contentValid, timeValid, flags, psmState;
@@ -1301,9 +1302,8 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
  * WIP: Initial decode, log only.
  *
  */
-static gps_mask_t
-ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
-                 size_t data_len)
+static gps_mask_t ubx_msg_log_info(struct gps_device_t *session,
+                                   unsigned char *buf UNUSED, size_t data_len)
 {
     struct tm oldest_date = {0}, newest_date = {0};
     timespec_t oldest = {0, 0};
@@ -1378,9 +1378,9 @@ ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
  * Used for GPS standalone operation and host saved logs
  * u-blox 7,8,9.  protVer 14 to 29
  */
-static gps_mask_t
-ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
-                        size_t data_len)
+static gps_mask_t ubx_msg_log_retrievepos(struct gps_device_t *session,
+                                          unsigned char *buf UNUSED,
+                                          size_t data_len)
 {
     struct tm unpacked_date = {0};
     unsigned char fixType;
@@ -1469,9 +1469,9 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
  * Used for GPS standalone operation and host saved logs
  * u-blox 7,8,9.  protVer 14 to 29
  */
-static gps_mask_t
-ubx_msg_log_retrieveposextra(struct gps_device_t *session,
-                             unsigned char *buf UNUSED, size_t data_len)
+static gps_mask_t ubx_msg_log_retrieveposextra(struct gps_device_t *session,
+                                               unsigned char *buf UNUSED,
+                                               size_t data_len)
 {
     struct tm unpacked_date = {0};
     gps_mask_t mask = 0;
@@ -1517,9 +1517,9 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
  * Used for GPS standalone operation and host saved logs
  * u-blox 7,8,9.  protVer 14 to 29
  */
-static gps_mask_t
-ubx_msg_log_retrievestring(struct gps_device_t *session,
-                           unsigned char *buf UNUSED, size_t data_len)
+static gps_mask_t ubx_msg_log_retrievestring(struct gps_device_t *session,
+                                             unsigned char *buf UNUSED,
+                                             size_t data_len)
 {
     struct tm unpacked_date = {0};
     unsigned int byteCount;
@@ -1567,9 +1567,8 @@ ubx_msg_log_retrievestring(struct gps_device_t *session,
 /* UBX-MON-COMMS
  * Replacement for MON-RXBUF and MON-TXBUF
  */
-static gps_mask_t
-ubx_msg_mon_comms(struct gps_device_t *session, unsigned char *buf,
-                  size_t data_len)
+static gps_mask_t ubx_msg_mon_comms(struct gps_device_t *session,
+                                    unsigned char *buf, size_t data_len)
 {
     gps_mask_t mask = 0;
     char buf2[80];
@@ -1657,9 +1656,8 @@ ubx_msg_mon_comms(struct gps_device_t *session, unsigned char *buf,
  * Oddly, UBX-MON-HW is output after NAV-EOE.  So too lare for the one
  * TPV for that epoch, and too early for the next epoch.
  */
-static gps_mask_t
-ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
-                  size_t data_len)
+static gps_mask_t ubx_msg_mon_hw(struct gps_device_t *session,
+                                 unsigned char *buf, size_t data_len)
 {
     char buf2[80];
     unsigned int noisePerMs;
@@ -1675,6 +1673,10 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX: MON-HW: runt payload len %zd\n", data_len);
         return 0;
+    }
+    if (12 > session->driver.ubx.protver) {
+        // least protver 12
+        session->driver.ubx.protver = 12;
     }
     noisePerMs = getleu16(buf, 16);
     agcCnt = getleu16(buf, 18);         // 0 to 8191
@@ -1744,9 +1746,8 @@ ubx_msg_mon_hw(struct gps_device_t *session, unsigned char *buf,
  * Oddly, UBX-MON-RF is output after NAV-EOE.  So too lare for the one
  * TPV for that epoch, and too early for the next epoch.
  */
-static gps_mask_t
-ubx_msg_mon_rf(struct gps_device_t *session, unsigned char *buf,
-                  size_t data_len)
+static gps_mask_t ubx_msg_mon_rf(struct gps_device_t *session,
+                                 unsigned char *buf, size_t data_len)
 {
     unsigned i;
     gps_mask_t mask = 0;
@@ -1817,9 +1818,8 @@ ubx_msg_mon_rf(struct gps_device_t *session, unsigned char *buf,
  * Present in u-blox 5+ through at least protVer 23.01
  * Supported but deprecated in M9P protVer 27.11, use MON-COMMS
  * Supported but deprecated in M9N protVer 32.00 */
-static gps_mask_t
-ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
-                  size_t data_len)
+static gps_mask_t ubx_msg_mon_rxbuf(struct gps_device_t *session,
+                                    unsigned char *buf, size_t data_len)
 {
     int i;
 
@@ -1848,9 +1848,8 @@ ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
  * Present in u-blox 5+ through at least protVer 23.01
  * Supported but deprecated in M9P protVer 27.11
  * Supported but deprecated in M9N protVer 32.00 */
-static gps_mask_t
-ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
-                  size_t data_len)
+static gps_mask_t ubx_msg_mon_txbuf(struct gps_device_t *session,
+                                    unsigned char *buf, size_t data_len)
 {
     char buf2[80];
     unsigned tUsage, tPeakusage;
@@ -1884,7 +1883,7 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
     reserved1 = getub(buf, 27);
 
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX: NAV-TXBUF: tUsage %3u%%, tPeakusage %3u%%, errors 0x%02x, "
+             "UBX: MON-TXBUF: tUsage %3u%%, tPeakusage %3u%%, errors 0x%02x, "
              "reserved1 0x%02x\n",
              tUsage, tPeakusage, errors, reserved1);
 
@@ -1989,9 +1988,8 @@ static gps_mask_t ubx_msg_mon_ver(struct gps_device_t *session,
  *
  * Present in u-blox 7
  */
-static gps_mask_t
-ubx_msg_nav_clock(struct gps_device_t *session, unsigned char *buf,
-                  size_t data_len)
+static gps_mask_t ubx_msg_nav_clock(struct gps_device_t *session,
+                                    unsigned char *buf, size_t data_len)
 {
     long clkB, clkD;
     unsigned long tAcc, fAcc;
@@ -2044,9 +2042,8 @@ static gps_mask_t ubx_msg_nav_dgps(struct gps_device_t *session,
  *
  * Present in all u-blox (4 to 10)
  */
-static gps_mask_t
-ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_nav_dop(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     unsigned u;
     gps_mask_t mask = 0;
@@ -2105,9 +2102,8 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
  * Not in u-blox 5, 6 or 7
  * Present in some u-blox 8, 9 and 10 (ADR, HPS)
  */
-static gps_mask_t
-ubx_msg_nav_eell(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_nav_eell(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
 {
     unsigned version;
     unsigned errEllipseOrient;
@@ -2142,9 +2138,8 @@ ubx_msg_nav_eell(struct gps_device_t *session, unsigned char *buf,
  * Present in:
  *    protVer 18 (8-series, 9)
  */
-static gps_mask_t
-ubx_msg_nav_eoe(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_nav_eoe(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     if (4 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -2169,9 +2164,8 @@ ubx_msg_nav_eoe(struct gps_device_t *session, unsigned char *buf,
  * Present in u-blox 8 and above, protVwer 20.00 and up.
  * Only with High Precision firmware.
  */
-static gps_mask_t
-ubx_msg_nav_hpposecef(struct gps_device_t *session, unsigned char *buf,
-                      size_t data_len)
+static gps_mask_t ubx_msg_nav_hpposecef(struct gps_device_t *session,
+                                        unsigned char *buf, size_t data_len)
 {
     gps_mask_t mask = ECEF_SET;
     int version;
@@ -2211,9 +2205,8 @@ ubx_msg_nav_hpposecef(struct gps_device_t *session, unsigned char *buf,
  * Present in u-blox 8 and above, protVwer 20.00 and up.
  * Only with High Precision firmware.
  */
-static gps_mask_t
-ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
-                     size_t data_len)
+static gps_mask_t ubx_msg_nav_hpposllh(struct gps_device_t *session,
+                                       unsigned char *buf, size_t data_len)
 {
     int version;
     gps_mask_t mask = 0;
@@ -2257,9 +2250,8 @@ ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
  *
  * This message does not bother to tell us if it is valid.
  */
-static gps_mask_t
-ubx_msg_nav_posecef(struct gps_device_t *session, unsigned char *buf,
-                    size_t data_len)
+static gps_mask_t ubx_msg_nav_posecef(struct gps_device_t *session,
+                                      unsigned char *buf, size_t data_len)
 {
     gps_mask_t mask = ECEF_SET;
 
@@ -2294,9 +2286,9 @@ ubx_msg_nav_posecef(struct gps_device_t *session, unsigned char *buf,
  * This message does not bother to tell us if it is valid.
  * No mode, so limited usefulness
  */
-static gps_mask_t
-ubx_msg_nav_posllh(struct gps_device_t *session, unsigned char *buf,
-                   size_t data_len UNUSED)
+static gps_mask_t ubx_msg_nav_posllh(struct gps_device_t *session,
+                                     unsigned char *buf,
+                                     size_t data_len UNUSED)
 {
     gps_mask_t mask = 0;
 
@@ -2338,12 +2330,14 @@ ubx_msg_nav_posllh(struct gps_device_t *session, unsigned char *buf,
  * Navigation Position Velocity Time solution message
  * UBX-NAV-PVT Class 1, ID 7
  *
- * Not in u-blox 5 or 6, present in u-blox 7
- * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT
+ * Present in:
+ *   protver 14  (6-series w/ GLONASS, 7-series)
+ *
+ * Not present in:
+ *    u-blox 5 or 6
  */
-static gps_mask_t
-ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     uint8_t valid;
     uint8_t flags;
@@ -2522,9 +2516,8 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
  * UBX-NAV-RELPOSNED, Class 1, ID x3c
  * HP GNSS only, protver 20+
  */
-static gps_mask_t
-ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
-                      size_t data_len)
+static gps_mask_t ubx_msg_nav_relposned(struct gps_device_t *session,
+                                        unsigned char *buf, size_t data_len)
 {
     int version;
     unsigned flags;
@@ -2726,9 +2719,8 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
  * Not in some u-blox 9
  * Decode looks good, but data only goes to log.
  */
-static gps_mask_t
-ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
-                 size_t data_len)
+static gps_mask_t ubx_msg_nav_sbas(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
 {
     unsigned i, cnt;
     unsigned ubx_PRN;
@@ -2799,8 +2791,10 @@ ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
  * Like NAV-SAT, but NAV-SIG has  noelevation and azimuth. So we need both
  * Assume NAV-SAT was sent in this epoch before NAV-SIG.
  *
- * Not before u-blox 9
- * Present in u-blox 9, protVer 27, and u-blox 10
+ * Present in:
+ *    protVer 27 (9-series and 10)
+ * Not present in:
+ *    before protVer27
  */
 static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
@@ -2925,9 +2919,16 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
 /**
  * Navigation solution message: UBX-NAV-SOL
  *
- * UBX-NAV-SOL, present in Antaris, up to 23,01
- * deprecated in u-blox 6, gone in u-blox 9.
- * Use UBX-NAV-PVT instead
+ * Present in:
+ *    protVer 7 ( Antaris)
+ *    protVer up to 23,01
+ *
+ * Deprecated in:
+ *    protVer 13 (6-series)
+ *
+ * Not present in:
+ *    protVer 27 (9-series)
+ *    Use UBX-NAV-PVT instead
  *
  * UBX-NAV-SOL has ECEF and VECEF, so no need for UBX-NAV-POSECEF and
  * UBX-NAV-VELECEF
@@ -3148,9 +3149,8 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
  * GPS Satellite Info -- deprecated - UBX-NAV-SVINFO
  * Not in u-blox 9 or 10, use UBX-NAV-SAT instead
  */
-static gps_mask_t
-ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
-                   size_t data_len)
+static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
+                                     unsigned char *buf, size_t data_len)
 {
     unsigned int i, nchan, nsv, st;
     timespec_t ts_tow;
@@ -3246,9 +3246,8 @@ ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
  * Not in:
  *     protVer 24 (NEO-D9S)
  */
-static gps_mask_t
-ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
-                    size_t data_len)
+static gps_mask_t ubx_msg_nav_timegps(struct gps_device_t *session,
+                                      unsigned char *buf, size_t data_len)
 {
     char buf2[80];
     uint8_t valid;         // Validity Flags
@@ -3308,9 +3307,8 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
  *     protVer 13 (6-series)
  *     protVer 14 (6-series / GLONASS, 6-series)
  */
-static gps_mask_t
-ubx_msg_nav_timels(struct gps_device_t *session, unsigned char *buf,
-                   size_t data_len)
+static gps_mask_t ubx_msg_nav_timels(struct gps_device_t *session,
+                                     unsigned char *buf, size_t data_len)
 {
     char buf2[80];
     unsigned version;
@@ -3404,9 +3402,8 @@ ubx_msg_nav_timels(struct gps_device_t *session, unsigned char *buf,
 /**
  * UBX-NAV-TIMEUTC
  */
-static gps_mask_t
-ubx_msg_nav_timeutc(struct gps_device_t *session, unsigned char *buf,
-                    size_t data_len)
+static gps_mask_t ubx_msg_nav_timeutc(struct gps_device_t *session,
+                                      unsigned char *buf, size_t data_len)
 {
     uint8_t valid;         // Validity Flags
     gps_mask_t mask = 0;
@@ -3460,9 +3457,8 @@ ubx_msg_nav_timeutc(struct gps_device_t *session, unsigned char *buf,
 /*
  * Velocity Position ECEF message, UBX-NAV-VELECEF
  */
-static gps_mask_t
-ubx_msg_nav_velecef(struct gps_device_t *session, unsigned char *buf,
-                    size_t data_len)
+static gps_mask_t ubx_msg_nav_velecef(struct gps_device_t *session,
+                                      unsigned char *buf, size_t data_len)
 {
     gps_mask_t mask = VECEF_SET;
 
@@ -3491,9 +3487,8 @@ ubx_msg_nav_velecef(struct gps_device_t *session, unsigned char *buf,
  * Velocity NED message, UBX-NAV-VELNED
  * protocol versions 15+
  */
-static gps_mask_t
-ubx_msg_nav_velned(struct gps_device_t *session, unsigned char *buf,
-                   size_t data_len)
+static gps_mask_t ubx_msg_nav_velned(struct gps_device_t *session,
+                                     unsigned char *buf, size_t data_len)
 {
     gps_mask_t mask = VNED_SET;
 
@@ -3864,9 +3859,8 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
  *
  * Present in u-blox 7
  */
-static gps_mask_t
-ubx_msg_rxm_svsi(struct gps_device_t *session, unsigned char *buf,
-                 size_t data_len)
+static gps_mask_t ubx_msg_rxm_svsi(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
 {
     unsigned numVis, numSV;
 
@@ -3881,7 +3875,7 @@ ubx_msg_rxm_svsi(struct gps_device_t *session, unsigned char *buf,
     numVis = getub(buf, 6);
     numSV = getub(buf, 7);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX: NAV-CLOCK: iTOW=%lld week %d numVis %u numSV %u\n",
+             "UBX: RXM-SVSI: iTOW=%lld week %d numVis %u numSV %u\n",
              (long long)session->driver.ubx.iTOW,
             session->context->gps_week, numVis, numSV);
     return 0;
@@ -3952,9 +3946,8 @@ static gps_mask_t ubx_msg_sec_uniqid(struct gps_device_t *session,
  * Survey-in data - UBX-TIM-SVIN
  * Time Sync products only
  */
-static gps_mask_t
-ubx_msg_tim_svin(struct gps_device_t *session, unsigned char *buf,
-                 size_t data_len)
+static gps_mask_t ubx_msg_tim_svin(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
 {
     gps_mask_t mask = ONLINE_SET;
     uint32_t dur;
@@ -3994,9 +3987,8 @@ ubx_msg_tim_svin(struct gps_device_t *session, unsigned char *buf,
 /**
  * Time Pulse Timedata - UBX-TIM-TP
  */
-static gps_mask_t
-ubx_msg_tim_tp(struct gps_device_t *session, unsigned char *buf,
-               size_t data_len)
+static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
+                                 unsigned char *buf, size_t data_len)
 {
     gps_mask_t mask = ONLINE_SET;
     uint32_t towMS;
