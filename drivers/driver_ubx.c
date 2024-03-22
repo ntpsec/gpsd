@@ -38,6 +38,9 @@
 #include "../include/bits.h"       // For UINT2INT()
 #include "../include/timespec.h"
 
+// number of rows in an array.
+#define ROWS(a) (sizeof(a) / sizeof(a[0]))
+
 /*
  * Some high-precision messages provide data where the main part is a
  * signed 32-bit integer (same as the standard-precision versions),
@@ -173,6 +176,57 @@ static struct vlist_t vtarget[] = {
     {0x400, "SPI"},         // MON-COMMS
     {0, NULL},
 };
+
+// UBX-NAV-PVT fixType
+static struct vlist_t vpvt_fixType[] = {
+    {0, "None"},
+    {1, "DR"},
+    {2, "2D"},
+    {3, "3D"},
+    {4, "GNSSDR"},
+    {5, "Time"},
+    {0, NULL},
+};
+
+// UBX-NAV-PVT flags
+static struct flist_t fpvt_flags[] = {
+    {1, 1, "gnssFixOK"},
+    {2, 2, "diffSoln"},
+    // {0, 0x1v, "psmState"},      // ??
+    {0x20, 0x20, "headVehValid"},
+    {0x40, 0xc0, "CarrSolnFLT"},   // protVer less than 20
+    {0x80, 0xc0, "CarrSolnFIX"},
+    {0, 0, NULL},
+};
+
+// UBX-NAV-PVT flags2
+static struct flist_t fpvt_flags2[] = {
+    {0x20, 0x20, "confirmedAvai"},   // protver 19+
+    {0x40, 0x40, "confirmedDate"},
+    {0x80, 0x80, "confirmedTime"},
+    {0, 0, NULL},
+};
+
+// UBX-NAV-PVT flags3
+static struct flist_t fpvt_flags3[] = {
+    {0x20, 0x20, "invalLlh"},
+    {0, 0, NULL},
+};
+
+// UBX-NAV-PVT valid
+static struct flist_t fpvt_valid[] = {
+    {1, 1, "validDate"},
+    {2, 2, "validTime"},
+    {4, 4, "fullyResolved"},
+    {8, 8, "validMag"},
+    {0, 0, NULL},
+};
+
+// UBX-NAV-PVT, dgps_age
+static int pvt_dgps_age[] = {
+    -1, 1, 2, 5, 10,
+    15, 20, 30, 45, 60,
+    90, 120, 240};
 
 // UBX-NAV-TIMEGPS valid
 static struct flist_t vtimegps_valid[] = {
@@ -2345,9 +2399,16 @@ static gps_mask_t ubx_msg_nav_posllh(struct gps_device_t *session,
 static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
 {
-    uint8_t valid;
-    uint8_t flags;
-    uint8_t fixType;
+    char buf2[80];
+    char buf3[80];
+    char buf4[80];
+    char buf5[80];
+    unsigned dgps_age;
+    unsigned fixType;
+    unsigned flags;
+    unsigned flags2;
+    unsigned flags3;
+    unsigned valid;
     struct tm unpacked_date;
     int *status = &session->newdata.status;
     int *mode = &session->newdata.mode;
@@ -2366,9 +2427,11 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
         session->driver.ubx.protver = 14;
     }
     session->driver.ubx.iTOW = getleu32(buf, 0);
-    valid = (unsigned int)getub(buf, 11);
-    fixType = (unsigned char)getub(buf, 20);
-    flags = (unsigned int)getub(buf, 21);
+    valid = getub(buf, 11);
+    fixType = getub(buf, 20);
+    flags = getub(buf, 21);
+    flags2 = getub(buf, 22);
+    flags3 = getleu16(buf, 78);
 
     switch (fixType) {
     case UBX_MODE_TMONLY:
@@ -2434,6 +2497,14 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
         } else {
             *status = STATUS_DGPS;
         }
+
+        dgps_age = (flags3 >> 1) & 0x0f;
+        if (0 < dgps_age) {
+            if (ROWS(pvt_dgps_age) <= dgps_age) {
+                dgps_age = ROWS(pvt_dgps_age) - 1;
+            }
+            session->newdata.dgps_age = pvt_dgps_age[dgps_age];
+        }
         mask |= STATUS_SET;
     }
 
@@ -2483,8 +2554,8 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
     // mask |= REPORT_IS;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-         "UBX: NAV-PVT: flags=%02x time=%s lat=%.2f lon=%.2f altHAE=%.2f "
-         "track=%.2f speed=%.2f mode=%d status=%d used=%d\n",
+         "UBX: NAV-PVT: flags %02x time=%s lat %.2f lon %.2f altHAE=%.2f "
+         "track=%.2f speed=%.2f mode=%d status=%d used=%d dgps_age %.0f\n",
          flags,
          timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
          session->newdata.latitude,
@@ -2494,7 +2565,16 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
          session->newdata.speed,
          session->newdata.mode,
          session->newdata.status,
-         session->gpsdata.satellites_used);
+         session->gpsdata.satellites_used,
+        session->newdata.dgps_age);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "UBX: NAV-PVT: fixType:%s flags:%s flags2:%s flags3:%s "
+             "valid:%s\n",
+	     val2str(fixType, vpvt_fixType),
+	     flags2str(flags, fpvt_flags, buf2, sizeof(buf2)),
+	     flags2str(flags2, fpvt_flags2, buf3, sizeof(buf3)),
+	     flags2str(flags3, fpvt_flags3, buf4, sizeof(buf4)),
+	     flags2str(valid, fpvt_valid, buf5, sizeof(buf5)));
     if (92 <= data_len) {
         // u-blox 8 and 9 extended
         double magDec = NAN;
@@ -2648,7 +2728,7 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
     ver = (unsigned int)getub(buf, 4);
     if (1 != ver) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV-SAT message unknown version %d", ver);
+                 "UBX: NAV-SAT unknown version %d", ver);
         return 0;
     }
     nchan = (unsigned int)getub(buf, 5);
@@ -2758,7 +2838,7 @@ static gps_mask_t ubx_msg_nav_sbas(struct gps_device_t *session,
     if (data_len < (12 + (12 * cnt))) {
         // length check, pacify coverity
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV-SBAS: bad message length %zd", data_len);
+                 "UBX: NAV-SBAS: bad length %zd", data_len);
     }
     for (i = 0; i < cnt; i++) {
         int off = 12 + (12 * i);
@@ -2828,7 +2908,7 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
     ver = getub(buf, 4);
     if (0 != ver) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV-SIG message unknown version %d s/b 0", ver);
+                 "UBX: NAV-SIG unknown version %d s/b 0", ver);
         return 0;
     }
     nchan = (unsigned int)getub(buf, 5);
@@ -3937,7 +4017,7 @@ static gps_mask_t ubx_msg_sec_uniqid(struct gps_device_t *session,
     default:
         // unknown version
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: SEC-UNIQID message bad version\n");
+                 "UBX: SEC-UNIQID bad version\n");
         return 0;
     }
 
@@ -4293,7 +4373,6 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-POSUTM\n");
         break;
     case UBX_NAV_PVT:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-PVT\n");
         mask = ubx_msg_nav_pvt(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_RELPOSNED:
