@@ -34,7 +34,7 @@ debian-experimental:gcc:
     SCONSOPTS: 'qt=yes xgps=yes'
     PACKAGES: 'asciidoctor bc build-essential ccache chrpath debhelper dh-buildinfo
         dpkg-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev libncurses-dev
-        libqt5network5 libusb-1.0-0-dev lsb-release makedev po-debconf pps-tools
+        libqt5network5t64 libusb-1.0-0-dev lsb-release makedev po-debconf pps-tools
         python3 python3-all-dbg python3-all-dev python3-lib2to3 python3-setuptools
         qtbase5-dev scons'
 
@@ -51,7 +51,7 @@ debian-unstable:clang:
     CXX: 'clang++'
     PACKAGES: 'asciidoctor bc build-essential ccache chrpath clang debhelper
         dh-buildinfo dpkg-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev
-        libncurses-dev libqt5network5 libusb-1.0-0-dev lsb-release makedev
+        libncurses-dev libqt5network5t64 libusb-1.0-0-dev lsb-release makedev
         po-debconf pps-tools python3 python3-all-dbg python3-all-dev
         python3-lib2to3 python3-setuptools qtbase5-dev scons'
   extends: .debian_build
@@ -67,7 +67,7 @@ debian-experimental:clang:
     CXX: 'clang++'
     PACKAGES: 'asciidoctor bc build-essential ccache chrpath debhelper dh-buildinfo
         dpkg-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev libncurses-dev
-        libqt5network5 libusb-1.0-0-dev lsb-release makedev po-debconf pps-tools
+        libqt5network5t64 libusb-1.0-0-dev lsb-release makedev po-debconf pps-tools
         python3 python3-all-dbg python3-all-dev python3-lib2to3 python3-setuptools
         qtbase5-dev scons'
     EXPERIMENTAL_PACKAGES: 'clang'
@@ -189,7 +189,7 @@ scan-build:
     NOCHECK: 'true'
     PACKAGES: 'asciidoctor bc build-essential chrpath clang clang-tools debhelper
         dh-buildinfo dpkg-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev
-        libncurses-dev libqt5network5 libusb-1.0-0-dev lsb-release makedev
+        libncurses-dev libqt5network5t64 libusb-1.0-0-dev lsb-release makedev
         po-debconf pps-tools python3-all-dbg python3-all-dev python3-setuptools
         qtbase5-dev scons'
   artifacts:
