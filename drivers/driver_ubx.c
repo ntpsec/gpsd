@@ -177,7 +177,7 @@ static struct vlist_t vtarget[] = {
     {0, NULL},
 };
 
-// UBX-NAV-PVT fixType
+// UBX-HNR-PVT, UBX-NAV-PVT fixType
 static struct vlist_t vpvt_fixType[] = {
     {0, "None"},
     {1, "DR"},
@@ -188,8 +188,18 @@ static struct vlist_t vpvt_fixType[] = {
     {0, NULL},
 };
 
+// UBX-HNR-PVT flags
+static struct flist_t fhnr_pvt_flags[] = {
+    {1, 1, "gnssFixOK"},
+    {2, 2, "diffSoln"},
+    {4, 4, "WKNSET"},
+    {8, 8, "TOWSET"},
+    {0x20, 0x20, "headVehValid"},
+    {0, 0, NULL},
+};
+
 // UBX-NAV-PVT flags
-static struct flist_t fpvt_flags[] = {
+static struct flist_t fnav_pvt_flags[] = {
     {1, 1, "gnssFixOK"},
     {2, 2, "diffSoln"},
     // {0, 0x1v, "psmState"},      // ??
@@ -213,7 +223,7 @@ static struct flist_t fpvt_flags3[] = {
     {0, 0, NULL},
 };
 
-// UBX-NAV-PVT valid
+// UBX-HNR-PVT, UBX-NAV-PVT valid
 static struct flist_t fpvt_valid[] = {
     {1, 1, "validDate"},
     {2, 2, "validTime"},
@@ -1025,21 +1035,24 @@ static gps_mask_t ubx_msg_hnr_ins(struct gps_device_t *session,
  * High rate output of PVT solution
  * UBX-HNR-PVT Class x28, ID 2
  *
- * Not before u-blox 8, protVer 19 and up.
- * only on ADR, and UDR
+ * Present in:
+ *    protVer 19 and up
+ *    only on ADR, and UDR
  */
 static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
 {
+    char buf2[80];
+    char buf3[80];
     char ts_buf[TIMESPEC_LEN];
     gps_mask_t mask = 0;
     int64_t iTOW;
     int *mode = &session->newdata.mode;
     int *status = &session->newdata.status;
     struct tm unpacked_date;
-    uint8_t flags;
-    uint8_t gpsFix;
-    uint8_t valid;
+    unsigned flags;
+    unsigned gpsFix;    // same as NAV-PVT typeFix
+    unsigned valid;
 
     if (72 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -1194,6 +1207,11 @@ static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
          session->newdata.mode,
          session->newdata.status,
          session->gpsdata.satellites_used);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "UBX: HNR-PVT: gpsFix:%s flags:%s valid:%s\n",
+	     val2str(gpsFix, vpvt_fixType),
+	     flags2str(flags, fhnr_pvt_flags, buf2, sizeof(buf2)),
+	     flags2str(valid, fpvt_valid, buf3, sizeof(buf3)));
 
     return mask;
 }
@@ -2571,7 +2589,7 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
              "UBX: NAV-PVT: fixType:%s flags:%s flags2:%s flags3:%s "
              "valid:%s\n",
 	     val2str(fixType, vpvt_fixType),
-	     flags2str(flags, fpvt_flags, buf2, sizeof(buf2)),
+	     flags2str(flags, fnav_pvt_flags, buf2, sizeof(buf2)),
 	     flags2str(flags2, fpvt_flags2, buf3, sizeof(buf3)),
 	     flags2str(flags3, fpvt_flags3, buf4, sizeof(buf4)),
 	     flags2str(valid, fpvt_valid, buf5, sizeof(buf5)));
