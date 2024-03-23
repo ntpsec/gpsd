@@ -1727,7 +1727,7 @@ static gps_mask_t ubx_msg_mon_comms(struct gps_device_t *session,
  * 68 bytes in protVer 12 ( 6-series)
  *    Present from Antaris (4-series)
  * 60 bytes in 8-series and 9-series
- *    Deprecated on M9, use MON-HW and MON-RF
+ *    Deprecated in protVer 32. M9 and 10-series, use MON-HW and MON-RF
  * 56 bytes in protVer 34 (10-series)
  *    Deprecated. and undocumented,  on M10, use MON-HW and MON-RF
  *
@@ -1819,7 +1819,7 @@ static gps_mask_t ubx_msg_mon_hw(struct gps_device_t *session,
 
 /* UBX-MON-RF
  * Present in protVer 27+ (9-series)
- * Partually replaces MON-H#
+ * Partially replaces MON-HW
  *
  * Oddly, UBX-MON-RF is output after NAV-EOE.  So too lare for the one
  * TPV for that epoch, and too early for the next epoch.
@@ -3256,7 +3256,7 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
 
 /**
  * GPS Satellite Info -- deprecated - UBX-NAV-SVINFO
- * Not in u-blox 9 or 10, use UBX-NAV-SAT instead
+ * Removed in protVer 32 (9-series_, use UBX-NAV-SAT instead
  */
 static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
                                      unsigned char *buf, size_t data_len)
@@ -4192,6 +4192,8 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_ack(session, buf, data_len);
         break;
 
+    /* UBX-AID-*
+     * removed in protVer 32 */
     case UBX_CFG_NAV5:
         // deprecated in u-blox 10
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: CFG-NAV5\n");
@@ -4295,6 +4297,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_mon_hw(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_HW2:
+         // Deprecated in protVer 32 (9-series, 10-series)
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-HW2\n");
         break;
     case UBX_MON_HW3:
@@ -4416,7 +4419,8 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_nav_sig(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SOL:
-        /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9 and 10.
+        /* UBX-NAV-SOL deprecated in u-blox 6,
+         * removed in protVer 32 (9 and 10 series).
          * Use UBX-NAV-PVT instead */
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-SOL\n");
         mask = ubx_msg_nav_sol(session, &buf[UBX_PREFIX_LEN], data_len);
@@ -4486,6 +4490,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-EPH\n");
         break;
     case UBX_RXM_IMES:
+        // Removed in protVer 32 (9-series)
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-IMES\n");
         break;
     case UBX_RXM_MEASX:
@@ -4516,7 +4521,8 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_rxm_sfrbx(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_SVSI:
-        // Gone in u-blox 10, use UBX-NAV-ORB instead
+        // Removed in protVer 32 (9-series)
+        // Use UBX-NAV-ORB instead
         mask = ubx_msg_rxm_svsi(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
