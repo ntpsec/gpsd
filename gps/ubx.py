@@ -2103,11 +2103,11 @@ class ubx(object):
                    'name': 'UBX-ACK-ACK'}}
 
     # UBX-AID-
-    # All UBX-AID- removed in u-blox 10
+    # All UBX-AID- removed in protVer 32.  u-blox 9, and 10
     def aid_alm(self, buf):
         """UBX-AID-ALM decode, GPS Aiding Almanac Data
 
-Removed in M10 (protVer 34.00 and up)
+Removed in protVer 32.00 and up
 """
         m_len = len(buf)
 
@@ -2301,7 +2301,7 @@ Removed in M10 (protVer 34.00 and up)
     def cfg_ant(self, buf):
         """UBX-CFG-ANT decode
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<HH', buf, 0)
@@ -2325,7 +2325,7 @@ Deprecated in protVer 34.00
     def cfg_batch(self, buf):
         """UBX-CFG-BATCH decode
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<BBHHBB', buf, 0)
@@ -2388,7 +2388,7 @@ Deprecated in protVer 34.00
     def cfg_dat(self, buf):
         """UBX-CFG-DAT decode, Standard Datum configuration
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         # u-blox 5 to 9, protVer 4.00 to 29
@@ -2432,7 +2432,10 @@ Deprecated in protVer 34.00
         }
 
     def cfg_dgnss(self, buf):
-        """UBX-CFG-DGNSS decode, DGNSS configuration"""
+        """UBX-CFG-DGNSS decode, DGNSS configuration
+
+Deprecated in protVer 32.00
+"""
 
         u = struct.unpack_from('<BBBB', buf, 0)
         s = (" dgnssMode %u (%s) reserved1 %u %u %u" %
@@ -2577,7 +2580,7 @@ Programming the fixed seed for host interface signature"""
     def cfg_geofence(self, buf):
         """UBX-CFG-GEOFENCE decode, Geofencing configuration
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         # not in M10, protVer 34 and up
@@ -2664,7 +2667,7 @@ Deprecated in protVer 34.00
     def cfg_inf(self, buf):
         """UBX-CFG-INF decode, Poll configuration for one protocol
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         m_len = len(buf)
@@ -2706,7 +2709,7 @@ Deprecated in protVer 34.00
     def cfg_itfm(self, buf):
         """UBX-CFG-ITFM decode, Jamming/Interference Monitor configuration
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<LL', buf, 0)
@@ -2729,7 +2732,10 @@ Deprecated in protVer 34.00
         }
 
     def cfg_logfilter(self, buf):
-        """UBX-CFG-LOGFILTER decode, Data Logger Configuration"""
+        """UBX-CFG-LOGFILTER decode, Data Logger Configuration
+
+Deprecated in protVer 32.00
+"""
 
         # u-blox 7+, protVer 14+
         u = struct.unpack_from('<BBHHHL', buf, 0)
@@ -2783,82 +2789,10 @@ Deprecated in protVer 34.00
         0x400: "utc",
         }
 
-    def cfg_nav5(self, buf):
-        """UBX-CFG-NAV5 nav Engine Settings
-
-Deprecated in protVer 34.00
-"""
-
-        u = struct.unpack_from('<HBBlLbBHHHHbbbbHHbBL', buf, 0)
-        s = (' mask %#x dynModel %u fixmode %d fixedAlt %d FixedAltVar %u\n'
-             ' minElev %d drLimit %u pDop %u tDop %u pAcc %u tAcc %u\n'
-             ' staticHoldThresh %u dgpsTimeOut %u cnoThreshNumSVs %u\n'
-             ' cnoThresh %u res %u staticHoldMaxDist %u utcStandard %u\n'
-             ' reserved x%x %x' % u)
-        if gps.VERB_DECODE <= self.verbosity:
-            s += ("\n   dynModel (%s) fixMode (%s) utcStandard (%s)"
-                  "\n   mask (%s)" %
-                  (index_s(u[1], self.cfg_nav5_dyn),
-                   index_s(u[2], self.cfg_nav5_fix),
-                   index_s(u[17] >> 4, self.utc_std),
-                   flag_s(u[0] >> 4, self.cfg_nav5_mask)))
-        return s
-
-    cfg_navx5_mask1 = {
-        4: "minMax",
-        8: "minCno",
-        0x40: "initial3dfix",
-        0x200: "wknRoll",
-        0x400: "ackAid",
-        0x2000: "ppp",
-        0x4000: "aop",
-        }
-
-    cfg_navx5_mask2 = {
-        0x40: "adr",
-        0x80: "sigAttenComp",
-        }
-
-    cfg_navx5_aop = {
-        1: "useAOP",
-        }
-
-    def cfg_navx5(self, buf):
-        """UBX-CFG-NAVX5 decode, Navigation Engine Expert Settings
-
-Deprecated in protVer 34.00
-"""
-
-        # deprecated protver 23+
-        # length == 20 case seems broken?
-        m_len = len(buf)
-
-        u = struct.unpack_from('<HHLHBBBBBHBH', buf, 0)
-        s = (" version %u mask1 x%x mask2 x%x reserved1 %u minSVs %u "
-             "maxSVs %u minCNO %u\n"
-             " reserved2 %u iniFix3D %u reserved3 %u  ackAiding %u "
-             "wknRollover %u" % u)
-
-        # length == 40 in protver 27
-        if 40 <= m_len:
-            u1 = struct.unpack_from('<BBHHBBHHLHBB', buf, 20)
-            s += ("\n sigAttenCompMode %u reserved456 %u %u %u usePPP %u "
-                  "aopCfg %u reserved7 %u"
-                  "\n aopOrbMaxErr %u reserved89 %u %u %u useAdr %u" % u1)
-
-        if gps.VERB_DECODE <= self.verbosity:
-            s += ("\n   mask1 (%s)"
-                  "\n   mask2 (%s) aopCfg (%s)" %
-                  (flag_s(u[1], self.cfg_navx5_mask1),
-                   flag_s(u[2], self.cfg_navx5_mask2),
-                   flag_s(u[5], self.cfg_navx5_aop)))
-
-        return s
-
     def cfg_msg(self, buf):
         """UBX-CFG-MSG decode
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
         m_len = len(buf)
         if 2 == m_len:
@@ -2931,10 +2865,83 @@ Deprecated in protVer 34.00
         0x40: "beidou",
         }
 
+
+    def cfg_nav5(self, buf):
+        """UBX-CFG-NAV5 nav Engine Settings
+
+Deprecated in protVer 32.00
+"""
+
+        u = struct.unpack_from('<HBBlLbBHHHHbbbbHHbBL', buf, 0)
+        s = (' mask %#x dynModel %u fixmode %d fixedAlt %d FixedAltVar %u\n'
+             ' minElev %d drLimit %u pDop %u tDop %u pAcc %u tAcc %u\n'
+             ' staticHoldThresh %u dgpsTimeOut %u cnoThreshNumSVs %u\n'
+             ' cnoThresh %u res %u staticHoldMaxDist %u utcStandard %u\n'
+             ' reserved x%x %x' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   dynModel (%s) fixMode (%s) utcStandard (%s)"
+                  "\n   mask (%s)" %
+                  (index_s(u[1], self.cfg_nav5_dyn),
+                   index_s(u[2], self.cfg_nav5_fix),
+                   index_s(u[17] >> 4, self.utc_std),
+                   flag_s(u[0] >> 4, self.cfg_nav5_mask)))
+        return s
+
+    cfg_navx5_mask1 = {
+        4: "minMax",
+        8: "minCno",
+        0x40: "initial3dfix",
+        0x200: "wknRoll",
+        0x400: "ackAid",
+        0x2000: "ppp",
+        0x4000: "aop",
+        }
+
+    cfg_navx5_mask2 = {
+        0x40: "adr",
+        0x80: "sigAttenComp",
+        }
+
+    cfg_navx5_aop = {
+        1: "useAOP",
+        }
+
+    def cfg_navx5(self, buf):
+        """UBX-CFG-NAVX5 decode, Navigation Engine Expert Settings
+
+Deprecated in protVer 32.00
+"""
+
+        # deprecated protver 23+
+        # length == 20 case seems broken?
+        m_len = len(buf)
+
+        u = struct.unpack_from('<HHLHBBBBBHBH', buf, 0)
+        s = (" version %u mask1 x%x mask2 x%x reserved1 %u minSVs %u "
+             "maxSVs %u minCNO %u\n"
+             " reserved2 %u iniFix3D %u reserved3 %u  ackAiding %u "
+             "wknRollover %u" % u)
+
+        # length == 40 in protver 27
+        if 40 <= m_len:
+            u1 = struct.unpack_from('<BBHHBBHHLHBB', buf, 20)
+            s += ("\n sigAttenCompMode %u reserved456 %u %u %u usePPP %u "
+                  "aopCfg %u reserved7 %u"
+                  "\n aopOrbMaxErr %u reserved89 %u %u %u useAdr %u" % u1)
+
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   mask1 (%s)"
+                  "\n   mask2 (%s) aopCfg (%s)" %
+                  (flag_s(u[1], self.cfg_navx5_mask1),
+                   flag_s(u[2], self.cfg_navx5_mask2),
+                   flag_s(u[5], self.cfg_navx5_aop)))
+
+        return s
+
     def cfg_nmea(self, buf):
         """UBX-CFG-NMEA decode, NMEA protocol configuration
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         # old u-blox have 4 octets, e.g. u-blox 6 w/ protVer < 14
@@ -3013,7 +3020,7 @@ Save and Load non-volatile storage data"""
     def cfg_odo(self, buf):
         """UBX-CFG-ODO decode, Odometer, Low-speed COG Engine Settings
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<BBBBBBBBBBBBBBBBBBBB', buf, 0)
@@ -3075,7 +3082,7 @@ Deprecated in protVer 34.00
     def cfg_pm2(self, buf):
         """UBX-CFG-PM2 decode, Extended Power Mode Configuration
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         # three versions, two lengths
@@ -3121,7 +3128,7 @@ Deprecated in protVer 34.00
     def cfg_pms(self, buf):
         """UBX-CFG-PMS decode, Power Mode Setup
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<BBHHBB', buf, 0)
@@ -3147,7 +3154,7 @@ Deprecated in protVer 34.00
     def cfg_prt(self, buf):
         """UBX-CFG-PRT decode, Port Configuration
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         m_len = len(buf)
@@ -3202,7 +3209,7 @@ Deprecated in protVer 34.00
     def cfg_pwr(self, buf):
         """UBX-CFG-PWR decode, Put receiver in a defined power state
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<BBBBL', buf, 0)
@@ -3221,7 +3228,7 @@ Deprecated in protVer 34.00
     def cfg_rate(self, buf):
         """UBX-CFG-RATE decode, Navigation/Measurement Rate Settings
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<HHH', buf, 0)
@@ -3237,7 +3244,7 @@ Deprecated in protVer 34.00
     def cfg_rinv(self, buf):
         """UBX-CFG-RINV decode, Contents of Remote Inventory
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         # u-blox 5, protVer 6.00 to 6.02
@@ -3313,7 +3320,7 @@ protVer 15 and up
     def cfg_rxm(self, buf):
         """UBX-CFG-RXM decode, Navigation/Measurement
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<BB', buf, 0)
@@ -3380,7 +3387,7 @@ Deprecated in protVer 34.00
     def cfg_sbas(self, buf):
         """UBX-CFG-SBAS decode, SBAS Configuration
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<BBBBL', buf, 0)
@@ -3565,7 +3572,7 @@ Deprecated in protVer 34.00
     def cfg_tp5(self, buf):
         """UBX-CFG-TP5 decode, Time Pulse Parameters
 
-Deprecated in protVer 34.00
+Deprecated in protVer 32.00
 """
 
         m_len = len(buf)
@@ -3602,6 +3609,7 @@ Deprecated in protVer 34.00
         """UBX-CFG-USB decode, USB Configuration
 
 Only for models with built in USB.
+Deprecated in protVer 32.00
 """
 
         u = struct.unpack_from('<HHHHHH', buf, 0)
@@ -4719,8 +4727,8 @@ Present from Antaris (4) to M10
 68 bytes in 6-series
 60 bytes in 8-series and 9-series
 56 bytes in protVer 34 (10-series)
-Deprecated on M9, use MON-H# and MON-RF
-Deprecated. and undocumented,  on M10, use MON-H# and MON-RF
+Deprecated in protVer 32.00 ( M9), use MON-H# and MON-RF
+Deprecated. and undocumented, on M10, use MON-H# and MON-RF
 """
         m_len = len(buf)
 
@@ -4778,7 +4786,10 @@ Deprecated. and undocumented,  on M10, use MON-H# and MON-RF
         }
 
     def mon_hw2(self, buf):
-        """UBX-MON-HW2 decode, Extended Hardware Status"""
+        """UBX-MON-HW2 decode, Extended Hardware Status
+
+Deprecated in protVer 32.00
+"""
 
         u = struct.unpack_from('<bBbBBBBBLLLLL', buf, 0)
         s = ('   ofsI %d magI %u ofsQ %d magQ %u cfgSource %u\n'
@@ -5764,7 +5775,7 @@ Present in 9 and 10, protVer 32 and up
         """UBX-NAV-SOL decode, Navigation Solution Information
 
 deprecated by u-blox
-removed from u-blox 10 (protVer 34 and up)
+removed in protVer 32 (u-blox 9 and 10)
 Use UBX-NAV-PVT instead
 """
 
@@ -5828,7 +5839,10 @@ Use UBX-NAV-PVT instead
         return s
 
     def nav_svin(self, buf):
-        """UBX-NAV-SVIN decode, Survey-in data"""
+        """UBX-NAV-SVIN decode, Survey-in data
+
+Removed in protVer 32.00
+"""
 
         # in M8 HPG only
         u = struct.unpack_from('<BBBBLLlllbbbBLLBB', buf, 0)
@@ -6167,7 +6181,10 @@ protVer 34 and up
                 }
 
     def rxm_imes(self, buf):
-        """UBX-RXM-IMES decode, Indoor Messaging System Information"""
+        """UBX-RXM-IMES decode, Indoor Messaging System Information
+
+Removed in protVer 32.00
+"""
 
         # not supported in M1
         u = struct.unpack_from('<BBH', buf, 0)
@@ -7528,8 +7545,8 @@ u-blox stripts preamble
     def rxm_svsi(self, buf):
         """UBX-RXM-SVSI decode, SV Status Info
 
-Gone in M10 (protVer 34)
 Use UBX-NAV-ORB instead
+Removed in protVer 32 (u-blox 9 and 10)
 """
         m_len = len(buf)
 
