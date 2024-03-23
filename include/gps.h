@@ -2425,7 +2425,7 @@ struct satellite_t {
     int16_t PRN;          // PRN numbering per NMEA 2.x to 4.0, not 4.10
     double elevation;     // elevation of satellite, -90 to 90 deg, NAN for n/a
     double azimuth;       // azimuth, 0 to 359 deg, NAN1 for n/a
-    double prRes;               // Pseudorange residual, meters
+    double prRes;         // Pseudorange residual, meters
     bool used;            // this satellite used in solution
     /* Quality Indicator
      * -1 = invalid, ignore

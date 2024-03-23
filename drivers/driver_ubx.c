@@ -404,6 +404,7 @@ static const fw_protver_map_entry_t fw_protver_map[] = {
 
 /*
  * Model  Fw          Protver
+ * M8     2,01        15.00
  * M9     HPG 1.13    27.12
  * M10    SPG 5.00    34.00
  */
@@ -3300,8 +3301,11 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
 {
     char buf2[80];
     unsigned i, nchan, nsv, st;
+    unsigned chipGen;
     unsigned globalFlags;
     timespec_t ts_tow;
+    // chipGen to protVer, Antaris 4, u-blox 4, 5, 6, 7 and 8
+    static unsigned gen2ver[] = {8, 10, 12, 13, 15};
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -3315,13 +3319,20 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
         gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
 
     nchan = getub(buf, 4);
-    globalFlags = getub(buf, 5);
     if (nchan > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX: NAV SVINFO: runt >%d reported visible",
                  MAXCHANNELS);
         return 0;
     }
+    globalFlags = getub(buf, 5);
+    chipGen = globalFlags & 0x07;
+    if (ROWS(gen2ver) > chipGen &&
+        // put a floor under protVer
+        gen2ver[chipGen] > session->driver.ubx.protver) {
+        session->driver.ubx.protver = gen2ver[chipGen];
+    }
+
     gpsd_zero_satellites(&session->gpsdata);
     nsv = 0;
     for (i = st = 0; i < nchan; i++) {
@@ -3356,6 +3367,8 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
             0 <= az) {
             session->gpsdata.skyview[st].azimuth = (double)az;
         }
+        session->gpsdata.skyview[st].prRes = prRes / 100.0;
+        session->gpsdata.skyview[st].qualityInd = quality;
         session->gpsdata.skyview[st].used = used;
         if (0x10 == (0x10 & flags)) {
            session->gpsdata.skyview[st].health = SAT_HEALTH_BAD;
@@ -3371,11 +3384,15 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "UBX: NAV-SVINFO ubx_prn %d gnssid %d, svid %d nmea_PRN %d "
-                 "flags x%x al %d el %d cno %u prRes %d quality %u\n",
+                 "flags x%x az %.0f el %.0f cno %.0f prRes %.2f quality %u\n",
                  ubx_PRN,
                  session->gpsdata.skyview[st].gnssid,
                  session->gpsdata.skyview[st].svid, nmea_PRN, flags,
-                 az, el, cno, prRes, quality);
+                 session->gpsdata.skyview[st].azimuth,
+                 session->gpsdata.skyview[st].elevation,
+                 session->gpsdata.skyview[st].ss,
+                 session->gpsdata.skyview[st].prRes,
+                 session->gpsdata.skyview[st].qualityInd);
         GPSD_LOG(LOG_IO, &session->context->errout,
                  "UBX: NAV-SVINFO: flags:%s quality:%s\n",
                  flags2str(flags, fsvinfo_flags, buf2, sizeof(buf2)),
@@ -4486,16 +4503,6 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_NAV_SVINFO:
         mask = ubx_msg_nav_svinfo(session, &buf[UBX_PREFIX_LEN], data_len);
-
-        /* this is a hack to move some initialization until after we
-         * get some u-blox message so we know the GPS is alive */
-        if ('\0' == session->subtype[0]) {
-            // one time only
-            (void)strlcpy(session->subtype, "Unknown", 8);
-            // request UBX-MON-VER, for  SW and HW Versions
-            (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
-        }
-
         break;
     case UBX_NAV_TIMEBDS:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-TIMEBDS\n");
@@ -4730,6 +4737,15 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         }
 
         switch (session->queue) {
+        case 10:
+            /* Older u-blox (6-series) may have ignored earlier requests
+             * for UBX-MON-VER.  Try again if needed. */
+            if ('\0' == session->subtype[0]) {
+                // request UBX-MON-VER, for  SW and HW Versions
+                (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
+            }
+            break;
+
         case 78:
             if (session->context->passive) {
                 // do nothing
