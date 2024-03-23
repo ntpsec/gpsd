@@ -177,7 +177,7 @@ static struct vlist_t vtarget[] = {
     {0, NULL},
 };
 
-// UBX-HNR-PVT, UBX-NAV-PVT fixType
+// UBX-HNR-PVT, UBX-NAV-SOL gpsFix, UBX-NAV-PVT fixType
 static struct vlist_t vpvt_fixType[] = {
     {0, "None"},
     {1, "DR"},
@@ -3040,9 +3040,10 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
 static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
 {
+    char buf2[80];
     unsigned flags, pdop;
-    unsigned char navmode;
-    gps_mask_t mask;
+    unsigned gpsFix;
+    gps_mask_t mask = 0;
     char ts_buf[TIMESPEC_LEN];
 
     if (52 > data_len) {
@@ -3052,7 +3053,8 @@ static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
     }
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
-    flags = (unsigned int)getub(buf, 11);
+    gpsFix = getub(buf, 10);
+    flags = getub(buf, 11);
     mask = 0;
 #define DATE_VALID      (UBX_SOL_VALID_WEEK | UBX_SOL_VALID_TIME)
     if ((flags & DATE_VALID) == DATE_VALID) {
@@ -3088,8 +3090,7 @@ static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
     }
     session->gpsdata.satellites_used = (int)getub(buf, 47);
 
-    navmode = (unsigned char)getub(buf, 10);
-    switch (navmode) {
+    switch (gpsFix) {
     case UBX_MODE_TMONLY:
         // Surveyed-in, better not have moved
         session->newdata.mode = MODE_3D;
@@ -3137,6 +3138,10 @@ static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
              session->newdata.mode,
              session->newdata.status,
              session->gpsdata.satellites_used);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "UBX: NAV-SOL-PVT: gpsFix:%s flags:%s\n",
+	     val2str(gpsFix, vpvt_fixType),
+	     flags2str(flags, fhnr_pvt_flags, buf2, sizeof(buf2)));
     return mask;
 }
 
