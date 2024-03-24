@@ -1985,7 +1985,7 @@ static gps_mask_t ubx_msg_mon_txbuf(struct gps_device_t *session,
         unsigned int peakUsage = getub(buf, 18 + i);
 
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "UBX: MON-RXBUF: tgt:%s\n",
+                 "UBX: MON-TXBUF: tgt:%s\n",
                  val2str(i, vtarget));
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "UBX: MON-TXBUF: tgt %d limit %u pending %4u "
