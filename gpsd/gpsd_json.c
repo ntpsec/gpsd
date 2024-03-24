@@ -474,7 +474,7 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
             str_appendf(reply, replylen,
                            ",\"depth\":%.3f", gpsdata->fix.depth);
         }
-        // Skytraq $PSTI can have Age but no Station
+        // Skytraq $PSTI, and u-blox, can have Age but no Station
         if (0 != isfinite(gpsdata->fix.dgps_age)) {
             str_appendf(reply, replylen,
                            ",\"dgpsAge\":%.1f", gpsdata->fix.dgps_age);
@@ -494,6 +494,11 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
     }
     if (0 < gpsdata->fix.jam){
         str_appendf(reply, replylen, ",\"jam\":%u", gpsdata->fix.jam);
+    }
+    if (0 != gpsdata->fix.clockbias &&
+        0 != gpsdata->fix.clockdrift){
+        str_appendf(reply, replylen, ",\"clockbias\":%lu,\"clockdrift\":%lu",
+                    gpsdata->fix.clockbias, gpsdata->fix.clockdrift);
     }
     if (0 != (changed & NAVDATA_SET)) {
         if (0 != isfinite(gpsdata->fix.wanglem)){

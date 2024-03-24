@@ -315,7 +315,7 @@ static struct flist_t vtimels_valid[] = {
 };
 
 // nmea to turn off
-const unsigned char nmea_off[] = {
+static const unsigned char nmea_off[] = {
     0x00,          // msg id  = GGA
     0x01,          // msg id  = GLL
     0x02,          // msg id  = GSA
@@ -327,8 +327,15 @@ const unsigned char nmea_off[] = {
     0x09,          // msg id  = GBS
 };
 
+// UBX-NAV for all protver that ww want on
+static const unsigned char ubx_nav_on[] = {
+    0x04,          // UBX-NAV-DOP
+    0x20,          // UBX-NAV-TIMEGPS
+    0x22,          // UBX-NAV-CLOCK, nice cycle ender in protVer 12.
+};
+
 // UBX-NAV for protver < 15
-const unsigned char ubx_14_nav_on[] = {
+static const unsigned char ubx_14_nav_on[] = {
     0x06,              // msg id = NAV-SOL
     0x30,              // msg id = NAV-SVINFO
 };
@@ -2102,12 +2109,11 @@ static gps_mask_t ubx_msg_mon_ver(struct gps_device_t *session,
  * Clock Solution
  *
  * Present in:
- *     protVer 15 and up
+ *     protVer 8 to 34 (Antaris 4 to M10)
  */
 static gps_mask_t ubx_msg_nav_clock(struct gps_device_t *session,
                                     unsigned char *buf, size_t data_len)
 {
-    long clkB, clkD;
     unsigned long tAcc, fAcc;
 
     if (20 > data_len) {
@@ -2117,13 +2123,17 @@ static gps_mask_t ubx_msg_nav_clock(struct gps_device_t *session,
     }
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
-    clkB = getles32(buf, 4);
-    clkD = getles32(buf, 8);
+    // u-bloc 6 sets clockbias and clockdrift to 0
+    session->newdata.clockbias = getles32(buf, 4);
+    session->newdata.clockdrift = getles32(buf, 8);
     tAcc = getleu32(buf, 12);
     fAcc = getleu32(buf, 16);
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NAV-CLOCK: iTOW=%lld clkB %ld clkD %ld tAcc %lu fAcc %lu\n",
-             (long long)session->driver.ubx.iTOW, clkB, clkD, tAcc, fAcc);
+             (long long)session->driver.ubx.iTOW,
+             session->gpsdata.fix.clockbias,
+             session->gpsdata.fix.clockdrift,
+             tAcc, fAcc);
     return 0;
 }
 
@@ -2154,7 +2164,7 @@ static gps_mask_t ubx_msg_nav_dgps(struct gps_device_t *session,
 }
 
 /**
- * Dilution of precision message
+ * UBX-NAV-DOP, Dilution of precision message
  *
  * Present in all u-blox (4 to 10)
  */
@@ -4738,6 +4748,19 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
 
         switch (session->queue) {
         case 10:
+            if (!session->context->passive) {
+                // turn on common UBX-NAV
+                unsigned i;
+
+                msg[0] = 0x01;          // class, UBX-NAV
+                msg[2] = 0x01;          // rate, one
+                for (i = 0; i < ROWS(ubx_nav_on); i++) {
+                    msg[1] = ubx_nav_on[i];          // msg id to turn on
+                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                }
+            }
+            break;
+        case 20:
             /* Older u-blox (6-series) may have ignored earlier requests
              * for UBX-MON-VER.  Try again if needed. */
             if ('\0' == session->subtype[0]) {
@@ -4745,7 +4768,6 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
             }
             break;
-
         case 78:
             if (session->context->passive) {
                 // do nothing
@@ -5118,17 +5140,6 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
 
     } else {    // MODE_BINARY
 
-        const unsigned char ubx_nav_on[] = {
-            0x04,          // msg id = UBX-NAV-DOP
-            // UBX-NAV-TIMEGPS is a great cycle ender, NAV-EOE better
-            0x20,          // msg id = UBX-NAV-TIMEGPS
-            // 0x26,           // msg id  = UBX-NAV-TIMELS, low rate, skip here
-            /* NAV-SBAS errors guranteed by FAA within 6 seconds!
-             * in NEO-M8N, but not most other 9-series.
-             * Do not set NAV-SBAS as the gpsd decode does not go to JSON,
-             * so the data is wasted. */
-            // 0x32,          // msg id = NAV-SBAS, in u-blox 4 to 8, not 9
-        };
 
         /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
          * Use UBX-NAV-PVT after u-blox 7 (protver 15+)
@@ -5169,19 +5180,11 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
          */
         unsigned char msg[3] = {0, 0, 0};
         // request SW and HW Versions, prolly already requested at detection
-        // ask again
+        // ask again as older u-blox are hard of hearing
         (void)ubx_write(session, UBX_CLASS_MON, 0x04, msg, 0);
 
         GPSD_LOG(LOG_IO, &session->context->errout, "UBX: init protVer %u\n",
                  session->driver.ubx.protver);
-
-        // turn on common UBX-NAV
-        msg[0] = 0x01;          // class, UBX-NAV
-        msg[2] = 0x01;          // rate, one
-        for (i = 0; i < sizeof(ubx_nav_on); i++) {
-            msg[1] = ubx_nav_on[i];          // msg id to turn on
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        }
 
         /* if protver unknown, turn on everything.  Which may be too
          * much for slower serial port speeds.  Hope that we know protver
