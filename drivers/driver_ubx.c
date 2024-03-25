@@ -331,7 +331,8 @@ static const unsigned char nmea_off[] = {
 static const unsigned char ubx_nav_on[] = {
     0x04,          // UBX-NAV-DOP
     0x20,          // UBX-NAV-TIMEGPS
-    0x22,          // UBX-NAV-CLOCK, nice cycle ender in protVer 12.
+    // UBX-NAV-CLOCK, nice cycle ender if no NAV-EOE (protVer 18)
+    0x22,
 };
 
 // UBX-NAV for protver < 15
@@ -2124,8 +2125,8 @@ static gps_mask_t ubx_msg_nav_clock(struct gps_device_t *session,
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
     // u-bloc 6 sets clockbias and clockdrift to 0
-    session->newdata.clockbias = getles32(buf, 4);
-    session->newdata.clockdrift = getles32(buf, 8);
+    session->gpsdata.fix.clockbias = getles32(buf, 4);
+    session->gpsdata.fix.clockdrift = getles32(buf, 8);
     tAcc = getleu32(buf, 12);
     fAcc = getleu32(buf, 16);
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2767,8 +2768,11 @@ static gps_mask_t ubx_msg_nav_relposned(struct gps_device_t *session,
 
 /**
  * GPS Satellite Info -- new style UBX-NAV-SAT
- * Not in u-blox 5
- * Present in u-blox 8,  protocol version 15+
+ * Not present in:
+ *     u-blox 5
+ *     protVer 12  5 and 6-series
+ * Present in:
+ *    protVer 15_  8-series
  */
 static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
@@ -2940,12 +2944,13 @@ static gps_mask_t ubx_msg_nav_sbas(struct gps_device_t *session,
 /**
  * Satellite Info -- UBX-NAV-SIG
  *
- * Like NAV-SAT, but NAV-SIG has  noelevation and azimuth. So we need both
+ * Like NAV-SAT, but NAV-SIG has no elevation and azimuth!  So we need both.
  * Assume NAV-SAT was sent in this epoch before NAV-SIG.
  *
  * Present in:
  *    protVer 27 (9-series and 10)
  * Not present in:
+ *    protVer 12 6-eries
  *    before protVer27
  */
 static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
@@ -4732,7 +4737,8 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
          * get too many configuration changes at once.
          */
 
-        if (50 <= session->queue) {
+        if (50 <= session->queue &&
+            !session->context->passive) {
             // turn off common NMEA, every 3rd queue turn.
             int i = session->queue - 50;
             if (0 == (i % 3)) {
@@ -4768,10 +4774,25 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
             }
             break;
+        case 30:
+            if (!session->context->passive &&
+                15 > session->driver.ubx.protver) {
+                /* protver 14 or less, or unknown version,
+                 * We should have a version now.
+                 * Turn on pre-15 UBX-NAV stuff */
+                unsigned i;
+
+                msg[0] = 0x01;          // class, UBX-NAV
+                msg[2] = 0x01;          // rate, one
+                for (i = 0; i < ROWS(ubx_14_nav_on); i++) {
+                    msg[1] = ubx_14_nav_on[i];          // msg id to turn on
+                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                }
+            }
+            break;
         case 78:
-            if (session->context->passive) {
-                // do nothing
-            } else if (15 <= session->driver.ubx.protver) {
+            if (!session->context->passive &&
+                15 <= session->driver.ubx.protver) {
                 // good cycle ender, except when it is not the ender...
                 msg[0] = 0x01;          // class
                 msg[1] = 0x61;          // msg id  = UBX-NAV-EOE
@@ -4780,9 +4801,8 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             }
             break;
         case 81:
-            if (session->context->passive) {
-                // do nothing
-            } else if (15 <= session->driver.ubx.protver) {
+            if (!session->context->passive &&
+                15 <= session->driver.ubx.protver) {
                 msg[0] = 0x01;          // class
                 msg[1] = 0x26;          // msg id  = UBX-NAV-TIMELS
                 msg[2] = 0xff;          // about every 4 mins if nav rate is 1Hz
@@ -4813,15 +4833,14 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             break;
         case 90:
             // Turn off some clutter, no need to do it early
-            if (session->context->passive) {
-                // do nothing
-            } else if (15 <= session->driver.ubx.protver) {
+            if (!session->context->passive &&
+                15 <= session->driver.ubx.protver) {
                 // protver 15 or more, turn off 14 and below UBX-NAV
                 unsigned i;
 
                 msg[0] = 0x01;          // class, UBX-NAV
                 msg[2] = 0x00;          // rate, off
-                for (i = 0; i < sizeof(ubx_14_nav_on); i++) {
+                for (i = 0; i < ROWS(ubx_14_nav_on); i++) {
                     msg[1] = ubx_14_nav_on[i];          // msg id to turn off
                     (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
                 }
@@ -5190,14 +5209,6 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
          * much for slower serial port speeds.  Hope that we know protver
          * later and can fix things then. */
         if (15 > session->driver.ubx.protver) {
-            /* protver 14 or less, or unknown version,
-             * turn on pre-15 UBX-NAV */
-            msg[0] = 0x01;          // class, UBX-NAV
-            msg[2] = 0x01;          // rate, one
-            for (i = 0; i < sizeof(ubx_14_nav_on); i++) {
-                msg[1] = ubx_14_nav_on[i];          // msg id to turn on
-                (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-            }
             if (0 != session->driver.ubx.protver) {
                 // protver 14 or less, known version only.
                 // turn off 15 and above UBX-NAV
