@@ -2968,22 +2968,22 @@ extern const char *gps_maskdump(gps_mask_t);
 
 // a flag list for flags2str()
 struct flist_t {
-    unsigned val;
-    unsigned mask;
+    unsigned long val;
+    unsigned long mask;
     const char *str;
 };
 
 // a value list for val2str()
 struct vlist_t {
-    unsigned val;
+    unsigned long val;
     const char *str;
 };
 extern struct vlist_t vmode_str[];       // mode val to mode string
 extern struct vlist_t vstatus_str[];     // status val to tatus string
 
-extern const char *flags2str(unsigned flags, const struct flist_t *flist,
+extern const char *flags2str(unsigned long flags, const struct flist_t *flist,
                              char *buffer, size_t buflen);
-extern const char *val2str(unsigned val, const struct vlist_t *vlist);
+extern const char *val2str(unsigned long val, const struct vlist_t *vlist);
 extern double safe_atof(const char *);
 extern time_t mkgmtime(struct tm *);
 extern timespec_t iso8601_to_timespec(const char *);

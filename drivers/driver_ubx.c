@@ -82,6 +82,19 @@
 #define UBX_CFG_LEN             20
 #define outProtoMask            14
 
+// gnssId names
+static struct vlist_t vgnssId[] = {
+    {0, "GPS"},
+    {1, "SBAS"},
+    {2, "GAL"},
+    {3, "BDS"},
+    {4, "IMES"},
+    {5, "QZSS"},
+    {6, "GLO"},
+    {7, "NavIC"},
+    {0, NULL},
+};
+
 // UBX-ACK-* ids
 static struct vlist_t vack_ids[] = {
     {UBX_ACK_ACK, "ACK-ACK"},
@@ -237,6 +250,28 @@ static int pvt_dgps_age[] = {
     15, 20, 30, 45, 60,
     90, 120, 240};
 
+// UBX-NAV-SAT flags
+static struct flist_t fsat_flags[] = {
+    // bits 0, 1, and 2 == qualityInd
+    {8, 8, "Used"},
+    {0x10, 0x30, "healthy"},
+    {0x20, 0x30, "unhealthy"},
+    {0x40, 0x40, "diffCorr"},
+    {0x800, 0x800, "ephAvail"},
+    {0x1000, 0x1000, "almAvail"},
+    {0x2000, 0x2000, "anoAvail"},
+    {0x4000, 0x4000, "aopAvail"},
+    {0x10000, 0x10000, "sbasCorrUsed"},
+    {0x20000, 0x20000, "rtcmCorrUsed"},
+    {0x40000, 0x40000, "slasCorrUsed"},
+    {0x80000, 0x80000, "spartnCorrUsed"},
+    {0x100000L, 0x100000L, "prCorrUsed"},
+    {0x200000L, 0x200000L, "crCorrUsed"},
+    {0x400000L, 0x400000L, "doCorrUsed"},
+    {0x800000L, 0x800000L, "cbasCorrUsed"},
+    {0, 0, NULL},
+};
+
 // UBX-NAV-SVINFO flags
 static struct flist_t fsvinfo_flags[] = {
     {1, 1, "svUsed"},
@@ -260,9 +295,9 @@ static struct vlist_t vglobalFlags[] = {
     {0, NULL},
 };
 
-// UBX-NAV-SVINFO qualtyiInd
+// UBX-NAV-SAT, UBX-NAV-SVINFO qualtyiInd
 static struct vlist_t vquality[] = {
-    {0, "None 4"},
+    {0, "None"},
     {1, "Searching"},
     {2, "Acquired"},
     {3, "Unusable"},
@@ -2859,10 +2894,12 @@ static gps_mask_t ubx_msg_nav_relposned(struct gps_device_t *session,
  *     protVer 12  5 and 6-series
  * Present in:
  *    protVer 15_  8-series
+ *    protVer 27   (ZED-F9P)
  */
 static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
 {
+    char buf2[80];
     unsigned int i, nchan, nsv, st, ver;
     timespec_t ts_tow;
 
@@ -2904,7 +2941,7 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
         uint8_t svId = getub(buf, off + 1);
         uint8_t cno = getub(buf, off + 2);
         // health data in flags
-        uint32_t flags = getleu32(buf, off + 8);
+        unsigned long flags = getleu32(buf, off + 8);
         bool used = (bool)(flags  & 0x08);
         int tmp;
         int prRes;
@@ -2935,12 +2972,18 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
             nsv++;
             session->gpsdata.skyview[st].used = true;
         }
-        // FIXME: sigid
+        // FIXME: sigid?
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "UBX: NAV-SAT gnssid %u, svid %u PRN %d "
-                 "prRes %d cno %u qual %d flags x%x\n",
+                 "prRes %d cno %u qual %d flags x%lx\n",
                  gnssId, svId, nmea_PRN, prRes, cno,
-                 session->gpsdata.skyview[st].qualityInd, flags);
+                 session->gpsdata.skyview[st].qualityInd,
+                 flags);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "UBX: NAV-SAT: gnssId:%s flags:%s quality:%s\n",
+                 val2str(gnssId, vgnssId),
+                 flags2str(flags, fsat_flags, buf2, sizeof(buf2)),
+                 val2str(flags & 7, vquality));
 
         st++;
     }

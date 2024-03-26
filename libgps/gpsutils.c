@@ -63,8 +63,8 @@ struct vlist_t vstatus_str[] = {
  * Return: pointer to passed in buffer
  *         A string matching the flags.
  */
-const char *flags2str(unsigned flags, const struct flist_t *flist, char *buffer,
-                      size_t buflen)
+const char *flags2str(unsigned long flags, const struct flist_t *flist,
+                      char *buffer, size_t buflen)
 {
     buffer[0] = '\0';
     while (NULL != flist->str) {
@@ -86,7 +86,7 @@ const char *flags2str(unsigned flags, const struct flist_t *flist, char *buffer,
  * Return: pointer to static string
  *         The string matching val, or "Unk".
  */
-const char *val2str(unsigned val, const struct vlist_t *vlist)
+const char *val2str(unsigned long val, const struct vlist_t *vlist)
 {
     while (NULL != vlist->str) {
         if (vlist->val == val) {
