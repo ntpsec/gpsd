@@ -32,8 +32,21 @@
 #include <QStringList>
 #endif
 
+// gnssId names
+const struct vlist_t vgnssId[] = {
+    {0, "GPS"},
+    {1, "SBAS"},
+    {2, "GAL"},
+    {3, "BDS"},
+    {4, "IMES"},
+    {5, "QZSS"},
+    {6, "GLO"},
+    {7, "NavIC"},
+    {0, NULL},
+};
+
 // mode val to mode string
-struct vlist_t vmode_str[] = {
+const struct vlist_t vmode_str[] = {
     {1, "No Fix"},
     {2, "2D Fix"},
     {3, "3D Fix"},
@@ -41,7 +54,7 @@ struct vlist_t vmode_str[] = {
 };
 
 // status val to status string
-struct vlist_t vstatus_str[] = {
+const struct vlist_t vstatus_str[] = {
     {0, "UNK"},
     {1, "GPS"},
     {2, "DGPS"},

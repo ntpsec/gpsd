@@ -82,19 +82,6 @@
 #define UBX_CFG_LEN             20
 #define outProtoMask            14
 
-// gnssId names
-static struct vlist_t vgnssId[] = {
-    {0, "GPS"},
-    {1, "SBAS"},
-    {2, "GAL"},
-    {3, "BDS"},
-    {4, "IMES"},
-    {5, "QZSS"},
-    {6, "GLO"},
-    {7, "NavIC"},
-    {0, NULL},
-};
-
 // UBX-ACK-* ids
 static struct vlist_t vack_ids[] = {
     {UBX_ACK_ACK, "ACK-ACK"},
