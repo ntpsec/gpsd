@@ -21,7 +21,6 @@
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
-#include <assert.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -314,6 +313,20 @@ static struct flist_t vtimels_valid[] = {
     {0, 0, NULL},
 };
 
+// start ubx message configuration stuff
+
+/* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
+ * Use UBX-NAV-PVT after u-blox 7 (protver 15+)
+ * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT
+ * UBX-NAV-SOL has same data from NAV-POSECEF and NAV-VELECEF.
+ * Need NAV-SOL for fix type and fix flags.
+ * skip NAV-POSLLH as we compute lat/lon/alt/geoid from ECEF.
+ *
+ * UBX-NAV-SVINFO deprecated in u-blox 8, gone in u-blox 9.
+ * Use UBX-NAV-SAT after u-blox 7
+ *
+ * UBX-NAV-EOE makes a good cycle ender */
+
 // nmea to turn off
 static const unsigned char nmea_off[] = {
     0x00,          // msg id  = GGA
@@ -327,7 +340,7 @@ static const unsigned char nmea_off[] = {
     0x09,          // msg id  = GBS
 };
 
-// UBX-NAV for all protver that ww want on
+// UBX-NAV that ww want on, for all protver
 static const unsigned char ubx_nav_on[] = {
     0x04,          // UBX-NAV-DOP
     0x20,          // UBX-NAV-TIMEGPS
@@ -335,11 +348,23 @@ static const unsigned char ubx_nav_on[] = {
     0x22,
 };
 
-// UBX-NAV for protver < 15
+// UBX-NAV for protver < 15, not present in protVer >= 27
 static const unsigned char ubx_14_nav_on[] = {
     0x06,              // msg id = NAV-SOL
     0x30,              // msg id = NAV-SVINFO
 };
+
+// UBX for protver >= 15
+static const unsigned char ubx_15_nav_on[] = {
+    // Need NAV-POSECEF, NAV-VELECEF and NAV-PVT to replace NAV-SOL
+    0x01,              // msg id = NAV-POSECEF
+    0x07,              // msg id = NAV-PVT
+    0x11,              // msg id = NAV-VELECEF
+    0x35,              // msg id = NAV-SAT
+    0x43,              // msg id = NAV-SIG
+};
+
+// end ubx message configuration stuff
 
 static gps_mask_t ubx_msg_inf(struct gps_device_t *session, unsigned char *buf,
                               size_t data_len);
@@ -416,6 +441,67 @@ static const fw_protver_map_entry_t fw_protver_map[] = {
  * M9     HPG 1.13    27.12
  * M10    SPG 5.00    34.00
  */
+
+/* send a ubx message.
+ * calcualte checksums, etc.
+ */
+bool ubx_write(struct gps_device_t * session,
+               unsigned int msg_class, unsigned int msg_id,
+               const unsigned char *msg, size_t data_len)
+{
+    unsigned char CK_A, CK_B;
+    ssize_t count;
+    size_t i;
+    bool ok;
+
+    // do not write if -b (readonly) option set
+    // "passive" handled earlier
+    if (session->context->readonly) {
+        return true;
+    }
+
+    session->msgbuf[0] = 0xb5;
+    session->msgbuf[1] = 0x62;
+
+    CK_A = CK_B = 0;
+    session->msgbuf[2] = msg_class;
+    session->msgbuf[3] = msg_id;
+    session->msgbuf[4] = data_len & 0xff;
+    session->msgbuf[5] = (data_len >> 8) & 0xff;
+
+    if ((sizeof(session->msgbuf) - 8) <= data_len) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "=> GPS: UBX class: %02x, id: %02x, len: %zd TOO LONG!\n",
+                 msg_class, msg_id, data_len);
+    }
+    if (NULL != msg &&
+        0 < data_len) {
+        (void)memcpy(&session->msgbuf[6], msg, data_len);
+    }
+
+    // calculate CRC
+    for (i = 2; i < 6; i++) {
+        CK_A += session->msgbuf[i];
+        CK_B += CK_A;
+    }
+    if (NULL != msg)
+        for (i = 0; i < data_len; i++) {
+            CK_A += msg[i];
+            CK_B += CK_A;
+        }
+
+    session->msgbuf[6 + data_len] = CK_A;
+    session->msgbuf[7 + data_len] = CK_B;
+    session->msgbuflen = data_len + 8;
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "=> GPS: UBX class: %02x, id: %02x, len: %zd, crc: %02x%02x\n",
+             msg_class, msg_id, data_len,
+             CK_A, CK_B);
+    count = gpsd_write(session, session->msgbuf, session->msgbuflen);
+    ok = (count == (ssize_t) session->msgbuflen);
+    return (ok);
+}
 
 /* Convert a ubx PRN to an NMEA 4.0 (extended) PRN and ubx gnssid, svid
  *
@@ -3309,7 +3395,10 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
 
 /**
  * GPS Satellite Info -- deprecated - UBX-NAV-SVINFO
- * Removed in protVer 32 (9-series_, use UBX-NAV-SAT instead
+ * Present in:
+ *    protver < 27
+ * Not present in:
+      protver >= 27 (9-series), use UBX-NAV-SAT instead
  */
 static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
                                      unsigned char *buf, size_t data_len)
@@ -4427,7 +4516,6 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-USB\n");
         break;
     case UBX_MON_VER:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-VER\n");
         mask = ubx_msg_mon_ver(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
@@ -4775,22 +4863,33 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             }
             break;
         case 30:
-            if (!session->context->passive &&
-                15 > session->driver.ubx.protver) {
-                /* protver 14 or less, or unknown version,
-                 * We should have a version now.
-                 * Turn on pre-15 UBX-NAV stuff */
+            if (!session->context->passive) {
                 unsigned i;
 
                 msg[0] = 0x01;          // class, UBX-NAV
                 msg[2] = 0x01;          // rate, one
-                for (i = 0; i < ROWS(ubx_14_nav_on); i++) {
-                    msg[1] = ubx_14_nav_on[i];          // msg id to turn on
-                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                if (15 > session->driver.ubx.protver) {
+                    /* protver 14 or less, or unknown version,
+                     * We should have a version now.
+                     * Turn on pre-15 UBX-NAV stuff */
+
+                    for (i = 0; i < ROWS(ubx_14_nav_on); i++) {
+                        // msg id to turn on
+                        msg[1] = ubx_14_nav_on[i];
+                        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                    }
+                } else {
+                    /* must be 15 <= session->driver.ubx.protver
+                     * turn on 15+ UBX-NAV */
+                    for (i = 0; i < ROWS(ubx_15_nav_on); i++) {
+                        // msg id to turn on
+                        msg[1] = ubx_15_nav_on[i];
+                        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                    }
                 }
             }
             break;
-        case 78:
+        case 71:
             if (!session->context->passive &&
                 15 <= session->driver.ubx.protver) {
                 // good cycle ender, except when it is not the ender...
@@ -4800,7 +4899,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
             break;
-        case 81:
+        case 75:
             if (!session->context->passive &&
                 15 <= session->driver.ubx.protver) {
                 msg[0] = 0x01;          // class
@@ -4809,14 +4908,14 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
             break;
-        case 84:
+        case 80:
             if (18 <= session->driver.ubx.protver) {
                 // No UNIQ-ID before PROTVER 18
                 // UBX-SEC-UNIQID: query for uniq id
                 (void)ubx_write(session, UBX_CLASS_SEC, 0x03, NULL, 0);
             }
             break;
-        case 87:
+        case 83:
             if (session->context->passive) {
                 // do nothing
             } else if (27 > session->driver.ubx.protver) {
@@ -4831,11 +4930,27 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
             break;
+        case 87:
+            if (15 > session->driver.ubx.protver) {
+                unsigned i;
+
+                /* protver 14 or less
+                 * turn off 15 and above UBX-NAV.  Do we need to? */
+                msg[0] = 0x01;          // class, UBX-NAV
+                msg[2] = 0x00;          // rate, off
+                for (i = 0; i < ROWS(ubx_15_nav_on); i++) {
+                    msg[1] = ubx_15_nav_on[i];          // msg id to turn off
+                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                }
+            }
+            break;
         case 90:
             // Turn off some clutter, no need to do it early
             if (!session->context->passive &&
-                15 <= session->driver.ubx.protver) {
-                // protver 15 or more, turn off 14 and below UBX-NAV
+                15 <= session->driver.ubx.protver &&
+                27 > session->driver.ubx.protver) {
+                /* protver 15 or more, and less than 27
+                 * Soturn off 14 and below UBX-NAV */
                 unsigned i;
 
                 msg[0] = 0x01;          // class, UBX-NAV
@@ -4875,58 +4990,6 @@ static gps_mask_t parse_input(struct gps_device_t *session)
     return generic_parse_input(session);
 }
 
-bool ubx_write(struct gps_device_t * session,
-               unsigned int msg_class, unsigned int msg_id,
-               const unsigned char *msg, size_t data_len)
-{
-    unsigned char CK_A, CK_B;
-    ssize_t count;
-    size_t i;
-    bool ok;
-
-    // do not write if -b (readonly) option set
-    // "passive" handled earlier
-    if (session->context->readonly) {
-        return true;
-    }
-
-    session->msgbuf[0] = 0xb5;
-    session->msgbuf[1] = 0x62;
-
-    CK_A = CK_B = 0;
-    session->msgbuf[2] = msg_class;
-    session->msgbuf[3] = msg_id;
-    session->msgbuf[4] = data_len & 0xff;
-    session->msgbuf[5] = (data_len >> 8) & 0xff;
-
-    assert(msg != NULL || data_len == 0);
-    if (msg != NULL)
-        (void)memcpy(&session->msgbuf[6], msg, data_len);
-
-    // calculate CRC
-    for (i = 2; i < 6; i++) {
-        CK_A += session->msgbuf[i];
-        CK_B += CK_A;
-    }
-    if (NULL != msg)
-        for (i = 0; i < data_len; i++) {
-            CK_A += msg[i];
-            CK_B += CK_A;
-        }
-
-    session->msgbuf[6 + data_len] = CK_A;
-    session->msgbuf[7 + data_len] = CK_B;
-    session->msgbuflen = data_len + 8;
-
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "=> GPS: UBX class: %02x, id: %02x, len: %zd, crc: %02x%02x\n",
-             msg_class, msg_id, data_len,
-             CK_A, CK_B);
-    count = gpsd_write(session, session->msgbuf, session->msgbuflen);
-    ok = (count == (ssize_t) session->msgbuflen);
-    return (ok);
-}
-
 // not used by gpsd, it's for gpsctl and friends
 static ssize_t ubx_control_send(struct gps_device_t *session, char *msg,
                                 size_t data_len)
@@ -4957,14 +5020,15 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
 
         // no longer set UBX-CFG-SBAS here, u-blox 9 and 10 do not have it
 
-        /*
-         * Turn off NMEA output, turn on UBX on this port.
-         */
         if (session->context->passive) {
-            // passive mode, do no autoconfig
+            /* passive mode, do no autoconfig
+             * but we really want MON-VER. */
+            (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
         } else if (session->mode == O_OPTIMIZE) {
+            // Turn off UBX output, turn on NMEA on this port.
             ubx_mode(session, MODE_BINARY);
         } else {
+            //* Turn off NMEA output, turn on UBX on this port.
             ubx_mode(session, MODE_NMEA);
         }
     } else if (event == event_deactivate) {
@@ -5159,36 +5223,13 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
 
     } else {    // MODE_BINARY
 
-
-        /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
-         * Use UBX-NAV-PVT after u-blox 7 (protver 15+)
-         * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT
-         * UBX-NAV-SOL has same data from NAV-POSECEF and NAV-VELECEF.
-         * Need NAV-SOL for fix type and fix flags.
-         * skip NAV-POSLLH as we compute lat/lon/alt/geoid from ECEF.
-         *
-         * UBX-NAV-SVINFO deprecated in u-blox 8, gone in u-blox 9.
-         * Use UBX-NAV-SAT after u-blox 7
-         *
-         * UBX-NAV-EOE makes a good cycle ender */
-
-        // UBX for protver >= 15
-        const unsigned char ubx_15_nav_on[] = {
-            // Need NAV-POSECEF, NAV-VELECEF and NAV-PVT to replace NAV-SOL
-            0x01,              // msg id = NAV-POSECEF
-            0x07,              // msg id = NAV-PVT
-            0x11,              // msg id = NAV-VELECEF
-            0x35,              // msg id = NAV-SAT
-            0x43,              // msg id = NAV-SIG
-        };
-
         /*
          * Just enabling the UBX protocol for output is not enough to
          * actually get UBX output; the sentence mix is initially empty.
          * Fix that...
          */
 
-        /* FIXME: possibly sending too many messages without waiting
+        /* Beware sending too many messages without waiting
          * for u-blox ACK, over running its input buffer.
          *
          * For example, the UBX-MON-VER may fail here, but works in other
@@ -5204,33 +5245,6 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
 
         GPSD_LOG(LOG_IO, &session->context->errout, "UBX: init protVer %u\n",
                  session->driver.ubx.protver);
-
-        /* if protver unknown, turn on everything.  Which may be too
-         * much for slower serial port speeds.  Hope that we know protver
-         * later and can fix things then. */
-        if (15 > session->driver.ubx.protver) {
-            if (0 != session->driver.ubx.protver) {
-                // protver 14 or less, known version only.
-                // turn off 15 and above UBX-NAV
-                msg[0] = 0x01;          // class, UBX-NAV
-                msg[2] = 0x00;          // rate, off
-                for (i = 0; i < sizeof(ubx_15_nav_on); i++) {
-                    msg[1] = ubx_15_nav_on[i];          // msg id to turn off
-                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-                }
-            }
-        }
-
-        if (15 <= session->driver.ubx.protver ||
-            0 == session->driver.ubx.protver) {
-            // protver 15 or more, or unknown version, turn on 15+ UBX-NAV
-            msg[0] = 0x01;          // class, UBX-NAV
-            msg[2] = 0x01;          // rate, one
-            for (i = 0; i < sizeof(ubx_15_nav_on); i++) {
-                msg[1] = ubx_15_nav_on[i];          // msg id to turn on
-                (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-            }
-        }
 
         // turn on init queue
         session->queue = 1;
