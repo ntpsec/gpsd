@@ -1,6 +1,6 @@
 = GPSD Numbers Matter
 Gary E. Miller <gem@rellim.com>
-11 May 2023
+18 March 2024
 :author: Gary E. Miller
 :description: How and why  GPSD tortures numbers.
 :email: <gem@rellim.com>
@@ -533,6 +533,66 @@ func IsFinite(x float64) bool {
 See above for why you should always use isFinite() before using a
 floating point number.
 
+== Baying at the moon
+
+All the preceding hasa been about how precise numbers can, and should,
+be.  But GNSS receivers are more or less random in the least significant
+digits.  And not random in a nice convenient Bayesian way.
+
+To be perfectly clear: GNSS errors are not normally distributed.  You
+can not use Bayesian inferences on GNSS numbers.  Forget them if you
+learned them.  The Standard Distribution (sigma) no longer behaves as
+you would expect.  For example, the "68–95–99.7 rule" fails.
+
+In the true spirit of statistical analysis, here we will ignore the
+causes of errors, and only look at the shape of the end result data
+(latitude, longitude, altitude, etc.).
+
+=== CEP
+
+The primary measure of GNSS goodness is Circular Error Probability (CEP).
+If Y = CEP(X) then X% of the measurements will be within a circle of
+Y radius from the mean measurement.  CEP(50), CEP(95) and CEP(99) are
+commonly used.  *gpsprof* will compute those, and other statistics, for
+you.
+
+Statisticians prefer to use the term Median Average Deviation (MAD)
+instead of CEP(50).  But CEP(50) and MAD are the same thing.
+
+Receiver manufacturers like to quote CEP(50), but who wants a receiver
+that is right only half of the time?  CEP(99) is more interessting.  You
+can use the CEP(99) to design a car navigation system that only leaves
+the road 1% of the time.  About once every one hundred minutes.
+
+It is easy to verify that your receiver errors do not have a normal
+distribution.  With a normal distribtution sigma / CEP(50) = 1.4826.  I
+just used *gpsprof* to compute the CEP(50) and sigma ov my receiver over
+12 hours.  From that data: sigma / CEP(50) = 1.6446.
+
+=== Skewness
+
+On casual inspection, you should notice that data with a Bayesian
+Distribution is symmetric about the center.  But a quick look at a
+*gpsprof* plot that GNSS data is not symmetric about the center.
+
+In statistics, this property is called *skewness*[[SKEW]].  A normal
+distribution has a skewness of zero.  The skewness of latitude,
+longitude, and altitude is often between negative 3 and negative 5 when
+measured at my office.  Another confirmation that GNSS data is not
+Bayesian.
+
+=== Kurtosis
+
+Another property of a data distribution is the shape of the "tail" of
+the data as it gets further from the peak.  In statistics, this property
+is called *kurtosis*[[JURTOSIS]].
+
+A normal distribution has a kurtosis of three.  A kurtosis greater than
+three means there are more outliers than in a normal distribution.  The
+kurtosis of latitude, longitude, and altitude is often between nine and
+fifteen when measured at my office.  More confirmation that GNSS data is
+not Bayesian.
+
 == REFERENCES
 
 * *GPSD Project web site:* {gpsdweb}
@@ -561,6 +621,10 @@ floating point number.
 * [[[IS-QZSS]]] https://qzss.go.jp/en/technical/ps-is-qzss/ps-is-qzss.html
 
 * [[[ICD-GLONASS]]] https://glonass-iac.ru/en/documents/
+
+* [[[SKEW]]] https://en.wikipedia.org/wiki/Skewness
+
+* [[[KURTOSIS]]] https://en.wikipedia.org/wiki/Kurtosis
 
 == COPYING
 
