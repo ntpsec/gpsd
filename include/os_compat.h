@@ -1,5 +1,5 @@
 /*
- * This file is Copyright 2017 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  * This is the header for os_compat.c, which contains functions dealing with
@@ -18,14 +18,14 @@ extern const char *gpsd_version;
 
 #ifndef HAVE_CLOCK_GETTIME
 
-/* Simulate ANSI/POSIX clock_gettime() on platforms that don't have it */
+// Simulate ANSI/POSIX clock_gettime() on platforms that don't have it
 
 #include <time.h>
 
 #ifndef CLOCKID_T_DEFINED
 typedef int clockid_t;
 #define CLOCKID_T_DEFINED
-#endif /* !CLOCKID_T_DEFINED */
+#endif  // !CLOCKID_T_DEFINED
 
 /*
  * OS X 10.5 and later use _STRUCT_TIMESPEC (like other OSes)
@@ -41,13 +41,13 @@ struct timespec {
     time_t  tv_sec;
     long    tv_nsec;
 };
-#endif /* !_STRUCT_TIMESPEC ... */
+#endif  // !_STRUCT_TIMESPEC ...
 
-/* OS X does not have clock_gettime */
+// OS X does not have clock_gettime
 #define CLOCK_REALTIME 0
 int clock_gettime(clockid_t, struct timespec *);
 
-#endif /* !HAVE_CLOCK_GETTIME */
+#endif  // !HAVE_CLOCK_GETTIME
 
 /*
  * Wrapper or substitute for Linux/BSD daemon()
@@ -64,7 +64,7 @@ int os_daemon(int nochdir, int noclose);
 
   #if !defined(LOG_PERROR)
     // Slowlaris 10 does not define LOG_PERROR
-    #define     LOG_PERROR      0x20    /* log to stderr as well */
+    #define     LOG_PERROR      0x20    // log to stderr as well
   #endif // LOG_PERROR
 
 #else // HAVE_SYSLOG_H
@@ -73,54 +73,54 @@ int os_daemon(int nochdir, int noclose);
  *  (only subset of defines used by gpsd components listed)
  *
  */
-/* Copy of syslog.h defines when otherwise not available */
-/* priorities (these are ordered) */
-#define LOG_EMERG       0       /* system is unusable */
-#define LOG_ALERT       1       /* action must be taken immediately */
-#define LOG_CRIT        2       /* critical conditions */
-#define LOG_ERR         3       /* error conditions */
-#define LOG_WARNING     4       /* warning conditions */
-#define LOG_NOTICE      5       /* normal but significant condition */
-#define LOG_INFO        6       /* informational */
-#define LOG_DEBUG       7       /* debug-level messages */
-/* Option flags for openlog */
-#define LOG_PID         0x01    /* log the pid with each message */
-#define LOG_PERROR      0x20    /* log to stderr as well */
-/* facility codes */
-#define LOG_USER        (1<<3)  /* random user-level messages */
-#define LOG_DAEMON      (3<<3)  /* system daemons */
+// Copy of syslog.h defines when otherwise not available
+// priorities (these are ordered)
+#define LOG_EMERG       0       // system is unusable
+#define LOG_ALERT       1       // action must be taken immediately
+#define LOG_CRIT        2       // critical conditions
+#define LOG_ERR         3       // error conditions
+#define LOG_WARNING     4       // warning conditions
+#define LOG_NOTICE      5       // normal but significant condition
+#define LOG_INFO        6       // informational
+#define LOG_DEBUG       7       // debug-level messages
+// Option flags for openlog
+#define LOG_PID         0x01    // log the pid with each message
+#define LOG_PERROR      0x20    // log to stderr as well
+// facility codes
+#define LOG_USER        (1<<3)  // random user-level messages
+#define LOG_DAEMON      (3<<3)  // system daemons
 
 void syslog(int priority, const char *format, ...);
 void openlog(const char *__ident, int __option, int __facility);
 void closelog(void);
-#endif /* !HAVE_SYSLOG_H */
+#endif // !HAVE_SYSLOG_H
 
 
-/* Provide BSD strlcat()/strlcpy() on platforms that don't have it */
+// Provide BSD strlcat()/strlcpy() on platforms that don't have it
 
 #ifndef HAVE_STRLCAT
 
 #include <string.h>
 size_t strlcat(char *dst, const char *src, size_t size);
 
-#endif /* !HAVE_STRLCAT */
+#endif  // !HAVE_STRLCAT
 
 #ifndef HAVE_STRLCPY
 
 #include <string.h>
 size_t strlcpy(char *dst, const char *src, size_t size);
 
-#endif /* !HAVE_STRLCPY */
+#endif  // !HAVE_STRLCPY
 
-/* Provide strnlen() on platforms that don't have it */
+// Provide strnlen() on platforms that don't have it
 
 #ifndef HAVE_STRNLEN
 
 size_t strnlen(const char *s, size_t maxlen);
 
-#endif /* !HAVE_STRNLEN */
+#endif  // !HAVE_STRNLEN
 
-/* Provide missing signal numbers for non-POSIX builds */
+// Provide missing signal numbers for non-POSIX builds
 
 #ifndef SIGHUP
 #define SIGHUP  1
@@ -129,7 +129,7 @@ size_t strnlen(const char *s, size_t maxlen);
 #define SIGQUIT 3
 #endif
 
-/* Provide missing open flags for non-POSIX builds */
+// Provide missing open flags for non-POSIX builds
 
 #ifndef O_NOCTTY
 #define O_NOCTTY   0400
@@ -138,7 +138,7 @@ size_t strnlen(const char *s, size_t maxlen);
 // getting scons to test for sincos() and pass -Werror not possible
 void gpsd_sincos(double x, double *sinp, double *cosp);
 
-#ifdef __GNU__ /* building on GNU/Hurd */
+#ifdef __GNU__  // building on GNU/Hurd
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
@@ -148,5 +148,5 @@ void gpsd_sincos(double x, double *sinp, double *cosp);
 }
 # endif
 
-#endif /* _GPSD_OS_COMPAT_H_ */
+#endif  // _GPSD_OS_COMPAT_H_
 // vim: set expandtab shiftwidth=4
