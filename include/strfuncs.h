@@ -1,8 +1,8 @@
 /*
  * strfuncs.h - string functions
  *
- * This software is distributed under a BSD-style license. See the
- * file "COPYING" in the toop-level directory of the distribution for details.
+ * This file is Copyright by the GPSD project
+ * SPDX-License-Identifier: BSD-2-clause
  */
 #ifndef _GPSD_STRFUNCS_H_
 #define _GPSD_STRFUNCS_H_
@@ -54,8 +54,8 @@ static inline void str_rstrip_char(char *str, char ch)
 static inline void memset_volatile(volatile void *dest, char c, size_t count)
 {
     volatile char *ptr = (volatile char*)dest;
-    while (count-- > 0) {
+    while (0 < count--) {
         *ptr++ = c;
     }
 }
-#endif /* _GPSD_STRFUNCS_H_ */
+#endif  // _GPSD_STRFUNCS_H_
