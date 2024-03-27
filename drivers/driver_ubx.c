@@ -259,6 +259,44 @@ static struct flist_t fsat_flags[] = {
     {0, 0, NULL},
 };
 
+// UBX-NAV-SIG corrSource
+static struct vlist_t vsig_corrsource[] = {
+    {0, "None"},
+    {1, "SBAS"},
+    {2, "rBDS"},
+    {3, "RTCM2"},
+    {4, "RTCM3 OSR"},
+    {5, "RTCM3 SSR"},
+    {6, "QZSS SLAS"},
+    {7, "SPARTN"},
+    {8, "CLAS"},
+    {0, NULL},
+};
+
+// UBX-NAV-SIG ionoModel
+static struct vlist_t vsig_ionomodel[] = {
+    {0, "None"},
+    {1, "Klobuchar GPS"},
+    {2, "SBAS"},
+    {8, "Dual F Delay"},
+    {0, NULL},
+};
+
+// UBX-NAV-SIG sigFlags
+static struct flist_t fsig_sigFlags[] = {
+    {1, 3, "healthy"},
+    {2, 3, "unhealthy"},
+    {4, 4, "prSmoothed"},
+    {8, 8, "prUsed"},
+    {0x10, 0x10, "crUsed"},
+    {0x20, 0x20, "doUsed"},
+    {0x40, 0x40, "prCorrUsed"},
+    {0x80, 0x80, "crCorrUsed"},
+    {0x100, 0x100, "doCorrUsed"},
+    {0x200, 0x200, "Authenticated"},  // u-blox M9 SPG, GALILEO
+    {0, 0, NULL},
+};
+
 // UBX-NAV-SVINFO flags
 static struct flist_t fsvinfo_flags[] = {
     {1, 1, "svUsed"},
@@ -3062,12 +3100,13 @@ static gps_mask_t ubx_msg_nav_sbas(struct gps_device_t *session,
  *
  * Like NAV-SAT, but NAV-SIG has no elevation and azimuth!  So we need both.
  * Assume NAV-SAT was sent in this epoch before NAV-SIG.
+ * Seems like NAV-SAT always sent just before NAV-SIG.
  *
  * Present in:
  *    protVer 27 (9-series and 10)
  * Not present in:
  *    protVer 12 6-eries
- *    before protVer27
+ *    before protVer 27
  */
 static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
@@ -3115,8 +3154,9 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
     nsv = 0;
     for (i = st = 0; i < nchan; i++) {
         // like NAV-SAT, but 16 bytes instead of 12, no elevation or azimuth
+        char buf2[80];
         int sat_old;
-        unsigned int off = 8 + 16 * i;
+        unsigned off = 8 + 16 * i;
         short nmea_PRN = 0;
         uint8_t gnssId = getub(buf, off + 0);
         uint8_t svId = getub(buf, off + 1);
@@ -3127,20 +3167,14 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
         uint8_t qualityInd = getub(buf, off + 7);   // quality indicator
         uint8_t corrSource = getub(buf, off + 8);   // correlation source
         uint8_t ionoModel = getub(buf, off + 9);    // Ionospheric model used:
-        // health data in flags.
-        uint32_t flags = getleu16(buf, off + 10);
-        bool used = (bool)(flags  & 0x38);
+        unsigned sigFlags = getleu16(buf, off + 10);
+        // not exactly right...
+        bool used = 4 <= qualityInd ? true : false;
 
         // last 4 vytes, reserved
         uint32_t reserved = getleu32(buf, 12);
 
         nmea_PRN = ubx2_to_prn(gnssId, svId);
-
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX: NAV-SIG gnssid %u, svid %u sigid %u PRN %d freqid %u "
-                 "prRes %d cno %u qual %u corr %u, iono %u flags x%x res x%x\n",
-                 gnssId, svId, sigId, nmea_PRN, freqid, prRes, cno,
-                 qualityInd, corrSource, ionoModel, flags, reserved);
 
         session->gpsdata.skyview[st].gnssid = gnssId;
         session->gpsdata.skyview[st].svid = svId;
@@ -3153,7 +3187,7 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
         session->gpsdata.skyview[st].ss = (double)cno;
         session->gpsdata.skyview[st].used = used;
         // by some coincidence, our health flags matches u-blox's
-        session->gpsdata.skyview[st].health = flags & 3;
+        session->gpsdata.skyview[st].health = sigFlags & 3;
         // sbas_in_use is not same as used
         if (used) {
             nsv++;
@@ -3176,6 +3210,18 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
                 skyview_old[sat_old].azimuth;
             break;
         }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "UBX: NAV-SIG gnssid %u, svid %u sigid %u PRN %d freqid %u "
+                 "prRes %d cno %u qual %u corr %u, iono %u flags x%x res x%x\n",
+                 gnssId, svId, sigId, nmea_PRN, freqid, prRes, cno,
+                 qualityInd, corrSource, ionoModel, sigFlags, reserved);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "UBX: NAV-SAT: gnssId:%s flags:%s courrSource:%s "
+                 "ionoModel:%s\n",
+                 val2str(gnssId, vgnssId),
+                 flags2str(sigFlags, fsig_sigFlags, buf2, sizeof(buf2)),
+                 val2str(corrSource, vsig_corrsource),
+                 val2str(ionoModel, vsig_ionomodel));
 
         st++;
     }
