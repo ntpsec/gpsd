@@ -3,7 +3,7 @@
  *
  * The entry points for driver_nmea2000
  *
- * This file is Copyright 2012 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -16,7 +16,7 @@ int nmea2000_open(struct gps_device_t *session);
 
 void nmea2000_close(struct gps_device_t *session);
 
-#endif /* of defined(NMEA2000_ENABLE) */
+#endif  // of defined(NMEA2000_ENABLE)
 
-#endif /* of ifndef _DRIVER_NMEA2000_H_ */
+#endif  // of ifndef _DRIVER_NMEA2000_H_
 // vim: set expandtab shiftwidth=4
