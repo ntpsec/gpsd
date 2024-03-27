@@ -1,5 +1,5 @@
 /*
- * This file is Copyright 2015 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -41,7 +41,8 @@
 static inline void TS_NORM( struct timespec *ts)
 {
     if ((1 <= ts->tv_sec) ||
-        ((0 == ts->tv_sec) && (0 <= ts->tv_nsec))) {
+        ((0 == ts->tv_sec) &&
+         (0 <= ts->tv_nsec))) {
         // result is positive
         if (NS_IN_SEC <= ts->tv_nsec) {
             // borrow from tv_sec
@@ -55,7 +56,7 @@ static inline void TS_NORM( struct timespec *ts)
     }  else {
         // result is negative
         if (-NS_IN_SEC >= ts->tv_nsec) {
-            /* carry to tv_sec */
+            // carry to tv_sec
             ts->tv_nsec += NS_IN_SEC;
             ts->tv_sec--;
         } else if (0 < ts->tv_nsec) {
