@@ -31,8 +31,8 @@ struct timedelta_t {
  * hook is called to log error and status indications from the thread.
  */
 struct pps_thread_t {
-    void *context;              // PPS thread code leaves this alone
-    gps_fd_t devicefd;          // device file descriptor
+    void *context;                    // PPS thread code leaves this alone
+    gps_fd_t devicefd;                // device file descriptor
     const char *devicename;           // device path
     char *(*report_hook)(volatile struct pps_thread_t *,
                          struct timedelta_t *);
@@ -42,8 +42,8 @@ struct pps_thread_t {
     struct timedelta_t pps_out; // real & clock time of last PPS event
     int ppsout_count;
     // quantization error adjustment to PPS. aka "sawtooth" correction
-    long qErr;                  /* offset in picoseconds (ps) */
-    /* time of PPS pulse that qErr applies to */
+    long qErr;                  // offset in picoseconds (ps)
+    // time of PPS pulse that qErr applies to
     struct timespec qErr_time;
 };
 

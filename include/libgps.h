@@ -1,6 +1,6 @@
-/* libgps.h -- prototypes for internals of the libgps library */
-/*
- * This file is Copyright 2010 by the GPSD project
+/* libgps.h -- prototypes for internals of the libgps library
+ *
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #ifndef _GPSD_LIBGPS_H_
@@ -17,8 +17,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern int gps_sock_open(const char *, const char *,
-                      struct gps_data_t *);
+extern int gps_sock_open(const char *, const char *, struct gps_data_t *);
 extern int gps_sock_close(struct gps_data_t *);
 extern int gps_sock_send(struct gps_data_t *, const char *);
 extern int gps_sock_read(struct gps_data_t *, char *message, int message_len);
@@ -26,17 +25,16 @@ extern bool gps_sock_waiting(const struct gps_data_t *, int);
 extern int gps_sock_stream(struct gps_data_t *, unsigned int, const char *);
 extern const char *gps_sock_data(const struct gps_data_t *);
 extern int gps_sock_mainloop(struct gps_data_t *, int,
-                              void (*)(struct gps_data_t *));
+                             void (*)(struct gps_data_t *));
 extern int gps_shm_open(struct gps_data_t *);
 extern void gps_shm_close(struct gps_data_t *);
 extern bool gps_shm_waiting(const struct gps_data_t *, int);
 extern int gps_shm_read(struct gps_data_t *);
 extern int gps_shm_mainloop(struct gps_data_t *, int,
-                              void (*)(struct gps_data_t *));
-
+                            void (*)(struct gps_data_t *));
 extern int gps_dbus_open(struct gps_data_t *);
 extern int gps_dbus_mainloop(struct gps_data_t *, int,
-                              void (*)(struct gps_data_t *));
+                             void (*)(struct gps_data_t *));
 
 extern int json_ais_read(const char *, char *, size_t, struct ais_t *,
                          const char **);
