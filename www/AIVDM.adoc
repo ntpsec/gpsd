@@ -4287,7 +4287,7 @@ gathered automatically from sensors.
 |133-138  |  6 |Time Stamp             |second       |u|Second of UTC timestamp.
 |139-142  |  4 |Regional reserved      |regional     |u|Uninterpreted
 |143-262  |120 |Name                   |shipname     |s|20 6-bit characters
-|263-270  |  8 |Type of ship and cargo |shiptype     |u|As in Message 5
+|263-270  |  8 |Type of ship and cargo |shiptype     |e|As in Message 5
 |271-279  |  9 |Dimension to Bow       |to_bow       |u|Meters
 |280-288  |  9 |Dimension to Stern     |to_stern     |u|Meters
 |289-294  |  6 |Dimension to Port      |to_port      |u|Meters
@@ -4766,10 +4766,10 @@ should warn when this occurs but decode the first 96 bits.
 |38-38   | 1    |Position Accuracy   |accuracy |u|See Common Navigation Block
 |39-39   | 1    |RAIM flag           |raim     |u|See Common Navigation Block
 |40-43   | 4    |Navigation Status   |status   |u|See Common Navigation Block
-|44-61   | 18   |Longitude           |lon      |I4|minutes/10
+|44-61   | 18   |Longitude           |lon      |I1|minutes/10
                                                   East positive, West negative
                                                   181000 = N/A (default)
-|62-78   | 17   |Latitude            |lat      |I4|minutes/10
+|62-78   | 17   |Latitude            |lat      |I1|minutes/10
                                                   North positive, South negative
                                                   91000 = N/A (default)
 |79-84   | 6    |Speed Over Ground   |speed    |u|Knots (0-62);
