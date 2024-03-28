@@ -5,7 +5,7 @@
 #ifndef _GPSD_ITALK_H_
 #define _GPSD_ITALK_H_
 
-/* 0 and 1 are responses to the <?> ping for iTalk and NMEA respectively */
+// 0 and 1 are responses to the <?> ping for iTalk and NMEA respectively
 #define PROTO_ITALK 0
 #define PROTO_NMEA 1
 
@@ -17,33 +17,33 @@
  * configuration), we will probably be sending to the SYSTEM task.
  */
 
-#define TASK_MASK       0x1f    /* 5 low bits of src/dst fields */
-#define NODE_MASK       0xe0    /* 3 high bits of src/dst fields */
-#define NODE_UNDEF      0x00    /* Used in message routing */
-#define NODE_ITRAX      0x20    /* The receiver */
-#define NODE_HOST       0x40    /* Software on your computer */
-#define NODE_GPSWB      0x60    /* GPSWorkbench seems to be HOST|ITRAX */
+#define TASK_MASK       0x1f    // 5 low bits of src/dst fields
+#define NODE_MASK       0xe0    // 3 high bits of src/dst fields
+#define NODE_UNDEF      0x00    // Used in message routing
+#define NODE_ITRAX      0x20    // The receiver
+#define NODE_HOST       0x40    // Software on your computer
+#define NODE_GPSWB      0x60    // GPSWorkbench seems to be HOST|ITRAX
 
 /* FIX-ME: These defines will likely be replaced by an enum
  * once I map every message to the task that sent it.
  */
-/* System controller on the receiver */
+// System controller on the receiver
 #define TASK_SYSTEM     0
-/* Acquisition & Tracking messages (PD) */
+// Acquisition & Tracking messages (PD)
 #define TASK_TRACK1     2
 #define TASK_TRACK2     3
-/* Data decoding messages (PD) */
+// Data decoding messages (PD)
 #define TASK_DATA       4
-/* Navigation messages are sent by these tasks (PD) */
+// Navigation messages are sent by these tasks (PD)
 #define TASK_NAV1       7
 #define TASK_NAV2       8
 #define TASK_NAV3       9
-/* Host controller software (PD) */
+// Host controller software (PD)
 #define TASK_HOST       31
 
 #define MAX_NR_VISIBLE_PRNS 16
 
-/* iTalk Message IDs - isuite.fastrax.fi/sdk/331/Protocols/PRO_MsgId.html */
+// iTalk Message IDs - isuite.fastrax.fi/sdk/331/Protocols/PRO_MsgId.html
 #define ITALK_ACQ_DATA          1
 #define ITALK_PRN_STATUS        2
 #define ITALK_TRACK             3
@@ -86,7 +86,7 @@
 #define ITALK_MEMCTRL           112
 #define ITALK_STOP_TASK         255
 
-/* NAV_FIX */
+// NAV_FIX
 #define FIX_CONV_VEL_VALID              0x0002
 #define FIX_CONV_ACC_VALID              0x0004
 #define FIX_CONV_DOP_VALID              0x0010
@@ -129,20 +129,20 @@
 #define FIXINFO_FLAG_INTERNAL           0x2000
 #define FIXINFO_FLAG_FIRSTFIX           0x4000
 
-/* PRN_STATUS */
+// PRN_STATUS
 #define PRN_FLAG_FOUND                  0x0001
 #define PRN_FLAG_TRACKING               0x0002
 #define PRN_FLAG_USE_IN_NAV             0x0004
 
-/* UTC_IONO_MODEL */
+// UTC_IONO_MODEL
 #define UTC_IONO_MODEL_UTCVALID         0x0001
 #define UTC_IONO_MODEL_IONOVALID        0x0002
 
-/* SUBFRAME */
+// SUBFRAME
 #define SUBFRAME_WORD_FLAG_MASK         0x03ff
 #define SUBFRAME_GPS_PREAMBLE_INVERTED  0x0400
 
-/* PSEUDO */
+// PSEUDO
 #define PSEUDO_OBS_DOPPLER_OK                   0x0001
 #define PSEUDO_OBS_PSEUDORANGE_OK               0x0002
 #define PSEUDO_OBS_TOW_OK                       0x0004
@@ -181,20 +181,20 @@
 #define PSEUDO_OBS_CORRECTED_BY_WAAS   (PSEUDO_OBS_CORRECTED_BY_WAAS_IONO | \
                                         PSEUDO_OBS_CORRECTED_BY_FAST_CORR)
 
-/* MEMCTRL */
+// MEMCTRL
 #define MEM_WRITE               0x0002
 #define MEM_READD               0x0003
 #define MEM_BOOT                0x0004
 #define MEM_ERASE               0x0006
 #define MEM_XTAL_CALIBRATE      0x000a
-/* BOOT flags based on isuite.fastrax.fi/sdk/331/Protocols/PRO_NMEA.html */
+// BOOT flags based on isuite.fastrax.fi/sdk/331/Protocols/PRO_NMEA.html
 #define MEM_BOOT_NORMAL         0x0000
 #define MEM_BOOT_INT_FWLOADER   0x0001
 #define MEM_BOOT_DL_FWLOADER    0x0002
 #define MEM_BOOT_RELOC_ALTFW    0x0003
 
-/* Config Parameters - isuite.fastrax.fi/sdk/331/System/SYS_Parameters.html */
-/* System parameters */
+// Config Parameters - isuite.fastrax.fi/sdk/331/System/SYS_Parameters.html
+// System parameters
 #define SYS_SET_ID                      0x0001
 #define SYS_FACTORY_SET_ID              0x0002
 #define SYS_AUTOSTART                   0x0380
@@ -207,7 +207,7 @@
 #define SYS_BOOT_ERASE_PARAMS           0x0080
 #define SYS_ENABLE_UI_LEDS              0x0081
 
-/* Protocols parameters */
+// Protocols parameters
 #define SYS_ITALK_PORT                  0x0010
 #define SYS_ITALK_SPEED                 0x0011
 #define SYS_ITALK_MASK                  0x0012
@@ -217,7 +217,7 @@
 #define TRACK_ALT_MSG_ROUTING           0x047f
 #define OBS_ALT_MSG_ROUTING             0x047e
 
-/* Fix Conversion parameters */
+// Fix Conversion parameters
 #define NAV_DATUM_ID                    0x0b08
 #define NAV_GRID_ID                     0x0b09
 #define NAV_GRID_NUMBER                 0x0b0a
@@ -228,7 +228,7 @@
 #define NAV_HEAD_VEL_THRMAX_PLL         0x0b0f
 #define NAV_HOLD_HEADING_IF_NO_FIX      0x0bd0
 
-/* General navigation parameters */
+// General navigation parameters
 #define NAV_MODE                        0x0b01
 #define NAV_FIX_INTERVAL                0x0b02
 #define NAV_OUTPUT_INTERVAL             0x0b03
@@ -268,7 +268,7 @@
 #define NAV_ESTIMATE_VEL_WITHOUT_PLL    0x0bb1
 #define NAV_OUTPUT_LAST_VEL_IF_NO_FIX   0x0bb2
 
-/* Position pinning parameters */
+// Position pinning parameters
 #define NAV_PIN_VEL                     0x0b35
 #define NAV_PIN_DRIFT_ERR               0x0b36
 #define NAV_PIN_XYZ_ERR                 0x0b37
@@ -276,7 +276,7 @@
 #define NAV_PIN_START_DELAY             0x0b39
 #define NAV_PINNING_ENA                 0x0b8a
 
-/* Interval mode parameters */
+// Interval mode parameters
 #define NAV_INTMODE_NBR_FIXES           0x0b22
 #define NAV_INTMODE_FIX_INTERVAL        0x0b23
 #define NAV_INTMODE_TRY_FIND_SV         0x0b24
@@ -285,7 +285,7 @@
 #define NAV_INTMODE_NUM_IGNORED_FIXES   0x0b27
 #define NAV_INTERVAL_MODE_ENA           0x0ba2
 
-/* Kalman navigation parameters */
+// Kalman navigation parameters
 #define KLM_MODE                        0x0801
 #define KLM_MAX_NUM_STATES              0x0802
 #define KLM_START_FLAGS                 0x0803
@@ -322,7 +322,7 @@
 #define KLM_RESERVED_007                0x0847
 #define KLM_RESERVED_008                0x0848
 
-/* Observation parameters */
+// Observation parameters
 #define TRACK_MEAS_INTERVAL             0x0420
 #define TRACK_CHANNELS                  0x041d
 #define OBS_ELEV_LIMIT                  0x0101
@@ -345,7 +345,7 @@
 #define SAT_PRED_LKG_TIMEOUT            0x0222
 #define SAT_ORBIT_CHECK                 0x0281
 
-/* Unav Tracking parameters */
+// Unav Tracking parameters
 #define TRACK_DLL_ALPHA                 0x0401
 #define TRACK_DLL_BETA                  0x0402
 #define TRACK_DLL_THR_HIGH              0x0403
@@ -380,7 +380,7 @@
 #define TRACK_RESERVED_015              0x0483
 #define SUBF_CHECK_FLAGS                0x0432
 
-/* Unav Track task parameters */
+// Unav Track task parameters
 #define TRACK_GROUP_1                   0x041a
 #define TRACK_GROUP_2                   0x041b
 #define TRACK_GROUP_2_DELAY             0x041c
@@ -390,13 +390,13 @@
 #define TRACK_NAVAID_ENA                0x0482
 #define TRACK_SHIFT_REG                 0x0421
 
-/* Agc config parameters */
+// Agc config parameters
 #define TRACK_AGC_LO                    0x0422
 #define TRACK_AGC_HI                    0x0423
 #define TRACK_AGC_MAX_HI                0x0424
 #define TRACK_AGC_ENA                   0x0481
 
-/* PPS parameters */
+// PPS parameters
 #define PPS_DUTYCYCLE                   0x0440
 #define PPS_FREQ                        0x0441
 #define PPS_DELAY                       0x0442
@@ -407,7 +407,7 @@
 #define PPS_ENA_PRED                    0x0492
 #define PPS_INVERT                      0x0493
 
-/* Frequency plan parameters */
+// Frequency plan parameters
 #define FREQ_XTAL                       0x0501
 #define FREQ_MCLK_NOM                   0x0502
 #define FREQ_MCLK_DENOM                 0x0503
@@ -417,7 +417,7 @@
 #define FREQ_TME2                       0x0507
 #define FREQ_PARAM_ENA                  0x0581
 
-/* Search parameters */
+// Search parameters
 #define SEARCH_XTAL_UNC                 0x0701
 #define SEARCH_DOPPLER_UNC              0x0702
 #define SEARCH_WIN_PRED_EVEN            0x0703
@@ -445,7 +445,7 @@
 #define SEARCH_AUTO_PD_ENA              0x0784
 #define SEARCH_SE_PD                    0x0785
 
-/* Unav Acquisition parameters */
+// Unav Acquisition parameters
 #define ACQ_SENS_9_COH                  0x0901
 #define ACQ_SENS_9_NONCOH               0x0902
 #define ACQ_SENS_9_THR                  0x0903
@@ -461,7 +461,7 @@
 #define SE_THR                          0x0942
 #define SE_INT_ENA                      0x09a0
 
-/* Logging parameters */
+// Logging parameters
 #define LOG_MODE                        0x0d01
 #define LOG_INTERVAL_MIN                0x0d02
 #define LOG_INTERVAL_MAX                0x0d03
@@ -480,14 +480,14 @@
 #define LOG_STORE_VEL_VERT              0x0d87
 #define LOG_STORE_FIXINFO               0x0d88
 
-/* SBAS parameters */
+// SBAS parameters
 #define WAAS_TIMEOUT_MODE               0x0b60
 #define WAAS_MAX_CHANNELS               0x0b61
 #define WAAS_ENA                        0x0bc0
 #define WAAS_MSG_0_ENA                  0x0bc1
 #define WAAS_STRICT_ENA                 0x0bc2
 
-/* Sony Track parameters */
+// Sony Track parameters
 #define TRACK_DLL_COEFF_GPS             0x0f01
 #define TRACK_DLL_COEFF_DISCR           0x0f02
 #define TRACK_DLL_LIM_GPS               0x0f03
@@ -529,10 +529,10 @@
 #define TRACK_CARRCHKATLOCK             0x0f83
 #define TRACK_BL_REACQ                  0x0f84
 
-/* Sony Test parameters */
+// Sony Test parameters
 #define SONYTEST_DISABLE_PORTS          0x0f85
 
-/* Sony Acq parameters */
+// Sony Acq parameters
 #define SACQ_SEARCH_CH_NUM              0x0f30
 #define SACQ_NOISE_COUNT_NUM            0x0f31
 #define SACQ_NOISE_VALID_TIME           0x0f32
@@ -542,5 +542,5 @@
 #define SACQ_RESERVE                    0x0f36
 #define SACQ_SEARCH_CH_NUM_VALID        0x0f96
 
-#endif /* _GPSD_ITALK_H_ */
+#endif // _GPSD_ITALK_H_
 // vim: set expandtab shiftwidth=4
