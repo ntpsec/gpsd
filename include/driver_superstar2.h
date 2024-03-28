@@ -8,7 +8,7 @@
 #define SUPERSTAR2_BASE_SIZE 4
 #define SUPERSTAR2_TYPE_OFFSET 1
 
-/* input-only */
+// input-only
 #define SUPERSTAR2_RESET 2
 #define SUPERSTAR2_LINKUP 63
 #define SUPERSTAR2_CHANNEL_INHIBIT 64
@@ -30,12 +30,12 @@
 #define SUPERSTAR2_MESSAGE_CONFIG 105
 #define SUPERSTAR2_SERIAL_CONFIG 110
 
-/* output-only */
+// output-only
 #define SUPERSTAR2_CHANINF2 7
 #define SUPERSTAR2_LINKERR 125
 #define SUPERSTAR2_ACK 126
 
-/* bidirectional */
+// bidirectional
 #define SUPERSTAR2_DUMMY 0
 #define SUPERSTAR2_CHANINF 6
 #define SUPERSTAR2_NAVSOL_LLA 20
@@ -59,5 +59,6 @@
 #define SUPERSTAR2_ALMANAC_STATUS 78
 #define SUPERSTAR2_TIMING 113
 
-#endif /* _GPSD_SUPERSTAR2_H_ */
+#endif  // _GPSD_SUPERSTAR2_H_ 
+
 // vim: set expandtab shiftwidth=4
