@@ -3,7 +3,7 @@
  * Nothing in this file should be used by any client.  So safe to change
  * anything here without (directly) affecting the API or ABI.
  *
- * This file is Copyright 2017 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -112,6 +112,7 @@ extern "C" {
  *      Change RTCM_MAX to RTCM2_MAX to avoid confusiotn, and make it 4 longer.
  *      add shm_clock_lastsec and shm_pps_lastsec to gps_device_t;
  *      add queue to gps_device_t
+ *      add ALL_PACKET
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -250,17 +251,23 @@ struct gps_lexer_t {
 #define GEOSTAR_PACKET          14
 #define NMEA2000_PACKET         15
 #define GREIS_PACKET            16
-#define MAX_GPSPACKET_TYPE      16      // increment this as necessary
-#define RTCM2_PACKET            17
-#define RTCM3_PACKET            18
-#define JSON_PACKET             19
-#define PACKET_TYPES            20      // increment this as necessary
-#define SKY_PACKET              21
+#define SKY_PACKET              17
+#define ALL_PACKET              18
+#define MAX_GPSPACKET_TYPE      18      // increment this as necessary
+// end of GPS type packets
+
+#define RTCM2_PACKET            19
+#define RTCM3_PACKET            20
+#define JSON_PACKET             21
+// end of non GPS type packets, AIVDM is GPS type??
+#define PACKET_TYPES            221      // increment this as necessary
+
 #define TEXTUAL_PACKET_TYPE(n)  ((((n)>=NMEA_PACKET) && ((n)<=MAX_TEXTUAL_TYPE)) || (n)==JSON_PACKET)
 #define GPS_PACKET_TYPE(n)      (((n)>=NMEA_PACKET) && ((n)<=MAX_GPSPACKET_TYPE))
 #define LOSSLESS_PACKET_TYPE(n) (((n)>=RTCM2_PACKET) && ((n)<=RTCM3_PACKET))
 #define PACKET_TYPEMASK(n)      (1 << (n))
 #define GPS_TYPEMASK    (((2<<(MAX_GPSPACKET_TYPE+1))-1) &~ PACKET_TYPEMASK(COMMENT_PACKET))
+
     unsigned int state;
     size_t length;         // if a message has a length field, this is it.
     unsigned char inbuffer[MAX_PACKET_LENGTH*2+1];

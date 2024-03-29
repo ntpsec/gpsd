@@ -560,6 +560,9 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = RTCM3_LEADER_1;
             break;
 #endif  // RTCM104V3_ENABLE
+        case 0xf1:      // latin1 small letter N with tilde
+            lexer->state = ALL_LEADER_1;
+            break;
 #ifdef ZODIAC_ENABLE
         case 0xff:      // lattin1 smal y with diaeresis
             lexer->state = ZODIAC_LEADER_1;
@@ -1601,6 +1604,63 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
 #endif  // UBLOX_ENABLE
+
+    // start ALLYSTAR
+    case ALL_LEADER_1:
+        if (0xd9 == c) {      // latin capital letter U with grave
+            lexer->state = ALL_LEADER_2;
+        } else {
+            return character_pushback(lexer, GROUND_STATE);
+        }
+        break;
+    case ALL_LEADER_2:
+        lexer->state = ALL_CLASS_ID;
+        break;
+    case ALL_CLASS_ID:
+        lexer->state = ALL_MESSAGE_ID;
+        break;
+    case ALL_MESSAGE_ID:
+        lexer->length = (size_t)c;
+        lexer->state = ALL_LENGTH_1;
+        break;
+    case ALL_LENGTH_1:
+        lexer->length += (c << 8);
+        if (0 == lexer->length) {
+            // no payload
+            lexer->state = ALL_CHECKSUM_A;
+        } else if (MAX_PACKET_LENGTH >= lexer->length) {
+            // normal size payload, noiddea the real max.
+            lexer->state = ALL_LENGTH_2;
+        } else {
+            // bad length
+            return character_pushback(lexer, GROUND_STATE);
+        }
+        break;
+    case ALL_LENGTH_2:
+        lexer->state = ALL_PAYLOAD;
+        break;
+    case ALL_PAYLOAD:
+        if (0 == --lexer->length) {
+            lexer->state = ALL_CHECKSUM_A;
+        }
+        // else stay in payload state
+        break;
+    case ALL_CHECKSUM_A:
+        lexer->state = ALL_RECOGNIZED;
+        break;
+    case ALL_RECOGNIZED:
+        if (0xf1 == c) {   // latin1 small letter N with tilde
+            lexer->state = ALL_LEADER_1;
+        } else if ('$' == c) {  // LEA-5H can/will output NMEA/ALL back to back
+            lexer->state = NMEA_DOLLAR;
+        } else if ('{' == c) {
+            // codacy thinks this can never happen
+            return character_pushback(lexer, JSON_LEADER);
+        } else {
+            return character_pushback(lexer, GROUND_STATE);
+        }
+        break;
+    // send ALLYSTAR
 #ifdef EVERMORE_ENABLE
     case EVERMORE_LEADER_1:
         if (STX == c) {        // DLE, STX
@@ -2924,6 +2984,34 @@ void packet_parse(struct gps_lexer_t *lexer)
             break;
 #endif  // TSIP_ENABLE || GARMIN_ENABLE
 
+        case ALL_RECOGNIZED:
+            // ALLYSTAR use a TCP like checksum
+            ck_a = (unsigned char)0;
+            ck_b = (unsigned char)0;
+
+            GPSD_LOG(LOG_IO, &lexer->errout, "ALL: len %d\n", inbuflen);
+            for (idx = 2; idx < (inbuflen - 2); idx++) {
+                ck_a += lexer->inbuffer[idx];
+                ck_b += ck_a;
+            }
+            if (ck_a == lexer->inbuffer[inbuflen - 2] &&
+                ck_b == lexer->inbuffer[inbuflen - 1]) {
+                packet_type = ALL_PACKET;
+            } else {
+                GPSD_LOG(LOG_PROG, &lexer->errout,
+                         "ALL checksum 0x%02hhx%02hhx over length %d,"
+                         " expecting 0x%02hhx%02hhx (type 0x%02hhx%02hhx)\n",
+                         ck_a,
+                         ck_b,
+                         inbuflen,
+                         lexer->inbuffer[inbuflen - 2],
+                         lexer->inbuffer[inbuflen - 1],
+                         lexer->inbuffer[2], lexer->inbuffer[3]);
+                packet_type = BAD_PACKET;
+                lexer->state = GROUND_STATE;
+            }
+            acc_dis = ACCEPT;
+            break;
 #ifdef UBLOX_ENABLE
         case UBX_RECOGNIZED:
             // UBX use a TCP like checksum
