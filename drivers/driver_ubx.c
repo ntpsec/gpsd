@@ -4917,7 +4917,9 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         }
 
         switch (session->queue) {
-        case 10:
+        case 0:
+            /* need to doi this right away, so there are UBX message
+            * to push this queue forward */
             if (!session->context->passive) {
                 // turn on common UBX-NAV
                 unsigned i;
@@ -4930,7 +4932,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 }
             }
             break;
-        case 20:
+        case 10:
             /* Older u-blox (6-series) may have ignored earlier requests
              * for UBX-MON-VER.  Try again if needed. */
             if ('\0' == session->subtype[0]) {
@@ -4938,7 +4940,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
             }
             break;
-        case 30:
+        case 20:
             if (!session->context->passive) {
                 unsigned i;
 
