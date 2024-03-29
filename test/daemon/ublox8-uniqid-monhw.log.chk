@@ -1,4 +1,3 @@
-{"class":"ERROR","message":"No such device as /dev/ttyACM0"}
 $GNRMC,204221.00,A,4624.27601,N,11701.24518,W,0.045,,240324,,,A*73
 {"class":"TPV","mode":2,"time":"2024-03-24T20:42:21.000Z","ept":0.005,"lat":46.404600167,"lon":-117.020753000,"magvar":13.9,"speed":0.023}
 $GNVTG,,T,,M,0.045,N,0.083,K,A*37
