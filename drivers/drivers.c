@@ -1708,6 +1708,7 @@ const struct gps_type_t driver_pps = {
 // *INDENT-ON*
 
 
+extern const struct gps_type_t driver_allystar;
 extern const struct gps_type_t driver_evermore;
 extern const struct gps_type_t driver_garmin_ser_binary;
 extern const struct gps_type_t driver_garmin_usb_binary;
@@ -1728,6 +1729,7 @@ extern const struct gps_type_t driver_zodiac;
 static const struct gps_type_t *gpsd_driver_array[] = {
     &driver_unknown,
     &driver_nmea0183,
+    &driver_allystar,
     &driver_ashtech,
 #ifdef TRIPMATE_ENABLE
     &driver_tripmate,

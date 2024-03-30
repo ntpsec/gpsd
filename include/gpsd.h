@@ -252,7 +252,7 @@ struct gps_lexer_t {
 #define NMEA2000_PACKET         15
 #define GREIS_PACKET            16
 #define SKY_PACKET              17
-#define ALL_PACKET              18
+#define ALLYSTAR_PACKET         18
 #define MAX_GPSPACKET_TYPE      18      // increment this as necessary
 // end of GPS type packets
 

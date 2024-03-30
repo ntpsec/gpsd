@@ -22,15 +22,15 @@
    AIS_RECOGNIZED,        // saw trailing \n of AIS packet
 
    // ALLYSTAR, sloppy copy of UBX.  Not UBX compatible
-   ALL_LEADER_1,          // first constant leader byte found
-   ALL_LEADER_2,          // second constant leader byte found
-   ALL_CLASS_ID,          // classid read
-   ALL_MESSAGE_ID,        // message id read
-   ALL_LENGTH_1,          // first length byte read (le)
-   ALL_LENGTH_2,          // second length byte read (le)
-   ALL_PAYLOAD,           // payload eating
-   ALL_CHECKSUM_A,        // checksum A byte (tcp checksum)
-   ALL_RECOGNIZED,        // this is also ALL_CHECKSUM_B
+   ALLY_LEADER_1,          // first constant leader byte found
+   ALLY_LEADER_2,          // second constant leader byte found
+   ALLY_CLASS_ID,          // classid read
+   ALLY_MESSAGE_ID,        // message id read
+   ALLY_LENGTH_1,          // first length byte read (le)
+   ALLY_LENGTH_2,          // second length byte read (le)
+   ALLY_PAYLOAD,           // payload eating
+   ALLY_CHECKSUM_A,        // checksum A byte (tcp checksum)
+   ALLY_RECOGNIZED,        // this is also ALLY_CHECKSUM_B
 
    DLE_LEADER,            // we've seen the TSIP/EverMore leader (DLE)
 

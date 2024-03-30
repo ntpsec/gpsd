@@ -1808,6 +1808,7 @@ libgpsd_sources = [
     "gpsd/bsd_base64.c",
     "gpsd/crc24q.c",
     "drivers/driver_ais.c",
+    "drivers/driver_allystar.c",
     "drivers/driver_evermore.c",
     "drivers/driver_garmin.c",
     "drivers/driver_garmin_txt.c",
