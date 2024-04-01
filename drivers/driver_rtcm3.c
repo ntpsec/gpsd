@@ -1815,6 +1815,12 @@ void rtcm3_unpack(const struct gps_context_t *context,
     case 4065:
         /* RTCM 3.3
          * Allystar Technology (Shenzhen) Co. Ltd. Proprietary
+         *
+         * sub-id:
+         *    0    Reference stations PVT, requires MSM7.
+         *    1    Navigation PVT Solyution
+         *    2    Attitude Determination (multi antenna)
+         *    0x0a Raw Sensor measurements.
          */
         msg_name = "Allystar Technology (Shenzhen) Co. Ltd. Proprietary";
         break;
