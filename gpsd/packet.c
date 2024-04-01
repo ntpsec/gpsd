@@ -3000,7 +3000,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_type = ALLYSTAR_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
-                         "ALL checksum 0x%02hhx%02hhx over length %d,"
+                         "ALLY: checksum 0x%02hhx%02hhx over length %d,"
                          " expecting 0x%02hhx%02hhx (type 0x%02hhx%02hhx)\n",
                          ck_a,
                          ck_b,
