@@ -486,8 +486,9 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
                      "Maybe gpsd is already running!  "
                      "Or systemd has the port?\n");
         }
-        (void)close(s);
-        return -1;
+        /* Make this fatal, users never notice the ERROR, and spend
+         * days looking at the rest of the log output. */
+        exit(1);
     }
     if (SOCK_STREAM == type &&
         -1 == listen(s, qlen)) {
