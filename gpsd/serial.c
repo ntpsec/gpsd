@@ -870,9 +870,12 @@ int gpsd_serial_open(struct gps_device_t *session)
         cnt = fusercount(session);
         if (1 < cnt) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: %s already opened by another process\n",
+                     "SER: %s already opened by another process!!!!!!!!!!!\n",
                      session->gpsdata.dev.path);
-            // since this never worked until now, just let user be bad
+            /* caan't really continue, make it obvious to the user as
+             * none undertsand what ERROR means. */
+            exit(1);
+
             // (void)close(session->gpsdata.gps_fd);
             // session->gpsdata.gps_fd = UNALLOCATED_FD;
             // return UNALLOCATED_FD;
