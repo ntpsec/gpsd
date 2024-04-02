@@ -1,6 +1,6 @@
 = GPSD Installation Instructions
 :author: Eric S. Raymond
-:date: 24 August 2021
+:date: 1 Apr 2024
 :description: Steps for installing GPSD and verifying its performance.
 :docinfodir: www
 :email: <esr@thyrsus.com>
@@ -25,11 +25,11 @@ Raspberry Pi are in the file "build.adoc" in the source distribution.
 Start by making sure you can get data from your GPS, otherwise the later
 steps will be very frustrating.  In this command:
 
-      stty -F /dev/ttyXXX ispeed 4800 && cat </dev/ttyXXX
+      stty -F /dev/ttyXXX speed 4800 && cat </dev/ttyXXX
 
-replace ttyXXX with the filename of the port.  This will probably be
-either /dev/ttyUSB0 or /dev/ttyS0. If you are on a *BSD Unix or MacOS X,
-replace -F with -f.
+replace ttyXXX with the filename of the port, and 4800 with the correct
+speed. This will probably be either /dev/ttyUSB0 or /dev/ttyS0. If you
+are on a *BSD Unix or MacOS X, replace -F with -f.
 
 When you run this command, you should see text lines beginning with $
 come to stdout (possibly after a short initial burst of binary
