@@ -1136,6 +1136,8 @@ extern bool gpsd_add_device(const char *device_name, bool flag_nowait);
 extern const char *gpsd_maskdump(gps_mask_t);
 
 // exceptional driver methods
+extern bool ally_write(struct gps_device_t *, unsigned int, unsigned int,
+                       const unsigned char *, size_t);
 extern bool ubx_write(struct gps_device_t *, unsigned int, unsigned int,
                       const unsigned char *, size_t);
 extern bool ais_binary_decode(const struct gpsd_errout_t *errout,

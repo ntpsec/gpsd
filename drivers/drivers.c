@@ -243,6 +243,13 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
             (void)nmea_send(session, "print,/par/rcv/vendor");
             break;
 #endif  // GREIS_ENABLE
+        case 10:
+            // probe for ALLYSTAR
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "=> Probing for ALLYSTAR\n");
+            // query version MON-VER
+            (void)ally_write(session, 0x0a, 0x04, NULL, 0);
+            break;
         default:
             break;
         }
@@ -1281,7 +1288,8 @@ static void isync_event_hook(struct gps_device_t *session, event_t event)
             (void)isync_write(session, "@@@@GPS\r\n");
             break;
         case 6:
-            // Trigger detection of underlying u-blox (if necessary)
+            /* Trigger detection of underlying u-blox (if necessary)
+             * UBX-CFG-PRT */
             (void)ubx_write(session, 0x06, 0x00, NULL, 0);
             break;
         }
