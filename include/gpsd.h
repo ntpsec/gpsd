@@ -681,7 +681,6 @@ struct gps_device_t {
      * mode switch.
      */
     union {
-#ifdef BINARY_ENABLE
 #ifdef GEOSTAR_ENABLE
         struct {
             unsigned int physical_port;
@@ -864,7 +863,6 @@ struct gps_device_t {
             isgps30bits_t   buf[RTCM2_WORDS_MAX];
             unsigned int    bufindex;
         } isgps;
-#endif  // BINARY_ENABLE
 #ifdef AIVDM_ENABLE
         struct {
             struct aivdm_context_t context[AIVDM_CHANNELS];
