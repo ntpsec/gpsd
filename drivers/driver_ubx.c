@@ -448,8 +448,6 @@ static gps_mask_t ubx_msg_nav_posecef(struct gps_device_t *session,
                                       unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len);
-static gps_mask_t ubx_msg_mon_ver(struct gps_device_t *session,
-                                  unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_nav_sbas(struct gps_device_t *session,
@@ -503,7 +501,7 @@ static const fw_protver_map_entry_t fw_protver_map[] = {
  */
 
 /* send a ubx message.
- * calcualte checksums, etc.
+ * calculate checksums, etc.
  */
 bool ubx_write(struct gps_device_t * session,
                unsigned int msg_class, unsigned int msg_id,
@@ -540,15 +538,10 @@ bool ubx_write(struct gps_device_t * session,
     }
 
     // calculate CRC
-    for (i = 2; i < 6; i++) {
+    for (i = 2; i < (6 + data_len); i++) {
         CK_A += session->msgbuf[i];
         CK_B += CK_A;
     }
-    if (NULL != msg)
-        for (i = 0; i < data_len; i++) {
-            CK_A += msg[i];
-            CK_B += CK_A;
-        }
 
     session->msgbuf[6 + data_len] = CK_A;
     session->msgbuf[7 + data_len] = CK_B;
