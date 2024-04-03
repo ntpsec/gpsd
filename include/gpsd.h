@@ -798,7 +798,8 @@ struct gps_device_t {
             unsigned int Zv[ZODIAC_CHANNELS];   // signal values (0-7)
         } zodiac;
 #endif  // ZODIAC_ENABLE
-#ifdef UBLOX_ENABLE
+
+        // driver_ally and driver_ubx both use the next struct.
         struct {
             // FIXME: last_time set but never used?
             timespec_t last_time;               // time of last_msgid
@@ -812,7 +813,6 @@ struct gps_device_t {
             unsigned char protver;              // u-blox protocol version
             unsigned char last_protver;         // last protocol version
         } ubx;
-#endif  // UBLOX_ENABLE
 #ifdef NAVCOM_ENABLE
         struct {
             uint8_t physical_port;
