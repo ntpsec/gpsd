@@ -25,9 +25,6 @@
 #include "../include/gpsd.h"
 #include "../include/bits.h"
 
-// prefix is 0xf1 0xd9, [class] [id]
-#define ALLY_PREFIX_LEN 4
-
 // one byte class
 typedef enum {
     ALLY_NAV = 0x01,     // Navigation
@@ -38,6 +35,39 @@ typedef enum {
     ALLY_AID = 0x0b,     // AGPS (Deprecated)
 } ally_classes_t;
 
+#define MSGID(cls_, id_) (((cls_)<<8)|(id_))
+
+typedef enum {
+    ACK_ACK         = MSGID(ALLY_ACK, 0x01),
+    ACK_NAK         = MSGID(ALLY_ACK, 0x00),
+} ally_msgs_t;
+
+// ACK-* ids
+static struct vlist_t vack_ids[] = {
+    {ACK_ACK, "ACK-ACK"},
+    {ACK_NAK, "ACK-NAK"},
+    {0, NULL},
+};
+
+// ACK-ACK, ACK-NAK
+static gps_mask_t msg_ack(struct gps_device_t *session,
+                              unsigned char *buf, size_t data_len)
+{
+    unsigned msgid = getbes16(buf, 2);
+
+    if (2 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: %s-: runt payload len %zd",
+                 val2str(msgid, vack_ids), data_len);
+        return 0;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: %s: class: %02x, id: %02x\n",
+             val2str(msgid, vack_ids),
+             buf[2], buf[3]);
+    return 0;
+}
+
 static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
                             size_t len)
 {
@@ -46,12 +76,16 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
     unsigned  msg_id;
     gps_mask_t mask = 0;
 
-    // the packet at least contains a head long enough for an empty message
-    if (ALLY_PREFIX_LEN > len) {
+    /* the packet at least 8 bytes / Min packet is 8 ==  header (2),
+    *  Message ID (2), length (2) and checksum (2).  The packetizer should
+    *  already guarantee, This is to protect against malicious fuzzing. */
+    if (8 > len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: runt message len %zu\n", len);
         return 0;
     }
 
-    session->cycle_end_reliable = true;
+    // session->cycle_end_reliable = true; // Not yet.
     // for now, use driver.ubx.
     session->driver.ubx.iTOW = -1;        // set by decoder
 
@@ -60,12 +94,38 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
     msg_id = getub(buf, 3);
     data_len = getles16(buf, 4);
 
+    if ((len - 8) != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: len (%zu) does not match payload (%u) + 8\n",
+                 len, data_len);
+        return 0;
+    }
+
     /* FIXME: make each case just call one function.
      / then this switch can be turned into a table. */
     switch (msg_class) {
     case ALLY_ACK:
+        mask = msg_ack(session, buf, data_len);
+        break;
+    case ALLY_AID:
+        // Deprecated
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: ACK- %02x length %zd/%u)\n",
+                 "ALLY: AID- %02x length %zd/%u)\n",
+                 msg_id, len, data_len);
+        break;
+    case ALLY_CFG:
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG- %02x length %zd/%u)\n",
+                 msg_id, len, data_len);
+        break;
+    case ALLY_MON:
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: MON- %02x length %zd/%u)\n",
+                 msg_id, len, data_len);
+        break;
+    case ALLY_NAV:
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV- %02x length %zd/%u)\n",
                  msg_id, len, data_len);
         break;
     case ALLY_RXM:
