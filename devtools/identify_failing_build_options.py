@@ -68,7 +68,6 @@ knobs = [
     'python',
     'qt',
     'reconfigure',
-    'rtcm104v3',
     'shared',
     'shm_export',
     'sirf',

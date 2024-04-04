@@ -545,11 +545,9 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         case MICRO:      // latin1 micro, 0xb5
             lexer->state = UBX_LEADER_1;
             break;
-#ifdef RTCM104V3_ENABLE
         case 0xD3:      // latin1 capital O acute
             lexer->state = RTCM3_LEADER_1;
             break;
-#endif  // RTCM104V3_ENABLE
         case 0xf1:      // latin1 small letter N with tilde
             lexer->state = ALLY_LEADER_1;
             break;
@@ -1415,7 +1413,6 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
 #endif  // NAVCOM_ENABLE
 #endif  // TSIP_ENABLE || EVERMORE_ENABLE || GARMIN_ENABLE
-#ifdef RTCM104V3_ENABLE
     case RTCM3_LEADER_1:
         // high 6 bits must be zero, low 2 bits are MSB of a 10-bit length
         if (0 == (c & 0xFC)) {
@@ -1438,7 +1435,6 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = RTCM3_RECOGNIZED;
         }
         break;
-#endif  // RTCM104V3_ENABLE
 #ifdef ZODIAC_ENABLE
     case ZODIAC_EXPECTED:
         FALLTHROUGH
@@ -2496,7 +2492,6 @@ void packet_parse(struct gps_lexer_t *lexer)
             acc_dis = ACCEPT;
             break;
 
-#ifdef RTCM104V3_ENABLE
         case RTCM3_RECOGNIZED:
             // RTCM3 message header not always at inbuffer[0]
             for (idx = 0; idx < inbuflen; idx++) {
@@ -2543,7 +2538,6 @@ void packet_parse(struct gps_lexer_t *lexer)
             acc_dis = ACCEPT;
             lexer->state = GROUND_STATE;
             break;
-#endif  // RTCM104V3_ENABLE
 
 #ifdef SIRF_ENABLE
         case SIRF_RECOGNIZED:

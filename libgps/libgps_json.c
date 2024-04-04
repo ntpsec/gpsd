@@ -935,7 +935,6 @@ int libgps_json_unpack(const char *buf,
         }
         return FILTER(status);
     }
-#ifdef RTCM104V3_ENABLE
     if (str_starts_with(classtag, "\"class\":\"RTCM3\"")) {
         status = json_rtcm3_read(buf,
                                  gpsdata->dev.path, sizeof(gpsdata->dev.path),
@@ -946,7 +945,6 @@ int libgps_json_unpack(const char *buf,
         }
         return FILTER(status);
     }
-#endif  // RTCM104V3_ENABLE
 #ifdef AIVDM_ENABLE
     if (str_starts_with(classtag, "\"class\":\"AIS\"")) {
         status = json_ais_read(buf,

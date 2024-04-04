@@ -338,7 +338,6 @@ boolopts = (
     ("gpsclock",      True,  "Furuno GPSClock support"),
     ("isync",         True,  "Spectratime iSync LNRClok/GRCLOK support"),
     ("oceanserver",   True,  "OceanServer support"),
-    ("rtcm104v3",     True,  "rtcm104v3 support"),
     # Time service
     ("oscillator",    True,  "Disciplined oscillator support"),
     # Export methods

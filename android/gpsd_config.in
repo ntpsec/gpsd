@@ -57,7 +57,6 @@
 #define ONCORE_ENABLE 1
 #define OSCILLATOR_ENABLE 1
 #define QT_ENABLE 1
-#define RTCM104V3_ENABLE 1
 #define RUNDIR "/run"
 #define SHARED_ENABLE 1
 #define SHM_EXPORT_ENABLE 1

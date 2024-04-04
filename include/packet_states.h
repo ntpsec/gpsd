@@ -223,12 +223,10 @@
    RTCM2_SKIP_STATE,      // we have sync lock, but this character is bad
    RTCM2_RECOGNIZED,      // we have an RTCM packet
 
-#ifdef RTCM104V3_ENABLE
    RTCM3_LEADER_1,        // constant leader byte found
    RTCM3_LEADER_2,        // second leader byte found (high 6 bits zero)
    RTCM3_PAYLOAD,         // gathering payload
    RTCM3_RECOGNIZED,      // RTCM3 packet recognized
-#endif  // RTCM104V3_ENABLE
 
    JSON_LEADER,           // JSON leading { found
    JSON_STRINGLITERAL,    // start of JSON string literal seen

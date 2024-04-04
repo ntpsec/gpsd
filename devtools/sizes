@@ -37,7 +37,6 @@ binary_gps = [
 
 # Differential correction and AIVDM
 non_gps = [
-  "rtcm104v3=no",
   "ntrip=no",
   "aivdm=no",
   ]

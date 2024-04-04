@@ -1679,7 +1679,6 @@ void json_rtcm2_dump(struct rtcm2_t *rtcm,
     (void)strlcat(buf, "}\r\n", buflen);
 }
 
-#if defined(RTCM104V3_ENABLE)
 /* dump the contents of a parsed RTCM104v3 message into buf as JSON
  *
  * return: void
@@ -2405,7 +2404,6 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 #undef CODE
 #undef INT
 }
-#endif   // defined(RTCM104V3_ENABLE)
 
 #if defined(AIVDM_ENABLE)
 /* json_aivdm_dump() - output AIS messages as JSON
@@ -4770,13 +4768,11 @@ void json_data_report(const gps_mask_t changed,
                         buf + buf_len, buflen - buf_len);
     }
 
-#ifdef RTCM104V3_ENABLE
     if (0 != (changed & RTCM3_SET)) {
         buf_len = strnlen(buf, MAX_PACKET_LENGTH);
         json_rtcm3_dump(&datap->rtcm3, datap->dev.path,
                         buf + buf_len, buflen - buf_len);
     }
-#endif  // RTCM104V3_ENABLE
 
 #ifdef AIVDM_ENABLE
     if (0 != (changed & AIS_SET)) {

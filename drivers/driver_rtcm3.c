@@ -45,8 +45,6 @@ SPDX-License-Identifier: BSD-2-clause
 #include "../include/gpsd.h"
 #include "../include/bits.h"
 
-#ifdef RTCM104V3_ENABLE
-
 // scaling constants for RTCM3 real number types
 #define GPS_PSEUDORANGE_RESOLUTION      0.02    // DF011
 #define PSEUDORANGE_DIFF_RESOLUTION     0.0005  // DF012, DF042
@@ -2058,7 +2056,5 @@ void rtcm3_unpack(const struct gps_context_t *context,
 }
 
 // *INDENT-ON*
-
-#endif  // RTCM104V3_ENABLE
 
 // vim: set expandtab shiftwidth=4
