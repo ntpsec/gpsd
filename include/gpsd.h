@@ -134,8 +134,6 @@ extern "C" {
 #define ZODIAC_ENABLE
 #endif
 
-#define NON_NMEA0183_ENABLE
-
 #ifdef ISYNC_ENABLE
 #define STASH_ENABLE
 #endif
