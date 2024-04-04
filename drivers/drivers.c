@@ -217,7 +217,6 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
                      "=> Probing for Ashtech\n");
             (void)nmea_send(session, "$PASHQ,RID");
             break;
-#ifdef UBLOX_ENABLE
         case 7:
             // probe for UBX
             GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -227,7 +226,6 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
             // query port configuration UBX-CFG-PRT
             (void)ubx_write(session, 0x06, 0x00, NULL, 0);
             break;
-#endif  // UBLOX_ENABLE
         case 8:
             // probe for MTK-3301 -- expect $PMTK705
             GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -1802,9 +1800,7 @@ static const struct gps_type_t *gpsd_driver_array[] = {
 #ifdef ISYNC_ENABLE
     &driver_isync,
 #endif  // ISYNC_ENABLE
-#ifdef UBLOX_ENABLE
     &driver_ubx,
-#endif  // UBLOX_ENABLE
 #ifdef ZODIAC_ENABLE
     &driver_zodiac,
 #endif  // ZODIAC_ENABLE

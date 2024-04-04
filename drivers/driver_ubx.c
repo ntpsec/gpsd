@@ -31,7 +31,6 @@
 
 #include "../include/compiler.h"   // for FALLTHROUGH
 #include "../include/gpsd.h"
-#if defined(UBLOX_ENABLE)
 #include "../include/driver_ubx.h"
 
 #include "../include/bits.h"       // For UINT2INT()
@@ -5412,6 +5411,5 @@ const struct gps_type_t driver_ubx = {
     .time_offset       = NULL,              // no method for NTP fudge factor
 };
 // *INDENT-ON*
-#endif // defined(UBLOX_ENABLE)
 
 // vim: set expandtab shiftwidth=4

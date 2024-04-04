@@ -550,11 +550,9 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = SIRF_LEADER_1;
             break;
 #endif  // SIRF_ENABLE || SKYTRAQ_ENABLE
-#ifdef UBLOX_ENABLE
         case MICRO:      // latin1 micro, 0xb5
             lexer->state = UBX_LEADER_1;
             break;
-#endif  // UBLOX_ENABLE
 #ifdef RTCM104V3_ENABLE
         case 0xD3:      // latin1 capital O acute
             lexer->state = RTCM3_LEADER_1;
@@ -881,12 +879,10 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = NMEA_DOLLAR;
         } else if ('!' == c) {
             lexer->state = AIS_BANG;
-#ifdef UBLOX_ENABLE
         } else if (MICRO == c) {   // latin1 micro, 0xb5
             // LEA-5H can/will output NMEA/UBX back to back
             // codacy says this state impossible?
             lexer->state = UBX_LEADER_1;
-#endif  // UBLOX_ENABLE
         } else if ('{' == c) {
             // codacy says this state impossible?
             return character_pushback(lexer, JSON_LEADER);
@@ -1548,7 +1544,6 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
 #endif  // ZODIAC_ENABLE
-#ifdef UBLOX_ENABLE
     case UBX_LEADER_1:
         if ('b' == c) {      // micro, b
             lexer->state = UBX_LEADER_2;
@@ -1603,7 +1598,6 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             return character_pushback(lexer, GROUND_STATE);
         }
         break;
-#endif  // UBLOX_ENABLE
 
     // start ALLYSTAR
     case ALLY_LEADER_1:
@@ -3013,7 +3007,6 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             acc_dis = ACCEPT;
             break;
-#ifdef UBLOX_ENABLE
         case UBX_RECOGNIZED:
             // UBX use a TCP like checksum
             ck_a = (unsigned char)0;
@@ -3042,7 +3035,6 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             acc_dis = ACCEPT;
             break;
-#endif  // UBLOX_ENABLE
 
 #ifdef ZODIAC_ENABLE
         case ZODIAC_RECOGNIZED:

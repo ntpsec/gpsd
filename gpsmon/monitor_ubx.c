@@ -15,7 +15,6 @@
 #include "../include/bits.h"
 #include "../include/gpsmon.h"
 
-#ifdef UBLOX_ENABLE
 #include "../include/driver_ubx.h"
 extern const struct gps_type_t driver_ubx;
 static WINDOW *satwin, *navsolwin, *dopwin, *ppswin;
@@ -335,7 +334,6 @@ static void ubx_wrap(void)
     (void)delwin(satwin);
     return;
 }
-
 const struct monitor_object_t ubx_mmt = {
     .initialize = ubx_initialize,
     .update = ubx_update,
@@ -344,5 +342,5 @@ const struct monitor_object_t ubx_mmt = {
     .min_y = 19,.min_x = 80,    // size of the device window
     .driver = &driver_ubx,
 };
-#endif
+
 // vim: set expandtab shiftwidth=4

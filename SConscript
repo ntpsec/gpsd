@@ -333,7 +333,6 @@ boolopts = (
     ("tnt",           True,  "True North Technologies support"),
     ("tripmate",      True,  "DeLorme TripMate support"),
     ("tsip",          True,  "Trimble TSIP support"),
-    ("ublox",         True,  "u-blox Protocol support"),
     # Non-GPS protocols
     ("aivdm",         True,  "AIVDM support"),
     ("gpsclock",      True,  "Furuno GPSClock support"),
@@ -566,17 +565,12 @@ if ARGUMENTS.get('timeservice'):
                    "ncurses",
                    "oscillator",
                    "socket_export",
-                   "ublox",      # For the Uputronics board
                    )
     for (name, default, helpd) in boolopts:
         if ((default is True and
              not ARGUMENTS.get(name) and
              name not in timerelated)):
             env[name] = False
-
-# iSync uses ublox underneath, so we force to enable it
-if env['isync']:
-    env['ublox'] = True
 
 opts.Save('.scons-option-cache', env)
 

@@ -105,9 +105,7 @@ static const struct monitor_object_t *monitor_objects[] = {
 #if defined(SIRF_ENABLE)
     &sirf_mmt,
 #endif  // defined(SIRF_ENABLE)
-#if defined(UBLOX_ENABLE)
     &ubx_mmt,
-#endif  // defined(UBLOX_ENABLE)
 #if defined(ITRAX_ENABLE)
     &italk_mmt,
 #endif  // defined(ITALK_ENABLE)
