@@ -50,7 +50,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#if defined(_PROTO__ENABLE) && defined(BINARY_ENABLE)
+#if defined(_PROTO__ENABLE)
 
 #include "../include/bits.h"
 
@@ -543,6 +543,6 @@ const struct gps_type_t driver__proto__binary = {
     .time_offset     = _proto_time_offset,
 /* *INDENT-ON* */
 };
-#endif /* defined(_PROTO__ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(_PROTO__ENABLE)
 
 // vim: set expandtab shiftwidth=4

@@ -6,12 +6,12 @@
  *
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
-#include <stdlib.h> /* for labs() */
+#include <stdlib.h>   // for labs()
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
@@ -21,7 +21,7 @@
 #include "../include/gpsmon.h"
 #include "../include/strfuncs.h"
 
-#if defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
+#if defined(SIRF_ENABLE)
 extern const struct gps_type_t driver_sirf;
 
 static WINDOW *mid2win, *mid4win, *mid6win, *mid7win, *mid9win, *mid13win;
@@ -49,7 +49,7 @@ static char *dgpsvec[] = {
     "Software",
 };
 
-/* check range of an unsigned quantity */
+// check range of an unsigned quantity
 #define CHECK_RANGE(vec, i) ((i) < sizeof(vec)/sizeof(vec[0]))
 
 /*****************************************************************************
@@ -60,7 +60,7 @@ static char *dgpsvec[] = {
 
 #define display (void)mvwprintw
 
-#define SIRF_CHANNELS   12      /* max channels allowed in SiRF format */
+#define SIRF_CHANNELS   12      // max channels allowed in SiRF format
 
 static bool sirf_initialize(void)
 {
@@ -200,10 +200,10 @@ static bool sirf_initialize(void)
     display(mid27win, 2, 8, " Packet type 27 (0x1B) ");
     (void)wattrset(mid27win, A_NORMAL);
 
-    /* probe for version */
+    // probe for version
     (void)monitor_control_send((unsigned char *)"\x84\x00", 2);
 
-    /* initialize the GPS context's time fields */
+    // initialize the GPS context's time fields
     gpsd_time_init(session.context, time(NULL));
 
     return true;
@@ -240,7 +240,7 @@ static void decode_ecef(double x, double y, double z,
     if (heading < 0)
         heading += 2 * GPS_PI;
 
-    /* North and East position fields */
+    // North and East position fields
     (void)wattrset(mid2win, A_UNDERLINE);
     (void)wmove(mid2win, 1, 40);
     (void)wprintw(mid2win, "%9.5f %9.5f %9d",
@@ -250,11 +250,11 @@ static void decode_ecef(double x, double y, double z,
     (void)mvwaddch(mid2win, 1, 49, ACS_DEGREE);
     (void)mvwaddch(mid2win, 1, 59, ACS_DEGREE);
 
-    /* North and East velocity fields */
+    // North and East velocity fields
     (void)wmove(mid2win, 2, 40);
     (void)wprintw(mid2win, "%9.1f %9.1f %9.1f", vnorth, veast, vup);
 
-    /* heading and speed fields */
+    // heading and speed fields
     (void)wmove(mid2win, 3, 54);
     (void)wprintw(mid2win, "%5.1f %9.1f", (double)(RAD_2_DEG * heading), speed);
     (void)mvwaddch(mid2win, 3, 59, ACS_DEGREE);
@@ -273,11 +273,11 @@ static void sirf_update(void)
     buf = session.lexer.outbuffer + 4;
     len = session.lexer.outbuflen - 8;
     switch (buf[0]) {
-    case 0x02:                  /* Measured Navigation Data */
-        (void)wmove(mid2win, 1, 6);     /* ECEF position */
+    case 0x02:                  // Measured Navigation Data
+        (void)wmove(mid2win, 1, 6);     // ECEF position
         (void)wprintw(mid2win, "%8d %8d %8d", getbes32(buf, 1),
                       getbes32(buf, 5), getbes32(buf, 9));
-        (void)wmove(mid2win, 2, 6);     /* ECEF velocity */
+        (void)wmove(mid2win, 2, 6);     // ECEF velocity
         (void)wprintw(mid2win, "%8.1f %8.1f %8.1f",
                       (double)getbes16(buf, 13) / 8, (double)getbes16(buf,
                                                                     15) / 8,
@@ -286,7 +286,7 @@ static void sirf_update(void)
                     (double)getbes32(buf, 9), (double)getbes16(buf, 13) / 8,
                     (double)getbes16(buf, 15) / 8, (double)getbes16(buf,
                                                                   17) / 8);
-        /* line 3 */
+        // line 3
         (void)wmove(mid2win, 3, 7);
         if (0 < session.gpsdata.fix.time.tv_sec) {
             (void)wprintw(mid2win, "%-24s",
@@ -300,21 +300,21 @@ static void sirf_update(void)
         else
            (void)wprintw(mid2win, "??");
         (void)wattrset(mid2win, A_NORMAL);
-        /* line 4 */
-        /* HDOP */
+        // line 4
+        // HDOP
         (void)wmove(mid2win, 4, 59);
         (void)wprintw(mid2win, "%4.1f", (double)getub(buf, 20) / 5);
-        /* Mode 1 */
+        // Mode 1
         (void)wmove(mid2win, 4, 69);
         (void)wprintw(mid2win, "%02x", getub(buf, 19));
-        /* Mode 2 */
+        // Mode 2
         (void)wmove(mid2win, 4, 77);
         (void)wprintw(mid2win, "%02x", getub(buf, 21));
-        /* SVs in fix */
+        // SVs in fix
         (void)wmove(mid2win, 4, 6);
         (void)wprintw(mid2win, "%2u =                                     ",
                       getub(buf, 28));
-        /* SV list */
+        // SV list
         (void)wmove(mid2win, 4, 10);
         x = getub(buf, 28);
         if (19 < x) {
@@ -325,7 +325,7 @@ static void sirf_update(void)
         monitor_log("MND 0x02=");
         break;
 
-    case 0x04:                  /* Measured Tracking Data */
+    case 0x04:                  // Measured Tracking Data
         ch = (int)getub(buf, 7);
         for (i = 0; i < ch; i++) {
             int az, el, state, off;
@@ -350,7 +350,7 @@ static void sirf_update(void)
         break;
 
 #ifdef __UNUSED__
-    case 0x05:                  /* raw track data */
+    case 0x05:                  // raw track data
         for (off = 1; off < len; off += 51) {
             ch = getbeu32(buf, off);
             (void)wmove(mid4win, ch + 2, 19);
@@ -368,25 +368,25 @@ static void sirf_update(void)
         }
         monitor_log("RTD 0x05=");
         break;
-#endif /* __UNUSED */
+#endif  // __UNUSED
 
-    case 0x06:                  /* firmware version */
+    case 0x06:                  // firmware version
         display(mid6win, 1, 1, "%s", buf + 1);
         monitor_log("FV  0x06=");
         break;
 
-    case 0x07:                  /* Response - Clock Status Data */
-        display(mid7win, 1, 5, "%2d", getub(buf, 7));   /* SVs */
-        /* Clock ppstimes */
+    case 0x07:                  // Response - Clock Status Data
+        display(mid7win, 1, 5, "%2d", getub(buf, 7));   // SVs
+        // Clock ppstimesn
         display(mid7win, 1, 16, "%lu", (unsigned long)getbeu32(buf, 8));
         display(mid7win, 1, 29, "%lu", (unsigned long)getbeu32(buf, 12));
-        /* Clock Bias */
+        // Clock Bias
         display(mid7win, 2, 11, "%lu", (unsigned long)getbeu32(buf, 16));
-        /* Estimated Time */
+        // Estimated Time
         monitor_log("CSD 0x07=");
         break;
 
-    case 0x08:                  /* 50 BPS data */
+    case 0x08:                  // 50 BPS data
         ch = (int)getub(buf, 1);
         sv = (int)getub(buf, 2);
         display(mid4win, ch + 2, 27, "%2d", sv);
@@ -394,27 +394,27 @@ static void sirf_update(void)
         monitor_log("50B 0x08=");
         break;
 
-    case 0x09:                  /* Throughput */
-        /*SegStatMax */
+    case 0x09:                  // Throughput
+        // SegStatMax
         display(mid9win, 1, 6, "%.3f", (double)getbeu16(buf, 1) / 186);
-        /*SegStatLat */
+        // SegStatLat
         display(mid9win, 1, 18, "%.3f", (double)getbeu16(buf, 3) / 186);
-        /*SegStatTime */
+        // SegStatTime
         display(mid9win, 1, 31, "%.3f", (double)getbeu16(buf, 5) / 186);
-        /* Last Millisecond */
+        // Last Millisecond
         display(mid9win, 1, 42, "%3d", (int)getbeu16(buf, 7));
         monitor_log("THR 0x09=");
         break;
 
-    case 0x0b:                  /* Command Acknowledgement */
+    case 0x0b:                  // Command Acknowledgement
         monitor_log("ACK 0x0b=");
         break;
 
-    case 0x0c:                  /* Command NAcknowledgement */
+    case 0x0c:                  // Command NAcknowledgement
         monitor_log("NAK 0x0c=");
         break;
 
-    case 0x0d:                  /* Visible List */
+    case 0x0d:                  // Visible List
         display(mid13win, 1, 1, "%02d =                                            ",
                                  getub(buf, 1));
         (void)wmove(mid13win, 1, 5);
@@ -425,47 +425,47 @@ static void sirf_update(void)
 
     case 0x13:
 #define YESNO(n)        (((int)getub(buf, n) != 0)?'Y':'N')
-        display(mid19win, 1, 20, "%d", getub(buf, 5));  /* Alt. hold mode */
-        display(mid19win, 2, 20, "%d", getub(buf, 6));  /* Alt. hold source */
-        /* Alt. source input */
+        display(mid19win, 1, 20, "%d", getub(buf, 5));  // Alt. hold mode
+        display(mid19win, 2, 20, "%d", getub(buf, 6));  // Alt. hold source
+        // Alt. source input
         display(mid19win, 3, 20, "%dm", (int)getbeu16(buf, 7));
         if (getub(buf, 9) != (uint8_t) '\0') {
-            /* Degraded timeout */
+            // Degraded timeout
             display(mid19win, 4, 20, "%dsec", getub(buf, 10));
         } else {
             display(mid19win, 4, 20, "N/A   ");
         }
-        display(mid19win, 5, 20, "%dsec", getub(buf, 11));      /* DR timeout */
-        display(mid19win, 6, 20, "%c", YESNO(12));      /* Track smooth mode */
-        display(mid19win, 7, 20, "%c", YESNO(13));      /* Static Nav. */
+        display(mid19win, 5, 20, "%dsec", getub(buf, 11));      // DR timeout
+        display(mid19win, 6, 20, "%c", YESNO(12));      // Track smooth mode
+        display(mid19win, 7, 20, "%c", YESNO(13));      // Static Nav.
         display(mid19win, 8, 20, "0x%x", getub(buf, 14)); // 3SV Least Squares
-        display(mid19win, 9, 20, "0x%x", getub(buf, 19)); /* DOP Mask mode */
-        /* Nav. Elev. mask */
+        display(mid19win, 9, 20, "0x%x", getub(buf, 19)); // DOP Mask mode
+        // Nav. Elev. mask
         display(mid19win, 10, 20, "0x%x", (int)getbeu16(buf, 20));
-        /* Nav. Power mask */
+        // Nav. Power mask
         display(mid19win, 11, 20, "0x%x", getub(buf, 22));
-        display(mid19win, 12, 20, "0x%x", getub(buf, 27));    /* DGPS Source */
-        display(mid19win, 13, 20, "0x%x", getub(buf, 28));      /* DGPS Mode */
-        display(mid19win, 14, 20, "%dsec", getub(buf, 29));     /* DGPS Timeout */
-        display(mid19win, 1, 42, "%c", YESNO(34));      /* LP Push-to-Fix */
-        display(mid19win, 2, 42, "%dms", getbeu32(buf, 35));   /* LP On Time */
-        display(mid19win, 3, 42, "%d", getbeu32(buf, 39));     /* LP Interval */
-        display(mid19win, 4, 42, "%c", YESNO(43));      /* User Tasks enabled */
-        /* User Task Interval */
+        display(mid19win, 12, 20, "0x%x", getub(buf, 27));    // DGPS Source
+        display(mid19win, 13, 20, "0x%x", getub(buf, 28));    // DGPS Mode
+        display(mid19win, 14, 20, "%dsec", getub(buf, 29));   // DGPS Timeout
+        display(mid19win, 1, 42, "%c", YESNO(34));      // LP Push-to-Fix
+        display(mid19win, 2, 42, "%dms", getbeu32(buf, 35));   // LP On Time
+        display(mid19win, 3, 42, "%d", getbeu32(buf, 39));     // LP Interval
+        display(mid19win, 4, 42, "%c", YESNO(43));      // User Tasks enabled
+        // User Task Interval
         display(mid19win, 5, 42, "%d", getbeu32(buf, 44));
         display(mid19win, 6, 42, "%c", YESNO(48));  // LP Power Cycling Enabled
-        /* LP Max Acq Search Time */
+        // LP Max Acq Search Time
         display(mid19win, 7, 42, "%d", getbeu32(buf, 49));
-        /* LP Max Off Time */
+        // LP Max Off Time
         display(mid19win, 8, 42, "%d", getbeu32(buf, 53));
-        display(mid19win, 9, 42, "%c", YESNO(57));      /* APM Enabled */
-        /* # of fixes */
+        display(mid19win, 9, 42, "%c", YESNO(57));      // APM Enabled
+        // # of fixes
         display(mid19win, 10, 42, "%d", (int)getbeu16(buf, 58));
-        /* Time Between fixes */
+        // Time Between fixes
         display(mid19win, 11, 42, "%d", (int)getbeu16(buf, 60));
-        display(mid19win, 12, 42, "%d", getub(buf, 62));   /* H/V Error Max */
+        display(mid19win, 12, 42, "%d", getub(buf, 62));   // H/V Error Max
         display(mid19win, 13, 42, "%d", getub(buf, 63));   // Response Time Max
-        /* Time/Accu & Duty Cycle Priority */
+        // Time/Accu & Duty Cycle Priority
         display(mid19win, 14, 42, "%d", getub(buf, 64));
 #undef YESNO
         monitor_log("NP  0x13=");
@@ -524,29 +524,29 @@ static void sirf_update(void)
         monitor_log("DST 0x1b=");
         break;
 
-    case 0x1c:                  /* NL Measurement Data */
-    case 0x1d:                  /* NL DGPS Data */
-    case 0x1e:                  /* NL SV State Data */
-    case 0x1f:                  /* NL Initialized Data */
+    case 0x1c:                  // NL Measurement Data
+    case 0x1d:                  // NL DGPS Data
+    case 0x1e:                  // NL SV State Data
+    case 0x1f:                  // NL Initialized Data
         subframe_enabled = true;
         monitor_log("NL  0x%02x=", buf[0]);
         break;
 
-    case 0x29:                  /* Geodetic Navigation Data */
+    case 0x29:                  // Geodetic Navigation Data
         monitor_log("GND 0x29=");
         break;
 
-    case 0x32:                  /* SBAS Parameters */
+    case 0x32:                  // SBAS Parameters
         monitor_log("SBP 0x32=");
         break;
 
-    case 0x34:                  /* PPS Time */
+    case 0x34:                  // PPS Time
         ppstime_enabled = true;
         leapseconds = (int)getbeu16(buf, 8);
         monitor_log("PPS 0x34=");
         break;
 
-    case 0xff:                  /* Development Data */
+    case 0xff:                  // Development Data
         while (len > 0 && buf[len - 1] == '\n')
             len--;
         while (len > 0 && buf[len - 1] == ' ')
@@ -568,12 +568,12 @@ static void sirf_update(void)
         break;
     }
 
-    /* elicit navigation parameters */
+    // elicit navigation parameters
     if (dispmode && (time(NULL) % 10 == 0)) {
         (void)monitor_control_send((unsigned char *)"\x98\x00", 2);
     }
 
-    /* clear the 50bps data field every 6 seconds */
+    // clear the 50bps data field every 6 seconds
     if (subframe_enabled && (time(NULL) % 6 == 0)) {
         for (ch = 0; ch < SIRF_CHANNELS; ch++)
            display(mid4win, ch + 2, 27, "  ");
@@ -593,7 +593,7 @@ static int sirf_command(char line[])
     int v;
 
     switch (line[0]) {
-    case 'A':                   /* toggle 50bps subframe data */
+    case 'A':                   // toggle 50bps subframe data
         (void)memset(buf, '\0', sizeof(buf));
         putbyte(buf, 0, 0x80);
         putbyte(buf, 23, 0x0c);
@@ -606,19 +606,19 @@ static int sirf_command(char line[])
         subframe_enabled = false;
         return COMMAND_MATCH;
 
-    case 'M':                   /* static navigation */
-        putbyte(buf, 0, 0x8f);  /* id */
+    case 'M':                   // static navigation
+        putbyte(buf, 0, 0x8f);  // id
         putbyte(buf, 1, atoi(line + 1));
         (void)monitor_control_send(buf, 2);
         return COMMAND_MATCH;
 
-    case 'D':                   /* MID 4 rate change (undocumented) */
+    case 'D':                   // MID 4 rate change (undocumented)
         v = atoi(line + 1);
         if (v > 30)
             return COMMAND_MATCH;
         putbyte(buf, 0, 0xa6);
         putbyte(buf, 1, 0);
-        putbyte(buf, 2, 4);     /* satellite picture */
+        putbyte(buf, 2, 4);     // satellite picture
         putbyte(buf, 3, v);
         putbyte(buf, 4, 0);
         putbyte(buf, 5, 0);
@@ -627,7 +627,7 @@ static int sirf_command(char line[])
         (void)monitor_control_send(buf, 8);
         return COMMAND_MATCH;
 
-    case 'P':                   /* poll navigation params */
+    case 'P':                   // poll navigation params
         dispmode = !dispmode;
         if (dispmode) {
             (void)syncok(mid6win, false);
@@ -650,7 +650,7 @@ static int sirf_command(char line[])
         return COMMAND_MATCH;
     }
 
-    return COMMAND_UNKNOWN;     /* no match */
+    return COMMAND_UNKNOWN;     // no match
 }
 
 static void sirf_wrap(void)
@@ -673,7 +673,6 @@ const struct monitor_object_t sirf_mmt = {
     .min_y = 22,.min_x = 80,
     .driver = &driver_sirf,
 };
-#endif /* defined(SIRF_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(SIRF_ENABLE)
 
-/* sirfmon.c ends here */
 // vim: set expandtab shiftwidth=4

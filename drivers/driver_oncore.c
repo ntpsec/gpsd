@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "../include/gpsd.h"
 
-#if defined(ONCORE_ENABLE) && defined(BINARY_ENABLE)
+#if defined(ONCORE_ENABLE)
 #include "../include/bits.h"
 #include "../include/timespec.h"
 
@@ -682,6 +682,6 @@ const struct gps_type_t driver_oncore = {
     .time_offset = oncore_time_offset,          // NTP offset array
 };
 // *INDENT-ON*
-#endif  // defined(ONCORE_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined(ONCORE_ENABLE)
 
 // vim: set expandtab shiftwidth=4

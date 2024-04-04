@@ -88,9 +88,9 @@ static const struct monitor_object_t *monitor_objects[] = {
 #if defined(GARMIN_ENABLE)
     &garmin_mmt,
 #endif  // GARMIN_ENABLE
-#if defined(GARMIN_ENABLE) && defined(BINARY_ENABLE)
+#if defined(GARMIN_ENABLE)
     &garmin_bin_ser_mmt,
-#endif  // defined(GARMIN_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined(GARMIN_ENABLE)
     &ashtech_mmt,
 #ifdef FV18_ENABLE
     &fv18_mmt,
@@ -102,21 +102,21 @@ static const struct monitor_object_t *monitor_objects[] = {
 #ifdef AIVDM_ENABLE
     &aivdm_mmt,
 #endif  // AIVDM_ENABLE
-#if defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
+#if defined(SIRF_ENABLE)
     &sirf_mmt,
-#endif  // defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
-#if defined(UBLOX_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined(SIRF_ENABLE)
+#if defined(UBLOX_ENABLE)
     &ubx_mmt,
-#endif  // defined(UBLOX_ENABLE) && defined(BINARY_ENABLE)
-#if defined(ITRAX_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined(UBLOX_ENABLE)
+#if defined(ITRAX_ENABLE)
     &italk_mmt,
-#endif  // defined(ITALK_ENABLE) && defined(BINARY_ENABLE)
-#if defined(SUPERSTAR2_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined(ITALK_ENABLE)
+#if defined(SUPERSTAR2_ENABLE)
     &superstar2_mmt,
-#endif  // defined(SUPERSTAR2_ENABLE) && defined(BINARY_ENABLE)
-#if defined(ONCORE_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined(SUPERSTAR2_ENABLE)
+#if defined(ONCORE_ENABLE)
     &oncore_mmt,
-#endif  // defined(ONCORE_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined(ONCORE_ENABLE)
 #ifdef TNT_ENABLE
     &tnt_mmt,
 #endif  // TNT_ENABLE

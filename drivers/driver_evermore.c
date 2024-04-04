@@ -143,7 +143,7 @@
 #include <string.h>
 
 #include "../include/gpsd.h"
-#if defined(EVERMORE_ENABLE) && defined(BINARY_ENABLE)
+#if defined(EVERMORE_ENABLE)
 
 #include "../include/bits.h"
 
@@ -371,5 +371,5 @@ const struct gps_type_t driver_evermore =
     .time_offset     = NULL,            // no method for NTP fudge factor
 };
 // *INDENT-ON*
-#endif  // defined(EVERMORE_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined(EVERMORE_ENABLE)
 // vim: set expandtab shiftwidth=4

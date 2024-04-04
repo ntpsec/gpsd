@@ -3577,9 +3577,7 @@ void packet_reset(struct gps_lexer_t *lexer)
     lexer->state = GROUND_STATE;
     lexer->inbuflen = 0;
     lexer->inbufptr = lexer->inbuffer;
-#ifdef BINARY_ENABLE
     isgps_init(lexer);
-#endif  // BINARY_ENABLE
 #ifdef STASH_ENABLE
     lexer->stashbuflen = 0;
 #endif  // STASH_ENABLE

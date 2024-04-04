@@ -34,7 +34,7 @@ http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf
 #include "../include/gpsd.h"
 #include "../include/timespec.h"
 
-#if defined(GREIS_ENABLE) && defined(BINARY_ENABLE)
+#if defined(GREIS_ENABLE)
 
 #define HEADER_LENGTH 5
 
@@ -1206,5 +1206,5 @@ const struct gps_type_t driver_greis = {
     .time_offset     = NULL,
 // *INDENT-ON*
 };
-#endif  // defined(GREIS_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined(GREIS_ENABLE)
 // vim: set expandtab shiftwidth=4

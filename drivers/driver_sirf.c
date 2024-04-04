@@ -52,7 +52,7 @@
 #include "../include/strfuncs.h"
 #include "../include/timespec.h"
 
-#if defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
+#if defined(SIRF_ENABLE)
 
 #define HI(n)           ((n) >> 8)
 #define LO(n)           ((n) & 0xff)
@@ -2776,6 +2776,6 @@ const struct gps_type_t driver_sirf =
     .time_offset    = sirf_time_offset,
 };
 // *INDENT-ON*
-#endif // defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
+#endif // defined(SIRF_ENABLE)
 
 // vim: set expandtab shiftwidth=4

@@ -270,11 +270,7 @@ const struct gps_type_t driver_nmea0183 = {
     .init_query     = NULL,             // non-perturbing initial query
     .event_hook     = nmea_event_hook,  // lifetime event handler
     .speed_switcher = NULL,             // no speed switcher
-#ifdef BINARY_ENABLE
     .mode_switcher  = NULL,             // maybe switchable if it was a SiRF
-#else
-    .mode_switcher  = NULL,             // no binary mode to revert to
-#endif  // BINARY_ENABLE
     .rate_switcher  = NULL,             // no sample-rate switcher
     .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
     .min_cycle.tv_nsec = 0,             // not relevant, no rate switch

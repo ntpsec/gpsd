@@ -134,25 +134,8 @@ extern "C" {
 #define ZODIAC_ENABLE
 #endif
 
-#if defined(EVERMORE_ENABLE) || \
-     defined(GARMIN_ENABLE) || \
-     defined(GEOSTAR_ENABLE) || \
-     defined(GREIS_ENABLE) || \
-     defined(ITRAX_ENABLE) || \
-     defined(NAVCOM_ENABLE) || \
-     defined(NMEA2000_ENABLE) || \
-     defined(ONCORE_ENABLE) || \
-     defined(SIRF_ENABLE) || \
-     defined(SUPERSTAR2_ENABLE) || \
-     defined(TSIP_ENABLE) || \
-     defined(UBLOX_ENABLE) || \
-     defined(ZODIAC_ENABLE)
-#define BINARY_ENABLE
-#endif
-
-#if defined(TRIPMATE_ENABLE) || defined(BINARY_ENABLE)
 #define NON_NMEA0183_ENABLE
-#endif
+
 #ifdef ISYNC_ENABLE
 #define STASH_ENABLE
 #endif

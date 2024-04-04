@@ -13,7 +13,7 @@
 
 #include "../include/gpsd.h"
 
-#if defined(SUPERSTAR2_ENABLE) && defined(BINARY_ENABLE)
+#if defined(SUPERSTAR2_ENABLE)
 #include "../include/bits.h"
 #include "../include/driver_superstar2.h"
 #include "../include/timespec.h"
@@ -570,6 +570,6 @@ const struct gps_type_t driver_superstar2 = {
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
-#endif /* defined(SUPERSTAR2_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(SUPERSTAR2_ENABLE)
 
 // vim: set expandtab shiftwidth=4

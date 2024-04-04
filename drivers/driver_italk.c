@@ -20,7 +20,7 @@
 #include <unistd.h>
 
 #include "../include/gpsd.h"
-#if defined(ITRAX_ENABLE) && defined(BINARY_ENABLE)
+#if defined(ITRAX_ENABLE)
 
 #include "../include/bits.h"
 #include "../include/driver_italk.h"
@@ -442,28 +442,28 @@ static void italk_ping(struct gps_device_t *session)
 }
 #endif  // __UNUSED__
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 const struct gps_type_t driver_italk =
 {
-    .type_name      = "iTalk",          /* full name of type */
-    .packet_type    = ITALK_PACKET,     /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* no rollover or other flags */
-    .trigger        = NULL,             /* recognize the type */
-    .channels       = 12,               /* consumer-grade GPS */
-    .probe_detect   = NULL,             /* how to detect at startup time */
-    .get_packet     = packet_get1,      /* use generic packet grabber */
-    .parse_packet   = italk_parse_input,/* parse message packets */
-    .rtcm_writer    = gpsd_write,       /* send RTCM data straight */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook     = NULL,             /* lifetime event handler */
-    .speed_switcher = NULL,             /* no speed switcher */
-    .mode_switcher  = NULL,             /* no mode switcher */
-    .rate_switcher  = NULL,             /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = NULL,             /* no control string sender */
-    .time_offset     = NULL,            /* no method for NTP fudge factor */
+    .type_name      = "iTalk",          // full name of type
+    .packet_type    = ITALK_PACKET,     // associated lexer packet type
+    .flags          = DRIVER_STICKY,    // no rollover or other flags
+    .trigger        = NULL,             // recognize the type
+    .channels       = 12,               // consumer-grade GPS
+    .probe_detect   = NULL,             // how to detect at startup time
+    .get_packet     = packet_get1,      // use generic packet grabber
+    .parse_packet   = italk_parse_input,// parse message packets
+    .rtcm_writer    = gpsd_write,       // send RTCM data straight
+    .init_query     = NULL,             // non-perturbing initial query
+    .event_hook     = NULL,             // lifetime event handler
+    .speed_switcher = NULL,             // no speed switcher
+    .mode_switcher  = NULL,             // no mode switcher
+    .rate_switcher  = NULL,             // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = NULL,             // no control string sender
+    .time_offset     = NULL,            // no method for NTP fudge factor
 };
 /* *INDENT-ON* */
-#endif /* defined(ITRAX_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(ITRAX_ENABLE)
 // vim: set expandtab shiftwidth=4

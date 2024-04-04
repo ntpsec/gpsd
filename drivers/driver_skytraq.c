@@ -1923,6 +1923,6 @@ const struct gps_type_t driver_skytraq =
     .type_name      = "Skytraq",             // full name of type
 };
 // *INDENT-ON*
-#endif  // defined SKYTRAQ_ENABLE) && defined(BINARY_ENABLE)
+#endif  // defined SKYTRAQ_ENABLE)
 
 // vim: set expandtab shiftwidth=4

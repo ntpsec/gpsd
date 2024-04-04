@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
 #include <math.h>
@@ -16,7 +16,7 @@
 #include "../include/bits.h"
 #include "../include/gpsmon.h"
 
-#if defined(ONCORE_ENABLE) && defined(BINARY_ENABLE)
+#if defined(ONCORE_ENABLE)
 extern const struct gps_type_t driver_oncore;
 
 static WINDOW *Ea1win, *Eawin, *Bbwin, *Enwin;
@@ -87,8 +87,8 @@ static const char *pos_hold_mode[] = {
 
 #define ONCTYPE(id2,id3) ((((unsigned int)id2)<<8)|(id3))
 
-#define MAXTRACKSATS    8       /* the most satellites being tracked */
-#define MAXVISSATS      12      /* the most satellites with known az/el */
+#define MAXTRACKSATS    8       // the most satellites being tracked
+#define MAXVISSATS      12      // the most satellites with known az/el
 
 static bool oncore_initialize(void)
 {
@@ -216,7 +216,7 @@ static void oncore_update(void)
         unsigned char mon, day, hour, min, sec;
         unsigned int nsec;
         unsigned char dopt, nvis, nsat, status;
-        char statusbuf[64];     /* 6 + 9 + 3 + 3 + 10 + 5 + 7 + 12 + 1 = 56 */
+        char statusbuf[64];     // 6 + 9 + 3 + 3 + 10 + 5 + 7 + 12 + 1 = 56
 
         mon = (unsigned char)getub(buf, 4);
         day = (unsigned char)getub(buf, 5);
@@ -292,14 +292,14 @@ static void oncore_update(void)
             (void)wprintw(Eawin, " %4s", sv_mode[mode]);
             (void)wprintw(Eawin, " %3d", sn);
             (void)wprintw(Eawin, " %c%c%c%c%c%c%c%c",
-                          (status & 0x80) ? 'p' : ' ',  /* used for pos fix  */
-                          (status & 0x40) ? 'M' : ' ',  /* momentum alert    */
-                          (status & 0x20) ? 's' : ' ',  /* anti-spoof   */
-                          (status & 0x10) ? 'U' : ' ',  /* unhealthy     */
-                          (status & 0x08) ? 'I' : ' ',  /* inaccurate   */
-                          (status & 0x04) ? 'S' : ' ',  /* spare             */
-                          (status & 0x02) ? 't' : ' ',  /* used for time sol */
-                          (status & 0x01) ? 'P' : ' '); /* parity error      */
+                          (status & 0x80) ? 'p' : ' ',  // used for pos fix
+                          (status & 0x40) ? 'M' : ' ',  // momentum alert
+                          (status & 0x20) ? 's' : ' ',  // anti-spoof
+                          (status & 0x10) ? 'U' : ' ',  // unhealthy
+                          (status & 0x08) ? 'I' : ' ',  // inaccurate
+                          (status & 0x04) ? 'S' : ' ',  // spare
+                          (status & 0x02) ? 't' : ' ',  // used for time sol
+                          (status & 0x01) ? 'P' : ' '); // parity error
         }
 
         monitor_log("Ea =");
@@ -331,7 +331,7 @@ static void oncore_update(void)
                     Bblines_mask |= 1 << Bblines[i];
                 }
         }
-        /* SVs not seen in Ea fill lines left over. */
+        // SVs not seen in Ea fill lines left over.
         next_line = 2;
         for (i = 0; i < ch; i++) {
             if (Bblines[i] == 0) {
@@ -341,7 +341,7 @@ static void oncore_update(void)
                 Bblines_mask |= 1 << Bblines[i];
             }
         }
-        /* Ready to print on precalculated lines. */
+        // Ready to print on precalculated lines.
         for (i = 0; i < ch; i++) {
             int doppl, el, az, health;
 
@@ -355,8 +355,8 @@ static void oncore_update(void)
             (void)wmove(Bbwin, (int)Bblines[i], 1);
             (void)wprintw(Bbwin, "%3d %3d %2d %5d %c%c",
                           sv, az, el, doppl,
-                          (health & 0x02) ? 'U' : ' ',      /* unhealthy */
-                          (health & 0x01) ? 'R' : ' ');     /* removed   */
+                          (health & 0x02) ? 'U' : ' ',      // unhealthy
+                          (health & 0x01) ? 'R' : ' ');     // removed
         }
 
         for (i = 2; i < 14; i++)
@@ -515,9 +515,9 @@ const struct monitor_object_t oncore_mmt = {
     .update = oncore_update,
     .command = oncore_command,
     .wrap = oncore_wrap,
-    .min_y = 20,.min_x = 80,    /* size of the device window */
+    .min_y = 20,.min_x = 80,    // size of the device window
     .driver = &driver_oncore,
 };
 
-#endif /* defined(ONCORE_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(ONCORE_ENABLE)
 // vim: set expandtab shiftwidth=4
