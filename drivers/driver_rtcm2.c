@@ -1128,8 +1128,6 @@ struct rtcm2_msg_t {
 
 #endif /* BIG ENDIAN */
 
-#ifdef RTCM104V2_ENABLE
-
 #define PREAMBLE_PATTERN 0x66
 
 static unsigned int tx_speed[] = { 25, 50, 100, 110, 150, 200, 250, 300 };
@@ -1726,7 +1724,5 @@ enum isgpsstat_t rtcm2_decode(struct gps_lexer_t *lexer, unsigned int c)
     return isgps_decode(lexer,
                         preamble_match, length_check, RTCM2_WORDS_MAX, c);
 }
-
-#endif /* RTCM104V2_ENABLE */
 
 // vim: set expandtab shiftwidth=4

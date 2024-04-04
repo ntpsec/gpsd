@@ -219,11 +219,9 @@
  * be recognized, that will be preferred.  Maybe.
  */
 
-#ifdef RTCM104V2_ENABLE
    RTCM2_SYNC_STATE,      // we have sync lock
    RTCM2_SKIP_STATE,      // we have sync lock, but this character is bad
    RTCM2_RECOGNIZED,      // we have an RTCM packet
-#endif  // RTCM104V2_ENABLE
 
 #ifdef RTCM104V3_ENABLE
    RTCM3_LEADER_1,        // constant leader byte found

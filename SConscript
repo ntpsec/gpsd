@@ -338,7 +338,6 @@ boolopts = (
     ("gpsclock",      True,  "Furuno GPSClock support"),
     ("isync",         True,  "Spectratime iSync LNRClok/GRCLOK support"),
     ("oceanserver",   True,  "OceanServer support"),
-    ("rtcm104v2",     True,  "rtcm104v2 support"),
     ("rtcm104v3",     True,  "rtcm104v3 support"),
     # Time service
     ("oscillator",    True,  "Disciplined oscillator support"),
@@ -1274,8 +1273,7 @@ if not cleaning and not helping:
             confdefs.append("/* #undef HAVE_SYS_ENDIAN_H */\n")
             confdefs.append("/* #undef HAVE_MACHINE_ENDIAN_H */\n")
             announce("You do not have the endian.h header file. "
-                     "RTCM V2 support disabled.")
-            config.env["rtcm104v2"] = False
+                     "RTCM V2 support will fail.")
 
     for hdr in ("arpa/inet",
                 "linux/serial",    # for serial_icounter_struct
@@ -2905,7 +2903,7 @@ if ((env["nmea2000"] and
 else:
     nmea2000_regress = None
     if not cleaning and not helping:
-        announce("NMEA2000 regression tests suppressed because rtcm104v2 is off "
+        announce("NMEA2000 regression tests suppressed because nmea200 is off "
                  "or canplayer is missing.")
 
 # using regress-drivers requires socket_export being enabled and Python
@@ -2972,29 +2970,25 @@ else:
 #    regress-driver -b test/daemon/foo.log
 
 # Regression-test the RTCM decoder.
-if env["rtcm104v2"]:
-    rtcm2_logs = ['test/sample.rtcm2', 'test/sample.rtcm2.chk']
-    # the log files must be dependencies so they get copied into variant_dir
-    rtcm_regress = Utility('rtcm-regress', [gpsdecode, rtcm2_logs], [
-        '@echo "Testing RTCM decoding..."',
-        '@for f in "${SRCDIR}/test/"*.rtcm2; do '
-        '    echo "\tTesting $${f}..."; '
-        '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '    "${SRCDIR}/clients/gpsdecode" -u -j <"$${f}" >$${TMPFILE}; '
-        '    diff -ub "$${f}".chk $${TMPFILE} || echo "Test FAILED!"; '
-        '    rm -f $${TMPFILE}; '
-        'done;',
-        '@echo "Testing idempotency of JSON dump/decode for RTCM2"',
-        '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '"${SRCDIR}/clients/gpsdecode" -u -e -j <test/synthetic-rtcm2.json '
-        ' >$${TMPFILE}; '
-        '    grep -v "^#" test/synthetic-rtcm2.json | diff -ub - $${TMPFILE} '
-        '    || echo "Test FAILED!"; '
-        '    rm -f $${TMPFILE}; ',
-    ])
-else:
-    announce("RTCM2 regression tests suppressed because rtcm104v2 is off.")
-    rtcm_regress = None
+rtcm2_logs = ['test/sample.rtcm2', 'test/sample.rtcm2.chk']
+# the log files must be dependencies so they get copied into variant_dir
+rtcm_regress = Utility('rtcm-regress', [gpsdecode, rtcm2_logs], [
+    '@echo "Testing RTCM decoding..."',
+    '@for f in "${SRCDIR}/test/"*.rtcm2; do '
+    '    echo "\tTesting $${f}..."; '
+    '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
+    '    "${SRCDIR}/clients/gpsdecode" -u -j <"$${f}" >$${TMPFILE}; '
+    '    diff -ub "$${f}".chk $${TMPFILE} || echo "Test FAILED!"; '
+    '    rm -f $${TMPFILE}; '
+    'done;',
+    '@echo "Testing idempotency of JSON dump/decode for RTCM2"',
+    '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
+    '"${SRCDIR}/clients/gpsdecode" -u -e -j <test/synthetic-rtcm2.json '
+    ' >$${TMPFILE}; '
+    '    grep -v "^#" test/synthetic-rtcm2.json | diff -ub - $${TMPFILE} '
+    '    || echo "Test FAILED!"; '
+    '    rm -f $${TMPFILE}; ',
+])
 
 # Rebuild the RTCM regression tests.
 Utility('rtcm-makeregress', [gpsdecode], [

@@ -1381,8 +1381,6 @@ void json_raw_dump(const struct gps_data_t *gpsdata,
     (void)strlcat(reply, "]}\r\n", replylen);
 }
 
-#if defined(RTCM104V2_ENABLE)
-
 // compare two struct rtk_sat_t
 static int rtk_sat_cmp(const void *a, const void *b)
 {
@@ -1680,7 +1678,6 @@ void json_rtcm2_dump(struct rtcm2_t *rtcm,
     str_rstrip_char(buf, ',');
     (void)strlcat(buf, "}\r\n", buflen);
 }
-#endif  // defined(RTCM104V2_ENABLE)
 
 #if defined(RTCM104V3_ENABLE)
 /* dump the contents of a parsed RTCM104v3 message into buf as JSON
@@ -4767,13 +4764,11 @@ void json_data_report(const gps_mask_t changed,
         }
     }
 
-#ifdef RTCM104V2_ENABLE
     if (0 != (changed & RTCM2_SET)) {
         buf_len = strnlen(buf, MAX_PACKET_LENGTH);
         json_rtcm2_dump(&datap->rtcm2, datap->dev.path,
                         buf + buf_len, buflen - buf_len);
     }
-#endif  // RTCM104V2_ENABLE
 
 #ifdef RTCM104V3_ENABLE
     if (0 != (changed & RTCM3_SET)) {

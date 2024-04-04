@@ -899,7 +899,6 @@ static const struct gps_type_t driver_fury = {
 
 #endif  // FURY_ENABLE
 
-#ifdef RTCM104V2_ENABLE
 /**************************************************************************
  *
  * RTCM-104 (v2), used for broadcasting DGPS corrections and by DGPS radios
@@ -937,7 +936,7 @@ static const struct gps_type_t driver_rtcm104v2 = {
     .time_offset     = NULL,
 };
 // *INDENT-ON*
-#endif  // RTCM104V2_ENABLE
+
 #ifdef RTCM104V3_ENABLE
 /**************************************************************************
  *
@@ -1809,9 +1808,7 @@ static const struct gps_type_t *gpsd_driver_array[] = {
     &driver_nmea2000,
 #endif  // NMEA2000_ENABLE
 
-#ifdef RTCM104V2_ENABLE
     &driver_rtcm104v2,
-#endif  // RTCM104V2_ENABLE
 #ifdef RTCM104V3_ENABLE
     &driver_rtcm104v3,
 #endif  // RTCM104V3_ENABLE
