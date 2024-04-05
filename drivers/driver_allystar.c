@@ -33,6 +33,7 @@ typedef enum {
     ALLY_CFG = 0x06,     // Configuration requests
     ALLY_MON = 0x0a,     // System monitoring
     ALLY_AID = 0x0b,     // AGPS (Deprecated)
+    ALLY_NMEA = 0xF0,    // NMEA, for CFG-MSG
 } ally_classes_t;
 
 #define MSGID(cls_, id_) (((cls_)<<8)|(id_))
@@ -260,6 +261,63 @@ static gps_mask_t parse_input(struct gps_device_t *session)
     return generic_parse_input(session);
 }
 
+// not used by gpsd, it's for gpsctl and friends
+static ssize_t control_send(struct gps_device_t *session, char *msg,
+                            size_t data_len)
+{
+    return ally_write(session, (unsigned int)msg[0], (unsigned int)msg[1],
+                      (unsigned char *)msg + 2,
+                      (size_t)(data_len - 2)) ? ((ssize_t) (data_len + 7)) : -1;
+}
+
+// ally_mode(), stub for NMEA/BINARY changer.
+static void ally_mode(struct gps_device_t *session, int mode UNUSED)
+{
+    unsigned char msg[4] = {0};
+
+    // turn on rate one NMEA
+    msg[0] = ALLY_NMEA;     // class, NMEA
+    msg[2] = 0x01;          // rate, one
+    msg[3] = 0x07;          // ZDA
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
+    // turn on rate one NAV-POSLLH
+    msg[0] = ALLY_NAV;      // class, NAV
+    msg[2] = 0x01;          // rate, one
+    msg[3] = 0x02;          // POSLLH
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
+}
+
+static void event_hook(struct gps_device_t *session, event_t event)
+{
+    if (session->context->readonly) {
+        return;
+    }
+    if (event == event_identified) {
+        GPSD_LOG(LOG_PROG, &session->context->errout, "ALLY: identified\n");
+
+        // no longer set UBX-CFG-SBAS here, u-blox 9 and 10 do not have it
+
+        if (session->context->passive) {
+            /* passive mode, do no autoconfig
+             * but we really want MON-VER. */
+            (void)ally_write(session, ALLY_MON, 0x04, NULL, 0);
+        } else if (O_OPTIMIZE == session->mode) {
+            ally_mode(session, MODE_BINARY);
+        } else {
+            //* Turn off NMEA output, turn on UBX on this port.
+            ally_mode(session, MODE_NMEA);
+        }
+    } else if (event == event_deactivate) {
+        /* There used to be a hotstart/reset here.
+         * That caused u-blox USB to re-enumerate.
+         * Sometimes to a new device name.
+         * Bad.  Don't do that anymore...
+         */
+    }
+}
+
 static void init_query(struct gps_device_t *session)
 {
     // MON-VER: query for version information
@@ -280,13 +338,13 @@ const struct gps_type_t driver_allystar =
     .parse_packet   = parse_input,              // parse message packets
     .rtcm_writer    = gpsd_write,               // send RTCM data straight
     .init_query     = init_query,               // non-perturbing query
-    .event_hook     = NULL,                     // lifetime event handler
+    .event_hook     = event_hook,               // lifetime event handler
     .speed_switcher = NULL,                     // we can change baud rates
     .mode_switcher  = NULL,                     // there is a mode switcher
     .rate_switcher  = NULL,                     // change sample rate
     .min_cycle.tv_sec  = 1,                     // default
     .min_cycle.tv_nsec = 0,                     // default
-    .control_send   = NULL,                     // how to send a control string
+    .control_send   = control_send,             // how to send a control string
     .time_offset    = NULL,                     // no NTP fudge factor
 };
 // *INDENT-ON*
