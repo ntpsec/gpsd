@@ -42,6 +42,7 @@ typedef enum {
     ACK_ACK         = MSGID(ALLY_ACK, 0x01),
     ACK_NAK         = MSGID(ALLY_ACK, 0x00),
     MON_VER         = MSGID(ALLY_MON, 0x04),
+    NAV_DOP         = MSGID(ALLY_NAV, 0x01),
     NAV_POSLLH      = MSGID(ALLY_NAV, 0x02),
 } ally_msgs_t;
 
@@ -182,6 +183,80 @@ static gps_mask_t msg_mon(struct gps_device_t *session,
     return mask;
 }
 
+// NAV-*
+
+/**
+ * NAV-DOP, Dilution of precision message
+ * Seems to match UBX-NAV-DOP
+ *
+ */
+static gps_mask_t msg_nav_dop(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
+{
+    unsigned u;
+    gps_mask_t mask = 0;
+
+    if (18 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-DOP: runt payload len %zd", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);  // in milli seconds
+    /*
+     * We make a deliberate choice not to clear DOPs from the
+     * last skyview here, but rather to treat this as a supplement
+     * to our calculations from the visibility matrix, trusting
+     * the firmware algorithms over ours.
+     */
+    u = getleu16(buf, 4);
+    if (9999 > u) {
+        session->gpsdata.dop.gdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    u = getleu16(buf, 6);
+    if (9999 > u) {
+        session->gpsdata.dop.pdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    u = getleu16(buf, 8);
+    if (9999 > u) {
+        session->gpsdata.dop.tdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    u = getleu16(buf, 10);
+    if (9999 > u) {
+        session->gpsdata.dop.vdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    u = getleu16(buf, 12);
+    if (9999 > u) {
+        session->gpsdata.dop.hdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    // Northing DOP
+    u = getleu16(buf, 14);
+    if (9999 > u) {
+        session->gpsdata.dop.ydop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    // Easting DOP
+    u = getleu16(buf, 16);
+    if (9999 > u) {
+        session->gpsdata.dop.xdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-DOP: gdop=%.2f pdop=%.2f "
+             "hdop=%.2f vdop=%.2f tdop=%.2f ydop=%.2f xdop=%.2f\n",
+             session->gpsdata.dop.gdop,
+             session->gpsdata.dop.hdop,
+             session->gpsdata.dop.vdop,
+             session->gpsdata.dop.pdop, session->gpsdata.dop.tdop,
+             session->gpsdata.dop.ydop, session->gpsdata.dop.xdop);
+    return mask;
+}
+
  /**
  * Geodetic position solution message
  * NAV-POSLLH, Class 1, ID 2
@@ -239,6 +314,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     gps_mask_t mask = 0;
 
     switch (msgid) {
+    case NAV_DOP:
+        mask = msg_nav_dop(session, &buf[4], payload_len);
+        break;
     case NAV_POSLLH:
         mask = msg_nav_posllh(session, &buf[4], payload_len);
         break;
@@ -351,12 +429,15 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
     msg[3] = 0x07;          // ZDA
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
-    // turn on rate one NAV-POSLLH
+    // turn on rate one NAV-DOP
     msg[0] = ALLY_NAV;      // class, NAV
     msg[2] = 0x01;          // rate, one
-    msg[3] = 0x02;          // POSLLH
+    msg[3] = 0x01;          // DOP
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
+    // turn on rate one NAV-POSLLH
+    msg[3] = 0x02;          // POSLLH
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 }
 
 static void event_hook(struct gps_device_t *session, event_t event)
