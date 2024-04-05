@@ -11,7 +11,7 @@
  *
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <math.h>
 #include <stdbool.h>
@@ -36,17 +36,17 @@ static gps_mask_t decode_itk_utcionomodel(struct gps_device_t *,
 static gps_mask_t decode_itk_subframe(struct gps_device_t *, unsigned char *,
                                       size_t);
 
-/* NAVIGATION_MSG, message id 7 */
+// NAVIGATION_MSG, message id 7
 static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
                                     unsigned char *buf, size_t len)
 {
     unsigned short flags, pflags;
     timespec_t ts_tow;
-    uint32_t tow;            /* Time of week [ms] */
+    uint32_t tow;            // Time of week [ms]
     char ts_buf[TIMESPEC_LEN];
 
     gps_mask_t mask = 0;
-    if (len != 296) {
+    if (296 != len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "ITALK: bad NAV_FIX (len %zu, should be 296)\n",
                  len);
@@ -61,12 +61,13 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
     session->newdata.mode = MODE_NO_FIX;
     mask = ONLINE_SET | MODE_SET | STATUS_SET | CLEAR_IS;
 
-    /* just bail out if this fix is not marked valid */
+    // just bail out if this fix is not marked valid
     if (0 != (pflags & FIX_FLAG_MASK_INVALID)
-        || 0 == (flags & FIXINFO_FLAG_VALID))
+        || 0 == (flags & FIXINFO_FLAG_VALID)) {
         return mask;
+    }
 
-    tow = getleu32(buf, 7 + 84);   /* tow in ms */
+    tow = getleu32(buf, 7 + 84);   // tow in ms
     MSTOTS(&ts_tow, tow);
     session->newdata.time = gpsd_gpstime_resolv(session,
         (unsigned short) getles16(buf, 7 + 82), ts_tow);
@@ -84,7 +85,7 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
      * session->newdata.eph = (double)(getles32(buf, 7 + 252) / 100.0);
      */
     session->newdata.eps = (double)(getles32(buf, 7 + 254) / 100.0);
-    /* compute epx/epy in gpsd_error_model(), not here */
+    // compute epx/epy in gpsd_error_model(), not here
     mask |= HERR_SET;
 
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
@@ -101,17 +102,19 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
         mask |= DOP_SET;
     }
 
-    if ((pflags & FIX_FLAG_MASK_INVALID) == 0
-        && (flags & FIXINFO_FLAG_VALID) != 0) {
-        if (pflags & FIX_FLAG_3DFIX)
+    if (0 == (pflags & FIX_FLAG_MASK_INVALID) &&
+        0 != (flags & FIXINFO_FLAG_VALID)) {
+        if (pflags & FIX_FLAG_3DFIX) {
             session->newdata.mode = MODE_3D;
-        else
+        } else {
             session->newdata.mode = MODE_2D;
+        }
 
-        if (pflags & FIX_FLAG_DGPS_CORRECTION)
+        if (pflags & FIX_FLAG_DGPS_CORRECTION) {
             session->newdata.status = STATUS_DGPS;
-        else
+        } else {
             session->newdata.status = STATUS_GPS;
+        }
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -133,59 +136,62 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
 static gps_mask_t decode_itk_prnstatus(struct gps_device_t *session,
                                        unsigned char *buf, size_t len)
 {
-    gps_mask_t mask;
+    gps_mask_t mask = 0;
+    unsigned int i, nsv, nchan, st;
+    uint32_t msec;
+    timespec_t ts_tow;
+    char ts_buf[TIMESPEC_LEN];
 
-    if (len < 62) {
+    if (62 > len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "ITALK: runt PRN_STATUS (len=%zu)\n", len);
-        mask = 0;
-    } else {
-        unsigned int i, nsv, nchan, st;
-        uint32_t msec = getleu32(buf, 7 + 6);
-        timespec_t ts_tow;
-        char ts_buf[TIMESPEC_LEN];
+        return mask;
+    }
 
-        MSTOTS(&ts_tow, msec);
+    msec = getleu32(buf, 7 + 6);
 
-        session->gpsdata.skyview_time = gpsd_gpstime_resolv(session,
-            (unsigned short)getleu16(buf, 7 + 4), ts_tow);
-        gpsd_zero_satellites(&session->gpsdata);
-        nchan = (unsigned int)getleu16(buf, 7 + 50);
-        if (nchan > MAX_NR_VISIBLE_PRNS)
-            nchan = MAX_NR_VISIBLE_PRNS;
-        for (i = st = nsv = 0; i < nchan; i++) {
-            unsigned int off = 7 + 52 + 10 * i;
-            unsigned short flags;
-            bool used;
+    MSTOTS(&ts_tow, msec);
 
-            flags = (unsigned short) getleu16(buf, off);
-            used = (bool)(flags & PRN_FLAG_USE_IN_NAV);
-            session->gpsdata.skyview[st].PRN =
-                (short)(getleu16(buf, off + 4) & 0xff);
-            session->gpsdata.skyview[st].elevation =
-                (double)(getles16(buf, off + 6) & 0xff);
-            session->gpsdata.skyview[st].azimuth =
-                (double)(getles16(buf, off + 8) & 0xff);
-            session->gpsdata.skyview[st].ss =
-                (double)(getleu16(buf, off + 2) & 0xff);
-            session->gpsdata.skyview[st].used = used;
-            if (session->gpsdata.skyview[st].PRN > 0) {
-                st++;
-                if (used)
-                    nsv++;
+    session->gpsdata.skyview_time = gpsd_gpstime_resolv(session,
+        (unsigned short)getleu16(buf, 7 + 4), ts_tow);
+    gpsd_zero_satellites(&session->gpsdata);
+    nchan = (unsigned int)getleu16(buf, 7 + 50);
+    if (nchan > MAX_NR_VISIBLE_PRNS) {
+        nchan = MAX_NR_VISIBLE_PRNS;
+    }
+    for (i = st = nsv = 0; i < nchan; i++) {
+        unsigned int off = 7 + 52 + 10 * i;
+        unsigned short flags;
+        bool used;
+
+        flags = (unsigned short) getleu16(buf, off);
+        used = (bool)(flags & PRN_FLAG_USE_IN_NAV);
+        session->gpsdata.skyview[st].PRN =
+            (short)(getleu16(buf, off + 4) & 0xff);
+        session->gpsdata.skyview[st].elevation =
+            (double)(getles16(buf, off + 6) & 0xff);
+        session->gpsdata.skyview[st].azimuth =
+            (double)(getles16(buf, off + 8) & 0xff);
+        session->gpsdata.skyview[st].ss =
+            (double)(getleu16(buf, off + 2) & 0xff);
+        session->gpsdata.skyview[st].used = used;
+        if (session->gpsdata.skyview[st].PRN > 0) {
+            st++;
+            if (used) {
+                nsv++;
             }
         }
-        session->gpsdata.satellites_visible = (int)st;
-        session->gpsdata.satellites_used = (int)nsv;
-        mask = USED_IS | SATELLITE_SET;
-
-        GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "PRN_STATUS: time=%s visible=%d used=%d "
-                 "mask={USED|SATELLITE}\n",
-                 timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
-                 session->gpsdata.satellites_visible,
-                 session->gpsdata.satellites_used);
     }
+    session->gpsdata.satellites_visible = (int)st;
+    session->gpsdata.satellites_used = (int)nsv;
+    mask = USED_IS | SATELLITE_SET;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "PRN_STATUS: time=%s visible=%d used=%d "
+             "mask={USED|SATELLITE}\n",
+             timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+             session->gpsdata.satellites_visible,
+             session->gpsdata.satellites_used);
 
     return mask;
 }
@@ -196,10 +202,10 @@ static gps_mask_t decode_itk_utcionomodel(struct gps_device_t *session,
     int leap;
     unsigned short flags;
     timespec_t ts_tow;
-    uint32_t tow;            /* Time of week [ms] */
+    uint32_t tow;            // Time of week [ms]
     char ts_buf[TIMESPEC_LEN];
 
-    if (len != 64) {
+    if (64 != len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "ITALK: bad UTC_IONO_MODEL (len %zu, should be 64)\n",
                  len);
@@ -207,14 +213,16 @@ static gps_mask_t decode_itk_utcionomodel(struct gps_device_t *session,
     }
 
     flags = (unsigned short) getleu16(buf, 7);
-    if (0 == (flags & UTC_IONO_MODEL_UTCVALID))
+    if (0 == (flags & UTC_IONO_MODEL_UTCVALID)) {
         return 0;
+    }
 
     leap = (int)getleu16(buf, 7 + 24);
-    if (session->context->leap_seconds < leap)
+    if (session->context->leap_seconds < leap) {
         session->context->leap_seconds = leap;
+    }
 
-    tow = getleu32(buf, 7 + 38);    /* in ms */
+    tow = getleu32(buf, 7 + 38);    // in ms
     MSTOTS(&ts_tow, tow);
     session->newdata.time = gpsd_gpstime_resolv(session,
         (unsigned short) getleu16(buf, 7 + 36), ts_tow);
@@ -231,7 +239,7 @@ static gps_mask_t decode_itk_subframe(struct gps_device_t *session,
     unsigned int i;
     uint32_t words[10];
 
-    if (len != 64) {
+    if (64 != len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "ITALK: bad SUBFRAME (len %zu, should be 64)\n", len);
         return 0;
@@ -245,8 +253,9 @@ static gps_mask_t decode_itk_subframe(struct gps_device_t *session,
              prn, sf,
              (flags & SUBFRAME_WORD_FLAG_MASK) ? "error" : "ok",
              (flags & SUBFRAME_GPS_PREAMBLE_INVERTED) ? "(inverted)" : "");
-    if (flags & SUBFRAME_WORD_FLAG_MASK)
+    if (flags & SUBFRAME_WORD_FLAG_MASK) {
         return 0;       // don't try decode an erroneous packet
+    }
 
     /*
      * Timo says "SUBRAME message contains decoded navigation message subframe
@@ -263,11 +272,12 @@ static gps_mask_t decode_itk_pseudo(struct gps_device_t *session,
                                       unsigned char *buf, size_t len)
 {
     unsigned short flags, n, i;
-    unsigned int tow;             /* time of week, in ms */
+    unsigned int tow;             // time of week, in ms
     timespec_t ts_tow;
 
     n = (unsigned short) getleu16(buf, 7 + 4);
-    if ((n < 1) || (n > MAXCHANNELS)){
+    if (1 > n ||
+        MAXCHANNELS < n ) {
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "ITALK: bad PSEUDO channel count\n");
         return 0;
@@ -280,8 +290,9 @@ static gps_mask_t decode_itk_pseudo(struct gps_device_t *session,
 
     GPSD_LOG(LOG_PROG, &session->context->errout, "iTalk PSEUDO [%u]\n", n);
     flags = (unsigned short)getleu16(buf, 7 + 6);
-    if ((flags & 0x3) != 0x3)
+    if ((flags & 0x3) != 0x3) {
         return 0; // bail if measurement time not valid.
+    }
 
     tow = (unsigned int)getleu32(buf, 7 + 38);
     MSTOTS(&ts_tow, tow);
@@ -290,9 +301,10 @@ static gps_mask_t decode_itk_pseudo(struct gps_device_t *session,
 
     session->gpsdata.raw.mtime = session->newdata.time;
 
-    /* this is so we can tell which never got set */
-    for (i = 0; i < MAXCHANNELS; i++)
+    // this is so we can tell which never got set
+    for (i = 0; i < MAXCHANNELS; i++) {
         session->gpsdata.raw.meas[i].svid = 0;
+    }
     for (i = 0; i < n; i++){
         session->gpsdata.skyview[i].PRN =
             getleu16(buf, 7 + 26 + (i*36)) & 0xff;
@@ -310,8 +322,8 @@ static gps_mask_t decode_itk_pseudo(struct gps_device_t *session,
         session->gpsdata.raw.meas[i].codephase = NAN;
         session->gpsdata.raw.meas[i].deltarange = NAN;
     }
-    /* return RAW_IS; The above decode does not give reasonable results */
-    return 0;         /* do not report valid until decode is fixed */
+    // return RAW_IS; The above decode does not give reasonable results
+    return 0;         // do not report valid until decode is fixed
 }
 
 static gps_mask_t italk_parse(struct gps_device_t *session,
@@ -320,11 +332,12 @@ static gps_mask_t italk_parse(struct gps_device_t *session,
     unsigned int type;
     gps_mask_t mask = 0;
 
-    if (len == 0)
+    if (0 == len) {
         return 0;
+    }
 
     type = (unsigned int) getub(buf, 4);
-    /* we may need to dump the raw packet */
+    // we may need to dump the raw packet
     GPSD_LOG(LOG_RAW, &session->context->errout,
              "raw italk packet type 0x%02x\n", type);
 
@@ -464,6 +477,6 @@ const struct gps_type_t driver_italk =
     .control_send   = NULL,             // no control string sender
     .time_offset     = NULL,            // no method for NTP fudge factor
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 #endif  // defined(ITRAX_ENABLE)
 // vim: set expandtab shiftwidth=4
