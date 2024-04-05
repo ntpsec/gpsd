@@ -42,6 +42,7 @@ typedef enum {
     ACK_ACK         = MSGID(ALLY_ACK, 0x01),
     ACK_NAK         = MSGID(ALLY_ACK, 0x00),
     MON_VER         = MSGID(ALLY_MON, 0x04),
+    NAV_POSLLH      = MSGID(ALLY_NAV, 0x02),
 } ally_msgs_t;
 
 // ACK-* ids
@@ -160,6 +161,8 @@ static gps_mask_t msg_mon_ver(struct gps_device_t *session,
     return 0;
 }
 
+/* msg_mon() -- handle CLASS-MON
+ */
 static gps_mask_t msg_mon(struct gps_device_t *session,
                           unsigned char *buf, size_t payload_len)
 {
@@ -173,6 +176,75 @@ static gps_mask_t msg_mon(struct gps_device_t *session,
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "ALLY: MON- %02x payload_len %zd\n",
+                 msgid & 0xff, payload_len);
+        break;
+    }
+    return mask;
+}
+
+ /**
+ * Geodetic position solution message
+ * NAV-POSLLH, Class 1, ID 2
+ * Seems same as UBX-MON-POSLLH
+ *
+ * This message does not bother to tell us if it is valid.
+ * No mode, so limited usefulness
+ */
+static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
+                                 unsigned char *buf,
+                                 size_t data_len UNUSED)
+{
+    gps_mask_t mask = 0;
+
+    if (28 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-POSLLH: runt payload len %zd", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    session->newdata.longitude = 1e-7 * getles32(buf, 4);
+    session->newdata.latitude = 1e-7 * getles32(buf, 8);
+    // altitude WGS84
+    session->newdata.altHAE = 1e-3 * getles32(buf, 12);
+    // altitude MSL
+    session->newdata.altMSL = 1e-3 * getles32(buf, 16);
+    // Let gpsd_error_model() deal with geoid_sep
+
+    // Horizontal accuracy estimate in mm, unknown type
+    session->newdata.eph = getleu32(buf, 20) * 1e-3;
+    // Vertical accuracy estimate in mm, unknown type
+    session->newdata.epv = getleu32(buf, 24) * 1e-3;
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+        "ALLY: NAV-POSLLH: iTOW=%lld lat=%.3f lon=%.3f altHAE=%.3f "
+        "eph %.3f epv %.3f\n",
+        (long long)session->driver.ubx.iTOW,
+        session->newdata.latitude,
+        session->newdata.longitude,
+        session->newdata.altHAE,
+        session->newdata.eph,
+        session->newdata.epv);
+
+    mask = ONLINE_SET | HERR_SET | VERR_SET | LATLON_SET | ALTITUDE_SET;
+    return mask;
+}
+
+/* msg_nav() -- handle CLASS-NAV
+ */
+static gps_mask_t msg_nav(struct gps_device_t *session,
+                          unsigned char *buf, size_t payload_len)
+{
+    unsigned msgid = getbes16(buf, 2);
+    gps_mask_t mask = 0;
+
+    switch (msgid) {
+    case NAV_POSLLH:
+        mask = msg_nav_posllh(session, &buf[4], payload_len);
+        break;
+    default:
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV- %02x payload_len %zd\n",
                  msgid & 0xff, payload_len);
         break;
     }
@@ -233,9 +305,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
         mask = msg_mon(session, buf, payload_len);
         break;
     case ALLY_NAV:
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV- %02x length %zd/%u)\n",
-                 msg_id, len, payload_len);
+        mask = msg_nav(session, buf, payload_len);
         break;
     case ALLY_RXM:
         GPSD_LOG(LOG_WARN, &session->context->errout,
