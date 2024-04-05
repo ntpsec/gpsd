@@ -2598,56 +2598,6 @@ static gps_mask_t processMWV(int c UNUSED, char *field[],
     return mask;
 }
 
-#ifdef OCEANSERVER_ENABLE
-static gps_mask_t processOHPR(int c UNUSED, char *field[],
-                              struct gps_device_t *session)
-{
-    /*
-     * Proprietary sentence for OceanServer Magnetic Compass.
-
-     OHPR,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x,x.x*hh<cr><lf>
-     Fields in order:
-     1. Azimuth
-     2. Pitch Angle
-     3. Roll Angle
-     4. Sensor temp, degrees centigrade
-     5. Depth (feet)
-     6. Magnetic Vector Length
-     7-9. 3 axis Magnetic Field readings x,y,z
-     10. Acceleration Vector Length
-     11-13. 3 axis Acceleration Readings x,y,z
-     14. Reserved
-     15-16. 2 axis Gyro Output, X,y
-     17. Reserved
-     18. Reserved
-     *hh          mandatory nmea_checksum
-     */
-    gps_mask_t mask = ONLINE_SET;
-
-    // True heading?
-    session->gpsdata.attitude.heading = safe_atof(field[1]);
-    session->gpsdata.attitude.pitch = safe_atof(field[2]);
-    session->gpsdata.attitude.roll = safe_atof(field[3]);
-    session->gpsdata.attitude.temp = safe_atof(field[4]);
-    session->gpsdata.attitude.depth = safe_atof(field[5]) * FEET_TO_METERS;
-    session->gpsdata.attitude.mag_len = safe_atof(field[6]);
-    session->gpsdata.attitude.mag_x = safe_atof(field[7]);
-    session->gpsdata.attitude.mag_y = safe_atof(field[8]);
-    session->gpsdata.attitude.mag_z = safe_atof(field[9]);
-    session->gpsdata.attitude.acc_len = safe_atof(field[10]);
-    session->gpsdata.attitude.acc_x = safe_atof(field[11]);
-    session->gpsdata.attitude.acc_y = safe_atof(field[12]);
-    session->gpsdata.attitude.acc_z = safe_atof(field[13]);
-    session->gpsdata.attitude.gyro_x = safe_atof(field[15]);
-    session->gpsdata.attitude.gyro_y = safe_atof(field[16]);
-    mask |= (ATTITUDE_SET);
-
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: Heading %lf.\n", session->gpsdata.attitude.heading);
-    return mask;
-}
-#endif  // OCEANSERVER_ENABLE
-
 // PAIRxxx is Airoha, spunoff from Mediatek
 
 // PAIR001 -- ACK/NAK
@@ -4965,9 +4915,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"MTW", NULL, 3,  false, processMTW},   // Water Temperature
         {"MWD", NULL, 0,  false, processMWD},   // Wind Direction and Speed
         {"MWV", NULL, 0,  false, processMWV},   // Wind Speed and Angle
-#ifdef OCEANSERVER_ENABLE
-        {"OHPR", NULL, 18, false, processOHPR},
-#endif  // OCEANSERVER_ENABLE
+        {"OHPR", NULL, 18, false, NULL},        // Oceanserver, not supported
         {"OSD", NULL, 0,  false, NULL},             // ignore Own Ship Data
         // general handler for Ashtech
         {"PASHR", NULL, 3, false, processPASHR},

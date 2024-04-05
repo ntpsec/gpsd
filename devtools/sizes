@@ -13,7 +13,6 @@ nmea_variants = [
   "fv18=no",
   "mtk3301=no",
   "tnt=no",
-  "oceanserver=no",
   "gpsclock=no",
 ]
 

@@ -1,5 +1,5 @@
 = gpsd(8)
-:date: 9 November 2022
+:date: 4 March 2024
 :keywords: gps, gpsd, gnss
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -77,12 +77,12 @@ correct port speed and protocol for it.
 
 *gpsd* should be able to query any GPS that speaks either the standard
 textual NMEA 0183 protocol, or the (differing) extended NMEA dialects
-used by MKT-3301, iTrax, Motorola OnCore, Sony CXD2951, Ashtech/Thales
+used by MTK-3301, iTrax, Motorola OnCore, Sony CXD2951, Ashtech/Thales
 and some other devices. It can also interpret the binary protocols used
 by EverMore, Garmin, Javad, Navcom, Rockwell/Zodiac, SiRF, Trimble, and
 u-blox devices. Under Linux it can read NMEA2000 packets through the
 kernel CAN socket. It can read heading and attitude information from the
-Oceanserver 5000 or TNT Revolution digital compasses.
+TNT Revolution digital compasses.
 
 The GPS reporting formats supported by your binary of *gpsd* may differ
 depending on how it was compiled; general-purpose versions support many,
@@ -677,10 +677,9 @@ the IN prefix emitted by some Garmin units, or with the EC prefix
 emitted by ECDIS units, or with the SD prefix emitted by depth sounders,
 or with the HC and TI prefix emitted by some Airmar equipment. It
 recognizes some vendor extensions: the PGRME emitted by some Garmin GPS
-models, the OHPR emitted by Oceanserver digital compasses, the PTNTHTM
-emitted by True North digital compasses, the PMTK omitted by some San
-Jose Navigation GPSes, and the PASHR sentences emitted by some Ashtech
-GPSes.
+models, the PTNTHTM emitted by True North digital compasses, the PMTK
+omitted by some San Jose Navigation GPSes, and the PASHR sentences
+emitted by some Ashtech GPSes.
 
 Note that *gpsd* JSON returns pure decimal degrees, not the hybrid
 degree/minute format described in the NMEA standard.
@@ -740,5 +739,5 @@ This manual page by Eric S. Raymond <esr@thyrsus.com>.
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project +
+This file is Copyright by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause

@@ -61,7 +61,6 @@ knobs = [
     'ntp',
     'ntpshm',
     'ntrip',
-    'oceanserver',
     'oncore',
     'passthrough',
     'pps',

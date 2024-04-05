@@ -582,12 +582,6 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         case 'B':           // $BD
             lexer->state = BEIDOU_LEAD_1;
             break;
-#ifdef OCEANSERVER_ENABLE
-        case 'C':           // $C
-            // is this ever used?
-            lexer->state = NMEA_LEADER_END;
-            break;
-#endif  // OCEANSERVER_ENABLE
         case 'E':           // $E, ECDIS
             // codacy thinks this is impossible
             lexer->state = ECDIS_LEAD_1;
@@ -601,12 +595,6 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         case 'I':           // $I, Seatalk
             lexer->state = SEATALK_LEAD_1;
             break;
-#ifdef OCEANSERVER_ENABLE
-        case 'O':
-            // for $OHPR
-            lexer->state = NMEA_LEADER_END;
-            break;
-#endif  // OCEANSERVER_ENABLE
         case 'P':           // $P, vendor sentence
             lexer->state = NMEA_VENDOR_LEAD;
             break;

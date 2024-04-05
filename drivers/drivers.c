@@ -754,83 +754,6 @@ const struct gps_type_t driver_trueNorth = {
 // *INDENT-ON*
 #endif
 
-#ifdef OCEANSERVER_ENABLE
-/**************************************************************************
- * OceanServer - Digital Compass, OS5000 Series
- *
- * More info: http://www.ocean-server.com/download/OS5000_Compass_Manual.pdf
- *
- * This is a digital compass which uses magnetometers to measure the
- * strength of the earth's magnetic field. Based on these measurements
- * it provides a compass heading using NMEA formatted output strings.
- * This is useful to supplement the heading provided by another GPS
- * unit. A GPS heading is unreliable at slow speed or no speed.
- *
- **************************************************************************/
-
-static int oceanserver_send(struct gpsd_errout_t *errout,
-                            const int fd, const char *fmt, ...)
-{
-    int status;
-    char buf[BUFSIZ];
-    va_list ap;
-
-    va_start(ap, fmt);
-    (void)vsnprintf(buf, sizeof(buf) - 5, fmt, ap);
-    va_end(ap);
-    (void)strlcat(buf, "", sizeof(buf));
-    status = (int)write(fd, buf, strnlen(buf, sizeof(buf)));
-    (void)tcdrain(fd);
-    if (status == (int)strnlen(buf, sizeof(buf))) {
-        GPSD_LOG(LOG_IO, errout, "=> GPS: %s\n", buf);
-        return status;
-    }  // else
-
-    GPSD_LOG(LOG_WARN, errout, "=> GPS: %s FAILED\n", buf);
-    return -1;
-}
-
-static void oceanserver_event_hook(struct gps_device_t *session,
-                                   event_t event)
-{
-    if (session->context->readonly) {
-        return;
-    }
-    if (event == event_configure &&
-        session->lexer.counter == 0) {
-        // report in NMEA format
-        (void)oceanserver_send(&session->context->errout,
-                               session->gpsdata.gps_fd, "2\n");
-        // ship all fields
-        (void)oceanserver_send(&session->context->errout,
-                               session->gpsdata.gps_fd, "X2047");
-    }
-}
-
-// *INDENT-OFF*
-static const struct gps_type_t driver_oceanServer = {
-    .type_name      = "OceanServer OS5000", // full name of type
-    .packet_type    = NMEA_PACKET,      // associated lexer packet type
-    .flags          = DRIVER_STICKY,    // no rollover or other flags
-    .trigger        = "$OHPR,",         // detect their main sentence
-    .channels       = 0,                // not an actual GPS at all
-    .probe_detect   = NULL,
-    .get_packet     = packet_get1,      // how to get a packet
-    .parse_packet   = generic_parse_input,      // how to interpret a packet
-    .rtcm_writer    = NULL,             // Don't send
-    .init_query     = NULL,             // non-perturbing initial query
-    .event_hook     = oceanserver_event_hook,
-    .speed_switcher = NULL,             // no speed switcher
-    .mode_switcher  = NULL,             // no mode switcher
-    .rate_switcher  = NULL,             // no wrapup
-    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
-    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
-    .control_send   = nmea_write,       // how to send control strings
-    .time_offset     = NULL,
-};
-// *INDENT-ON*
-#endif
-
 #ifdef FURY_ENABLE
 /**************************************************************************
  *
@@ -1743,9 +1666,6 @@ static const struct gps_type_t *gpsd_driver_array[] = {
     &driver_garmin,
 #endif  // GARMIN_ENABLE
     &driver_mtk3301,
-#ifdef OCEANSERVER_ENABLE
-    &driver_oceanServer,
-#endif  // OCEANSERVER_ENABLE
 #ifdef FV18_ENABLE
     &driver_fv18,
 #endif  // FV18_ENABLE

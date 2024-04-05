@@ -46,7 +46,6 @@ driver_names = (
     "nmea",
     "ntrip",
     "oncore",
-    "oceanserver",
     "rtcm104v2",
     # "rtcm104v3",
     "sirf",
