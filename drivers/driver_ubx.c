@@ -5081,8 +5081,7 @@ static void ubx_init_query(struct gps_device_t *session)
 
 static void ubx_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (session->context->readonly ||
-        session->context->passive) {
+    if (session->context->readonly) {
         return;
     }
     if (event == event_identified) {
@@ -5094,7 +5093,7 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
             /* passive mode, do no autoconfig
              * but we really want MON-VER. */
             (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
-        } else if (session->mode == O_OPTIMIZE) {
+        } else if (O_OPTIMIZE == session->mode) {
             // Turn off UBX output, turn on NMEA on this port.
             ubx_mode(session, MODE_BINARY);
         } else {
