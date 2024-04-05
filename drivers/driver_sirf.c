@@ -2572,9 +2572,9 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
     }
 
     switch (event) {
-    case event_identified:
+    case EVENT_IDENTIFIED:
         FALLTHROUGH
-    case event_reactivate:
+    case EVENT_REACTIVATE:
         if (NMEA_PACKET == session->lexer.type) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: Switching chip mode to binary.\n");
@@ -2584,7 +2584,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
         }
         break;
 
-    case event_configure:
+    case EVENT_CONFIGURE:
         /* This wakes up on every received packet.
          * Use this hook to step, slowly, through the init messages.
          * We try, but not always succeed, to wait for the ACK/NACK.
@@ -2615,7 +2615,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
 
         switch (session->cfg_stage) {
         case 0:
-            // this slot used by event_identified
+            // this slot used by EVENT_IDENTIFIED
             return;
 
         case 1:
@@ -2724,7 +2724,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
         }
         break;
 
-    case event_deactivate:
+    case EVENT_DEACTIVATE:
 
         putbyte(moderevert, 7, session->driver.sirf.degraded_mode);
         putbe16(moderevert, 10, session->driver.sirf.altitude_source_input);
@@ -2738,13 +2738,13 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
         (void)sirf_write(session, moderevert, sizeof(moderevert));
         break;
 
-    case event_driver_switch:
+    case EVENT_DRIVER_SWITCH:
         // do what here?
         break;
-    case event_triggermatch:
+    case EVENT_TRIGGERMATCH:
         // do what here?
         break;
-    case event_wakeup:
+    case EVENT_WAKEUP:
         // do what here?
         break;
     }

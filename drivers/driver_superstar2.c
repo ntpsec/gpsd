@@ -447,7 +447,7 @@ static void superstar2_event_hook(struct gps_device_t *session, event_t event)
         return;
     }
 
-    if (event == event_identified) {
+    if (event == EVENT_IDENTIFIED) {
         unsigned char version_msg[]    = { 0x01, 0x2d, 0xd2, 0x00, 0x00, 0x01 };
         unsigned char svinfo_msg[]     = { 0x01, 0xa1, 0x5e, 0x00, 0x00, 0x01 };
         unsigned char timing_msg[]     = { 0x01, 0xf1, 0x0e, 0x00, 0x00, 0x01 };

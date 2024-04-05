@@ -5983,15 +5983,15 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
         return;
     }
     switch (event) {
-    case event_identified:
+    case EVENT_IDENTIFIED:
         FALLTHROUGH
-    case event_reactivate:
+    case EVENT_REACTIVATE:
         /* reactivate style needs to depend on model
          * So send Request Software Version (0x1f), which returns 0x45.
          * Once we have the x45, we can decide how to configure */
         (void)tsip_write1(session, "\x1f", 1);
         break;
-    case event_configure:
+    case EVENT_CONFIGURE:
         // this seems to get called on every packet...
         if (0 == session->lexer.counter) {
             /* but the above if() makes it never execute
@@ -5999,7 +5999,7 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
              * never fired as some Trimble are 8N1 */
         }
         break;
-    case event_deactivate:
+    case EVENT_DEACTIVATE:
         // used to revert serial port parms here.  No need for that.
         FALLTHROUGH
     default:

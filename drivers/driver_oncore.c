@@ -613,7 +613,7 @@ static void oncore_event_hook(struct gps_device_t *session, event_t event)
      * power-down will be silent on startup.  Provoke
      * identification by requesting the firmware version.
      */
-    if (event == event_wakeup) {
+    if (event == EVENT_WAKEUP) {
         (void)oncore_control_send(session, getfirmware, sizeof(getfirmware));
     }
 
@@ -624,8 +624,8 @@ static void oncore_event_hook(struct gps_device_t *session, event_t event)
      * FIXME: It might not be necessary to call this on reactivate.
      * Experiment to see if the holds its settings through a close.
      */
-    if (event == event_identified ||
-        event == event_reactivate) {
+    if (event == EVENT_IDENTIFIED ||
+        event == EVENT_REACTIVATE) {
         (void)oncore_control_send(session, enableEa, sizeof(enableEa));
         (void)oncore_control_send(session, enableBb, sizeof(enableBb));
         // (void)oncore_control_send(session, enableEn, sizeof(enableEn));

@@ -267,7 +267,8 @@ static void evermore_event_hook(struct gps_device_t *session, event_t event)
      * FIX-ME: It might not be necessary to call this on reactivate.
      * Experiment to see if the holds its settings through a close.
      */
-    if (event == event_identified || event == event_reactivate) {
+    if (event == EVENT_IDENTIFIED ||
+        event == EVENT_REACTIVATE) {
         /*
          * We used to run this driver in binary mode, but that has the
          * problem that Evermore binary mode doesn't report a
@@ -279,7 +280,7 @@ static void evermore_event_hook(struct gps_device_t *session, event_t event)
         (void)evermore_mode(session, 0);        // switch GPS to NMEA mode
         // configure NMEA messages for gpsd (GPGSV every 5s)
         (void)evermore_nmea_config(session, 1);
-    } else if (event == event_deactivate) {
+    } else if (event == EVENT_DEACTIVATE) {
         // configure NMEA messages to default
         (void)evermore_nmea_config(session, 0);
     }

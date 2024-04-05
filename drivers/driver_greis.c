@@ -1024,7 +1024,7 @@ static void greis_event_hook(struct gps_device_t *session, event_t event)
         return;
     }
 
-    if (event == event_wakeup) {
+    if (event == EVENT_WAKEUP) {
         /*
          * Code to make the device ready to communicate.  Only needed if the
          * device is in some kind of sleeping state, and only shipped to
@@ -1039,8 +1039,8 @@ static void greis_event_hook(struct gps_device_t *session, event_t event)
         (void)greis_write(session, disable_messages,
                           sizeof(disable_messages) - 1);
         (void)greis_write(session, get_vendor, sizeof(get_vendor) - 1);
-    } else if (event == event_identified ||
-               event == event_reactivate) {
+    } else if (event == EVENT_IDENTIFIED ||
+               event == EVENT_REACTIVATE) {
         /*
          * Fires when the first full packet is recognized from a previously
          * unidentified device OR the device is reactivated after close. The
@@ -1059,15 +1059,15 @@ static void greis_event_hook(struct gps_device_t *session, event_t event)
         // Store (expected) cycle time (seconds)
         session->gpsdata.dev.cycle.tv_sec = 0;
         session->gpsdata.dev.cycle.tv_nsec = 250000000L;
-    } else if (event == event_driver_switch) {
+    } else if (event == EVENT_DRIVER_SWITCH) {
         /*
          * Fires when the driver on a device is changed *after* it
          * has been identified.
          */
-    } else if (event == event_deactivate) {
+    } else if (event == EVENT_DEACTIVATE) {
         /*
          * Fires when the device is deactivated.  Use this to revert
-         * whatever was done at event_identified and event_configure
+         * whatever was done at EVENT_IDENTIFIED and EVENT_CONFIGURE
          * time.
          */
         (void)greis_write(session, disable_messages,

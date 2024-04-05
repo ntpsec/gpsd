@@ -992,7 +992,8 @@ static void garmin_event_hook(struct gps_device_t *session, event_t event)
      * FIX-ME: It might not be necessary to call this on reactivate.
      * Experiment to see if the holds its settings through a close.
      */
-    if (event == event_identified || event == event_reactivate) {
+    if (event == EVENT_IDENTIFIED ||
+        event == EVENT_REACTIVATE) {
         // Tell the device to send product data
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "Garmin: Get Product Data\n");
@@ -1016,10 +1017,11 @@ static void garmin_event_hook(struct gps_device_t *session, event_t event)
                               CMND_START_RM_DATA);
 #endif
     }
-    if (event == event_deactivate)
+    if (event == EVENT_DEACTIVATE) {
         // FIX-ME: is any action needed, or is closing the port sufficient?
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "Garmin: garmin_close()\n");
+    }
 }
 
 #define Send_ACK()    Build_Send_SER_Packet(session, 0, ACK, 0, 0)

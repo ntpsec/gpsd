@@ -539,8 +539,8 @@ static void geostar_event_hook(struct gps_device_t *session, event_t event)
         return;
     }
 
-    if (event == event_identified ||
-        event == event_reactivate) {
+    if (event == EVENT_IDENTIFIED ||
+        event == EVENT_REACTIVATE) {
         // Select binary packets
         putbe32(buf, 0, 0xffff0000);
         putbe32(buf, 4, 0);
@@ -569,7 +569,7 @@ static void geostar_event_hook(struct gps_device_t *session, event_t event)
         (void)geostar_write(session, 0x8f, buf, 1);
     }
 
-    if (event_deactivate == event) {
+    if (EVENT_DEACTIVATE == event) {
         // Perform cold restart
         putbe32(buf, 0, 3);
         (void)geostar_write(session, 0xc2, buf, 1);

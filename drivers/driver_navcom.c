@@ -182,11 +182,12 @@ static void navcom_cmd_0x11(struct gps_device_t *session,
 
 static void navcom_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (session->context->readonly)
+    if (session->context->readonly) {
         return;
+    }
 
     // Request the following messages:
-    if (event == event_identified) {
+    if (event == EVENT_IDENTIFIED) {
         /* NOTE - Channel Status allows us to know into which of the
          * unit's various serial ports we are connected.
          * Its value gets updated every time we receive a 0x06 (Ack)

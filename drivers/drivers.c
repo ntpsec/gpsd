@@ -58,7 +58,7 @@ gps_mask_t generic_parse_input(struct gps_device_t *session)
                     if (session->device_type != NULL &&
                         session->device_type->event_hook != NULL) {
                         session->device_type->event_hook(session,
-                                                         event_triggermatch);
+                                                         EVENT_TRIGGERMATCH);
                     st |= DEVICEID_SET;
                     }
                 }
@@ -123,7 +123,7 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
      * This is where we try to tickle NMEA devices into revealing their
      * inner natures.
      */
-    if (event == event_configure) {
+    if (event == EVENT_CONFIGURE) {
         /*
          * The reason for splitting these probes up by packet sequence
          * number, interleaving them with the first few packet receives,
@@ -306,14 +306,14 @@ static void garmin_nmea_event_hook(struct gps_device_t *session,
         return;
     }
 
-    if (event == event_driver_switch) {
+    if (event == EVENT_DRIVER_SWITCH) {
         // forces a reconfigure as the following packets come in
         session->lexer.counter = 0;
     }
     if (session->context->passive) {
         return;
     }
-    if (event == event_configure) {
+    if (event == EVENT_CONFIGURE) {
         /*
          * And here's that reconfigure.  It's split up like this because
          * receivers like the Garmin GPS-10 don't handle having having a lot of
@@ -394,14 +394,14 @@ static void ashtech_event_hook(struct gps_device_t *session, event_t event)
         return;
     }
 
-    if (event == event_wakeup) {
+    if (event == EVENT_WAKEUP) {
         (void)nmea_send(session, "$PASHQ,RID");
     }
 
     if (session->context->passive) {
         return;
     }
-    if (event == event_identified) {
+    if (event == EVENT_IDENTIFIED) {
         // turn WAAS on. can't hurt...
         (void)nmea_send(session, "$PASHS,WAS,ON");
         // reset to known output state
@@ -463,9 +463,11 @@ static void fv18_event_hook(struct gps_device_t *session, event_t event)
      * It's possible we might not need to redo this on event_reactivate,
      * but doing so is safe and cheap.
      */
-    if (event == event_identified || event == event_reactivate)
+    if (event == EVENT_IDENTIFIED ||
+        event == EVENT_REACTIVATE) {
         (void)nmea_send(session,
                         "$PFEC,GPint,GSA01,DTM00,ZDA01,RMC01,GLL00,VTG00,GSV05");
+    }
 }
 
 // *INDENT-OFF*
@@ -549,12 +551,12 @@ static void tripmate_event_hook(struct gps_device_t *session, event_t event)
     }
 
     // TripMate requires this response to the ASTRAL it sends at boot time
-    if (event == event_identified) {
+    if (event == EVENT_IDENTIFIED) {
         (void)nmea_send(session, "$IIGPQ,ASTRAL");
     }
     // stop it sending PRWIZCH
-    if (event == event_identified ||
-        event == event_reactivate) {
+    if (event == EVENT_IDENTIFIED ||
+        event == EVENT_REACTIVATE) {
         (void)nmea_send(session, "$PRWIILOG,ZCH,V,,");
     }
 }
@@ -601,7 +603,7 @@ static void earthmate_event_hook(struct gps_device_t *session, event_t event)
     if (session->context->readonly) {
         return;
     }
-    if (event == event_triggermatch) {
+    if (event == EVENT_TRIGGERMATCH) {
         (void)gpsd_write(session, "EARTHA\r\n", 8);
         // wait 10,000 uSec
         delay.tv_sec = 0;
@@ -724,7 +726,7 @@ static void tnt_event_hook(struct gps_device_t *session, event_t event)
     if (session->context->readonly) {
         return;
     }
-    if (event == event_wakeup) {
+    if (event == EVENT_WAKEUP) {
         (void)tnt_send(session, "@F0.3=1");     // set run mode
         (void)tnt_send(session, "@F2.2=1");     // report in degrees
     }
@@ -788,10 +790,10 @@ static bool fury_rate_switcher(struct gps_device_t *session, double rate)
 
 static void fury_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (event == event_wakeup &&
+    if (event == EVENT_WAKEUP &&
         gpsd_get_speed(session) == 115200) {
         (void)fury_rate_switcher(session, 1.0);
-    } else if (event == event_deactivate) {
+    } else if (event == EVENT_DEACTIVATE) {
         (void)fury_rate_switcher(session, 0.0);
     }
 }
@@ -987,7 +989,7 @@ static void mtk3301_event_hook(struct gps_device_t *session, event_t event)
     if (session->context->readonly) {
         return;
     }
-    if (event == event_triggermatch) {
+    if (event == EVENT_TRIGGERMATCH) {
         (void)nmea_send(session, "$PMTK320,0");  // power save off
         // Fix interval, 1000 millseconds
         (void)nmea_send(session, "$PMTK300,1000,0,0,0.0,0.0");
@@ -1127,11 +1129,11 @@ static void isync_event_hook(struct gps_device_t *session, event_t event)
         return;
     }
 
-    if (event == event_driver_switch) {
+    if (event == EVENT_DRIVER_SWITCH) {
         session->lexer.counter = 0;
     }
 
-    if (event == event_configure) {
+    if (event == EVENT_CONFIGURE) {
         switch (session->lexer.counter) {
         case 1:
             /* Configure timing and frequency flags:

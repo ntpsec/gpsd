@@ -717,11 +717,11 @@ void gpsd_set_speed(struct gps_device_t *session,
 
                 for (dp = gpsd_drivers; *dp; dp++) {
                     if (NULL != (*dp)->event_hook) {
-                        (*dp)->event_hook(session, event_wakeup);
+                        (*dp)->event_hook(session, EVENT_WAKEUP);
                     }
                 }
             } else if (NULL != session->device_type->event_hook) {
-                session->device_type->event_hook(session, event_wakeup);
+                session->device_type->event_hook(session, EVENT_WAKEUP);
             }
         }
     }

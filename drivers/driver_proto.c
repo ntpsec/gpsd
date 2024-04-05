@@ -382,7 +382,7 @@ static void _proto__event_hook(struct gps_device_t *session, event_t event)
     if (session->context->readonly)
         return;
 
-    if (event == event_wakeup) {
+    if (event == EVENT_WAKEUP) {
        /*
         * Code to make the device ready to communicate.  Only needed if the
         * device is in some kind of sleeping state, and only shipped to
@@ -390,7 +390,7 @@ static void _proto__event_hook(struct gps_device_t *session, event_t event)
         * that might not be GPSes at all.
         */
     }
-    if (event == event_identified) {
+    if (event == EVENT_IDENTIFIED) {
         /*
          * Fires when the first full packet is recognized from a
          * previously unidentified device.  The session.lexer counter
@@ -400,10 +400,10 @@ static void _proto__event_hook(struct gps_device_t *session, event_t event)
          * session->subtype.
          */
     }
-    if (event == event_configure) {
+    if (event == EVENT_CONFIGURE) {
         /*
          * Change sentence mix and set reporting modes as needed.
-         * Called immediately after event_identified fires, then just
+         * Called immediately after EVENT_IDENTIFIED fires, then just
          * after every packet received thereafter, but you probably
          * only want to take actions on the first few packets after
          * the session.lexer counter has been zeroed,
@@ -413,18 +413,18 @@ static void _proto__event_hook(struct gps_device_t *session, event_t event)
          * sends with the first few packet reads, which is useful for
          * devices with small receive buffers.
          */
-    } else if (event == event_driver_switch) {
+    } else if (event == EVENT_DRIVER_SWITCH) {
         /*
          * Fires when the driver on a device is changed *after* it
          * has been identified.
          */
-    } else if (event == event_deactivate) {
+    } else if (event == EVENT_DEACTIVATE) {
         /*
          * Fires when the device is deactivated.  Usr this to revert
-         * whatever was done at event_identify and event_configure
+         * whatever was done at EVENT_IDENTIFY and EVENT_CONFIGURE
          * time.
          */
-    } else if (event == event_reactivate) {
+    } else if (event == EVENT_REACTIVATE) {
        /*
         * Fires when a device is reactivated after having been closed.
         * Use this hook for re-establishing device settings that

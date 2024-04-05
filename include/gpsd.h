@@ -389,13 +389,13 @@ struct aivdm_context_t {
 
 typedef enum {ANY, GPS, RTCM2, RTCM3, AIS} gnss_type;
 typedef enum {
-    event_wakeup,
-    event_triggermatch,
-    event_identified,
-    event_configure,
-    event_driver_switch,
-    event_deactivate,
-    event_reactivate,
+    EVENT_WAKEUP,
+    EVENT_TRIGGERMATCH,
+    EVENT_IDENTIFIED,
+    EVENT_CONFIGURE,
+    EVENT_DRIVER_SWITCH,
+    EVENT_DEACTIVATE,
+    EVENT_REACTIVATE,
 } event_t;
 
 

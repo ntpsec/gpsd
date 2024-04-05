@@ -5084,7 +5084,7 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
     if (session->context->readonly) {
         return;
     }
-    if (event == event_identified) {
+    if (event == EVENT_IDENTIFIED) {
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX identified\n");
 
         // no longer set UBX-CFG-SBAS here, u-blox 9 and 10 do not have it
@@ -5100,7 +5100,7 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
             //* Turn off NMEA output, turn on UBX on this port.
             ubx_mode(session, MODE_NMEA);
         }
-    } else if (event == event_deactivate) {
+    } else if (event == EVENT_DEACTIVATE) {
         /* There used to be a hotstart/reset here.
          * That caused u-blox USB to re-enumerate.
          * Sometimes to a new device name.

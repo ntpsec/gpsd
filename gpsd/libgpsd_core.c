@@ -284,7 +284,7 @@ int gpsd_switch_driver(struct gps_device_t *session, char *type_name)
             if (first_sync &&
                 NULL != session->device_type->event_hook) {
                 session->device_type->event_hook(session,
-                                                 event_driver_switch);
+                                                 EVENT_DRIVER_SWITCH);
             }
             if (STICKY(*dp)) {
                 session->last_controller = *dp;
@@ -365,7 +365,7 @@ void gpsd_deactivate(struct gps_device_t *session)
     if (!session->context->readonly &&
         NULL != session->device_type  &&
         NULL != session->device_type->event_hook) {
-        session->device_type->event_hook(session, event_deactivate);
+        session->device_type->event_hook(session, EVENT_DEACTIVATE);
     }
     // cast for 32-bit ints.
     GPSD_LOG(LOG_INF, &session->context->errout,
@@ -765,7 +765,7 @@ foundit:
      */
     if (NULL != session->device_type &&
         NULL != session->device_type->event_hook) {
-        session->device_type->event_hook(session, event_reactivate);
+        session->device_type->event_hook(session, EVENT_REACTIVATE);
     }
     // cast for 32-bit ints
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -1807,7 +1807,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         // fire the identified hook
         if (NULL != session->device_type &&
             NULL != session->device_type->event_hook) {
-            session->device_type->event_hook(session, event_identified);
+            session->device_type->event_hook(session, EVENT_IDENTIFIED);
         }
         session->lexer.counter = 0;
 
@@ -1823,7 +1823,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     // fire the configure hook, on every packet.  Seems excessive...
     if (NULL != session->device_type &&
         NULL != session->device_type->event_hook) {
-        session->device_type->event_hook(session, event_configure);
+        session->device_type->event_hook(session, EVENT_CONFIGURE);
     }
 
     GPSD_LOG(LOG_RAW, &session->context->errout,
