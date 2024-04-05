@@ -44,12 +44,28 @@ typedef enum {
     MON_VER         = MSGID(ALLY_MON, 0x04),
     NAV_DOP         = MSGID(ALLY_NAV, 0x01),
     NAV_POSLLH      = MSGID(ALLY_NAV, 0x02),
+    NAV_TIME        = MSGID(ALLY_NAV, 0x05),
 } ally_msgs_t;
 
 // ACK-* ids
 static struct vlist_t vack_ids[] = {
     {ACK_ACK, "ACK-ACK"},
     {ACK_NAK, "ACK-NAK"},
+    {0, NULL},
+};
+
+// NAV-TIME flags
+static struct flist_t vtime_flags[] = {
+    {1, 1, "week"},
+    {2, 2, "second"},
+    {4, 4, "leapsecond"},
+    {0, 0, NULL},
+};
+
+// NAV-TIME navSys
+static struct vlist_t vtime_navsys[] = {
+    {0, "GPS"},
+    {1, "BDS"},
     {0, NULL},
 };
 
@@ -305,6 +321,66 @@ static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
     return mask;
 }
 
+/**
+ * GPS Leap Seconds - NAV-TIME
+ * sorta like UBX-NAV-TIMEGPS
+ */
+static gps_mask_t msg_nav_time(struct gps_device_t *session,
+                               unsigned char *buf, size_t data_len)
+{
+    char buf2[80];
+    unsigned navSys;        // which constellation
+    unsigned flags;         // Validity Flags
+    unsigned FracTow;       // fractional TOW, ns
+    gps_mask_t mask = 0;
+    char ts_buf[TIMESPEC_LEN];
+
+    if (16 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-TIME: runt payload len %zd", data_len);
+        return 0;
+    }
+
+    navSys = getub(buf, 0);
+    flags = getub(buf, 1);
+    FracTow = getleu32(buf, 2);
+    session->driver.ubx.iTOW = getleu64(buf, 4);   // refTow, ms
+
+    // Valid leap seconds ?
+    if (4 == (flags &4)) {
+        session->context->leap_seconds = (int)getub(buf, 10);
+        session->context->valid |= LEAP_SECOND_VALID;
+    }
+
+    // Valid GPS time of week and week number
+    if (3 == (flags & 3)) {
+        unsigned week;
+        double timeErr;      // Time Accuracy Estimate in ns
+        timespec_t ts_tow;
+
+        week = getleu16(buf, 8);
+        MSTOTS(&ts_tow, session->driver.ubx.iTOW);
+        ts_tow.tv_nsec += FracTow;
+        TS_NORM(&ts_tow);
+        session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
+
+        // timeErr in ns, unknown type (1 sigma, 50%, etc.)
+        timeErr = (double)getleu32(buf, 12);
+        session->newdata.ept = timeErr / 1e9;
+        mask |= (TIME_SET | NTPTIME_IS);
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-TIME: time=%s flags x%x\n",
+             timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+             flags);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "ALLY: NAV-TIME: navSys %s flags:%s\n",
+	     val2str(navSys, vtime_navsys),
+	     flags2str(flags, vtime_flags, buf2, sizeof(buf2)));
+    return mask;
+}
+
 /* msg_nav() -- handle CLASS-NAV
  */
 static gps_mask_t msg_nav(struct gps_device_t *session,
@@ -319,6 +395,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
         break;
     case NAV_POSLLH:
         mask = msg_nav_posllh(session, &buf[4], payload_len);
+        break;
+    case NAV_TIME:
+        mask = msg_nav_time(session, &buf[4], payload_len);
         break;
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -437,6 +516,10 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
 
     // turn on rate one NAV-POSLLH
     msg[3] = 0x02;          // POSLLH
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
+    // turn on rate one NAV-TIME
+    msg[3] = 0x05;          // TIME
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 }
 
