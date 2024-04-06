@@ -45,6 +45,7 @@ typedef enum {
     NAV_DOP         = MSGID(ALLY_NAV, 0x01),
     NAV_POSLLH      = MSGID(ALLY_NAV, 0x02),
     NAV_TIME        = MSGID(ALLY_NAV, 0x05),
+    NAV_CLOCK       = MSGID(ALLY_NAV, 0x22),
 } ally_msgs_t;
 
 // ACK-* ids
@@ -200,6 +201,36 @@ static gps_mask_t msg_mon(struct gps_device_t *session,
 }
 
 // NAV-*
+
+/**
+ * Clock Solution NAV-CLOCK
+ * Seems to match UBX-NAV-CLOCK
+ *
+ */
+static gps_mask_t msg_nav_clock(struct gps_device_t *session,
+                                unsigned char *buf, size_t data_len)
+{
+    unsigned long tAcc, fAcc;
+
+    if (20 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-CLOCK: runt payload len %zd", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    session->gpsdata.fix.clockbias = getles32(buf, 4);
+    session->gpsdata.fix.clockdrift = getles32(buf, 8);
+    tAcc = getleu32(buf, 12);
+    fAcc = getleu32(buf, 16);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-CLOCK: iTOW=%lld clkB %ld clkD %ld tAcc %lu fAcc %lu\n",
+             (long long)session->driver.ubx.iTOW,
+             session->gpsdata.fix.clockbias,
+             session->gpsdata.fix.clockdrift,
+             tAcc, fAcc);
+    return 0;
+}
 
 /**
  * NAV-DOP, Dilution of precision message
@@ -390,6 +421,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     gps_mask_t mask = 0;
 
     switch (msgid) {
+    case NAV_CLOCK:
+        mask = msg_nav_clock(session, &buf[4], payload_len);
+        break;
     case NAV_DOP:
         mask = msg_nav_dop(session, &buf[4], payload_len);
         break;
@@ -520,6 +554,10 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
 
     // turn on rate one NAV-TIME
     msg[3] = 0x05;          // TIME
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
+    // turn on rate one NAV-CLOCK
+    msg[3] = 0x22;          // CLOCK
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 }
 
