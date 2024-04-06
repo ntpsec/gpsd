@@ -351,11 +351,11 @@ an error estimate.
 
 |xdop |No |numeric |Longitudinal dilution of precision, a
 dimensionless factor which should be multiplied by a base UERE to get
-an error estimate.
+an error estimate.  A.k.a. Northing DOP.
 
 |ydop |No |numeric |Latitudinal dilution of precision, a dimensionless
 factor which should be multiplied by a base UERE to get an error
-estimate.
+estimate.  A.k.a. Easting DOP.
 
 |===
 

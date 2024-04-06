@@ -2245,7 +2245,7 @@ static gps_mask_t ubx_msg_mon_ver(struct gps_device_t *session,
 }
 
 /**
- * Clock Solution
+ * Clock Solution UBX-NAV-CLOCK
  *
  * Present in:
  *     protVer 8 to 34 (Antaris 4 to M10)
@@ -2268,7 +2268,7 @@ static gps_mask_t ubx_msg_nav_clock(struct gps_device_t *session,
     tAcc = getleu32(buf, 12);
     fAcc = getleu32(buf, 16);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NAV-CLOCK: iTOW=%lld clkB %ld clkD %ld tAcc %lu fAcc %lu\n",
+             "UBX: NAV-CLOCK: iTOW=%lld clkB %ld clkD %ld tAcc %lu fAcc %lu\n",
              (long long)session->driver.ubx.iTOW,
              session->gpsdata.fix.clockbias,
              session->gpsdata.fix.clockdrift,
@@ -2351,13 +2351,26 @@ static gps_mask_t ubx_msg_nav_dop(struct gps_device_t *session,
         session->gpsdata.dop.hdop = (double)(u / 100.0);
         mask |= DOP_SET;
     }
+    // Northing DOP
+    u = getleu16(buf, 14);
+    if (9999 > u) {
+        session->gpsdata.dop.ydop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    // Easting DOP
+    u = getleu16(buf, 16);
+    if (9999 > u) {
+        session->gpsdata.dop.xdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX: NAV-DOP: gdop=%.2f pdop=%.2f "
-             "hdop=%.2f vdop=%.2f tdop=%.2f mask={DOP}\n",
+             "hdop=%.2f vdop=%.2f tdop=%.2f ydop=%.2f xdop=%.2f\n",
              session->gpsdata.dop.gdop,
              session->gpsdata.dop.hdop,
              session->gpsdata.dop.vdop,
-             session->gpsdata.dop.pdop, session->gpsdata.dop.tdop);
+             session->gpsdata.dop.pdop, session->gpsdata.dop.tdop,
+             session->gpsdata.dop.ydop, session->gpsdata.dop.xdop);
     return mask;
 }
 
@@ -3634,12 +3647,12 @@ static gps_mask_t ubx_msg_nav_timegps(struct gps_device_t *session,
         session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
 
         tAcc = (double)getleu32(buf, 12);     // tAcc in ns
-        session->newdata.ept = tAcc * 1e-9;
+        session->newdata.ept = tAcc / 1e9;
         mask |= (TIME_SET | NTPTIME_IS);
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX: NAV-TIMEGPS: time=%s mask={TIME} calid x%x\n",
+             "UBX: NAV-TIMEGPS: time=%s mask={TIME} valid x%x\n",
              timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
              valid);
     GPSD_LOG(LOG_IO, &session->context->errout,
@@ -3647,6 +3660,7 @@ static gps_mask_t ubx_msg_nav_timegps(struct gps_device_t *session,
 	     flags2str(valid, vtimegps_valid, buf2, sizeof(buf2)));
     return mask;
 }
+
 /**
  * Navigation time to leap second: UBX-NAV-TIMELS
  *

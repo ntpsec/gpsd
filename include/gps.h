@@ -2586,8 +2586,14 @@ struct attitude_t {
 };
 
 struct dop_t {
-    // Dilution of precision factors
-    double xdop, ydop, pdop, hdop, vdop, tdop, gdop;
+    // Dilution of precision factors, dimensionless.
+    double xdop;       // latitude, easting
+    double ydop;       // longitude, northing
+    double pdop;       // position, scpherical, 3D
+    double hdop;       // horizontal, circular, 2D
+    double vdop;       // vertical, altitude
+    double tdop;       // time
+    double gdop;       // geometric, hyperspherical, 3D 
 };
 
 struct rawdata_t {
