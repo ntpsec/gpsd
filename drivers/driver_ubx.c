@@ -24,7 +24,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>                // for abs()
 #include <string.h>
 #include <unistd.h>
 
@@ -3523,7 +3523,8 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
     for (i = st = 0; i < nchan; i++) {
         unsigned off = 8 + 12 * i;
         short nmea_PRN;
-        short ubx_PRN = (short)getub(buf, off + 1);
+        unsigned chan = getub(buf, off);
+        unsigned ubx_PRN = getub(buf, off + 1);
         unsigned flags = getub(buf, off + 2);
         unsigned quality = getub(buf, off + 3);
         unsigned cno = getub(buf, off + 4);
@@ -3568,9 +3569,10 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
             session->gpsdata.skyview[st].used = true;
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX: NAV-SVINFO ubx_prn %d gnssid %d, svid %d nmea_PRN %d "
-                 "flags x%x az %.0f el %.0f cno %.0f prRes %.2f quality %u\n",
-                 ubx_PRN,
+                 "UBX: NAV-SVINFO chan %u  ubx_prn %d gnssid %d, svid %d "
+                 "nmea_PRN %d flags x%x az %.0f el %.0f cno %.0f prRes %.2f "
+                 "quality %u\n",
+                 chan, ubx_PRN,
                  session->gpsdata.skyview[st].gnssid,
                  session->gpsdata.skyview[st].svid, nmea_PRN, flags,
                  session->gpsdata.skyview[st].azimuth,
