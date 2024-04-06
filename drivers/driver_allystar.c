@@ -20,6 +20,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>                // for abs()
 #include <string.h>
 
 #include "../include/gpsd.h"
@@ -47,6 +48,7 @@ typedef enum {
     NAV_DOP         = MSGID(ALLY_NAV, 0x04),
     NAV_TIME        = MSGID(ALLY_NAV, 0x05),
     NAV_CLOCK       = MSGID(ALLY_NAV, 0x22),
+    NAV_SVINFO      = MSGID(ALLY_NAV, 0x30),
 } ally_msgs_t;
 
 // ACK-* ids
@@ -389,6 +391,135 @@ static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
 }
 
 /**
+ * GPS Satellite Info -- NAV-SVINFO
+ * Sort of like UBX-NAV-SVINFO
+ *   UBX is (8 + 12 * numCh)
+ *   ALLYSTAR if (8 + 24 *numCh)
+ *
+ */
+static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
+                               unsigned char *buf, size_t data_len)
+{
+    // char buf2[80];
+    unsigned i, nsv, st;
+    long long nchan;
+    timespec_t ts_tow;
+
+    if (8 > data_len) {
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "ALLY: NAV-SVINFO runt datalen %zd\n", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    MSTOTS(&ts_tow, session->driver.ubx.iTOW);
+    session->gpsdata.skyview_time =
+        gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
+
+    nchan = getleu32(buf, 4);  // 32 bits, seriously??
+    if (nchan > MAXCHANNELS) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV SVINFO: runt >%d reported visible",
+                 MAXCHANNELS);
+        return 0;
+    }
+
+    gpsd_zero_satellites(&session->gpsdata);
+    nsv = 0;
+    for (i = st = 0; i < nchan; i++) {
+        unsigned off = 24 * i;
+        unsigned nmea_PRN;
+        // v 2.3.1, 8 bit chand and 8-bit svid became 16-bit svid.
+        // no doc on svid numbers...
+        unsigned chan = getu2(buf, off + 8);
+        unsigned ally_svid = getub(buf, off + 9);
+        // no doc on flags
+        unsigned flags = getub(buf, off + 10);
+        // no doc on quality
+        unsigned quality = getub(buf, off + 11);
+        unsigned cno = getub(buf, off + 12);
+        // bool used = (bool)(flags & 0x01);
+        int el = getsb(buf, off + 13);
+        int az = getles16(buf, off + 14);
+        long long prRes = getles32(buf, off + 16);  // pseudorange residue, cm
+        // pr Rate, m/s
+        session->gpsdata.skyview[st].prRate = getlef32((const char*)buf,
+                                                        off + 20);
+        // pseudorange, m
+        session->gpsdata.skyview[st].pr = getled64((const char*)buf, off + 24);
+
+        // nmea_PRN = ubx_to_prn(ubx_PRN,
+                              // &session->gpsdata.skyview[st].gnssid,
+                              // &session->gpsdata.skyview[st].svid);
+
+        // if (1 > nmea_PRN) {
+        //     // skip bad PRN
+        //     GPSD_LOG(LOG_PROG, &session->context->errout,
+        //              "ALLY: NAV-SVINFO bad NMEA PRN %d\n", nmea_PRN);
+        //     continue;
+        // }
+        nmea_PRN = ally_svid;      // conversion undocumented.
+        session->gpsdata.skyview[st].PRN = nmea_PRN;
+
+        session->gpsdata.skyview[st].ss = (double)cno;
+        if (90 >= abs(el)) {
+            session->gpsdata.skyview[st].elevation = (double)el;
+        }
+        if (359 > az &&
+            0 <= az) {
+            session->gpsdata.skyview[st].azimuth = (double)az;
+        }
+        session->gpsdata.skyview[st].prRes = prRes / 100.0;
+        // session->gpsdata.skyview[st].qualityInd = quality;
+        // session->gpsdata.skyview[st].used = used;
+        // if (0x10 == (0x10 & flags)) {
+        //    session->gpsdata.skyview[st].health = SAT_HEALTH_BAD;
+        // } else {
+        //    session->gpsdata.skyview[st].health = SAT_HEALTH_OK;
+        // }
+
+        // sbas_in_use is not same as used
+        // if (used) {
+        //     // not really 'used', just integrity data from there
+        //     nsv++;
+        //     session->gpsdata.skyview[st].used = true;
+        // }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "ALLY: NAV-SVINFO chnd %llu  ally_svid %d gnssid %d, svid %d "
+                 "nmea_PRN %d flags x%x az %.0f el %.0f cno %.0f prRes %.2f "
+                 "quality x%x, prRate %f pr %.4f\n",
+                 chan, ally_svid,
+                 session->gpsdata.skyview[st].gnssid,
+                 session->gpsdata.skyview[st].svid, nmea_PRN, flags,
+                 session->gpsdata.skyview[st].azimuth,
+                 session->gpsdata.skyview[st].elevation,
+                 session->gpsdata.skyview[st].ss,
+                 session->gpsdata.skyview[st].prRes,
+                 quality,
+                 session->gpsdata.skyview[st].prRate,
+                 session->gpsdata.skyview[st].pr);
+        // flags and quality undocumented.
+        // GPSD_LOG(LOG_IO, &session->context->errout,
+        //          "UBX: NAV-SVINFO: flags:%s quality:%s\n",
+        //          flags2str(flags, fsvinfo_flags, buf2, sizeof(buf2)),
+        //          val2str(quality, vquality));
+
+        st++;
+    }
+
+    session->gpsdata.satellites_visible = (int)st;
+    session->gpsdata.satellites_used = (int)nsv;
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-SVINFO: visible=%d used=%d\n",
+             session->gpsdata.satellites_visible,
+             session->gpsdata.satellites_used);
+    // GPSD_LOG(LOG_IO, &session->context->errout,
+    //          "ALLY: NAV-SVINFO: chipGen %s\n",
+    //          val2str(globalFlags & 7, vglobalFlags));
+    return SATELLITE_SET | USED_IS;
+}
+
+/**
  * GPS Leap Seconds - NAV-TIME
  * sorta like UBX-NAV-TIMEGPS
  */
@@ -468,6 +599,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
         break;
     case NAV_POSLLH:
         mask = msg_nav_posllh(session, &buf[4], payload_len);
+        break;
+    case NAV_SVINFO:
+        mask = msg_nav_svinfo(session, &buf[4], payload_len);
         break;
     case NAV_TIME:
         mask = msg_nav_time(session, &buf[4], payload_len);
