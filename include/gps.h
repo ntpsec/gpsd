@@ -98,7 +98,7 @@ extern "C" {
  * 14    Move threee visibilize() into one gps_visibilize() here.
  *       Move gpsd_hexpack() to here as gps_hexpack()
  *       Move gpsd_hexdump() to here as gps_hexdump()
- *       Add prRes and qualityInd to satellite_t
+ *       Add prRes, prRate, pr, and qualityInd to satellite_t
  *       Add fixsource_t and watch_t to gps_data_t
  *       move privdata_t here from libgps/gps_sock.c
  *       Add rot (Rate Of Turn), mheading, to struct attitude_t
@@ -2429,6 +2429,8 @@ struct satellite_t {
     double elevation;     // elevation of satellite, -90 to 90 deg, NAN for n/a
     double azimuth;       // azimuth, 0 to 359 deg, NAN1 for n/a
     double prRes;         // Pseudorange residual, meters
+    double prRate;        // Pseudorange Rate of change, m/ss
+    double pr;            // Pseudorange meters
     bool used;            // this satellite used in solution
     /* Quality Indicator
      * -1 = invalid, ignore

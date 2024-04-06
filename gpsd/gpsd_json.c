@@ -661,6 +661,14 @@ void json_sky_dump(const struct gps_device_t *session,
                     str_appendf(reply, replylen, ",\"el\":%.1f",
                                 datap->skyview[i].elevation);
                 }
+                if (0 != isfinite(datap->skyview[i].pr)) {
+                    str_appendf(reply, replylen, ",\"pr\":%.3f",
+                                datap->skyview[i].pr);
+                }
+                if (0 != isfinite(datap->skyview[i].prRate)) {
+                    str_appendf(reply, replylen, ",\"prRate\":%.1f",
+                                datap->skyview[i].prRate);
+                }
                 if (0 != isfinite(datap->skyview[i].prRes)) {
                     str_appendf(reply, replylen, ",\"prRes\":%.1f",
                                 datap->skyview[i].prRes);

@@ -325,7 +325,11 @@ error estimate.
 dimensionless factor which should be multiplied by a base UERE to get
 an error estimate.
 
-|prRes |No |numeric |Pseudorange residue in meters.
+|pr |No |numeric |Pseudorange, in meters.
+
+|prRate |No |numeric |Pseudorange Rate of Change, in meters / second.
+
+|prRes |No |numeric |Pseudorange residue, in meters.
 
 |qual |No |numeric |Quality Indicator +
 0=no signal +
