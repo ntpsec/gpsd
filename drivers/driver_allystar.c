@@ -42,8 +42,9 @@ typedef enum {
     ACK_ACK         = MSGID(ALLY_ACK, 0x01),
     ACK_NAK         = MSGID(ALLY_ACK, 0x00),
     MON_VER         = MSGID(ALLY_MON, 0x04),
-    NAV_DOP         = MSGID(ALLY_NAV, 0x01),
+    NAV_POSECEF     = MSGID(ALLY_NAV, 0x01),
     NAV_POSLLH      = MSGID(ALLY_NAV, 0x02),
+    NAV_DOP         = MSGID(ALLY_NAV, 0x04),
     NAV_TIME        = MSGID(ALLY_NAV, 0x05),
     NAV_CLOCK       = MSGID(ALLY_NAV, 0x22),
 } ally_msgs_t;
@@ -304,6 +305,41 @@ static gps_mask_t msg_nav_dop(struct gps_device_t *session,
     return mask;
 }
 
+/*
+ * Navigation Position ECEF message -- NAV-POSECEF
+ * Looks same as UBX-NAV-POSECEF
+ *
+ * This message does not bother to tell us if it is valid.
+ */
+static gps_mask_t msg_nav_posecef(struct gps_device_t *session,
+                                 unsigned char *buf, size_t data_len)
+{
+    gps_mask_t mask = ECEF_SET;
+
+    if (20 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-POSECEF: runt payload len %zd", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    // all in cm
+    session->newdata.ecef.x = getles32(buf, 4) / 100.0;
+    session->newdata.ecef.y = getles32(buf, 8) / 100.0;
+    session->newdata.ecef.z = getles32(buf, 12) / 100.0;
+    session->newdata.ecef.pAcc = getleu32(buf, 16) / 100.0;
+
+    // (long long) cast for 32-bit compat
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+        "ALLY: NAV-POSECEF: iTOW=%lld ECEF x=%.2f y=%.2f z=%.2f pAcc=%.2f\n",
+        (long long)session->driver.ubx.iTOW,
+        session->newdata.ecef.x,
+        session->newdata.ecef.y,
+        session->newdata.ecef.z,
+        session->newdata.ecef.pAcc);
+    return mask;
+}
+
  /**
  * Geodetic position solution message
  * NAV-POSLLH, Class 1, ID 2
@@ -426,6 +462,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
         break;
     case NAV_DOP:
         mask = msg_nav_dop(session, &buf[4], payload_len);
+        break;
+    case NAV_POSECEF:
+        mask = msg_nav_posecef(session, &buf[4], payload_len);
         break;
     case NAV_POSLLH:
         mask = msg_nav_posllh(session, &buf[4], payload_len);
