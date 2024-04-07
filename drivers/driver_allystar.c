@@ -431,7 +431,7 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
         unsigned nmea_PRN;
         // v 2.3.1, 8 bit chand and 8-bit svid became 16-bit svid.
         // no doc on svid numbers...
-        unsigned chan = getu2(buf, off + 8);
+        unsigned chan = getub(buf, off + 8);
         unsigned ally_svid = getub(buf, off + 9);
         // no doc on flags
         unsigned flags = getub(buf, off + 10);
