@@ -349,6 +349,7 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
     gps_clear_fix(&session->lastfix);
     gps_clear_fix(&session->newdata);
     gps_clear_fix(&session->oldfix);
+    gps_clear_gst(&session->gpsdata.gst);
     gps_clear_log(&session->gpsdata.log);
     // tty-level initialization
     gpsd_tty_init(session);
@@ -446,6 +447,7 @@ void gpsd_clear(struct gps_device_t *session)
     gps_clear_att(&session->gpsdata.attitude);
     gps_clear_dop(&session->gpsdata.dop);
     gps_clear_fix(&session->gpsdata.fix);
+    gps_clear_gst(&session->gpsdata.gst);
     session->releasetime = (time_t)0;
     session->badcount = 0;
 

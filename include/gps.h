@@ -107,6 +107,8 @@ extern "C" {
  *       change gps_data_t.gps_fd to type gps_fd_t.
  *       devconfig_t add sernum[]
  *       Add val2sstr() and flags2str()
+ *       Add ve_err_deviation, vn_err_deviationv, vu_err_deviation to gst_t
+ *       Move gst_t out of gps_data_t union.
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -341,7 +343,8 @@ struct gps_log_t  {
 #define GLONASS_PRN_OFFSET      64
 
 /*
- * The structure describing the pseudorange errors (GPGST)
+ * The structure describing the pseudorange errors (GPGST, etc.)
+ * These are all 1 standard deviation errors.
  */
 struct gst_t {
     timespec_t utctime;
@@ -349,9 +352,12 @@ struct gst_t {
     double smajor_deviation;
     double sminor_deviation;
     double smajor_orientation;
-    double lat_err_deviation;
-    double lon_err_deviation;
-    double alt_err_deviation;
+    double lat_err_deviation;          // latitude, meters
+    double lon_err_deviation;          // longitude meters
+    double alt_err_deviation;          // altitude, meters
+    double ve_err_deviation;           // north velocity,  meters/sec
+    double vn_err_deviation;           // veast elocity,  meters/sec
+    double vu_err_deviation;           // up velocity,  meters/sec
 };
 
 /*
@@ -2896,6 +2902,7 @@ struct gps_data_t {
                          LOGMESSAGE_SET|OSCILLATOR_SET|PPS_SET|RAW_SET| \
                          RTCM2_SET|RTCM3_SET|SUBFRAME_SET|TOFF_SET|VERSION_SET)
 
+    struct gst_t gst;
     union {
         // unusual forms of sensor data that might come up the pipe
         struct rtcm2_t  rtcm2;
@@ -2903,7 +2910,6 @@ struct gps_data_t {
         struct subframe_t subframe;
         struct ais_t ais;
         struct rawdata_t raw;
-        struct gst_t gst;
         struct oscillator_t osc;
         // "artificial" structures for various protocol responses
         struct version_t version;
@@ -2967,6 +2973,7 @@ extern void libgps_trace(int errlevel, const char *, ...);
 extern void gps_clear_att(struct attitude_t *);
 extern void gps_clear_dop( struct dop_t *);
 extern void gps_clear_fix(struct gps_fix_t *);
+extern void gps_clear_gst( struct gst_t *);
 extern void gps_clear_log(struct gps_log_t *);
 extern void gps_merge_fix(struct gps_fix_t *, gps_mask_t, struct gps_fix_t *);
 extern void gps_enable_debug(int, FILE *);

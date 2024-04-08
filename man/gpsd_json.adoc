@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 1 February 2024
+:date: 8 April 2024
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -458,11 +458,19 @@ ellipse, in meters.
 |orient |No |numeric |Orientation of semi-major axis of error ellipse,
 in degrees from true north.
 
+|alt |No |numeric |Standard deviation of altitude error, in meters.
+
 |lat |No |numeric |Standard deviation of latitude error, in meters.
 
 |lon |No |numeric |Standard deviation of longitude error, in meters.
 
-|alt |No |numeric |Standard deviation of altitude error, in meters.
+|ve |No |numeric |Standard deviation of East velocity error, in meters / second.
+
+|vn |No |numeric |Standard deviation of North velocity error, in meters /
+second.
+
+|vu |No |numeric |Standard deviation of Up velocity error, in meters / second.
+
 |===
 
 Here's an example:

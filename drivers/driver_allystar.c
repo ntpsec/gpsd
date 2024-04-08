@@ -353,7 +353,7 @@ static gps_mask_t msg_nav_posecef(struct gps_device_t *session,
  */
 static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
                                  unsigned char *buf,
-                                 size_t data_len UNUSED)
+                                 size_t data_len)
 {
     gps_mask_t mask = 0;
 
@@ -364,18 +364,18 @@ static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
     }
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
-    session->newdata.longitude = 1e-7 * getles32(buf, 4);
-    session->newdata.latitude = 1e-7 * getles32(buf, 8);
+    session->newdata.longitude = getles32(buf, 4) / 1e7;
+    session->newdata.latitude = getles32(buf, 8) / 1e7;
     // altitude WGS84
-    session->newdata.altHAE = 1e-3 * getles32(buf, 12);
+    session->newdata.altHAE = getles32(buf, 12) / 1e3;
     // altitude MSL
-    session->newdata.altMSL = 1e-3 * getles32(buf, 16);
+    session->newdata.altMSL = getles32(buf, 16) / 1e3;
     // Let gpsd_error_model() deal with geoid_sep
 
     // Horizontal accuracy estimate in mm, unknown type
-    session->newdata.eph = getleu32(buf, 20) * 1e-3;
+    session->newdata.eph = getleu32(buf, 20) / 1e3;
     // Vertical accuracy estimate in mm, unknown type
-    session->newdata.epv = getleu32(buf, 24) * 1e-3;
+    session->newdata.epv = getleu32(buf, 24) / 1e3;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
         "ALLY: NAV-POSLLH: iTOW=%lld lat=%.3f lon=%.3f altHAE=%.3f "
@@ -395,11 +395,11 @@ static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
  * Positioning velocity error estimation
  * NAV-PVERR, Class 1, ID x26
  * UBX has no equivalent
- * No mode, so limited usefulness
+ * Most of the data in $GPGST, but missing the ellipsoid data.
  */
 static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
                                 unsigned char *buf,
-                                size_t data_len UNUSED)
+                                size_t data_len)
 {
     gps_mask_t mask = 0;
 
@@ -409,26 +409,33 @@ static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
         return 0;
     }
 
-    double stdlat = getles32(buf, 4)/ 1000.0;   // millimeters
-    double stdlon = getles32(buf, 4)/ 1000.0;   // millimeters
-    double stdalt = getles32(buf, 4)/ 1000.0;   // millimeters
-    double stdve  = getles32(buf, 4)/ 1000.0;   // millimeters / second
-    double stdvn  = getles32(buf, 4)/ 1000.0;   // millimeters / second
-    double stdvu  = getles32(buf, 4)/ 1000.0;   // millimeters / second
+    // Probably NOT fix time
     session->driver.ubx.iTOW = getleu32(buf, 0);
+    // latitude, millimeters
+    session->gpsdata.gst.lat_err_deviation = getles32(buf, 4)/ 1000.0;
+    // longitude, millimeters
+    session->gpsdata.gst.lon_err_deviation = getles32(buf, 4)/ 1000.0;
+    // altitude, millimeters
+    session->gpsdata.gst.alt_err_deviation = getles32(buf, 4)/ 1000.0;
+    // velocity east, millimeters / second
+    session->gpsdata.gst.ve_err_deviation  = getles32(buf, 4)/ 1000.0;
+    // velocity north, millimeters / second
+    session->gpsdata.gst.ve_err_deviation = getles32(buf, 4)/ 1000.0;
+    // velocity up, millimeters / second
+    session->gpsdata.gst.ve_err_deviation = getles32(buf, 4)/ 1000.0;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
         "ALLY: NAV-PVERR: iTOW %llu stdlat %.3f stdlon %.3f stdalt %.3f "
         "stdve %.3f stdvn %.3f stdvu %.3f\n",
         (unsigned long long)session->driver.ubx.iTOW,
-        stdlat,
-        stdlon,
-        stdalt,
-        stdve,
-        stdvn,
-        stdvu);
+        session->gpsdata.gst.lat_err_deviation,
+        session->gpsdata.gst.lon_err_deviation,
+        session->gpsdata.gst.alt_err_deviation,
+        session->gpsdata.gst.ve_err_deviation,
+        session->gpsdata.gst.ve_err_deviation,
+        session->gpsdata.gst.ve_err_deviation);
 
-    mask = ONLINE_SET;
+    mask = GST_SET | ONLINE_SET;
     return mask;
 }
 

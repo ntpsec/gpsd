@@ -426,10 +426,27 @@ void gps_clear_att(struct attitude_t *attp)
     gps_clear_base(&attp->base);
 }
 
+// Clear a dop_t structure
 void gps_clear_dop( struct dop_t *dop)
 {
     dop->xdop = dop->ydop = dop->vdop = dop->tdop = dop->hdop = dop->pdop =
         dop->gdop = NAN;
+}
+
+// Clear a gst structure
+void gps_clear_gst( struct gst_t *gst)
+{
+    memset(&gst->utctime, 0, sizeof(gst->utctime));
+    gst-> rms_deviation =  NAN;
+    gst-> smajor_deviation =  NAN;
+    gst-> sminor_deviation =  NAN;
+    gst-> smajor_orientation =  NAN;
+    gst-> lat_err_deviation =  NAN;
+    gst-> lon_err_deviation =  NAN;
+    gst-> alt_err_deviation =  NAN;
+    gst-> ve_err_deviation =  NAN;
+    gst-> vn_err_deviation =  NAN;
+    gst-> vu_err_deviation =  NAN;
 }
 
 // stuff a log structure with recognizable out-of-band values

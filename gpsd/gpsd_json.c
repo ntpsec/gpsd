@@ -566,6 +566,9 @@ void json_noise_dump(const struct gps_data_t *gpsdata,
     ADD_GST_FIELD("lat",    lat_err_deviation);
     ADD_GST_FIELD("lon",    lon_err_deviation);
     ADD_GST_FIELD("alt",    alt_err_deviation);
+    ADD_GST_FIELD("ve",     ve_err_deviation);
+    ADD_GST_FIELD("vn",     vn_err_deviation);
+    ADD_GST_FIELD("vu",     vu_err_deviation);
 
 #undef ADD_GST_FIELD
 
