@@ -48,6 +48,7 @@ typedef enum {
     NAV_DOP         = MSGID(ALLY_NAV, 0x04),
     NAV_TIME        = MSGID(ALLY_NAV, 0x05),
     NAV_CLOCK       = MSGID(ALLY_NAV, 0x22),
+    NAV_PVERR       = MSGID(ALLY_NAV, 0x26),
     NAV_SVINFO      = MSGID(ALLY_NAV, 0x30),
 } ally_msgs_t;
 
@@ -342,7 +343,7 @@ static gps_mask_t msg_nav_posecef(struct gps_device_t *session,
     return mask;
 }
 
- /**
+/*
  * Geodetic position solution message
  * NAV-POSLLH, Class 1, ID 2
  * Seems same as UBX-MON-POSLLH
@@ -387,6 +388,47 @@ static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
         session->newdata.epv);
 
     mask = ONLINE_SET | HERR_SET | VERR_SET | LATLON_SET | ALTITUDE_SET;
+    return mask;
+}
+
+/*
+ * Positioning velocity error estimation
+ * NAV-PVERR, Class 1, ID x26
+ * UBX has no equivalent
+ * No mode, so limited usefulness
+ */
+static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
+                                unsigned char *buf,
+                                size_t data_len UNUSED)
+{
+    gps_mask_t mask = 0;
+
+    if (28 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-PVERR: runt payload len %zd", data_len);
+        return 0;
+    }
+
+    double stdlat = getles32(buf, 4)/ 1000.0;   // millimeters
+    double stdlon = getles32(buf, 4)/ 1000.0;   // millimeters
+    double stdalt = getles32(buf, 4)/ 1000.0;   // millimeters
+    double stdve  = getles32(buf, 4)/ 1000.0;   // millimeters / second
+    double stdvn  = getles32(buf, 4)/ 1000.0;   // millimeters / second
+    double stdvu  = getles32(buf, 4)/ 1000.0;   // millimeters / second
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+        "ALLY: NAV-PVERR: iTOW %llu stdlat %.3f stdlon %.3f stdalt %.3f "
+        "stdve %.3f stdvn %.3f stdvu %.3f\n",
+        (unsigned long long)session->driver.ubx.iTOW,
+        stdlat,
+        stdlon,
+        stdalt,
+        stdve,
+        stdvn,
+        stdvu);
+
+    mask = ONLINE_SET;
     return mask;
 }
 
@@ -485,7 +527,7 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
         //     session->gpsdata.skyview[st].used = true;
         // }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "ALLY: NAV-SVINFO chnd %llu  ally_svid %d gnssid %d, svid %d "
+                 "ALLY: NAV-SVINFO chnd %u  ally_svid %d gnssid %d, svid %d "
                  "nmea_PRN %d flags x%x az %.0f el %.0f cno %.0f prRes %.2f "
                  "quality x%x, prRate %f pr %.4f\n",
                  chan, ally_svid,
@@ -599,6 +641,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
         break;
     case NAV_POSLLH:
         mask = msg_nav_posllh(session, &buf[4], payload_len);
+        break;
+    case NAV_PVERR:
+        mask = msg_nav_pverr(session, &buf[4], payload_len);
         break;
     case NAV_SVINFO:
         mask = msg_nav_svinfo(session, &buf[4], payload_len);
