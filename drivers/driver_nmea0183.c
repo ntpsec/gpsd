@@ -469,6 +469,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
      *   401..437: BeiDou
      *   null: GLONASS unused
      *   500-509: NavIC (IRNSS)  NOT STANDARD!
+     *   901..918: NavIC (IRNSS), ALLYSTAR
      *
      * The issue is what to do when GPSes from these different systems
      * fight for IDs in the  1-32 range, as in this pair of Beidou sentences
