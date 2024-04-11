@@ -34,7 +34,9 @@ typedef enum {
     ALLY_CFG = 0x06,     // Configuration requests
     ALLY_MON = 0x0a,     // System monitoring
     ALLY_AID = 0x0b,     // AGPS (Deprecated)
-    ALLY_NMEA = 0xF0,    // NMEA, for CFG-MSG
+    ALLY_NMEA = 0xf0,    // NMEA, for CFG-MSG
+    ALLY_RTCM = 0xf8,    // RTCM, for CFG-MSG
+
 } ally_classes_t;
 
 #define MSGID(cls_, id_) (((cls_)<<8)|(id_))
@@ -50,7 +52,32 @@ typedef enum {
     NAV_CLOCK       = MSGID(ALLY_NAV, 0x22),
     NAV_PVERR       = MSGID(ALLY_NAV, 0x26),
     NAV_SVINFO      = MSGID(ALLY_NAV, 0x30),
+    /* NMEA_* for CFG-MSG, srouce:
+     * https://docs.datagnss.com/rtk-board/#9download-the-latest-firmware
+     */
+    NMEA_GGA        = MSGID(ALLY_NMEA, 0x00),
+    NMEA_GLL        = MSGID(ALLY_NMEA, 0x01),
+    NMEA_GSA        = MSGID(ALLY_NMEA, 0x02),
+    NMEA_GRS        = MSGID(ALLY_NMEA, 0x03),
+    NMEA_GSV        = MSGID(ALLY_NMEA, 0x04),
+    NMEA_RMC        = MSGID(ALLY_NMEA, 0x05),
+    NMEA_VTG        = MSGID(ALLY_NMEA, 0x06),
+    NMEA_ZDA        = MSGID(ALLY_NMEA, 0x07),
+    /* RTCM_* for CFG-MSG, srouce:
+     * https://docs.datagnss.com/rtk-board/#9download-the-latest-firmware
+     */
+    RTCM_1005       = MSGID(ALLY_RTCM, 0x05),
+    RTCM_1019       = MSGID(ALLY_RTCM, 0x12),
+    RTCM_1020       = MSGID(ALLY_RTCM, 0x14),
+    RTCM_1077       = MSGID(ALLY_RTCM, 0x4d),
+    RTCM_1087       = MSGID(ALLY_RTCM, 0x57),
+    RTCM_1097       = MSGID(ALLY_RTCM, 0x06),
+    RTCM_1117       = MSGID(ALLY_RTCM, 0x75),
+    RTCM_1127       = MSGID(ALLY_RTCM, 0x7f),
 } ally_msgs_t;
+
+// 2 bytes leader, 2 bytes ID, 2 bytes payload length
+#define ALLY_PREFIX_LEN 6
 
 // ACK-* ids
 static struct vlist_t vack_ids[] = {
@@ -68,9 +95,12 @@ static struct flist_t vtime_flags[] = {
 };
 
 // NAV-TIME navSys
+// What does 15 mean??
 static struct vlist_t vtime_navsys[] = {
     {0, "GPS"},
     {1, "BDS"},
+    {2, "GLO"},
+    {3, "GAL"},
     {0, NULL},
 };
 
@@ -108,7 +138,7 @@ bool ally_write(struct gps_device_t * session,
     }
     if (NULL != msg &&
         0 < payload_len) {
-        (void)memcpy(&session->msgbuf[6], msg, payload_len);
+        (void)memcpy(&session->msgbuf[ALLY_PREFIX_LEN], msg, payload_len);
     }
 
     // calculate CRC
@@ -193,7 +223,7 @@ static gps_mask_t msg_mon(struct gps_device_t *session,
 
     switch (msgid) {
     case MON_VER:
-        mask = msg_mon_ver(session, &buf[4], payload_len);
+        mask = msg_mon_ver(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -420,9 +450,9 @@ static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
     // velocity east, millimeters / second
     session->gpsdata.gst.ve_err_deviation  = getles32(buf, 4)/ 1000.0;
     // velocity north, millimeters / second
-    session->gpsdata.gst.ve_err_deviation = getles32(buf, 4)/ 1000.0;
+    session->gpsdata.gst.vn_err_deviation = getles32(buf, 4)/ 1000.0;
     // velocity up, millimeters / second
-    session->gpsdata.gst.ve_err_deviation = getles32(buf, 4)/ 1000.0;
+    session->gpsdata.gst.vu_err_deviation = getles32(buf, 4)/ 1000.0;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
         "ALLY: NAV-PVERR: iTOW %llu stdlat %.3f stdlon %.3f stdalt %.3f "
@@ -432,8 +462,8 @@ static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
         session->gpsdata.gst.lon_err_deviation,
         session->gpsdata.gst.alt_err_deviation,
         session->gpsdata.gst.ve_err_deviation,
-        session->gpsdata.gst.ve_err_deviation,
-        session->gpsdata.gst.ve_err_deviation);
+        session->gpsdata.gst.vn_err_deviation,
+        session->gpsdata.gst.vu_err_deviation);
 
     mask = GST_SET | ONLINE_SET;
     return mask;
@@ -577,8 +607,12 @@ static gps_mask_t msg_nav_time(struct gps_device_t *session,
 {
     char buf2[80];
     unsigned navSys;        // which constellation
-    unsigned flags;         // Validity Flags
-    unsigned FracTow;       // fractional TOW, ns
+    unsigned flag;          // Validity Flags
+    int FracTow;            // fractional TOW, ns
+    unsigned week;
+    int leapSec;
+    // timeErr in ns, unknown type (1 sigma, 50%, etc.)
+    double timeErr = NAN;
     gps_mask_t mask = 0;
     char ts_buf[TIMESPEC_LEN];
 
@@ -589,42 +623,44 @@ static gps_mask_t msg_nav_time(struct gps_device_t *session,
     }
 
     navSys = getub(buf, 0);
-    flags = getub(buf, 1);
-    FracTow = getleu32(buf, 2);
-    session->driver.ubx.iTOW = getleu64(buf, 4);   // refTow, ms
+    flag = getub(buf, 1);
+    FracTow = getles16(buf, 2);
+    session->driver.ubx.iTOW = getleu32(buf, 4);   // refTow, ms
+    week = getleu16(buf, 8);
+    leapSec = getsb(buf, 10);
+    // timeErr in ns, unknown type (1 sigma, 50%, etc.)
+    timeErr = (double)getleu32(buf, 12);
 
     // Valid leap seconds ?
-    if (4 == (flags &4)) {
-        session->context->leap_seconds = (int)getub(buf, 10);
+    if (4 == (flag & 4)) {
+        session->context->leap_seconds = leapSec;
         session->context->valid |= LEAP_SECOND_VALID;
     }
 
     // Valid GPS time of week and week number
-    if (3 == (flags & 3)) {
-        unsigned week;
-        double timeErr;      // Time Accuracy Estimate in ns
+    if (3 == (flag & 3)) {
         timespec_t ts_tow;
 
-        week = getleu16(buf, 8);
         MSTOTS(&ts_tow, session->driver.ubx.iTOW);
         ts_tow.tv_nsec += FracTow;
         TS_NORM(&ts_tow);
         session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
 
-        // timeErr in ns, unknown type (1 sigma, 50%, etc.)
-        timeErr = (double)getleu32(buf, 12);
         session->newdata.ept = timeErr / 1e9;
         mask |= (TIME_SET | NTPTIME_IS);
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "ALLY: NAV-TIME: time=%s flags x%x\n",
+             "ALLY: NAV-TIME: time=%s navSys %u flag x%x FracTow %d "
+             "refTow %llu week %u leapSec %d timeErr %g\n",
              timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
-             flags);
+             navSys, flag, FracTow,
+             (unsigned long long)session->driver.ubx.iTOW, week,
+             leapSec, timeErr);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "ALLY: NAV-TIME: navSys %s flags:%s\n",
+             "ALLY: NAV-TIME: navSys %s flag:%s\n",
 	     val2str(navSys, vtime_navsys),
-	     flags2str(flags, vtime_flags, buf2, sizeof(buf2)));
+	     flags2str(flag, vtime_flags, buf2, sizeof(buf2)));
     return mask;
 }
 
@@ -638,25 +674,25 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
 
     switch (msgid) {
     case NAV_CLOCK:
-        mask = msg_nav_clock(session, &buf[4], payload_len);
+        mask = msg_nav_clock(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case NAV_DOP:
-        mask = msg_nav_dop(session, &buf[4], payload_len);
+        mask = msg_nav_dop(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case NAV_POSECEF:
-        mask = msg_nav_posecef(session, &buf[4], payload_len);
+        mask = msg_nav_posecef(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case NAV_POSLLH:
-        mask = msg_nav_posllh(session, &buf[4], payload_len);
+        mask = msg_nav_posllh(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case NAV_PVERR:
-        mask = msg_nav_pverr(session, &buf[4], payload_len);
+        mask = msg_nav_pverr(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case NAV_SVINFO:
-        mask = msg_nav_svinfo(session, &buf[4], payload_len);
+        mask = msg_nav_svinfo(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case NAV_TIME:
-        mask = msg_nav_time(session, &buf[4], payload_len);
+        mask = msg_nav_time(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -762,27 +798,24 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
     unsigned char msg[4] = {0};
 
     // turn on rate one NMEA
-    msg[0] = ALLY_NMEA;     // class, NMEA
+    putbe16(msg, 0, NMEA_ZDA);
     msg[2] = 0x01;          // rate, one
-    msg[3] = 0x07;          // ZDA
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
     // turn on rate one NAV-DOP
-    msg[0] = ALLY_NAV;      // class, NAV
-    msg[2] = 0x01;          // rate, one
-    msg[3] = 0x01;          // DOP
+    putbe16(msg, 0, NAV_DOP);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
     // turn on rate one NAV-POSLLH
-    msg[3] = 0x02;          // POSLLH
+    putbe16(msg, 0, NAV_POSLLH);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
     // turn on rate one NAV-TIME
-    msg[3] = 0x05;          // TIME
+    putbe16(msg, 0, NAV_TIME);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
     // turn on rate one NAV-CLOCK
-    msg[3] = 0x22;          // CLOCK
+    putbe16(msg, 0, NAV_CLOCK);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 }
 
