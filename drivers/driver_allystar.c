@@ -44,6 +44,17 @@ typedef enum {
 typedef enum {
     ACK_ACK         = MSGID(ALLY_ACK, 0x01),
     ACK_NAK         = MSGID(ALLY_ACK, 0x00),
+    CFG_PRT         = MSGID(ALLY_CFG, 0x00),
+    CFG_MSG         = MSGID(ALLY_CFG, 0x01),
+    CFG_PPS         = MSGID(ALLY_CFG, 0x07),
+    CFG_DOP         = MSGID(ALLY_CFG, 0x0a),
+    CFG_ELEV        = MSGID(ALLY_CFG, 0x0b),
+    CFG_NAVSAT      = MSGID(ALLY_CFG, 0x0c),
+    CFG_HEIGHT      = MSGID(ALLY_CFG, 0x0d),
+    CFG_SBAS        = MSGID(ALLY_CFG, 0x0e),
+    CFG_SPDHOLD     = MSGID(ALLY_CFG, 0x0f),
+    CFG_SIMPLERST   = MSGID(ALLY_CFG, 0x40),
+    CFG_NMEAVER     = MSGID(ALLY_CFG, 0x43),
     MON_VER         = MSGID(ALLY_MON, 0x04),
     NAV_POSECEF     = MSGID(ALLY_NAV, 0x01),
     NAV_POSLLH      = MSGID(ALLY_NAV, 0x02),
@@ -63,6 +74,7 @@ typedef enum {
     NMEA_RMC        = MSGID(ALLY_NMEA, 0x05),
     NMEA_VTG        = MSGID(ALLY_NMEA, 0x06),
     NMEA_ZDA        = MSGID(ALLY_NMEA, 0x07),
+    NMEA_TXT        = MSGID(ALLY_NMEA, 0x20),
     /* RTCM_* for CFG-MSG, srouce:
      * https://docs.datagnss.com/rtk-board/#9download-the-latest-firmware
      */
@@ -86,6 +98,48 @@ static struct vlist_t vack_ids[] = {
     {0, NULL},
 };
 
+//CFG-NAVSAT enableMask
+static struct flist_t venableMask[] = {
+    {1, 1, "GPS L1"},
+    {2, 2, "GLO G1"},
+    {4, 4, "BDS B1"},
+    {8, 8, "8"},
+    {0x10, 0x10, "GAL E1"},
+    {0x20, 0x20, "QZSS L1"},
+    {0x40, 0x40, "SBAS L1"},
+    {0x80, 0x80, "IRNSS L5"},
+    {0x100, 0x100, "GPS L1C"},
+    {0x200, 0x800, "GPS L5"},
+    {0x400, 0x400, "GPS L2C"},
+    {0x800, 0x40000, "x800"},
+    {0x1000, 0x40000, "x1000"},
+    {0x2000, 0x2000, "GLO G2"},
+    {0x4000, 0x4000, "BDS B1C"},
+    {0x8000, 0x8000, "BDS B2A"},
+    {0x10000, 0x10000, "BDS B3I"},
+    {0x20000, 0x20000, "BDS B5"},
+    {0x40000, 0x40000, "0x40000"},
+    {0x80000, 0x80000, "0x80000"},
+    {0x100000, 0x100000, "GAL E5A"},
+    {0x200000, 0x200000, "GAL E5B"},
+    {0x400000, 0x400000, "GAL E6"},
+    {0x800000, 0x800000, "0x800000"},
+    {0x1000000, 0x1000000, "QZSS L6"},
+    {0x2000000, 0x2000000, "QZSS L1C"},
+    {0x4000000, 0x4000000, "QZSS L5"},
+    {0x8000000, 0x8000000, "QZSS L2C"},
+    {0, 0, NULL},
+};
+
+// CFG-NMEAVER NMEA versions
+static struct vlist_t vversions[] = {
+    {0, "None"},
+    {1, "V3.01"},
+    {2, "V4.00"},
+    {3, "V4.10"},
+    {0, NULL},
+};
+
 // NAV-TIME flags
 static struct flist_t vtime_flags[] = {
     {1, 1, "week"},
@@ -95,7 +149,7 @@ static struct flist_t vtime_flags[] = {
 };
 
 // NAV-TIME navSys
-// What does 15 mean??
+// What does 15 or 21 mean??
 static struct vlist_t vtime_navsys[] = {
     {0, "GPS"},
     {1, "BDS"},
@@ -105,7 +159,7 @@ static struct vlist_t vtime_navsys[] = {
 };
 
 /* send a ALLYSTAR message.
- * calcualte checksums, etc.
+ * calculate checksums, etc.
  */
 bool ally_write(struct gps_device_t * session,
                 unsigned int msg_class, unsigned int msg_id,
@@ -179,6 +233,79 @@ static gps_mask_t msg_ack(struct gps_device_t *session,
     return 0;
 }
 
+// CFG-*
+
+/**
+ * CFG-NAVSAT - Constellations in use
+ *
+ */
+static gps_mask_t msg_cfg_navsat(struct gps_device_t *session,
+                                 unsigned char *buf, size_t payload_len)
+{
+    unsigned long long enableMask;
+    char buf2[200];
+
+    if (4 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG-NAVSAT: runt payload len %zd", payload_len);
+        return 0;
+    }
+
+    enableMask = getleu32(buf, 0);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: CFG-NAVSAT: enableMask x%llx(%s)\n",
+             enableMask,
+             flags2str(enableMask, venableMask, buf2, sizeof(buf2)));
+    return 0;
+}
+
+/**
+ * CFG-NMEAVER - NMEA version
+ *
+ */
+static gps_mask_t msg_cfg_nmeaver(struct gps_device_t *session,
+                                  unsigned char *buf, size_t payload_len)
+{
+    unsigned version;
+
+    if (1 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG-NMEAVER-CLOCK: runt payload len %zd", payload_len);
+        return 0;
+    }
+
+    version = getub(buf, 0);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: CFG-NMEAVER: version %u(%s)\n",
+             version,
+             val2str(version, vversions));
+    return 0;
+}
+
+/* msg_cfg() -- handle CLASS-CFG
+ */
+static gps_mask_t msg_cfg(struct gps_device_t *session,
+                          unsigned char *buf, size_t payload_len)
+{
+    unsigned msgid = getbes16(buf, 2);
+    gps_mask_t mask = 0;
+
+    switch (msgid) {
+    case CFG_NAVSAT:
+        mask = msg_cfg_navsat(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
+    case CFG_NMEAVER:
+        mask = msg_cfg_nmeaver(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
+    default:
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG- x%02x payload_len %zd\n",
+                 msgid & 0xff, payload_len);
+        break;
+    }
+    return mask;
+}
+
 // MON-*
 
 /**
@@ -242,13 +369,13 @@ static gps_mask_t msg_mon(struct gps_device_t *session,
  *
  */
 static gps_mask_t msg_nav_clock(struct gps_device_t *session,
-                                unsigned char *buf, size_t data_len)
+                                unsigned char *buf, size_t payload_len)
 {
     unsigned long tAcc, fAcc;
 
-    if (20 > data_len) {
+    if (20 > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV-CLOCK: runt payload len %zd", data_len);
+                 "ALLY: NAV-CLOCK: runt payload len %zd", payload_len);
         return 0;
     }
 
@@ -272,14 +399,14 @@ static gps_mask_t msg_nav_clock(struct gps_device_t *session,
  *
  */
 static gps_mask_t msg_nav_dop(struct gps_device_t *session,
-                                  unsigned char *buf, size_t data_len)
+                                  unsigned char *buf, size_t payload_len)
 {
     unsigned u;
     gps_mask_t mask = 0;
 
-    if (18 > data_len) {
+    if (18 > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV-DOP: runt payload len %zd", data_len);
+                 "ALLY: NAV-DOP: runt payload len %zd", payload_len);
         return 0;
     }
 
@@ -345,13 +472,13 @@ static gps_mask_t msg_nav_dop(struct gps_device_t *session,
  * This message does not bother to tell us if it is valid.
  */
 static gps_mask_t msg_nav_posecef(struct gps_device_t *session,
-                                 unsigned char *buf, size_t data_len)
+                                 unsigned char *buf, size_t payload_len)
 {
     gps_mask_t mask = ECEF_SET;
 
-    if (20 > data_len) {
+    if (20 > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV-POSECEF: runt payload len %zd", data_len);
+                 "ALLY: NAV-POSECEF: runt payload len %zd", payload_len);
         return 0;
     }
 
@@ -383,13 +510,13 @@ static gps_mask_t msg_nav_posecef(struct gps_device_t *session,
  */
 static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
                                  unsigned char *buf,
-                                 size_t data_len)
+                                 size_t payload_len)
 {
     gps_mask_t mask = 0;
 
-    if (28 > data_len) {
+    if (28 > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV-POSLLH: runt payload len %zd", data_len);
+                 "ALLY: NAV-POSLLH: runt payload len %zd", payload_len);
         return 0;
     }
 
@@ -429,13 +556,13 @@ static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
  */
 static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
                                 unsigned char *buf,
-                                size_t data_len)
+                                size_t payload_len)
 {
     gps_mask_t mask = 0;
 
-    if (28 > data_len) {
+    if (28 > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV-PVERR: runt payload len %zd", data_len);
+                 "ALLY: NAV-PVERR: runt payload len %zd", payload_len);
         return 0;
     }
 
@@ -477,16 +604,16 @@ static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
  *
  */
 static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
-                               unsigned char *buf, size_t data_len)
+                               unsigned char *buf, size_t payload_len)
 {
     // char buf2[80];
     unsigned i, nsv, st;
     long long nchan;
     timespec_t ts_tow;
 
-    if (8 > data_len) {
+    if (8 > payload_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "ALLY: NAV-SVINFO runt datalen %zd\n", data_len);
+                 "ALLY: NAV-SVINFO runt datalen %zd\n", payload_len);
         return 0;
     }
 
@@ -603,7 +730,7 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
  * sorta like UBX-NAV-TIMEGPS
  */
 static gps_mask_t msg_nav_time(struct gps_device_t *session,
-                               unsigned char *buf, size_t data_len)
+                               unsigned char *buf, size_t payload_len)
 {
     char buf2[80];
     unsigned navSys;        // which constellation
@@ -616,12 +743,13 @@ static gps_mask_t msg_nav_time(struct gps_device_t *session,
     gps_mask_t mask = 0;
     char ts_buf[TIMESPEC_LEN];
 
-    if (16 > data_len) {
+    if (16 > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV-TIME: runt payload len %zd", data_len);
+                 "ALLY: NAV-TIME: runt payload len %zd", payload_len);
         return 0;
     }
 
+    // TAU1202 returns 21 ???
     navSys = getub(buf, 0);
     flag = getub(buf, 1);
     FracTow = getles16(buf, 2);
@@ -749,9 +877,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
                  msg_id, len, payload_len);
         break;
     case ALLY_CFG:
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: CFG- %02x length %zd/%u)\n",
-                 msg_id, len, payload_len);
+        mask = msg_cfg(session, buf, payload_len);
         break;
     case ALLY_MON:
         mask = msg_mon(session, buf, payload_len);
@@ -770,6 +896,38 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
                  msg_class, msg_id, len, payload_len);
         break;
     }
+
+    /* handle the init queue.  Some parts get cranky when they
+     * get too many configuration changes at once.
+     */
+    if (!session->context->readonly &&
+        0 <= session->queue &&
+        100 > session->queue) {
+        // unsigned char msg[4] = {0};
+
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "ALLY: queue %d\n", session->queue);
+
+
+        switch (session->queue) {
+        case 10:
+            // Poll CFG-NAVSAT
+            (void)ally_write(session, ALLY_CFG, 0x0c, NULL, 0);
+            break;
+        case 14:
+            // Poll CFG-NMEAVER
+            (void)ally_write(session, ALLY_CFG, 0x43, NULL, 0);
+            break;
+        case 18:
+            // Poll CFG-SBAS
+            (void)ally_write(session, ALLY_CFG, 0x0e, NULL, 0);
+            break;
+        default:
+            break;
+        }
+        session->queue++;
+    }
+
     return mask;
 }
 
@@ -835,6 +993,8 @@ static void event_hook(struct gps_device_t *session, event_t event)
             (void)ally_write(session, ALLY_MON, 0x04, NULL, 0);
         } else if (O_OPTIMIZE == session->mode) {
             ally_mode(session, MODE_BINARY);
+            // restart init queue
+            session->queue = 0;
         } else {
             //* Turn off NMEA output, turn on UBX on this port.
             ally_mode(session, MODE_NMEA);
