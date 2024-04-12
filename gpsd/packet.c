@@ -2941,7 +2941,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                      inbuflen, data_len);
             if (inbuflen < data_len) {
                 GPSD_LOG(LOG_INFO, &lexer->errout,
-                         "ALLY: bad length %d/%zd\n",
+                         "ALLY: bad length %d/%u\n",
                          inbuflen, data_len);
                 packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
@@ -2960,7 +2960,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                 char scratchbuf[200];
 
                 GPSD_LOG(LOG_WARN, &lexer->errout,
-                         "ALLY: bad checksum 0x%02hhx%02hhx length %d/%zd"
+                         "ALLY: bad checksum 0x%02hhx%02hhx length %d/%u"
                          ", %s\n",
                          ck_a,
                          ck_b,
