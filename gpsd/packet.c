@@ -549,6 +549,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = RTCM3_LEADER_1;
             break;
         case 0xf1:      // latin1 small letter N with tilde
+            // got 1st, of 2, bytes of leader
             lexer->state = ALLY_LEADER_1;
             break;
 #ifdef ZODIAC_ENABLE
@@ -1556,44 +1557,47 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     // start ALLYSTAR
     case ALLY_LEADER_1:
         if (0xd9 == c) {      // latin capital letter U with grave
+            // got 2nd, of 2, bytes of leader
             lexer->state = ALLY_LEADER_2;
         } else {
             return character_pushback(lexer, GROUND_STATE);
         }
         break;
     case ALLY_LEADER_2:
+        // got 1 byte Class ID
         lexer->state = ALLY_CLASS_ID;
         break;
     case ALLY_CLASS_ID:
+        // got 1 byte Message ID
         lexer->state = ALLY_MESSAGE_ID;
         break;
     case ALLY_MESSAGE_ID:
+        // got 1st, of 2, bytes of length
         lexer->length = (size_t)c;
         lexer->state = ALLY_LENGTH_1;
         break;
     case ALLY_LENGTH_1:
+        // got 2nd, of 2, bytes of length
         lexer->length += (c << 8);
-        if (0 == lexer->length) {
-            // no payload
-            lexer->state = ALLY_CHECKSUM_A;
-        } else if (MAX_PACKET_LENGTH >= lexer->length) {
-            // normal size payload, noiddea the real max.
-            lexer->state = ALLY_LENGTH_2;
-        } else {
+        if (MAX_PACKET_LENGTH <= lexer->length) {
             // bad length
             return character_pushback(lexer, GROUND_STATE);
-        }
-        break;
-    case ALLY_LENGTH_2:
+        }  // else
+
+        /* no payload or normal size payload.
+         * no idea the real max. */
         lexer->state = ALLY_PAYLOAD;
         break;
     case ALLY_PAYLOAD:
-        if (0 == --lexer->length) {
+        if (0 == lexer->length) {
+            // got 1st, of 2, bytes of checksum
             lexer->state = ALLY_CHECKSUM_A;
         }
+        lexer->length--;
         // else stay in payload state
         break;
     case ALLY_CHECKSUM_A:
+        // got 2nd, of 2, bytes of checksum
         lexer->state = ALLY_RECOGNIZED;
         break;
     case ALLY_RECOGNIZED:
@@ -2930,26 +2934,39 @@ void packet_parse(struct gps_lexer_t *lexer)
             // ALLYSTAR use a TCP like checksum, 8-bit Fletcher Algorithm
             ck_a = (unsigned char)0;
             ck_b = (unsigned char)0;
+            // payload length
+            data_len = getleu16(lexer->inbuffer, 4);
 
-            GPSD_LOG(LOG_IO, &lexer->errout, "ALLY: len %d\n", inbuflen);
-            // from message ID (byte 2) to end of payload
-            for (idx = 2; idx < (inbuflen - 2); idx++) {
-                ck_a += lexer->inbuffer[idx];
+            GPSD_LOG(LOG_IO, &lexer->errout, "ALLY: buflen %d. paylen %u\n",
+                     inbuflen, data_len);
+            if (inbuflen < data_len) {
+                GPSD_LOG(LOG_INFO, &lexer->errout,
+                         "ALLY: bad length %d/%zd\n",
+                         inbuflen, data_len);
+                packet_type = BAD_PACKET;
+                lexer->state = GROUND_STATE;
+                acc_dis = ACCEPT;
+                break;
+            }
+            // from class ID (byte 2), msg ID, length,  to end of payload
+            for (idx = 0; idx < (data_len + 4); idx++) {
+                ck_a += lexer->inbuffer[idx + 2];
                 ck_b += ck_a;
             }
-            if (ck_a == lexer->inbuffer[inbuflen - 2] &&
-                ck_b == lexer->inbuffer[inbuflen - 1]) {
+            if (ck_a == lexer->inbuffer[data_len + 6] &&
+                ck_b == lexer->inbuffer[data_len + 7]) {
                 packet_type = ALLYSTAR_PACKET;
             } else {
-                GPSD_LOG(LOG_PROG, &lexer->errout,
-                         "ALLY: checksum 0x%02hhx%02hhx over length %d,"
-                         " expecting 0x%02hhx%02hhx (type 0x%02hhx%02hhx)\n",
+                char scratchbuf[200];
+
+                GPSD_LOG(LOG_WARN, &lexer->errout,
+                         "ALLY: bad checksum 0x%02hhx%02hhx length %d/%zd"
+                         ", %s\n",
                          ck_a,
                          ck_b,
-                         inbuflen,
-                         lexer->inbuffer[inbuflen - 2],
-                         lexer->inbuffer[inbuflen - 1],
-                         lexer->inbuffer[2], lexer->inbuffer[3]);
+                         inbuflen, data_len,
+                         gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                                     lexer->inbuffer, lexer->inbuflen));
                 packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
             }
