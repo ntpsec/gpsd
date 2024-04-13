@@ -357,7 +357,7 @@ static gps_mask_t msg_cfg_geofence(struct gps_device_t *session,
 
     if ((8 + (12 * llr_num)) != payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: CFG-GEOFENCE odd payload len %u\n",
+                 "ALLY: CFG-GEOFENCE odd payload len %zu\n",
                  payload_len);
     }
 
