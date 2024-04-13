@@ -78,8 +78,8 @@ MAXCHANNELS = 120
 # MAXCHANDISP, default max channels to display
 MAXCHANDISP = 28
 
-# Default Constellation text
-CONSTELLATION = 0
+# Default Constellation text option
+constellation = 0
 
 # Each GNSS constellation reuses the same PRNs.  To differentiate they are
 # all mushed into the PRN.  Different GPS mush differently.  gpsd should
@@ -1603,7 +1603,7 @@ frame * {
                     continue
 
                 (self.set_satlist_field(i, 0,
-                 gnssid_str(satellite)[options.CONSTELLATION]))
+                 gnssid_str(satellite)[options.constellation]))
                 if 'svid' in satellite:
                     # SBAS is in the 100's...
                     self.set_satlist_field(i, 1,
@@ -1849,8 +1849,8 @@ if __name__ == "__main__":
         '-c',
         '--const',
         choices=[0, 1, 2],
-        dest='CONSTELLATION',
-        default=CONSTELLATION,
+        dest='constellation',
+        default=constellation,
         type=int,
         help=('Display format of constellation. '
               '[Default %(default)s]\n'
