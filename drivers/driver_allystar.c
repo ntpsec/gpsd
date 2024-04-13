@@ -115,6 +115,28 @@ static struct vlist_t vack_ids[] = {
     {0, NULL},
 };
 
+//CFG-ANTIJAM statsys_mask
+static struct flist_t fsatsys[] = {
+    {0x02, 0x02, "GPS"},
+    {0x04, 0x04, "QZSS"},
+    {0x08, 0x08, "SBAS"},
+    {0x10, 0x10, "GAL"},
+    {0x20, 0x20, "BDS"},
+    {0x40, 0x40, "GLO"},
+    {0, 0, NULL},
+};
+
+// CFG-GEOFENCE  cfg_flag
+static struct vlist_t vcfg_flags[] = {
+    {0, "None"},
+    {1, "68%"},
+    {2, "95%"},
+    {3, "99.7%"},
+    {4, "99.99%"},
+    {5, "99.99999%"},
+    {0, NULL},
+};
+
 //CFG-NAVSAT enableMask
 static struct flist_t venableMask[] = {
     {1, 1, "GPS L1"},
@@ -253,6 +275,104 @@ static gps_mask_t msg_ack(struct gps_device_t *session,
 // CFG-*
 
 /**
+ * CFG-ANTIJAM - Constellations in useantijam settings
+ *
+ */
+static gps_mask_t msg_cfg_antijam(struct gps_device_t *session,
+                                  unsigned char *buf, size_t payload_len)
+{
+    unsigned satsys_mask;
+    unsigned threshold;
+    char buf2[80];
+
+    if (3 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG-ANTIJAM: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+
+    satsys_mask = getleu16(buf, 0);
+    threshold = getub(buf, 2);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: CFG-ANTIJAM: satsys_mask x%x(%s) threshold %u\n",
+             satsys_mask,
+             flags2str(satsys_mask, fsatsys, buf2, sizeof(buf2)),
+             threshold);
+    return 0;
+}
+
+/**
+ * CFG_CARRSMOOTH
+ *
+ */
+static gps_mask_t msg_cfg_carrsmooth(struct gps_device_t *session,
+                                  unsigned char *buf, size_t payload_len)
+{
+    int windows_value;
+
+    if (1 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG-CARRSMOOTH: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+
+    windows_value = getsb(buf, 0);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: CFG-CARRSMOOTH: windows_value %d\n",
+             windows_value);
+    return 0;
+}
+
+/**
+ * CFG-GEOFENCE -- genfences
+ *
+ */
+static gps_mask_t msg_cfg_geofence(struct gps_device_t *session,
+                                   unsigned char *buf, size_t payload_len)
+{
+    unsigned idx;
+    unsigned llr_num;
+    unsigned cfg_flag;;
+    unsigned gpio_enable;;
+    unsigned polarity;;
+    unsigned gpionum;;
+
+    if (8 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG-GEOFENCE: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+    llr_num = getub(buf, 0);
+    cfg_flag = getub(buf, 1);
+    gpio_enable = getub(buf, 2);
+    polarity = getub(buf, 13);
+    gpionum = getub(buf, 14);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: CFG-GEOFENCE: llr_num %u cfg_flag %u(%s) gpio_enable %u "
+             "polarity %u gpionum %u\n",
+             llr_num, cfg_flag,
+             val2str(cfg_flag, vcfg_flags),
+             gpio_enable, polarity, gpionum);
+
+    if ((8 + (12 * llr_num)) != payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG-GEOFENCE odd payload len %u\n",
+                 payload_len);
+    }
+
+    for (idx = 8; idx < payload_len; idx += 12) {
+        double lon = getles32(buf, 0) / 1e7;
+        double lat = getles32(buf, 4) / 1e7;
+        double radius = getleu16(buf, 8) / 100.0;
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "ALLY: CFG-GEOFENCE: lat %.4f lon %.4f rad %.2f\n",
+                 lat, lon, radius);
+    }
+    return 0;
+}
+
+/**
  * CFG-NAVSAT - Constellations in use
  *
  */
@@ -327,7 +447,7 @@ static gps_mask_t msg_cfg_pps(struct gps_device_t *session,
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "ALLY: CFG-PPS: period %llu offset %lld duty %llu "
-                 "polarity %u gpio %u synx %u\n",
+                 "polarity %u gpio %u sync %u\n",
                  period, offset, dutyCycle,  polarity, gpio, sync);
     } else {
         // doc mentions payload 12, but no details.
@@ -373,6 +493,15 @@ static gps_mask_t msg_cfg(struct gps_device_t *session,
     gps_mask_t mask = 0;
 
     switch (msgid) {
+    case CFG_ANTIJAM:
+        mask = msg_cfg_antijam(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
+    case CFG_CARRSMOOTH:
+        mask = msg_cfg_carrsmooth(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
+    case CFG_GEOFENCE:
+        mask = msg_cfg_geofence(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
     case CFG_NAVSAT:
         mask = msg_cfg_navsat(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
@@ -999,18 +1128,31 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
 
         switch (session->queue) {
         case 10:
+            // start at 10 so the initial configuration can finish first.
+            // Poll CFG-ANTIJAM
+            (void)ally_write(session, ALLY_CFG, 0x15, NULL, 0);
+            break;
+        case 14:
+            // Poll CFG_CARRSMOOTH
+            (void)ally_write(session, ALLY_CFG, 0x17, NULL, 0);
+            break;
+        case 18:
+            // Poll CFG_GEOFENCE
+            (void)ally_write(session, ALLY_CFG, 0x18, NULL, 0);
+            break;
+        case 22:
             // Poll CFG-NAVSAT
             (void)ally_write(session, ALLY_CFG, 0x0c, NULL, 0);
             break;
-        case 14:
+        case 26:
             // Poll CFG-NMEAVER
             (void)ally_write(session, ALLY_CFG, 0x43, NULL, 0);
             break;
-        case 18:
+        case 32:
             // Poll CFG-PPS
             (void)ally_write(session, ALLY_CFG, 0x07, NULL, 0);
             break;
-        case 22:
+        case 36:
             // Poll CFG-SBAS
             (void)ally_write(session, ALLY_CFG, 0x0e, NULL, 0);
             break;
