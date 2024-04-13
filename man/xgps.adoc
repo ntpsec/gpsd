@@ -1,6 +1,6 @@
 = xgps(1)
 Remco Treffcorn; Derrick Brashear; Russ Nelson; Eric S. Raymond
-:date: 25 February 2021
+:date: 13 April 2024
 :keywords: gps, gpsd, xgps
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -66,6 +66,10 @@ under *sudo* will cause some loss of functionality.
 *-r DEG*, *--rotate DEG*::
   Accepts an argument in degrees, to rotate the skyview
   counterclockwise.
+*-c FORMAT*, *--const FORMAT*::
+  Display format of constellation.
+  Can display abbreviated, full name or full name & flag where possible.
+  NOTE: flags require a UTF-8 font with emoji flags
 *-V*, *--version*::
   This option causes each client to dump the package version and exit.
 
@@ -145,5 +149,5 @@ selected defaults to metric.
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project +
+This file is Copyright by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause

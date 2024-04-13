@@ -78,6 +78,9 @@ MAXCHANNELS = 120
 # MAXCHANDISP, default max channels to display
 MAXCHANDISP = 28
 
+# Default Constellation text
+CONSTELLATION = 0
+
 # Each GNSS constellation reuses the same PRNs.  To differentiate they are
 # all mushed into the PRN.  Different GPS mush differently.  gpsd should
 # have untangled and put in gnssid:svid
@@ -91,23 +94,23 @@ def gnssid_str(sat):
         return '  '
 
     if 0 >= sat.svid:
-        return ['  ', '']
+        return ['  ', '', '']
     if 0 == sat.gnssid:
-        return ['GP', 'GPS']
+        return ['GP', 'GPS', '\U0001F1FA\U0001F1F8 GPS']
     if 1 == sat.gnssid:
-        return ['SB', 'SBAS']
+        return ['SB', 'SBAS', 'SBAS']
     if 2 == sat.gnssid:
-        return ['GA', 'Galileo']
+        return ['GA', 'Galileo', '\U0001F1EA\U0001F1FA Galileo']
     if 3 == sat.gnssid:
-        return ['BD', 'BeiDou']
+        return ['BD', 'BeiDou', '\U0001F1E8\U0001F1F3 BeiDou']
     if 4 == sat.gnssid:
-        return ['IM', 'IMES']
+        return ['IM', 'IMES', 'IMES']
     if 5 == sat.gnssid:
-        return ['QZ', 'QZSS']
+        return ['QZ', 'QZSS', '\U0001F1EF\U0001F1F5 QZSS']
     if 6 == sat.gnssid:
-        return ['GL', 'GLONASS']
+        return ['GL', 'GLONASS', '\U0001F1F7\U0001F1FA GLONASS']
     if 7 == sat.gnssid:
-        return ['IR', 'IRNSS']
+        return ['IR', 'IRNSS', '\U0001F1EE\U0001F1F3 IRNSS']
 
     return '  '
 
@@ -1141,7 +1144,7 @@ frame * {
         sat_view = Gtk.TreeView(model=self.satlist)
         sat_view.set_fixed_height_mode(True)  # supposed to speed up TreeView
 
-        satcols = [['', 0],
+        satcols = [['Constellation', 0],
                    ['svid', 1],
                    ['sig', 1],
                    ['PRN', 1],
@@ -1599,7 +1602,8 @@ frame * {
                     # more than can be displaced
                     continue
 
-                self.set_satlist_field(i, 0, gnssid_str(satellite)[0])
+                (self.set_satlist_field(i, 0,
+                 gnssid_str(satellite)[options.CONSTELLATION]))
                 if 'svid' in satellite:
                     # SBAS is in the 100's...
                     self.set_satlist_field(i, 1,
@@ -1774,7 +1778,8 @@ if __name__ == "__main__":
     # GPSD_UNITS, LC_MEASUREMENT and LANG
     default_units = gps.clienthelpers.unit_adjustments()
 
-    parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
+    parser = (argparse.ArgumentParser(usage=usage, epilog=epilog,
+              formatter_class=argparse.RawTextHelpFormatter))
     parser.add_argument(
         '-?',
         action="help",
@@ -1839,6 +1844,20 @@ if __name__ == "__main__":
         dest='units',
         default=default_units.name,
         help='The unit of speed. [Default %(default)s]',
+    )
+    parser.add_argument(
+        '-c',
+        '--const',
+        choices=[0, 1, 2],
+        dest='CONSTELLATION',
+        default=CONSTELLATION,
+        type=int,
+        help=('Display format of constellation. '
+              '[Default %(default)s]\n'
+              '  0 - abbreviated,\n'
+              '  1 - full name,\n'
+              '  2 - flag & full name\n'
+              ' NOTE flags require a UTF-8 font with emoji  flags.'),
     )
     parser.add_argument(
         '-V', '--version',
