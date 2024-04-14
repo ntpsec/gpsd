@@ -2453,22 +2453,22 @@ struct satellite_t {
      *  0 = GPS           1-32
      *  1 = SBAS          120-158
      *  2 = Galileo       1-36
-     *  3 - BeiDou        1-37
+     *  3 - BeiDou        1-63
      *  4 = IMES          1-10
-     *  5 = QZSS          1-5       Undocumented u-blox goes to 7
+     *  5 = QZSS          1-10       F10
      *  6 = GLONASS       1-32, 255
      *  7 = NavIC (IRNSS) 1-11       ZED-F9T
      *
      * gnssid:svid:sigid, as defined by NMEA 4.11, NOT USED HERE!
-     *  1 = GPS       1-32
-     *  1 = SBAS      33-64, 152-158
-     *  1 = QZSS      193-202  (u-blox extended NMEA 4.10)
-     *  2 = GLONASS   65-96, null
-     *  3 = Galileo   1-36
-     *  4 - BeiDou    1-37
-     *  5 = QZSS      1-10 (NMEA 4.11)
-     *  6 = NavIC (IRNSS)               NMEA 4.11+
-     *  x = IMES      173-182 (u-blox extended NMEA 3.10)
+     *  1 = GPS           1-32
+     *  1 = SBAS          33-64, 152-158
+     *  1 = QZSS          193-202  (u-blox extended NMEA 4.10)
+     *  2 = GLONASS       65-96, null
+     *  3 = Galileo       1-36
+     *  4 - BeiDou        1-63
+     *  5 = QZSS          1-10            (NMEA 4.11)
+     *  6 = NavIC (IRNSS) 1-14             NMEA 4.11+
+     *  x = IMES          173-182 (u-blox extended NMEA 3.10)
      *
      * Note: other GNSS receivers use different mappings!
      */
@@ -2487,22 +2487,26 @@ struct satellite_t {
     // ignore gnssid and sigid if svid is zero
     uint8_t svid;
     /* sigid as defined by u-blox 9/10, and used here
-     * BeiDou:   0 = B1I D1, 1 = B1I D2, 2 = B2I D1, 3 = B2I D2, 7 = B2a
+     * BeiDou:   0 = B1I D1, 1 = B1I D2, 2 = B2I D1, 3 = B2I D2, 5 = B1 Cp
+     *           6 = B1 Cd,  7 = B2 ap, 8 = B2 ad
      * Galileo:  0 = E1 C, 1 = E1 B, 3 = E5 aI, 4 = E5 aQ, 5 = E5 bl, 6 = E5 bQ
      * GLONASS:  0 = L1 OF, 2 = L2 OF
      * GPS:      0 = L1C/A, 3 = L2 CL, 4 = L2 CM, 6 = L5 I, 7 = L5 Q
-     * IRNSS:    ??
-     * QZSS:     0 = L1C/A, 4 = L2 CM, 5 = L2 CL
+     * IRNSS:    0 = L5 A
+     * QZSS:     0 = L1C/A, 1 = L1 S, 4 = L2 CM, 5 = L2 CL, 8 = L5 I, 9 = L5 Q
      * SBAS:     0 = L1C/A, ? = L5I
      *
      * sigid as defined by NMEA 4.10, according to Skytrak, NOT used here
      * BeiDou:
-     *   1  B1I       // ALLYSTAR
-     *   2  B2I       // ALLYSTAR
-     *   3  B3I       // ALLYSTAR
-     *   4  B2A       // ALLYSTAR
-     *   9  B1C       // ALLYSTAR
-     *   11 B2I       // NMEA 4.11, according to u-blox
+     *   1  B1I               // ALLYSTAR
+     *   2  B2I               // ALLYSTAR
+     *   3  B3I               // ALLYSTAR
+     *   3  B1 Cp, B1 Cd      // NMEA 4.11
+     *   4  B2A               // ALLYSTAR
+     *   5  B5 ap, B2 ad      // NMEA 4.11
+     *   8  B2I D1, B2I D1    // NMEA 4.11
+     *   9  B1C               // ALLYSTAR
+     *   11 B2I               // NMEA 4.11, according to u-blox
      * Galileo:
      *   0  All signals
      *   1  E5a  (aI and aQ)
@@ -2534,14 +2538,20 @@ struct satellite_t {
      *   1  ??           // ALLYSTAR
      *   4  L5
      * QZSS:     not defined
+     *   1  L1C/A        // NMEA 4.11
+     *   4  L1S          // NMEA 4.11
+     *   5  L2CM         // NMEA 4.11
+     *   6  L2CL         // NMEA 4.11
+     *   7  L5 I         // NMEA 4.11
+     *   8  L5 Q         // NMEA 4.11
      *
-     * Additional sigid as defined by NMEA 4.11, NOT used here
+     * Additional sigid as defined by NMEA 4.11
      * BeiDou:
      *   According to u-blox
      *     1 = B1 D1, 1 = B1 D2, 5 = B2 a, 11(8) = B2 D1, 11(8) = B2 D2
      *   According to Skytrak
      *     0  All signals
-     *     1  B1  (b1-d1 AND b1-d2)
+     *     1  B1  (B1-d1 and B1-d2)
      *     2  B2A
      *     3  B2
      *     4  B3
