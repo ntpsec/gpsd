@@ -394,40 +394,67 @@ static void register_fractional_time(const char *tag, const char *fld,
 }
 
 // convert NMEA sigid to ublox sigid
-static unsigned char nmea_sigid_to_ubx(unsigned char nmea_sigid)
+static unsigned char nmea_sigid_to_ubx(struct gps_device_t *session,
+                                       unsigned char nmea_sigid)
 {
     unsigned char ubx_sigid = 0;
 
     // FIXME: need to know gnssid to guess sigid
     switch (nmea_sigid) {
     default:
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: Unknown nmea_sigid %u\n", nmea_sigid);
         FALLTHROUGH
     case 0:
         // missing, assume GPS L1
+        // ALLYSTAR, "all signal"
         ubx_sigid = 0;
         break;
     case 1:
         // L1
+        // ALLYSTAR, GLO G1CA
+        // ALLYSTAR, GAL E5A
+        // ALLYSTAR, BDS B1I
         ubx_sigid = 0;
         break;
     case 2:
         // E5, could be 5 or 6.
+        // ALLYSTAR, GAL E5B
+        // ALLYSTAR, BDS B2I
         ubx_sigid = 5;
         break;
     case 3:
         // B2 or L2, could be 2 or 3.
+        // ALLYSTAR, GLO G2CA
+        // ALLYSTAR, BDS B3I
         ubx_sigid = 2;
         break;
     case 5:
         // L2
+        // ALLYSTAR, BDS B2A
         ubx_sigid = 4;
         break;
     case 6:
         // L2CL
+        // ALLYSTAR, GAL L1A
         ubx_sigid = 3;
         break;
     case 7:
         // E1, could be 0 or 1.
+        // ALLYSTAR, GAL LBC
+        ubx_sigid = 0;
+        break;
+    case 8:
+        // ALLYSTAR, GPS L5Q
+        ubx_sigid = 7;
+        break;
+    case 9:
+        // ALLYSTAR, Quectel, GPS L1C
+        // ALLYSTAR, BDS B1C
+        ubx_sigid = 0;
+        break;
+    case 11:
+        // ALLYSTAR, GPS L6
         ubx_sigid = 0;
         break;
     }
@@ -2069,12 +2096,12 @@ static gps_mask_t processGSV(int count, char *field[],
     case 1:
         // NMEA 4.10, get the signal ID
         nmea_sigid = atoi(field[count - 1]);
-        ubx_sigid = nmea_sigid_to_ubx(nmea_sigid);
+        ubx_sigid = nmea_sigid_to_ubx(session, nmea_sigid);
         break;
     case 2:
         // Quectel Querk. $PQGSV, get the signal ID, and system ID
         nmea_sigid = atoi(field[count - 2]);
-        ubx_sigid = nmea_sigid_to_ubx(nmea_sigid);
+        ubx_sigid = nmea_sigid_to_ubx(session, nmea_sigid);
         nmea_gnssid = atoi(field[count - 1]);
         if (4 > nmea_gnssid ||
             5 < nmea_gnssid) {

@@ -2496,6 +2496,13 @@ struct satellite_t {
      * SBAS:     0 = L1C/A, ? = L5I
      *
      * sigid as defined by NMEA 4.10, according to Skytrak, NOT used here
+     * BeiDou:
+     *   1  B1I       // ALLYSTAR
+     *   2  B2I       // ALLYSTAR
+     *   3  B3I       // ALLYSTAR
+     *   4  B2A       // ALLYSTAR
+     *   9  B1C       // ALLYSTAR
+     *   11 B2I       // NMEA 4.11, according to u-blox
      * Galileo:
      *   0  All signals
      *   1  E5a  (aI and aQ)
@@ -2504,7 +2511,7 @@ struct satellite_t {
      *   4  E6-A
      *   5  E6-BC
      *   6  L1-A
-     *   7  L1-B and L1-C (E1-C and E1-B)
+     *   7  L1-B and L1-C (E1-C and E1-B) (L1BC)
      * GLONASS:
      *   0  All signals-
      *   1  G1 C/A  (L1-OF)
@@ -2518,10 +2525,13 @@ struct satellite_t {
      *   3  L1C
      *   4  L2 P(Y)
      *   5  L2C-M
-     *   6  L2C-L
+     *   6  L2C-L   (L2CL)
      *   7  L5-I
      *   8  L5-Q
-     * IRNSS:
+     *   9  L1C          // ALLYSTAR
+     *   11 L6           // ALLYSTAR
+     * Navic (IRNSS):
+     *   1  ??           // ALLYSTAR
      *   4  L5
      * QZSS:     not defined
      *
