@@ -179,6 +179,13 @@ static struct vlist_t vversions[] = {
     {0, NULL},
 };
 
+// CFG-PRT, portID
+static struct vlist_t vportID[] = {
+    {0, "UART0"},
+    {1, "UART1"},
+    {0, NULL},
+};
+
 // NAV-TIME flags
 static struct flist_t vtime_flags[] = {
     {1, 1, "week"},
@@ -460,6 +467,33 @@ static gps_mask_t msg_cfg_pps(struct gps_device_t *session,
 }
 
 /**
+ * CFG-PRT -- Coomm port settings
+ *
+ * Sadly, no way to tell what port is the current port!
+ *
+ */
+static gps_mask_t msg_cfg_prt(struct gps_device_t *session,
+                              unsigned char *buf, size_t payload_len)
+{
+    unsigned portID;
+    unsigned long long baudrate;
+
+    if (2 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG-PRT: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+    portID  = getub(buf, 0);
+    baudrate = getleu32(buf, 4);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: CFG-PRT: portID %u(%s) baudrate %llu\n",
+             portID, val2str(portID, vportID), baudrate);
+
+    return 0;
+}
+
+/**
  * CFG-SBAS - SBAS in use
  *
  */
@@ -510,6 +544,9 @@ static gps_mask_t msg_cfg(struct gps_device_t *session,
         break;
     case CFG_PPS:
         mask = msg_cfg_pps(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
+    case CFG_PRT:
+        mask = msg_cfg_prt(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case CFG_SBAS:
         mask = msg_cfg_sbas(session, &buf[ALLY_PREFIX_LEN], payload_len);
@@ -1120,7 +1157,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
     if (!session->context->readonly &&
         0 <= session->queue &&
         100 > session->queue) {
-        // unsigned char msg[4] = {0};
+        unsigned char msg[4] = {0};
 
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "ALLY: queue %d\n", session->queue);
@@ -1148,11 +1185,21 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
             // Poll CFG-NMEAVER
             (void)ally_write(session, ALLY_CFG, 0x43, NULL, 0);
             break;
-        case 32:
-            // Poll CFG-PPS
-            (void)ally_write(session, ALLY_CFG, 0x07, NULL, 0);
+        case 30:
+            // Poll CFG-PRT
+            (void)ally_write(session, ALLY_CFG, 0x00, NULL, 0);
             break;
-        case 36:
+        case 34:
+            // Poll CFG-PRT(UART1)
+            msg[0] = 0;
+            (void)ally_write(session, ALLY_CFG, 0x00, msg, 1);
+            break;
+        case 38:
+            // Poll CFG-PRT(UART2)
+            msg[0] = 1;
+            (void)ally_write(session, ALLY_CFG, 0x00, msg, 1);
+            break;
+        case 40:
             // Poll CFG-SBAS
             (void)ally_write(session, ALLY_CFG, 0x0e, NULL, 0);
             break;
@@ -1211,6 +1258,35 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 }
 
+/* speed()
+ * WIP: implement speed changing.
+ * Luckily ALLYSTAR is only 8N1.
+ * Unluckily, no way to know what port we are on...
+ */
+static bool speed(struct gps_device_t *session, speed_t speed,
+                  char parity UNUSED, int stopbits UNUSED)
+{
+    unsigned char msg[8] = {0};
+
+    memset(msg, '\0', sizeof(msg));
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "ALLY: baudrate %u\n", speed);
+
+    if (0 == speed) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: invalid baudrate %u\n", speed);
+        return 0;
+    }
+    // turn on rate one NMEA
+    putbe16(msg, 0, CFG_PRT);
+    msg[2] = 0x00;          // WAG: UART0
+    putbe32(msg, 4, speed);
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 8);
+    return true;
+}
+
+
 static void event_hook(struct gps_device_t *session, event_t event)
 {
     if (session->context->readonly) {
@@ -1263,7 +1339,7 @@ const struct gps_type_t driver_allystar =
     .rtcm_writer    = gpsd_write,               // send RTCM data straight
     .init_query     = init_query,               // non-perturbing query
     .event_hook     = event_hook,               // lifetime event handler
-    .speed_switcher = NULL,                     // we can change baud rates
+    .speed_switcher = speed,                    // we can change baud rates
     .mode_switcher  = NULL,                     // there is a mode switcher
     .rate_switcher  = NULL,                     // change sample rate
     .min_cycle.tv_sec  = 1,                     // default
