@@ -191,6 +191,19 @@ static struct vlist_t vportID[] = {
     {0, NULL},
 };
 
+// NAV-AUTO fixstate
+static struct vlist_t vfixstate[] = {
+    {0, "None"},
+    {1, "Aided"},         // ??
+    {2, "Clock Bias"},    // ??
+    {3, "2D"},
+    {4, "3D"},
+    {5, "DGNSS"},
+    {6, "RTTK Flt"},
+    {7, "RTTK Fix"},
+    {0, NULL},
+};
+
 // NAV-TIME flags
 static struct flist_t vtime_flags[] = {
     {1, 1, "week"},
@@ -334,6 +347,8 @@ static gps_mask_t msg_cfg_carrsmooth(struct gps_device_t *session,
              windows_value);
     return 0;
 }
+
+// CFG_FIXEDLLA    alt is altHAE, per datagnss.
 
 /**
  * CFG-GEOFENCE -- genfences
@@ -629,19 +644,129 @@ static gps_mask_t msg_mon(struct gps_device_t *session,
 static gps_mask_t msg_nav_auto(struct gps_device_t *session,
                                 unsigned char *buf, size_t payload_len)
 {
+    gps_mask_t mask = 0;
     unsigned fixstate;
+    unsigned mode = MODE_NOT_SEEN;
+    unsigned status = STATUS_UNK;
+    unsigned year, month, day;
+    unsigned hour, min, sec;
+    long long lat, lon, altHAE;
+    unsigned speed_3d;
+    int heading;
+    unsigned pDOP, hDOP, vDOP;
+    unsigned satInUse, satInView;
 
     if (32 > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "ALLY: NAV-AUTO: runt payload len %zd\n", payload_len);
-        return 0;
+        return mask;
     }
 
     fixstate = getub(buf, 0);
+    year = getleu16(buf, 1);
+    month = getub(buf, 3);
+    day = getub(buf, 4);
+    hour = getub(buf, 5);
+    min = getub(buf, 6);
+    sec = getub(buf, 7);
+    lon = getles32(buf, 8);
+    lat = getles32(buf, 12);
+    altHAE = getles32(buf, 16);
+    speed_3d = getleu16(buf, 20);
+    heading = getles16(buf, 22);
+    pDOP = getles16(buf, 24);
+    hDOP = getles16(buf, 26);
+    vDOP = getles16(buf, 28);
+    /* We don't use satInUse, satInView.  ALLYSTAR counts two signals from
+     * one sat, as one sat */
+    satInUse = getub(buf, 30);
+    satInView = getub(buf, 31);
+
+    switch (fixstate) {
+    case 0:    // No fix
+        mode |= MODE_NO_FIX;
+        status = STATUS_UNK;
+        mask |= STATUS_SET | MODE_SET;
+        break;
+    case 1:    // Aided fix ??
+        FALLTHROUGH
+    case 2:    // Clock bias fix ??
+        // assume these are like surveyed-in
+        mode = MODE_3D;
+        status = STATUS_TIME;
+        mask |= STATUS_SET | MODE_SET;
+        break;
+    case 3:         // 2D fix
+        mode = MODE_2D;
+        status = STATUS_GPS;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    case 4:         // 3D fix
+        mode = MODE_3D;
+        status = STATUS_GPS;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    case 5:         // DGNSS
+        mode = MODE_3D;
+        status = STATUS_DGPS;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    case 6:         // RTK Float
+        mode = MODE_3D;
+        status = STATUS_RTK_FLT;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    case 7:         // RTK Fix
+        mode = MODE_3D;
+        status = STATUS_RTK_FIX;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    default:
+        // huh?
+        break;
+    }
+    session->newdata.mode = mode;
+    session->newdata.status = status;
+
+    session->newdata.longitude = lon / 1e7;
+    session->newdata.latitude = lat / 1e7;
+    session->newdata.altHAE = altHAE / 1e3;
+
+    if (9999 > pDOP) {
+        session->gpsdata.dop.pdop = pDOP / 100.0;
+        mask |= DOP_SET;
+    }
+    if (9999 > hDOP) {
+        session->gpsdata.dop.hdop = hDOP / 100.0;
+        mask |= DOP_SET;
+    }
+    if (9999 > vDOP) {
+        session->gpsdata.dop.vdop = vDOP / 100.0;
+        mask |= DOP_SET;
+    }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "ALLY: NAV-AUTO: fixstate %u \n",
-             fixstate);
-    return 0;
+             "ALLY: NAV-AUTO: fixstate %u %u/%u/%u "
+             "%u:%02u:%02u lon %.7f lat %.7f altHAE %.3f "
+             "speed_3d %u, heading %d pDOP %.2f hDOP %.2f vDOP %.2f "
+             "satInUse %u satInView %u\n",
+             fixstate,
+             year, month, day, hour, min, sec,
+             session->newdata.longitude,
+             session->newdata.latitude,
+             session->newdata.altHAE,
+             speed_3d, heading,
+             session->gpsdata.dop.pdop,
+             session->gpsdata.dop.hdop,
+             session->gpsdata.dop.vdop,
+             satInUse, satInView);
+     GPSD_LOG(LOG_IO, &session->context->errout,
+              "UBX: NAV-SUTO: fixstate %u(%s) mode %u(%s) status %u(%s)\n",
+             fixstate, val2str(fixstate, vfixstate),
+             session->newdata.mode,
+             val2str(session->newdata.mode, vmode_str),
+             session->newdata.status,
+             val2str(session->newdata.status, vstatus_str));
+    return mask;
 }
 
 /**
