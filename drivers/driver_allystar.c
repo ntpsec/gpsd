@@ -80,6 +80,9 @@ typedef enum {
     NAV_CLOCK       = MSGID(ALLY_NAV, 0x22),
     NAV_PVERR       = MSGID(ALLY_NAV, 0x26),
     NAV_SVINFO      = MSGID(ALLY_NAV, 0x30),
+    NAV_STATE       = MSGID(ALLY_NAV, 0x32),
+    NAV_AUTO        = MSGID(ALLY_NAV, 0xc0),
+    NAV_PVT         = MSGID(ALLY_NAV, 0xc1),
     /* NMEA_* for CFG-MSG, srouce:
      * https://docs.datagnss.com/rtk-board/#9download-the-latest-firmware
      */
@@ -103,6 +106,8 @@ typedef enum {
     RTCM_1097       = MSGID(ALLY_RTCM, 0x06),
     RTCM_1117       = MSGID(ALLY_RTCM, 0x75),
     RTCM_1127       = MSGID(ALLY_RTCM, 0x7f),
+    // RXM-*
+    RXM_DUMPRAW     = MSGID(ALLY_RXM, 0x01),
 } ally_msgs_t;
 
 // 2 bytes leader, 2 bytes ID, 2 bytes payload length
@@ -618,6 +623,28 @@ static gps_mask_t msg_mon(struct gps_device_t *session,
 // NAV-*
 
 /**
+ * NAV-AUTO -- GNSS info
+ *
+ */
+static gps_mask_t msg_nav_auto(struct gps_device_t *session,
+                                unsigned char *buf, size_t payload_len)
+{
+    unsigned fixstate;
+
+    if (32 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-AUTO: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+
+    fixstate = getub(buf, 0);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-AUTO: fixstate %u \n",
+             fixstate);
+    return 0;
+}
+
+/**
  * Clock Solution NAV-CLOCK
  * Seems to match UBX-NAV-CLOCK
  *
@@ -1055,6 +1082,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     gps_mask_t mask = 0;
 
     switch (msgid) {
+    case NAV_AUTO:
+        mask = msg_nav_auto(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
     case NAV_CLOCK:
         mask = msg_nav_clock(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
@@ -1236,8 +1266,8 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
 {
     unsigned char msg[4] = {0};
 
-    // turn on rate one NMEA
-    putbe16(msg, 0, NMEA_ZDA);
+    // turn on rate one NAV-AUTO
+    putbe16(msg, 0, NAV_AUTO);
     msg[2] = 0x01;          // rate, one
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
