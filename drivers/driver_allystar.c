@@ -655,6 +655,7 @@ static gps_mask_t msg_nav_auto(struct gps_device_t *session,
     int heading;
     unsigned pDOP, hDOP, vDOP;
     unsigned satInUse, satInView;
+    struct tm unpacked_date = {0};
 
     if (32 > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -672,6 +673,7 @@ static gps_mask_t msg_nav_auto(struct gps_device_t *session,
     lon = getles32(buf, 8);
     lat = getles32(buf, 12);
     altHAE = getles32(buf, 16);
+    // no place for speed_3d....
     speed_3d = getleu16(buf, 20);
     heading = getles16(buf, 22);
     pDOP = getles16(buf, 24);
@@ -728,9 +730,28 @@ static gps_mask_t msg_nav_auto(struct gps_device_t *session,
     session->newdata.mode = mode;
     session->newdata.status = status;
 
+    // We don't know if time, or leapseconds, is valid.
+    unpacked_date.tm_year = (uint16_t)getleu16(buf, 4) - 1900;
+    unpacked_date.tm_mon = (uint8_t)getub(buf, 6) - 1;
+    unpacked_date.tm_mday = (uint8_t)getub(buf, 7);
+    unpacked_date.tm_hour = (uint8_t)getub(buf, 8);
+    unpacked_date.tm_min = (uint8_t)getub(buf, 9);
+    unpacked_date.tm_sec = (uint8_t)getub(buf, 10);
+    session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
+    // If rate highter than 1Hz, we have no idea of sub-seconds...
+    session->newdata.time.tv_nsec = 0;
+    TS_NORM(&session->newdata.time);
+    if (3 <= fixstate) {
+        // not sure baout states 1 and 2
+        mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
+    }
+
     session->newdata.longitude = lon / 1e7;
     session->newdata.latitude = lat / 1e7;
     session->newdata.altHAE = altHAE / 1e3;
+
+    session->newdata.track = heading / 100.0;
+    mask |= TRACK_SET;
 
     if (9999 > pDOP) {
         session->gpsdata.dop.pdop = pDOP / 100.0;
@@ -745,16 +766,18 @@ static gps_mask_t msg_nav_auto(struct gps_device_t *session,
         mask |= DOP_SET;
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "ALLY: NAV-AUTO: fixstate %u %u/%u/%u "
+             "ALLY: NAV-AUTO: time %ld fixstate %u %u/%u/%u "
              "%u:%02u:%02u lon %.7f lat %.7f altHAE %.3f "
-             "speed_3d %u, heading %d pDOP %.2f hDOP %.2f vDOP %.2f "
+             "speed_3d %u, heading %.2f pDOP %.2f hDOP %.2f vDOP %.2f "
              "satInUse %u satInView %u\n",
+             session->newdata.time.tv_sec,
              fixstate,
              year, month, day, hour, min, sec,
              session->newdata.longitude,
              session->newdata.latitude,
              session->newdata.altHAE,
-             speed_3d, heading,
+             speed_3d,
+             session->newdata.track,
              session->gpsdata.dop.pdop,
              session->gpsdata.dop.hdop,
              session->gpsdata.dop.vdop,
