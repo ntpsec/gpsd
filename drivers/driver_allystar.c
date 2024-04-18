@@ -77,10 +77,13 @@ typedef enum {
     NAV_POSLLH      = MSGID(ALLY_NAV, 0x02),
     NAV_DOP         = MSGID(ALLY_NAV, 0x04),
     NAV_TIME        = MSGID(ALLY_NAV, 0x05),
+    NAV_VELECEF     = MSGID(ALLY_NAV, 0x11),
+    NAV_VELNED      = MSGID(ALLY_NAV, 0x12),
+    NAV_TIMEUTC     = MSGID(ALLY_NAV, 0x21),
     NAV_CLOCK       = MSGID(ALLY_NAV, 0x22),
     NAV_PVERR       = MSGID(ALLY_NAV, 0x26),
     NAV_SVINFO      = MSGID(ALLY_NAV, 0x30),
-    NAV_STATE       = MSGID(ALLY_NAV, 0x32),
+    NAV_SVSTATE     = MSGID(ALLY_NAV, 0x32),
     NAV_AUTO        = MSGID(ALLY_NAV, 0xc0),
     NAV_PVT         = MSGID(ALLY_NAV, 0xc1),
     /* NMEA_* for CFG-MSG, srouce:
@@ -107,7 +110,9 @@ typedef enum {
     RTCM_1117       = MSGID(ALLY_RTCM, 0x75),
     RTCM_1127       = MSGID(ALLY_RTCM, 0x7f),
     // RXM-*
-    RXM_DUMPRAW     = MSGID(ALLY_RXM, 0x01),
+    RXM_DUMPRAW     = MSGID(ALLY_RXM, 0x01),   // -DUM and -DUMPRAW the same??
+    RXM_DUM         = MSGID(ALLY_RXM, 0x01),
+    RXM_GALSAR      = MSGID(ALLY_RXM, 0x02),
 } ally_msgs_t;
 
 // 2 bytes leader, 2 bytes ID, 2 bytes payload length
@@ -230,6 +235,25 @@ static struct vlist_t vtime_navsys[] = {
     {2, "GLO"},
     {3, "GAL"},
     {0, NULL},
+};
+
+// NAV-TIMEUTC utcStandard
+static struct vlist_t vtimeutc_utc[] = {
+    {0x10, "NA"},
+    {0x20, "NTSC"},
+    {0x30, "USNO"},
+    {0x40, "EUL"},
+    {0x50, "SU"},
+    {0x60, "INDIA"},
+    {0x0, NULL},
+};
+
+// NAV-TIMEUTC ValidFlag
+static struct flist_t vtimeutc_valid[] = {
+    {1, 1, "Valid tow"},
+    {2, 2, "Valid week"},
+    {4, 4, "Valid UTC"},    // Valid Leapsecond
+    {0, 0, NULL},
 };
 
 /* send a ALLYSTAR message.
@@ -1340,6 +1364,38 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
 }
 
 /**
+ * NAV-SVSTATE
+ */
+static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
+                                  unsigned char *buf, size_t payload_len)
+{
+    unsigned long long numSV;
+    // char buf2[80];
+    // unsigned year, month, day;
+    // unsigned hour, min, sec;
+    // unsigned ValidFlag;         // Validity Flags
+    // unsigned long long tAcc;  // Time Accuracy, ns
+    // long long nano;             // fractional TOW, ns
+    gps_mask_t mask = 0;
+    // char ts_buf[TIMESPEC_LEN];
+
+    if (8 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-SVSTATE: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);   // iTow, ms
+    numSV = getleu32(buf, 4);
+    // 5 reserved
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-SVSTATE: iTOW %lld numSV %llu\n",
+             session->driver.ubx.iTOW, numSV);
+    return mask;
+}
+
+/**
  * GPS Leap Seconds - NAV-TIME
  * sorta like UBX-NAV-TIMEGPS
  */
@@ -1406,6 +1462,53 @@ static gps_mask_t msg_nav_time(struct gps_device_t *session,
     return mask;
 }
 
+/**
+ * NAV-TIMEUTC
+ */
+static gps_mask_t msg_nav_timeutc(struct gps_device_t *session,
+                                  unsigned char *buf, size_t payload_len)
+{
+    char buf2[80];
+    unsigned year, month, day;
+    unsigned hour, min, sec;
+    unsigned ValidFlag;         // Validity Flags
+    unsigned long long tAcc;  // Time Accuracy, ns
+    long long nano;             // fractional TOW, ns
+    gps_mask_t mask = 0;
+    // char ts_buf[TIMESPEC_LEN];
+
+    if (20 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-TIMEUTC: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);   // iTow, ms
+    // tAcc in ns, unknown type (1 sigma, 50%, etc.)
+    tAcc = getleu32(buf, 4);
+    nano = getles32(buf, 8);
+    year = getleu16(buf, 12);
+    month = getub(buf, 14);
+    day = getub(buf, 15);
+    hour = getub(buf, 16);
+    min = getub(buf, 17);
+    sec = getub(buf, 18);
+    ValidFlag = getles32(buf, 19);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-TIMEUTC: iTOW %lld tAcc %llu nano %lld "
+             "time %u/%u/%u %u:%02u:%02u ValidFlag x%x\n",
+             session->driver.ubx.iTOW, tAcc, nano,
+             year, month, day, hour, min, sec, ValidFlag);
+             // timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "ALLY: NAV-TIMEUTC: ValidFlag:x%x(%s) utc %s\n",
+             ValidFlag,
+             flags2str(ValidFlag, vtimeutc_valid, buf2, sizeof(buf2)),
+             val2str(ValidFlag, vtimeutc_utc));
+    return mask;
+}
+
 /* msg_nav() -- handle CLASS-NAV
  */
 static gps_mask_t msg_nav(struct gps_device_t *session,
@@ -1439,12 +1542,18 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     case NAV_SVINFO:
         mask = msg_nav_svinfo(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
+    case NAV_SVSTATE:
+        mask = msg_nav_svstate(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
     case NAV_TIME:
         mask = msg_nav_time(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
+    case NAV_TIMEUTC:
+        mask = msg_nav_timeutc(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV- %02x payload_len %zd\n",
+                 "ALLY: Unknown NAV-%02x payload_len %zd\n",
                  msgid & 0xff, payload_len);
         break;
     }
@@ -1614,28 +1723,56 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
     msg[2] = 0x01;          // rate, one
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
+    // turn on rate one NAV-CLOCK
+    putbe16(msg, 0, NAV_CLOCK);
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
     // turn on rate one NAV-DOP
     putbe16(msg, 0, NAV_DOP);
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
+    // turn on rate one NAV-POSECEF
+    putbe16(msg, 0, NAV_POSECEF);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
     // turn on rate one NAV-POSLLH
     putbe16(msg, 0, NAV_POSLLH);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
+    // turn on rate one NAV-PVERR
+    putbe16(msg, 0, NAV_PVERR);
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
     // turn on rate one NAV-PVT
     // prolly no need for NAV-AUTO and NAV-POLL
-    putbe16(msg, 0, NAV_PVT);
-    msg[2] = 0x01;          // rate, one
+    // putbe16(msg, 0, NAV_PVT);
+    // (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+    // This gets ACK-NAK ????  Not in SW 3.018.a3f23db?
+
+    // turn on rate one NAV-SVINFO
+    putbe16(msg, 0, NAV_SVINFO);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-    // This gets ACK-NAK ????
+
+    // turn on rate one NAV-SVSTATE
+    putbe16(msg, 0, NAV_SVSTATE);
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
     // turn on rate one NAV-TIME
     putbe16(msg, 0, NAV_TIME);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
-    // turn on rate one NAV-CLOCK
-    putbe16(msg, 0, NAV_CLOCK);
+    // turn on rate one NAV-TIMETC
+    putbe16(msg, 0, NAV_TIMEUTC);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
+    // turn on rate one NAV-VELECEF
+    putbe16(msg, 0, NAV_VELECEF);
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
+    // turn on rate one NAV-VELNED
+    putbe16(msg, 0, NAV_VELNED);
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+
 }
 
 /* speed()
