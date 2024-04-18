@@ -429,6 +429,10 @@ static unsigned char nmea_sigid_to_ubx(struct gps_device_t *session,
         // ALLYSTAR, BDS B3I
         ubx_sigid = 2;
         break;
+    case 4:
+        // ALLYSTAR, BDS B2A
+        ubx_sigid = 7;     // This is for NMEA digid 5, but we have 4!  Close.
+        break;
     case 5:
         // L2
         // ALLYSTAR, BDS B2A
