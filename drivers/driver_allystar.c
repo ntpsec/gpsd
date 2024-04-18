@@ -204,6 +204,16 @@ static struct vlist_t vfixstate[] = {
     {0, NULL},
 };
 
+// NAV-PVT fixType fixstate
+static struct vlist_t vfixType[] = {
+    {0, "None"},
+    {1, "DR"},
+    {2, "2D"},
+    {3, "3D"},
+    {4, "Surveyed"},
+    {0, NULL},
+};
+
 // NAV-TIME flags
 static struct flist_t vtime_flags[] = {
     {1, 1, "week"},
@@ -1026,6 +1036,181 @@ static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
 }
 
 /**
+ * NAV-PVT
+ *
+ */
+static gps_mask_t msg_nav_pvt(struct gps_device_t *session,
+                              unsigned char *buf, size_t payload_len)
+{
+    gps_mask_t mask = 0;
+    unsigned mode = MODE_NOT_SEEN;
+    unsigned status = STATUS_UNK;
+    unsigned year, month, day;
+    unsigned hour, min, sec;
+    unsigned valid;         // undocumented
+    unsigned long long tAcc;;
+    long long nano;
+    unsigned fixType;
+    unsigned numSV;
+    long long lon, lat, altHAE, hMSL;
+    unsigned long long hAcc, vAcc;
+    long long Vel_N, Vel_E, Vel_D;
+    long long gSpeed;      // signed??
+    long long headMot;
+    unsigned long long sAcc, headAcc;
+    unsigned pDOP;
+    long long headVeh;     // signed?
+    struct tm unpacked_date = {0};
+    timespec_t ts_tow;
+
+    if (88 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-PVT: runt payload len %zd\n", payload_len);
+        return mask;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    MSTOTS(&ts_tow, session->driver.ubx.iTOW);
+    year = getleu16(buf, 4);
+    month = getub(buf, 6);
+    day = getub(buf, 7);
+    hour = getub(buf, 8);
+    min = getub(buf, 9);
+    sec = getub(buf, 10);
+    valid = getub(buf, 10);      // undocumented!
+    tAcc = getleu32(buf, 12);
+    nano = getles32(buf, 16);
+    fixType = getub(buf, 20);
+    // 21, 22 reserved
+    /* We don't use numSV.  ALLYSTAR counts two signals from
+     * one sat, as one sat */
+    numSV = getub(buf, 23);
+    lon = getles32(buf, 24);
+    lat = getles32(buf, 28);
+    altHAE = getles32(buf, 32);
+    hMSL = getles32(buf, 36);
+    hAcc = getleu32(buf, 40);
+    vAcc = getleu32(buf, 44);
+    Vel_N = getles32(buf, 48);
+    Vel_E = getles32(buf, 52);
+    Vel_D = getles32(buf, 56);
+    gSpeed = getleu32(buf, 60);
+    headMot = getles32(buf, 64);
+    sAcc = getleu32(buf, 68);
+    headAcc = getleu32(buf, 72);
+    pDOP = getles16(buf, 76);
+    headVeh = getles32(buf, 84);  // Different than headMot ??
+
+    switch (fixType) {
+    case 0:    // No fix
+        mode |= MODE_NO_FIX;
+        status = STATUS_UNK;
+        mask |= STATUS_SET | MODE_SET;
+        break;
+    case 1:    // Aided fix ??
+        FALLTHROUGH
+    case 2:    // Clock bias fix ??
+        // assume these are like surveyed-in
+        mode = MODE_3D;
+        status = STATUS_TIME;
+        mask |= STATUS_SET | MODE_SET;
+        break;
+    case 3:         // 2D fix
+        mode = MODE_2D;
+        status = STATUS_GPS;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    case 4:         // 3D fix
+        mode = MODE_3D;
+        status = STATUS_GPS;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    case 5:         // DGNSS
+        mode = MODE_3D;
+        status = STATUS_DGPS;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    case 6:         // RTK Float
+        mode = MODE_3D;
+        status = STATUS_RTK_FLT;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    case 7:         // RTK Fix
+        mode = MODE_3D;
+        status = STATUS_RTK_FIX;
+        mask |= MODE_SET | STATUS_SET | LATLON_SET;
+        break;
+    default:
+        // huh?
+        break;
+    }
+    session->newdata.mode = mode;
+    session->newdata.status = status;
+
+    unpacked_date.tm_year = year;
+    unpacked_date.tm_mon = month;
+    unpacked_date.tm_mday = day;
+    unpacked_date.tm_hour = hour;
+    unpacked_date.tm_min = min;
+    unpacked_date.tm_sec = sec;
+    // FIXME:  add in fractional iTOW
+    session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
+    session->newdata.time.tv_nsec = nano;
+    TS_NORM(&session->newdata.time);
+    if (0 < fixType) {
+        // accept DR
+        mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
+    }
+
+    session->newdata.longitude = lon / 1e7;
+    session->newdata.latitude = lat / 1e7;
+    session->newdata.altHAE = altHAE / 1e3;
+    session->newdata.altMSL = hMSL / 1e3;
+    session->newdata.speed = gSpeed / 1e3;
+
+    session->newdata.track = headMot / 100.0;
+    mask |= TRACK_SET;
+
+    if (9999 > pDOP) {
+        session->gpsdata.dop.pdop = pDOP / 100.0;
+        mask |= DOP_SET;
+    }
+    session->newdata.NED.velN = Vel_N / 1000.0;
+    session->newdata.NED.velE = Vel_E / 1000.0;
+    session->newdata.NED.velD = Vel_D / 1000.0;
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-PVT: time %ld%.09ld %u/%u/%u %u:%02u:%02u valid x%x "
+             "tAcc %llu fixType %u  numSv %u lon %.7f lat %.7f "
+             "altHAE %.3f altMSL %.3f hAcc %llu vAcc %llu "
+             "speed %.3f, headMot %.2f sAcc ^%.55f headAcc %.5f pDOP %.2f "
+             "headVeh %.2f\n",
+             session->newdata.time.tv_sec,
+             session->newdata.time.tv_nsec,
+             year, month, day, hour, min, sec,
+             valid, tAcc,
+             fixType, numSV,
+             session->newdata.longitude,
+             session->newdata.latitude,
+             session->newdata.altHAE,
+             session->newdata.altMSL,
+             hAcc, vAcc,
+             session->newdata.speed,
+             session->newdata.track,
+             sAcc / 1e5, headAcc / 1e5,
+             session->gpsdata.dop.pdop,
+             headVeh / 1e5);
+     GPSD_LOG(LOG_IO, &session->context->errout,
+              "UBX: NAV-PVT fixType %u(%s) mode %u(%s) status %u(%s)\n",
+             fixType, val2str(fixType, vfixType),
+             session->newdata.mode,
+             val2str(session->newdata.mode, vmode_str),
+             session->newdata.status,
+             val2str(session->newdata.status, vstatus_str));
+    return mask;
+}
+
+/**
  * GPS Satellite Info -- NAV-SVINFO
  * Sort of like UBX-NAV-SVINFO
  *   UBX is (8 + 12 * numCh)
@@ -1248,6 +1433,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     case NAV_PVERR:
         mask = msg_nav_pverr(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
+    case NAV_PVT:
+        mask = msg_nav_pvt(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
     case NAV_SVINFO:
         mask = msg_nav_svinfo(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
@@ -1381,6 +1569,13 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
             // Poll CFG-SBAS
             (void)ally_write(session, ALLY_CFG, 0x0e, NULL, 0);
             break;
+        case 44:
+            // turn on rate one NAV-PVT
+            // prolly no need for NAV-AUTO and NAV-POLL
+            putbe16(msg, 0, NAV_PVT);
+            msg[2] = 0x01;          // rate, one
+            (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+            break;
         default:
             break;
         }
@@ -1427,6 +1622,13 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
     putbe16(msg, 0, NAV_POSLLH);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
 
+    // turn on rate one NAV-PVT
+    // prolly no need for NAV-AUTO and NAV-POLL
+    putbe16(msg, 0, NAV_PVT);
+    msg[2] = 0x01;          // rate, one
+    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+    // This gets ACK-NAK ????
+
     // turn on rate one NAV-TIME
     putbe16(msg, 0, NAV_TIME);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
@@ -1456,7 +1658,7 @@ static bool speed(struct gps_device_t *session, speed_t speed,
                  "ALLY: invalid baudrate %u\n", speed);
         return 0;
     }
-    // turn on rate one NMEA
+    // poll CFG-PRT for UART0
     putbe16(msg, 0, CFG_PRT);
     msg[2] = 0x00;          // WAG: UART0
     putbe32(msg, 4, speed);
