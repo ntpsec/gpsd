@@ -1717,62 +1717,34 @@ static ssize_t control_send(struct gps_device_t *session, char *msg,
 static void ally_mode(struct gps_device_t *session, int mode UNUSED)
 {
     unsigned char msg[4] = {0};
+    unsigned u;
 
-    // turn on rate one NAV-AUTO
-    putbe16(msg, 0, NAV_AUTO);
-    msg[2] = 0x01;          // rate, one
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+    // TAU1201 seems OK with being blasted with CFG-MSG's.
+    static ally_msgs_t all_nav[] = {
+        // prolly no need for NAV-AUTO and NAV-POLL
+        NAV_AUTO,
+        NAV_CLOCK,
+        NAV_DOP,
+        NAV_POSECEF,
+        NAV_POSLLH,
+        NAV_PVERR,
+        // NAV-PVT gets ACK-NAK with SW 3.018.a3f23db.
+        NAV_PVT,
+        NAV_SVINFO,
+        NAV_SVSTATE,
+        NAV_TIME,
+        NAV_TIMEUTC,
+        NAV_VELECEF,
+        NAV_VELNED,
+    };
 
-    // turn on rate one NAV-CLOCK
-    putbe16(msg, 0, NAV_CLOCK);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-DOP
-    putbe16(msg, 0, NAV_DOP);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-POSECEF
-    putbe16(msg, 0, NAV_POSECEF);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-POSLLH
-    putbe16(msg, 0, NAV_POSLLH);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-PVERR
-    putbe16(msg, 0, NAV_PVERR);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-PVT
-    // prolly no need for NAV-AUTO and NAV-POLL
-    // putbe16(msg, 0, NAV_PVT);
-    // (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-    // This gets ACK-NAK ????  Not in SW 3.018.a3f23db?
-
-    // turn on rate one NAV-SVINFO
-    putbe16(msg, 0, NAV_SVINFO);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-SVSTATE
-    putbe16(msg, 0, NAV_SVSTATE);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-TIME
-    putbe16(msg, 0, NAV_TIME);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-TIMETC
-    putbe16(msg, 0, NAV_TIMEUTC);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-VELECEF
-    putbe16(msg, 0, NAV_VELECEF);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
-    // turn on rate one NAV-VELNED
-    putbe16(msg, 0, NAV_VELNED);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
-
+    // turn on all binary NAV- messages we know of
+    for (u = 0; u < ROWS(all_nav); u++) {
+        // turn on rate one
+        putbe16(msg, 0, all_nav[u]);
+        msg[2] = 0x01;          // rate, one
+        (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+    }
 }
 
 /* speed()
