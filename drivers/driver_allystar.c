@@ -1045,9 +1045,9 @@ static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
     session->gpsdata.gst.vu_err_deviation = getles32(buf, 4)/ 1000.0;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-        "ALLY: NAV-PVERR: iTOW %llu stdlat %.3f stdlon %.3f stdalt %.3f "
+        "ALLY: NAV-PVERR: iTOW %lld stdlat %.3f stdlon %.3f stdalt %.3f "
         "stdve %.3f stdvn %.3f stdvu %.3f\n",
-        (unsigned long long)session->driver.ubx.iTOW,
+        (long long)session->driver.ubx.iTOW,
         session->gpsdata.gst.lat_err_deviation,
         session->gpsdata.gst.lon_err_deviation,
         session->gpsdata.gst.alt_err_deviation,
@@ -1391,7 +1391,7 @@ static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "ALLY: NAV-SVSTATE: iTOW %lld numSV %llu\n",
-             session->driver.ubx.iTOW, numSV);
+             (long long)session->driver.ubx.iTOW, numSV);
     return mask;
 }
 
@@ -1450,10 +1450,10 @@ static gps_mask_t msg_nav_time(struct gps_device_t *session,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "ALLY: NAV-TIME: time=%s navSys %u flag x%x FracTow %d "
-             "refTow %llu week %u leapSec %d timeErr %g\n",
+             "refTow %lld week %u leapSec %d timeErr %g\n",
              timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
              navSys, flag, FracTow,
-             (unsigned long long)session->driver.ubx.iTOW, week,
+             (long long)session->driver.ubx.iTOW, week,
              leapSec, timeErr);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "ALLY: NAV-TIME: navSys %s flag:%s\n",
@@ -1498,7 +1498,7 @@ static gps_mask_t msg_nav_timeutc(struct gps_device_t *session,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "ALLY: NAV-TIMEUTC: iTOW %lld tAcc %llu nano %lld "
              "time %u/%u/%u %u:%02u:%02u ValidFlag x%x\n",
-             session->driver.ubx.iTOW, tAcc, nano,
+             (long long)session->driver.ubx.iTOW, tAcc, nano,
              year, month, day, hour, min, sec, ValidFlag);
              // timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
     GPSD_LOG(LOG_IO, &session->context->errout,
