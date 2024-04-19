@@ -36,9 +36,6 @@
 #include "../include/bits.h"       // For UINT2INT()
 #include "../include/timespec.h"
 
-// number of rows in an array.
-#define ROWS(a) (sizeof(a) / sizeof(a[0]))
-
 /*
  * Some high-precision messages provide data where the main part is a
  * signed 32-bit integer (same as the standard-precision versions),

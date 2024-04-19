@@ -109,6 +109,7 @@ extern "C" {
  *       Add val2sstr() and flags2str()
  *       Add ve_err_deviation, vn_err_deviationv, vu_err_deviation to gst_t
  *       Move gst_t out of gps_data_t union.
+ *       Add ROWS()
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -120,6 +121,9 @@ extern "C" {
 #define GPS_JSON_COMMAND_MAX    80
 // u-blox 9 can make really long JSON in "RAW" messages
 #define GPS_JSON_RESPONSE_MAX   10240
+
+// number of rows in an array.
+#define ROWS(a) (sizeof(a) / sizeof(a[0]))
 
 // normalize degrees to 0 to 359
 #define DEG_NORM(deg) \
