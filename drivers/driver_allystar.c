@@ -81,6 +81,7 @@ typedef enum {
     NAV_VELNED      = MSGID(ALLY_NAV, 0x12),
     NAV_TIMEUTC     = MSGID(ALLY_NAV, 0x21),
     NAV_CLOCK       = MSGID(ALLY_NAV, 0x22),
+    NAV_CLOCK2      = MSGID(ALLY_NAV, 0x23),
     NAV_PVERR       = MSGID(ALLY_NAV, 0x26),
     NAV_SVINFO      = MSGID(ALLY_NAV, 0x30),
     NAV_SVSTATE     = MSGID(ALLY_NAV, 0x32),
@@ -147,16 +148,17 @@ static struct vlist_t vcfg_flags[] = {
     {0, NULL},
 };
 
-//CFG-NAVSAT enableMask
-static struct flist_t venableMask[] = {
+/* CFG-NAVSAT enableMask
+ * NAV-CLOCK2 sysmask */
+static struct flist_t fenableMask[] = {
     {1, 1, "GPS L1"},
     {2, 2, "GLO G1"},
     {4, 4, "BDS B1"},
-    {8, 8, "8"},
+    {8, 8, "QZSS L1S"},
     {0x10, 0x10, "GAL E1"},
     {0x20, 0x20, "QZSS L1"},
     {0x40, 0x40, "SBAS L1"},
-    {0x80, 0x80, "IRNSS L5"},
+    {0x80, 0x80, "NAVIC L5"},
     {0x100, 0x100, "GPS L1C"},
     {0x200, 0x800, "GPS L5"},
     {0x400, 0x400, "GPS L2C"},
@@ -167,7 +169,7 @@ static struct flist_t venableMask[] = {
     {0x8000, 0x8000, "BDS B2A"},
     {0x10000, 0x10000, "BDS B3I"},
     {0x20000, 0x20000, "BDS B5"},
-    {0x40000, 0x40000, "0x40000"},
+    {0x40000, 0x40000, "BDS B2"},
     {0x80000, 0x80000, "0x80000"},
     {0x100000, 0x100000, "GAL E5A"},
     {0x200000, 0x200000, "GAL E5B"},
@@ -423,9 +425,9 @@ static gps_mask_t msg_cfg_geofence(struct gps_device_t *session,
     }
 
     for (idx = 8; idx < payload_len; idx += 12) {
-        double lon = getles32(buf, 0) / 1e7;
-        double lat = getles32(buf, 4) / 1e7;
-        double radius = getleu16(buf, 8) / 100.0;
+        double lon = getles32(buf, idx) / 1e7;
+        double lat = getles32(buf, idx + 4) / 1e7;
+        double radius = getleu16(buf, idx + 8) / 100.0;
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "ALLY: CFG-GEOFENCE: lat %.4f lon %.4f rad %.2f\n",
                  lat, lon, radius);
@@ -453,7 +455,7 @@ static gps_mask_t msg_cfg_navsat(struct gps_device_t *session,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "ALLY: CFG-NAVSAT: enableMask x%llx(%s)\n",
              enableMask,
-             flags2str(enableMask, venableMask, buf2, sizeof(buf2)));
+             flags2str(enableMask, fenableMask, buf2, sizeof(buf2)));
     return 0;
 }
 
@@ -853,6 +855,45 @@ static gps_mask_t msg_nav_clock(struct gps_device_t *session,
              session->gpsdata.fix.clockbias,
              session->gpsdata.fix.clockdrift,
              tAcc, fAcc);
+    return 0;
+}
+
+/**
+ * NAV-CLOCK2 Sat Clock Solution 
+ *
+ */
+static gps_mask_t msg_nav_clock2(struct gps_device_t *session,
+                                 unsigned char *buf, size_t payload_len)
+{
+    char buf2[80];
+    unsigned long long numClk;
+    unsigned u;
+
+    if (8 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-CLOCK2: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    numClk = getleu32(buf, 4);
+
+    for (u = 8; u < payload_len; u += 12) {
+        unsigned long long sysmask = getleu32(buf, u);
+        long long clkB = getles32(buf, u + 4);              // ns
+        unsigned long long tAcc = getleu16(buf, u + 8);     // ns
+
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "ALLY: CFG-CLOCK2: sysmask x%llx(%s) clkB %lld yAcc %llu\n",
+                 sysmask,
+                 flags2str(sysmask, fenableMask, buf2, sizeof(buf2)),
+                 clkB, tAcc);
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-CLOCK2: iTOW=%lld numClk %lld\n",
+             (long long)session->driver.ubx.iTOW,
+             numClk);
     return 0;
 }
 
@@ -1463,6 +1504,69 @@ static gps_mask_t msg_nav_time(struct gps_device_t *session,
 }
 
 /**
+ * NAV-VELECEF
+ */
+static gps_mask_t msg_nav_velecef(struct gps_device_t *session,
+                                  unsigned char *buf, size_t payload_len)
+{
+    gps_mask_t mask = VECEF_SET;
+
+    if (20 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-VELECEF: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);      // iTow, ms
+    session->newdata.ecef.vx = getles32(buf, 4) / 100.0;      // cm/s
+    session->newdata.ecef.vy = getles32(buf, 8) / 100.0;      // cm/s
+    session->newdata.ecef.vz = getles32(buf, 12) / 100.0;      // cm/s
+    // sAcc (vAcc) in ns, unknown type (1 sigma, 50%, etc.)
+    session->newdata.ecef.vAcc = getleu32(buf, 16) / 100.0;   // cm/s
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-VELECEF: iTOW %lld vECEF %.2f %.2f %.2f sAcc %.2f\n",
+             (long long)session->driver.ubx.iTOW,
+             session->newdata.ecef.vx,
+             session->newdata.ecef.vy,
+             session->newdata.ecef.vz,
+             session->newdata.ecef.vAcc);
+    return mask;
+}
+
+/**
+ * NAV-VELNED
+ */
+static gps_mask_t msg_nav_velned(struct gps_device_t *session,
+                                 unsigned char *buf, size_t payload_len)
+{
+    gps_mask_t mask = VNED_SET;
+
+    if (36 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-VELNED: runt payload len %zd\n", payload_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);      // iTow, ms
+    session->newdata.NED.velN = getles32(buf, 4) / 100.0;
+    session->newdata.NED.velE = getles32(buf, 8) / 100.0;
+    session->newdata.NED.velD = getles32(buf, 12) / 100.0;
+
+    // sAcc (vAcc) in ns, unknown type (1 sigma, 50%, etc.)
+    session->newdata.ecef.vAcc = getleu32(buf, 28) / 100.0;   // cm/s
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-VELNED: iTOW %lld vNED %.2f %.2f %.2f sAcc %.2f\n",
+             (long long)session->driver.ubx.iTOW,
+             session->newdata.ecef.vx,
+             session->newdata.ecef.vy,
+             session->newdata.ecef.vz,
+             session->newdata.ecef.vAcc);
+    return mask;
+}
+
+/**
  * NAV-TIMEUTC
  */
 static gps_mask_t msg_nav_timeutc(struct gps_device_t *session,
@@ -1524,6 +1628,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     case NAV_CLOCK:
         mask = msg_nav_clock(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
+    case NAV_CLOCK2:
+        mask = msg_nav_clock2(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
     case NAV_DOP:
         mask = msg_nav_dop(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
@@ -1550,6 +1657,12 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
         break;
     case NAV_TIMEUTC:
         mask = msg_nav_timeutc(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
+    case NAV_VELECEF:
+        mask = msg_nav_velecef(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        break;
+    case NAV_VELNED:
+        mask = msg_nav_velned(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -1724,6 +1837,7 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
         // prolly no need for NAV-AUTO and NAV-POLL
         NAV_AUTO,
         NAV_CLOCK,
+        NAV_CLOCK2,
         NAV_DOP,
         NAV_POSECEF,
         NAV_POSLLH,
