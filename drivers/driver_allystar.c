@@ -269,7 +269,7 @@ static struct vlist_t vsvstate_hlth[] = {
 // NAV-SVSTATE eph_cource, alm_source
 static struct vlist_t vsvstate_src[] = {
     {0, "NA"},
-    {1, "HGNSS"},
+    {1, "GNSS"},
     {2, "Aided"},
     {0, NULL},
 };
@@ -929,7 +929,7 @@ static gps_mask_t msg_nav_clock2(struct gps_device_t *session,
  *
  */
 static gps_mask_t msg_nav_dop(struct gps_device_t *session,
-                                  unsigned char *buf, size_t payload_len)
+                              unsigned char *buf, size_t payload_len)
 {
     unsigned u;
     gps_mask_t mask = 0;
@@ -1340,18 +1340,17 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
     gpsd_zero_satellites(&session->gpsdata);
     nsv = 0;
     for (i = st = 0; i < nchan; i++) {
+        // No info on sigid???
         unsigned off = 24 * i;
         unsigned nmea_PRN;
         // v 2.3.1, 8 bit chand and 8-bit svid became 16-bit svid.
-        // no doc on svid numbers...
-        unsigned chan = getub(buf, off + 8);
-        unsigned ally_svid = getub(buf, off + 9);
+        // no doc on svid numbers... same as NMEA??
+        unsigned ally_svid = getleu16(buf, off + 8);
         // no doc on flags
         unsigned flags = getub(buf, off + 10);
         // no doc on quality
         unsigned quality = getub(buf, off + 11);
         unsigned cno = getub(buf, off + 12);
-        // bool used = (bool)(flags & 0x01);
         int el = getsb(buf, off + 13);
         int az = getles16(buf, off + 14);
         long long prRes = getles32(buf, off + 16);  // pseudorange residue, cm
@@ -1361,6 +1360,7 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
         // pseudorange, m
         session->gpsdata.skyview[st].pr = getled64((const char*)buf, off + 24);
 
+        nmea_PRN = ally_svid;
         // nmea_PRN = ubx_to_prn(ubx_PRN,
                               // &session->gpsdata.skyview[st].gnssid,
                               // &session->gpsdata.skyview[st].svid);
@@ -1371,7 +1371,6 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
         //              "ALLY: NAV-SVINFO bad NMEA PRN %d\n", nmea_PRN);
         //     continue;
         // }
-        nmea_PRN = ally_svid;      // conversion undocumented.
         session->gpsdata.skyview[st].PRN = nmea_PRN;
 
         session->gpsdata.skyview[st].ss = (double)cno;
@@ -1383,25 +1382,13 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
             session->gpsdata.skyview[st].azimuth = (double)az;
         }
         session->gpsdata.skyview[st].prRes = prRes / 100.0;
-        // session->gpsdata.skyview[st].qualityInd = quality;
-        // session->gpsdata.skyview[st].used = used;
-        // if (0x10 == (0x10 & flags)) {
-        //    session->gpsdata.skyview[st].health = SAT_HEALTH_BAD;
-        // } else {
-        //    session->gpsdata.skyview[st].health = SAT_HEALTH_OK;
-        // }
-
-        // sbas_in_use is not same as used
-        // if (used) {
-        //     // not really 'used', just integrity data from there
-        //     nsv++;
-        //     session->gpsdata.skyview[st].used = true;
-        // }
+        // No health data, no used data.
+        // flags and quality undocumented.
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "ALLY: NAV-SVINFO chnd %u  ally_svid %d gnssid %d, svid %d "
+                 "ALLY: NAV-SVINFO ally_svid %u  gnssid %d, svid %d "
                  "nmea_PRN %d flags x%x az %.0f el %.0f cno %.0f prRes %.2f "
                  "quality x%x, prRate %f pr %.4f\n",
-                 chan, ally_svid,
+                 ally_svid,
                  session->gpsdata.skyview[st].gnssid,
                  session->gpsdata.skyview[st].svid, nmea_PRN, flags,
                  session->gpsdata.skyview[st].azimuth,
@@ -1411,12 +1398,6 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
                  quality,
                  session->gpsdata.skyview[st].prRate,
                  session->gpsdata.skyview[st].pr);
-        // flags and quality undocumented.
-        // GPSD_LOG(LOG_IO, &session->context->errout,
-        //          "UBX: NAV-SVINFO: flags:%s quality:%s\n",
-        //          flags2str(flags, fsvinfo_flags, buf2, sizeof(buf2)),
-        //          val2str(quality, vquality));
-
         st++;
     }
 
@@ -1426,9 +1407,6 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
              "ALLY: NAV-SVINFO: visible=%d used=%d\n",
              session->gpsdata.satellites_visible,
              session->gpsdata.satellites_used);
-    // GPSD_LOG(LOG_IO, &session->context->errout,
-    //          "ALLY: NAV-SVINFO: chipGen %s\n",
-    //          val2str(globalFlags & 7, vglobalFlags));
     return SATELLITE_SET | USED_IS;
 }
 
@@ -1438,7 +1416,7 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
 static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
                                   unsigned char *buf, size_t payload_len)
 {
-    unsigned long long numSV;
+    unsigned numSV;
     unsigned idx;
     // char buf2[80];
     // unsigned year, month, day;
@@ -1456,25 +1434,28 @@ static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
     }
 
     session->driver.ubx.iTOW = getleu32(buf, 0);   // iTow, ms
-    numSV = getleu32(buf, 4);                      // 32 bits?!?!
+    numSV = getub(buf, 4);                         // 32 bits?!?!
     // 5 reserved
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "ALLY: NAV-SVSTATE: iTOW %lld numSV %llu payload_len x%x\n",
-             (long long)session->driver.ubx.iTOW, numSV, payload_len);
+             "ALLY: NAV-SVSTATE: iTOW %lld numSV %u payload_len %lld\n",
+             (long long)session->driver.ubx.iTOW, numSV,
+             (long long) payload_len);
     for (idx = 8; idx < payload_len; idx += 4) {
         unsigned svid = getleu16(buf, idx);         // NMEA PRN
-        unsigned eph_state = getub(buf, idx +2);    // ephemeris state
+        unsigned eph_state = getub(buf, idx + 2);   // ephemeris state
         unsigned alm_state = getub(buf, idx + 3);   // ephemeris state
 
         GPSD_LOG(LOG_INFO, &session->context->errout,
-                 "ALLY: NAV-SVSTATE: svid %4u use %d viz %u(%s) hlth %u(%s) "
-                 "use %d asrc %u(%s) esrc %u(%s)\n",
-                 svid, eph_state & 0x0f,
+                 "ALLY: NAV-SVSTATE: svid %4u "
+                 "eph x%x(use %d viz %u(%s) hlth %u(%s) "
+                 "alm x%x(use %d asrc %u(%s) esrc %u(%s))\n",
+                 svid, eph_state, eph_state & 0x0f,
                  (eph_state >> 4) & 0x03,
                  val2str((eph_state >> 4) & 0x03, vsvstate_viz),
                  (eph_state >> 6) & 0x03,
                  val2str((eph_state >> 6) & 0x03, vsvstate_hlth),
+                 alm_state,
                  alm_state & 0x0f,
                  (alm_state >> 4) & 0x03,
                  val2str((eph_state >> 4) & 0x03, vsvstate_src),
@@ -1489,34 +1470,22 @@ static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
  * sorta like UBX-NAV-TIMEGPS
  */
 static gps_mask_t msg_nav_time(struct gps_device_t *session,
-                               unsigned char *buf, size_t payload_len)
+                               unsigned char *buf, size_t payload_len UNUSED)
 {
     char buf2[80];
-    unsigned navSys;        // which constellation
-    unsigned flag;          // Validity Flags
-    int FracTow;            // fractional TOW, ns
-    unsigned week;
-    int leapSec;
-    // timeErr in ns, unknown type (1 sigma, 50%, etc.)
-    double timeErr = NAN;
     gps_mask_t mask = 0;
     char ts_buf[TIMESPEC_LEN];
 
-    if (16 > payload_len) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV-TIME: runt payload len %zd\n", payload_len);
-        return 0;
-    }
-
     // TAU1202 returns 21 ???
-    navSys = getub(buf, 0);
-    flag = getub(buf, 1);
-    FracTow = getles16(buf, 2);
-    session->driver.ubx.iTOW = getleu32(buf, 4);   // refTow, ms
-    week = getleu16(buf, 8);
-    leapSec = getsb(buf, 10);
+    unsigned navSys = getub(buf, 0);               // which constellation
+    unsigned flag = getub(buf, 1);                 // Validity flags
+    int FracTow = getles16(buf, 2);                // fractional TOW, ns
+    unsigned week = getleu16(buf, 8);
+    int leapSec = getsb(buf, 10);
     // timeErr in ns, unknown type (1 sigma, 50%, etc.)
-    timeErr = (double)getleu32(buf, 12);
+    double timeErr = (double)getleu32(buf, 12);
+
+    session->driver.ubx.iTOW = getleu32(buf, 4);   // refTow, ms
 
     // Valid leap seconds ?
     if (4 == (flag & 4)) {
@@ -1548,6 +1517,42 @@ static gps_mask_t msg_nav_time(struct gps_device_t *session,
              "ALLY: NAV-TIME: navSys %s flag:%s\n",
 	     val2str(navSys, vtime_navsys),
 	     flags2str(flag, vtime_flags, buf2, sizeof(buf2)));
+    return mask;
+}
+
+/**
+ * NAV-TIMEUTC
+ */
+static gps_mask_t msg_nav_timeutc(struct gps_device_t *session,
+                                  unsigned char *buf, size_t payload_len UNUSED)
+{
+    char buf2[80];
+    gps_mask_t mask = 0;
+    // char ts_buf[TIMESPEC_LEN];
+
+    // tAcc in ns, unknown type (1 sigma, 50%, etc.)
+    unsigned long long tAcc = getleu32(buf, 4);
+    long long nano = getles32(buf, 8);        // fractional TOW, ns
+    unsigned year = getleu16(buf, 12);
+    unsigned month = getub(buf, 14);
+    unsigned day = getub(buf, 15);
+    unsigned hour = getub(buf, 16);
+    unsigned min = getub(buf, 17);
+    unsigned sec = getub(buf, 18);
+    unsigned ValidFlag = getub(buf, 19);
+    session->driver.ubx.iTOW = getleu32(buf, 0);   // iTow, ms
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: NAV-TIMEUTC: iTOW %lld tAcc %llu nano %lld "
+             "time %u/%u/%u %u:%02u:%02u ValidFlag x%x\n",
+             (long long)session->driver.ubx.iTOW, tAcc, nano,
+             year, month, day, hour, min, sec, ValidFlag);
+             // timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "ALLY: NAV-TIMEUTC: ValidFlag:x%x(%s) utc %s\n",
+             ValidFlag,
+             flags2str(ValidFlag, vtimeutc_valid, buf2, sizeof(buf2)),
+             val2str(ValidFlag, vtimeutc_utc));
     return mask;
 }
 
@@ -1616,53 +1621,6 @@ static gps_mask_t msg_nav_velned(struct gps_device_t *session,
     return mask;
 }
 
-/**
- * NAV-TIMEUTC
- */
-static gps_mask_t msg_nav_timeutc(struct gps_device_t *session,
-                                  unsigned char *buf, size_t payload_len)
-{
-    char buf2[80];
-    unsigned year, month, day;
-    unsigned hour, min, sec;
-    unsigned ValidFlag;         // Validity Flags
-    unsigned long long tAcc;  // Time Accuracy, ns
-    long long nano;             // fractional TOW, ns
-    gps_mask_t mask = 0;
-    // char ts_buf[TIMESPEC_LEN];
-
-    if (20 > payload_len) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV-TIMEUTC: runt payload len %zd\n", payload_len);
-        return 0;
-    }
-
-    session->driver.ubx.iTOW = getleu32(buf, 0);   // iTow, ms
-    // tAcc in ns, unknown type (1 sigma, 50%, etc.)
-    tAcc = getleu32(buf, 4);
-    nano = getles32(buf, 8);
-    year = getleu16(buf, 12);
-    month = getub(buf, 14);
-    day = getub(buf, 15);
-    hour = getub(buf, 16);
-    min = getub(buf, 17);
-    sec = getub(buf, 18);
-    ValidFlag = getles32(buf, 19);
-
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "ALLY: NAV-TIMEUTC: iTOW %lld tAcc %llu nano %lld "
-             "time %u/%u/%u %u:%02u:%02u ValidFlag x%x\n",
-             (long long)session->driver.ubx.iTOW, tAcc, nano,
-             year, month, day, hour, min, sec, ValidFlag);
-             // timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
-    GPSD_LOG(LOG_IO, &session->context->errout,
-             "ALLY: NAV-TIMEUTC: ValidFlag:x%x(%s) utc %s\n",
-             ValidFlag,
-             flags2str(ValidFlag, vtimeutc_valid, buf2, sizeof(buf2)),
-             val2str(ValidFlag, vtimeutc_utc));
-    return mask;
-}
-
 /* msg_nav() -- handle CLASS-NAV
  */
 static gps_mask_t msg_nav(struct gps_device_t *session,
@@ -1703,9 +1661,19 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
         mask = msg_nav_svstate(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case NAV_TIME:
+        if (16 > payload_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "ALLY: NAV-TIME: runt payload len %zd\n", payload_len);
+            break;
+        }
         mask = msg_nav_time(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case NAV_TIMEUTC:
+        if (20 > payload_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "ALLY: NAV-TIMEUTC: runt payload len %zd\n", payload_len);
+            break;
+        }
         mask = msg_nav_timeutc(session, &buf[ALLY_PREFIX_LEN], payload_len);
         break;
     case NAV_VELECEF:
