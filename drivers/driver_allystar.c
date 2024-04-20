@@ -258,6 +258,31 @@ static struct flist_t vtimeutc_valid[] = {
     {0, 0, NULL},
 };
 
+// NAV-SVSTATE health
+static struct vlist_t vsvstate_hlth[] = {
+    {0, "Unk"},
+    {1, "Healthy"},
+    {2, "Unhealthy"},
+    {0, NULL},
+};
+
+// NAV-SVSTATE eph_cource, alm_source
+static struct vlist_t vsvstate_src[] = {
+    {0, "NA"},
+    {1, "HGNSS"},
+    {2, "Aided"},
+    {0, NULL},
+};
+
+// NAV-SVSTATE visibility
+static struct vlist_t vsvstate_viz[] = {
+    {0, "Unk"},
+    {1, "Below Hrz"},
+    {2, "Above Hrz"},
+    {2, "Above mask"},
+    {0, NULL},
+};
+
 /* send a ALLYSTAR message.
  * calculate checksums, etc.
  */
@@ -859,7 +884,8 @@ static gps_mask_t msg_nav_clock(struct gps_device_t *session,
 }
 
 /**
- * NAV-CLOCK2 Sat Clock Solution 
+ * NAV-CLOCK2 Sat Clock Solution
+ * Untested, unsupported on TAU1202, SW 3.018.a3f23db
  *
  */
 static gps_mask_t msg_nav_clock2(struct gps_device_t *session,
@@ -1055,6 +1081,7 @@ static gps_mask_t msg_nav_posllh(struct gps_device_t *session,
 /*
  * Positioning velocity error estimation
  * NAV-PVERR, Class 1, ID x26
+ * Untested, unsupported on TAU1202, SW 3.018.a3f23db
  * UBX has no equivalent
  * Most of the data in $GPGST, but missing the ellipsoid data.
  */
@@ -1102,6 +1129,7 @@ static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
 
 /**
  * NAV-PVT
+ * Untested, unsupported on TAU1202, SW 3.018.a3f23db
  *
  */
 static gps_mask_t msg_nav_pvt(struct gps_device_t *session,
@@ -1411,6 +1439,7 @@ static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
                                   unsigned char *buf, size_t payload_len)
 {
     unsigned long long numSV;
+    unsigned idx;
     // char buf2[80];
     // unsigned year, month, day;
     // unsigned hour, min, sec;
@@ -1427,12 +1456,31 @@ static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
     }
 
     session->driver.ubx.iTOW = getleu32(buf, 0);   // iTow, ms
-    numSV = getleu32(buf, 4);
+    numSV = getleu32(buf, 4);                      // 32 bits?!?!
     // 5 reserved
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "ALLY: NAV-SVSTATE: iTOW %lld numSV %llu\n",
-             (long long)session->driver.ubx.iTOW, numSV);
+             "ALLY: NAV-SVSTATE: iTOW %lld numSV %llu payload_len x%x\n",
+             (long long)session->driver.ubx.iTOW, numSV, payload_len);
+    for (idx = 8; idx < payload_len; idx += 4) {
+        unsigned svid = getleu16(buf, idx);         // NMEA PRN
+        unsigned eph_state = getub(buf, idx +2);    // ephemeris state
+        unsigned alm_state = getub(buf, idx + 3);   // ephemeris state
+
+        GPSD_LOG(LOG_INFO, &session->context->errout,
+                 "ALLY: NAV-SVSTATE: svid %4u use %d viz %u(%s) hlth %u(%s) "
+                 "use %d asrc %u(%s) esrc %u(%s)\n",
+                 svid, eph_state & 0x0f,
+                 (eph_state >> 4) & 0x03,
+                 val2str((eph_state >> 4) & 0x03, vsvstate_viz),
+                 (eph_state >> 6) & 0x03,
+                 val2str((eph_state >> 6) & 0x03, vsvstate_hlth),
+                 alm_state & 0x0f,
+                 (alm_state >> 4) & 0x03,
+                 val2str((eph_state >> 4) & 0x03, vsvstate_src),
+                 (alm_state >> 6) & 0x03,
+                 val2str((eph_state >> 6) & 0x03, vsvstate_src));
+    }
     return mask;
 }
 
@@ -1505,6 +1553,7 @@ static gps_mask_t msg_nav_time(struct gps_device_t *session,
 
 /**
  * NAV-VELECEF
+ * Untested, unsupported on TAU1202, SW 3.018.a3f23db
  */
 static gps_mask_t msg_nav_velecef(struct gps_device_t *session,
                                   unsigned char *buf, size_t payload_len)
@@ -1536,6 +1585,7 @@ static gps_mask_t msg_nav_velecef(struct gps_device_t *session,
 
 /**
  * NAV-VELNED
+ * Untested, unsupported on TAU1202, SW 3.018.a3f23db
  */
 static gps_mask_t msg_nav_velned(struct gps_device_t *session,
                                  unsigned char *buf, size_t payload_len)
@@ -1832,24 +1882,23 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
     unsigned char msg[4] = {0};
     unsigned u;
 
-    // TAU1201 seems OK with being blasted with CFG-MSG's.
+    // TAU1202 seems OK with being blasted with CFG-MSG's.
     static ally_msgs_t all_nav[] = {
         // prolly no need for NAV-AUTO and NAV-POLL
         NAV_AUTO,
         NAV_CLOCK,
-        NAV_CLOCK2,
+        // NAV_CLOCK2,           // unsuported TAU1202
         NAV_DOP,
         NAV_POSECEF,
         NAV_POSLLH,
-        NAV_PVERR,
-        // NAV-PVT gets ACK-NAK with SW 3.018.a3f23db.
-        NAV_PVT,
+        // NAV_PVERR,            // unsuported TAU1202
+        // NAV_PVT,              // unsuported TAU1202
         NAV_SVINFO,
         NAV_SVSTATE,
         NAV_TIME,
         NAV_TIMEUTC,
-        NAV_VELECEF,
-        NAV_VELNED,
+        // NAV_VELECEF,          // unsuported TAU1202
+        // NAV_VELNED,           // unsuported TAU1202
     };
 
     // turn on all binary NAV- messages we know of
