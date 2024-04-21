@@ -548,81 +548,69 @@ static gps_mask_t msg_cfg(struct gps_device_t *session,
 {
     unsigned msgid = getbes16(buf, 2);
     gps_mask_t mask = 0;
+    size_t needed_len;
+    const char *msg_name;
+    gps_mask_t (* p_decode)(struct gps_device_t *, unsigned char *, size_t);
 
     switch (msgid) {
     case CFG_ANTIJAM:
-        if (3 > payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: CFG-ANTIJAM: runt payload len %zd\n", payload_len);
-            break;
-        }
-        mask = msg_cfg_antijam(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        needed_len = 3;
+        msg_name = "CFG-ANTIJAM";
+        p_decode = msg_cfg_antijam;
         break;
     case CFG_CARRSMOOTH:
-        if (1 > payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: CFG-CARRSMOOTH: runt payload len %zd\n",
-                     payload_len);
-            break;
-        }
-        mask = msg_cfg_carrsmooth(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        msg_name = "CFG-CARRSMOOTH";
+        needed_len = 1;
+        p_decode = msg_cfg_carrsmooth;
         break;
     case CFG_GEOFENCE:
-        if (8 > payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: CFG-GEOFENCE: runt payload len %zd\n", payload_len);
-            break;
-        }
-        mask = msg_cfg_geofence(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        msg_name = "CFG-GEOFENCE";
+        needed_len = 8;
+        p_decode = msg_cfg_geofence;
         break;
     case CFG_NAVSAT:
-        if (4 > payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: CFG-NAVSAT: runt payload len %zd\n", payload_len);
-            break;
-        }
-        mask = msg_cfg_navsat(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        needed_len = 4;
+        msg_name = "CFG-NAVSAT";
+        p_decode = msg_cfg_navsat;
         break;
     case CFG_NMEAVER:
-        if (1 > payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: CFG-NMEAVER: runt payload len %zd\n",
-                     payload_len);
-            break;
-        }
-        mask = msg_cfg_nmeaver(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        msg_name = "CFG-NMEAVER";
+        needed_len = 1;
+        p_decode = msg_cfg_nmeaver;
         break;
     case CFG_PPS:
-        if (5 > payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: CFG-PPS: runt payload len %zd\n",
-                     payload_len);
-            break;
-        }
-        mask = msg_cfg_pps(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        msg_name = "CFG-PPS";
+        needed_len = 5;
+        p_decode = msg_cfg_pps;
         break;
     case CFG_PRT:
-        if (2 > payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: CFG-PRT: runt payload len %zd\n", payload_len);
-            break;
-        }
-        mask = msg_cfg_prt(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        msg_name = "CFG-PRT";
+        needed_len = 2;
+        p_decode = msg_cfg_prt;
         break;
     case CFG_SBAS:
-        if (0 == payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: CFG-SBAS: no SBAS enabled\n");
-            break;
-        }
-        mask = msg_cfg_sbas(session, &buf[ALLY_PREFIX_LEN], payload_len);
+        msg_name = "CFG-SBAS";
+        needed_len = 0;
+        p_decode = msg_cfg_sbas;
         break;
     default:
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: CFG- x%02x payload_len %zd\n",
-                 msgid & 0xff, payload_len);
+        msg_name = "CFG-x";
+        needed_len = 0;
+        p_decode = NULL;
         break;
     }
+    if (needed_len > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: %s: runt payload len %zd\n", msg_name, payload_len);
+        return 0;
+    }
+    if (NULL == p_decode) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: Unknown CFG-%02x payload_len %zd\n",
+                 msgid & 0xff, payload_len);
+        return 0;
+    }
+    mask = p_decode(session, &buf[ALLY_PREFIX_LEN], payload_len);
     return mask;
 }
 
@@ -1595,7 +1583,7 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     }
     if (needed_len > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: NAV-%s: runt payload len %zd need %zd\n",
+                 "ALLY: %s: runt payload len %zd need %zd\n",
                  msg_name, payload_len, needed_len);
         return 0;
     }
