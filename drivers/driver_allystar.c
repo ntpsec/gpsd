@@ -36,7 +36,6 @@ typedef enum {
     ALLY_AID = 0x0b,     // AGPS (Deprecated)
     ALLY_NMEA = 0xf0,    // NMEA, for CFG-MSG
     ALLY_RTCM = 0xf8,    // RTCM, for CFG-MSG
-
 } ally_classes_t;
 
 #define MSGID(cls_, id_) (((cls_)<<8)|(id_))
@@ -118,6 +117,18 @@ typedef enum {
 
 // 2 bytes leader, 2 bytes ID, 2 bytes payload length
 #define ALLY_PREFIX_LEN 6
+
+static struct vlist_t vclass[] = {
+    {0x01, "NAV"},
+    {0x02, "RXM"},
+    {0x05, "ACK"},
+    {0x06, "CFG"},
+    {0x0a, "MON"},
+    {0x0b, "AID"},
+    {0xf0, "NMEA"},
+    {0xf8, "RTCM"},
+    {0, NULL},
+};
 
 // ACK-* ids
 static struct vlist_t vack_ids[] = {
@@ -527,9 +538,15 @@ static gps_mask_t msg_cfg_prt(struct gps_device_t *session,
  *
  */
 static gps_mask_t msg_cfg_sbas(struct gps_device_t *session,
-                               unsigned char *buf, size_t payload_len UNUSED)
+                               unsigned char *buf, size_t payload_len)
 {
     unsigned idx;
+
+    if (0 == payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: CFG-SBAS: no SBAS enabled\n");
+        return 0;
+    }
 
     for (idx = 0; idx < payload_len; idx += 2) {
         unsigned PRN = getub(buf, idx);
@@ -539,79 +556,6 @@ static gps_mask_t msg_cfg_sbas(struct gps_device_t *session,
                  PRN, enabled);
     }
     return 0;
-}
-
-/* msg_cfg() -- handle CLASS-CFG
- */
-static gps_mask_t msg_cfg(struct gps_device_t *session,
-                          unsigned char *buf, size_t payload_len)
-{
-    unsigned msgid = getbes16(buf, 2);
-    gps_mask_t mask = 0;
-    size_t needed_len;
-    const char *msg_name;
-    gps_mask_t (* p_decode)(struct gps_device_t *, unsigned char *, size_t);
-
-    switch (msgid) {
-    case CFG_ANTIJAM:
-        needed_len = 3;
-        msg_name = "CFG-ANTIJAM";
-        p_decode = msg_cfg_antijam;
-        break;
-    case CFG_CARRSMOOTH:
-        msg_name = "CFG-CARRSMOOTH";
-        needed_len = 1;
-        p_decode = msg_cfg_carrsmooth;
-        break;
-    case CFG_GEOFENCE:
-        msg_name = "CFG-GEOFENCE";
-        needed_len = 8;
-        p_decode = msg_cfg_geofence;
-        break;
-    case CFG_NAVSAT:
-        needed_len = 4;
-        msg_name = "CFG-NAVSAT";
-        p_decode = msg_cfg_navsat;
-        break;
-    case CFG_NMEAVER:
-        msg_name = "CFG-NMEAVER";
-        needed_len = 1;
-        p_decode = msg_cfg_nmeaver;
-        break;
-    case CFG_PPS:
-        msg_name = "CFG-PPS";
-        needed_len = 5;
-        p_decode = msg_cfg_pps;
-        break;
-    case CFG_PRT:
-        msg_name = "CFG-PRT";
-        needed_len = 2;
-        p_decode = msg_cfg_prt;
-        break;
-    case CFG_SBAS:
-        msg_name = "CFG-SBAS";
-        needed_len = 0;
-        p_decode = msg_cfg_sbas;
-        break;
-    default:
-        msg_name = "CFG-x";
-        needed_len = 0;
-        p_decode = NULL;
-        break;
-    }
-    if (needed_len > payload_len) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: %s: runt payload len %zd\n", msg_name, payload_len);
-        return 0;
-    }
-    if (NULL == p_decode) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: Unknown CFG-%02x payload_len %zd\n",
-                 msgid & 0xff, payload_len);
-        return 0;
-    }
-    mask = p_decode(session, &buf[ALLY_PREFIX_LEN], payload_len);
-    return mask;
 }
 
 // MON-*
@@ -1467,7 +1411,7 @@ static gps_mask_t msg_nav_velned(struct gps_device_t *session,
     return mask;
 }
 
-/* msg_nav() -- handle CLASS-NAV and CLASS-MON
+/* msg_nav() -- handle CLASS-CFG, CLASS-NAV and CLASS-MON
  */
 static gps_mask_t msg_nav(struct gps_device_t *session,
                           unsigned char *buf, size_t payload_len)
@@ -1479,6 +1423,46 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     gps_mask_t (* p_decode)(struct gps_device_t *, unsigned char *, size_t);
 
     switch (msgid) {
+    case CFG_ANTIJAM:
+        needed_len = 3;
+        msg_name = "CFG-ANTIJAM";
+        p_decode = msg_cfg_antijam;
+        break;
+    case CFG_CARRSMOOTH:
+        msg_name = "CFG-CARRSMOOTH";
+        needed_len = 1;
+        p_decode = msg_cfg_carrsmooth;
+        break;
+    case CFG_GEOFENCE:
+        msg_name = "CFG-GEOFENCE";
+        needed_len = 8;
+        p_decode = msg_cfg_geofence;
+        break;
+    case CFG_NAVSAT:
+        needed_len = 4;
+        msg_name = "CFG-NAVSAT";
+        p_decode = msg_cfg_navsat;
+        break;
+    case CFG_NMEAVER:
+        msg_name = "CFG-NMEAVER";
+        needed_len = 1;
+        p_decode = msg_cfg_nmeaver;
+        break;
+    case CFG_PPS:
+        msg_name = "CFG-PPS";
+        needed_len = 5;
+        p_decode = msg_cfg_pps;
+        break;
+    case CFG_PRT:
+        msg_name = "CFG-PRT";
+        needed_len = 2;
+        p_decode = msg_cfg_prt;
+        break;
+    case CFG_SBAS:
+        msg_name = "CFG-SBAS";
+        needed_len = 0;
+        p_decode = msg_cfg_sbas;
+        break;
     case MON_VER:
         msg_name ="MON-VER";
         needed_len = 32;
@@ -1568,7 +1552,9 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     }
     if (NULL == p_decode) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: Unknown NAV-%02x payload_len %zd\n",
+                 "ALLY: Unknown %02x)%s)-%02x payload_len %zd\n",
+                 (msgid >> 8) & 0xff,
+                 val2str((msgid >> 8) & 0xff, vclass),
                  msgid & 0xff, payload_len);
         return 0;
     }
@@ -1629,8 +1615,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
                  msg_id, len, payload_len);
         break;
     case ALLY_CFG:
-        mask = msg_cfg(session, buf, payload_len);
-        break;
+        FALLTHROUGH
     case ALLY_MON:
         FALLTHROUGH
     case ALLY_NAV:
