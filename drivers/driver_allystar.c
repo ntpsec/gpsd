@@ -642,32 +642,6 @@ static gps_mask_t msg_mon_ver(struct gps_device_t *session,
     return 0;
 }
 
-/* msg_mon() -- handle CLASS-MON
- */
-static gps_mask_t msg_mon(struct gps_device_t *session,
-                          unsigned char *buf, size_t payload_len)
-{
-    unsigned msgid = getbes16(buf, 2);
-    gps_mask_t mask = 0;
-
-    switch (msgid) {
-    case MON_VER:
-        if (32 > payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: MON-VER: runt payload len %zd\n", payload_len);
-           break;
-        }
-        mask = msg_mon_ver(session, &buf[ALLY_PREFIX_LEN], payload_len);
-        break;
-    default:
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: MON- %02x payload_len %zd\n",
-                 msgid & 0xff, payload_len);
-        break;
-    }
-    return mask;
-}
-
 // NAV-*
 
 /**
@@ -1493,7 +1467,7 @@ static gps_mask_t msg_nav_velned(struct gps_device_t *session,
     return mask;
 }
 
-/* msg_nav() -- handle CLASS-NAV
+/* msg_nav() -- handle CLASS-NAV and CLASS-MON
  */
 static gps_mask_t msg_nav(struct gps_device_t *session,
                           unsigned char *buf, size_t payload_len)
@@ -1505,6 +1479,11 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     gps_mask_t (* p_decode)(struct gps_device_t *, unsigned char *, size_t);
 
     switch (msgid) {
+    case MON_VER:
+        msg_name ="MON-VER";
+        needed_len = 32;
+        p_decode = msg_mon_ver;
+        break;
     case NAV_AUTO:
         msg_name ="NAV-AUTO";
         needed_len = 32;
@@ -1653,8 +1632,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
         mask = msg_cfg(session, buf, payload_len);
         break;
     case ALLY_MON:
-        mask = msg_mon(session, buf, payload_len);
-        break;
+        FALLTHROUGH
     case ALLY_NAV:
         mask = msg_nav(session, buf, payload_len);
         break;
