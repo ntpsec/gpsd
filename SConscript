@@ -629,9 +629,11 @@ for i in ["ARFLAGS",
         env.MergeFlags({t: Split(os.getenv(i))})
 
 
-# Keep scan-build options in the environment
+# Keep scan-build and RPM-specific build options in the environment.
+# They may be referenced by a linker script specified in LDFLAGS
+# (e.g. RPM_PACKAGE_NAME).  The build would fail without them.
 for key, value in os.environ.items():
-    if key.startswith('CCC_'):
+    if key.startswith('CCC_') or key.startswith('RPM_'):
         env.Append(ENV={key: value})
 
 # Placeholder so we can kluge together something like VPATH builds.
