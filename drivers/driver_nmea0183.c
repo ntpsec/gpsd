@@ -779,6 +779,24 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
         // BeiDou
         *ubx_gnssid = 3;
         *ubx_svid = nmea_satnum - 400;
+    } else if (499 >= nmea_satnum) {
+        // 438 to 500??
+        *ubx_gnssid = 0;
+        *ubx_svid = 0;
+        nmea2_prn = 0;
+    } else if (518 >= nmea_satnum) {
+        // NavIC (IRNSS) IDs 1..18 to 510 - 509, not NMEA
+        *ubx_gnssid = 7;
+        *ubx_svid = nmea_satnum - 500;
+    } else if (900 >= nmea_satnum) {
+        // 438 to 900??
+        *ubx_gnssid = 0;
+        *ubx_svid = 0;
+        nmea2_prn = 0;
+    } else if (918 >= nmea_satnum) {
+        // 900 to 918 NavIC (IRNSS), per ALLYSTAR (NMEA?)
+        *ubx_gnssid = 7;
+        *ubx_svid = nmea_satnum - 900;
     } else {
         // greater than 437 Huh?
         *ubx_gnssid = 0;
