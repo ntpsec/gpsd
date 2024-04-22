@@ -1565,7 +1565,7 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
 static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
                             size_t len)
 {
-    unsigned payload_len;
+    size_t payload_len;
     unsigned  msg_class;
     unsigned  msg_id;
     unsigned msgid = getbes16(buf, 2);
@@ -1591,7 +1591,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
 
     if ((len - 8) != payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: len (%zu) does not match payload (%u) + 8\n",
+                 "ALLY: len (%zu) does not match payload (%zu) + 8\n",
                  len, payload_len);
         return 0;
     }
@@ -1602,7 +1602,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
     case ALLY_ACK:
         if (2 > payload_len) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: %s-: runt payload len %zd\n",
+                     "ALLY: %s-: runt payload len %zu\n",
                      val2str(msgid, vack_ids), payload_len);
             break;
         }
@@ -1611,7 +1611,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
     case ALLY_AID:
         // Deprecated
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: AID- %02x length %zd/%u)\n",
+                 "ALLY: AID- %02x length %zu/%zu)\n",
                  msg_id, len, payload_len);
         break;
     case ALLY_CFG:
@@ -1623,12 +1623,12 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case ALLY_RXM:
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: RXM- %02x length %zd/%u)\n",
+                 "ALLY: RXM- %02x length %zu/%zu)\n",
                  msg_id, len, payload_len);
         break;
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: unknown packet id x%02x %02x length %zd/%u)\n",
+                 "ALLY: unknown packet id x%02x %02x length %zu/%zu)\n",
                  msg_class, msg_id, len, payload_len);
         break;
     }
