@@ -368,7 +368,7 @@ static unsigned ally_svid_to_ids(struct gps_device_t *session,
     *ubx_sigid = 0;
 
     if (1 <= svid &&
-        32 >- svid) {
+        32 >= svid) {
         // GPS
         *ubx_gnssid = 0;
         *ubx_sigid = 0;
