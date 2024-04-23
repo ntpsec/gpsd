@@ -131,13 +131,6 @@ static struct vlist_t vclass[] = {
     {0, NULL},
 };
 
-// ACK-* ids
-static struct vlist_t vack_ids[] = {
-    {ACK_ACK, "ACK-ACK"},
-    {ACK_NAK, "ACK-NAK"},
-    {0, NULL},
-};
-
 //CFG-ANTIJAM statsys_mask
 static struct flist_t fsatsys[] = {
     {0x02, 0x02, "GPS"},
@@ -484,16 +477,25 @@ static unsigned ally_svid_to_ids(struct gps_device_t *session,
     return ubx_svid;
 }
 
-// ACK-ACK, ACK-NAK
-static gps_mask_t msg_ack(struct gps_device_t *session,
-                          unsigned char *buf, size_t payload_len UNUSED)
-{
-    unsigned msgid = getbes16(buf, 2);
+// ACK-*
 
+// ACK-ACK
+static gps_mask_t msg_ack_ack(struct gps_device_t *session,
+                              unsigned char *buf, size_t payload_len UNUSED)
+{
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "ALLY: %s: class: %02x, id: %02x\n",
-             val2str(msgid, vack_ids),
-             buf[2], buf[3]);
+             "ALLY: ACK-ACK: class: %02x(%s), id: %02x\n",
+              buf[0], val2str(buf[0], vclass), buf[1]);
+    return 0;
+}
+
+// ACK-NAK
+static gps_mask_t msg_ack_nak(struct gps_device_t *session,
+                              unsigned char *buf, size_t payload_len UNUSED)
+{
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "ALLY: ACK-NAK: class: %02x(%s), id: %02x\n",
+              buf[0], val2str(buf[0], vclass), buf[1]);
     return 0;
 }
 
@@ -1561,10 +1563,10 @@ static gps_mask_t msg_nav_velned(struct gps_device_t *session,
  * RXM-x57 undocumented.
  */
 
-/* msg_nav() -- handle CLASS-CFG, CLASS-NAV and CLASS-MON
+/* msg_decode() -- dispatch all message types to proper decoder
  */
-static gps_mask_t msg_nav(struct gps_device_t *session,
-                          unsigned char *buf, size_t payload_len)
+static gps_mask_t msg_decode(struct gps_device_t *session,
+                            unsigned char *buf, size_t payload_len)
 {
     unsigned msgid = getbes16(buf, 2);
     gps_mask_t mask = 0;
@@ -1573,6 +1575,16 @@ static gps_mask_t msg_nav(struct gps_device_t *session,
     gps_mask_t (* p_decode)(struct gps_device_t *, unsigned char *, size_t);
 
     switch (msgid) {
+    case ACK_NAK:
+        needed_len = 2;
+        msg_name = "ACK-NAK";
+        p_decode = msg_ack_ack;
+        break;
+    case ACK_ACK:
+        needed_len = 2;
+        msg_name = "ACK-ACK";
+        p_decode = msg_ack_nak;
+        break;
     case CFG_ANTIJAM:
         needed_len = 3;
         msg_name = "CFG-ANTIJAM";
@@ -1716,8 +1728,6 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
                             size_t len)
 {
     size_t payload_len;
-    unsigned  msg_class;
-    unsigned msgid = getbes16(buf, 2);
     gps_mask_t mask = 0;
 
     /* the packet at least 8 bytes / Min packet is 8 ==  header (2),
@@ -1733,8 +1743,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
     // for now, use driver.ubx.
     session->driver.ubx.iTOW = -1;        // set by decoder
 
-    // extract message id and length
-    msg_class = getub(buf, 2);
+    // extract payload length, check against actual length
     payload_len = getles16(buf, 4);
 
     if ((len - 8) != payload_len) {
@@ -1744,32 +1753,7 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
         return 0;
     }
 
-    /* FIXME: make each case just call one function.
-     / then this switch can be turned into a table. */
-    switch (msg_class) {
-    case ALLY_ACK:
-        if (2 > payload_len) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "ALLY: %s-: runt payload len %zu\n",
-                     val2str(msgid, vack_ids), payload_len);
-            break;
-        }
-        mask = msg_ack(session, buf, payload_len);
-        break;
-    case ALLY_AID:
-        FALLTHROUGH
-    case ALLY_CFG:
-        FALLTHROUGH
-    case ALLY_MON:
-        FALLTHROUGH
-    case ALLY_NAV:
-        FALLTHROUGH
-    case ALLY_RXM:
-        FALLTHROUGH
-    default:
-        mask = msg_nav(session, buf, payload_len);
-        break;
-    }
+    mask = msg_decode(session, buf, payload_len);
 
     /* handle the init queue.  Some parts get cranky when they
      * get too many configuration changes at once.
