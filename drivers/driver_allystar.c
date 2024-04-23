@@ -391,11 +391,11 @@ static unsigned ally_svid_to_ids(struct gps_device_t *session,
         *ubx_sigid = 0;
         ubx_svid = svid - 192;
     } else if (201 <= svid &&
-        236 >= svid) {
-        // BDS N1
+        263 >= svid) {
+        // BDS B1
         *ubx_gnssid = 3;
         *ubx_sigid = 0;
-        ubx_svid = svid;
+        ubx_svid = svid - 200;
     } else if (301 <= svid &&
         336 >= svid) {
         // Galileo E1 C
@@ -1303,24 +1303,27 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
         int el = getsb(buf, off + 13);
         int az = getles16(buf, off + 14);
         long long prRes = getles32(buf, off + 16);  // pseudorange residue, cm
+        unsigned ubx_gnssid, ubx_sigid;
+
+        unsigned ubx_svid = ally_svid_to_ids(session, ally_svid, &ubx_gnssid,
+                                             &ubx_sigid);
+
+        if (1 > ubx_svid) {
+           // skip bad PRN
+           GPSD_LOG(LOG_WARN, &session->context->errout,
+                    "ALLY: NAV-SVINFO bad svid %u\n", ally_svid);
+           continue;
+        }
+        nmea_PRN = ally_svid;
         // pr Rate, m/s
         session->gpsdata.skyview[st].prRate = getlef32((const char*)buf,
                                                         off + 20);
         // pseudorange, m
         session->gpsdata.skyview[st].pr = getled64((const char*)buf, off + 24);
 
-        nmea_PRN = ally_svid;
-        // nmea_PRN = ubx_to_prn(ubx_PRN,
-                              // &session->gpsdata.skyview[st].gnssid,
-                              // &session->gpsdata.skyview[st].svid);
-
-        // if (1 > nmea_PRN) {
-        //     // skip bad PRN
-        //     GPSD_LOG(LOG_PROG, &session->context->errout,
-        //              "ALLY: NAV-SVINFO bad NMEA PRN %d\n", nmea_PRN);
-        //     continue;
-        // }
         session->gpsdata.skyview[st].PRN = nmea_PRN;
+        session->gpsdata.skyview[st].gnssid = ubx_gnssid;
+        session->gpsdata.skyview[st].svid = ubx_svid;
 
         session->gpsdata.skyview[st].ss = (double)cno;
         if (90 >= abs(el)) {
@@ -1334,12 +1337,13 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
         // No health data, no used data.
         // flags and quality undocumented.
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "ALLY: NAV-SVINFO ally_svid %u  gnssid %d, svid %d "
-                 "nmea_PRN %d flags x%x az %.0f el %.0f cno %.0f prRes %.2f "
+                 "ALLY: NAV-SVINFO ally_svid %u  gnssid %d(%s) svid %d "
+                 "sigid %d flags x%x az %.0f el %.0f cno %.0f prRes %.2f "
                  "quality x%x, prRate %f pr %.4f\n",
                  ally_svid,
                  session->gpsdata.skyview[st].gnssid,
-                 session->gpsdata.skyview[st].svid, nmea_PRN, flags,
+                 val2str(session->gpsdata.skyview[st].gnssid, vgnssId),
+                 session->gpsdata.skyview[st].svid, ubx_sigid, flags,
                  session->gpsdata.skyview[st].azimuth,
                  session->gpsdata.skyview[st].elevation,
                  session->gpsdata.skyview[st].ss,
@@ -1387,16 +1391,13 @@ static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
         unsigned ubx_svid = ally_svid_to_ids(session, svid, &ubx_gnssid,
                                              &ubx_sigid);
 
-        GPSD_LOG(LOG_SHOUT, &session->context->errout,
-                 "ALLY: NAV-SVSTATE: svid %4u ubx_gnssid %u ubx_svid %u "
-                 "ubx_sigid %u\n",
-                 svid, ubx_gnssid, ubx_svid, ubx_sigid);
-
-        GPSD_LOG(LOG_INFO, &session->context->errout,
-                 "ALLY: NAV-SVSTATE: svid %4u "
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "ALLY: NAV-SVSTATE: svid %4u gnssid %u(%s) usvid %u sigid %u "
                  "eph x%x(use %d viz %u(%s) hlth %u(%s) "
                  "alm x%x(use %d asrc %u(%s) esrc %u(%s))\n",
-                 svid, eph_state, (eph_state >> 4) & 0x0f,
+                 svid, ubx_gnssid, val2str(ubx_gnssid, vgnssId),
+                 ubx_svid, ubx_sigid,
+                 eph_state, (eph_state >> 4) & 0x0f,
                  (eph_state >> 2) & 0x03,
                  val2str((eph_state >> 2) & 0x03, vsvstate_viz),
                  eph_state & 0x03,
