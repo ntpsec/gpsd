@@ -3472,6 +3472,53 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
 }
 
 /**
+ * Survey-in data - UBX-NAV-SVIN
+ * Time Sync products only
+ */
+static gps_mask_t ubx_msg_nav_svin(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len UNUSED)
+{
+    gps_mask_t mask = ONLINE_SET;
+    unsigned version = getub(buf, 0);
+    // 3 reserved bytes
+    unsigned long iTOW = getleu32(buf, 4);
+    unsigned long dur = getleu32(buf, 0);
+    long long meanX = getles32(buf, 12);             // cm
+    long long meanY = getles32(buf, 16);             // cm
+    long long meanZ = getles32(buf, 20);             // cm
+    int meanXHP = getsb(buf, 24);                    // 0.1 mm
+    int meanYHP = getsb(buf, 25);                    // 0.1 mm
+    int meanZHP = getsb(buf, 26);                    // 0.1 mm
+    // 1 reserved byte
+    unsigned long meanAcc = getleu32(buf, 28);  // 0.1 mm
+    unsigned long obs = getleu32(buf, 32);
+    unsigned valid = getub(buf, 36);
+    unsigned active = getub(buf, 37);
+    // 2 reserved
+
+    // Only version 0 is defined up to ub-blox 9
+    if (0 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: NAV-SVIN: unknown version $u %u", version);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = iTOW;
+    meanX = (meanX * 10) + meanXHP;
+    meanY = (meanY * 10) + meanYHP;
+    meanZ = (meanZ * 10) + meanZHP;
+
+    // casts for 32 bit compatibility
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX: NAV-SVIN: iTOW %llu dur=%lu meanX=%lld meanY=%lld "
+             "meanZ=%lld meanAcc=%lu "
+             "obs=%lu valid=%u active=%u\n",
+             (long long)iTOW, dur, meanX, meanY, meanZ,
+             meanAcc, obs, valid, active);
+    return mask;
+}
+
+/**
  * GPS Satellite Info -- deprecated - UBX-NAV-SVINFO
  * Present in:
  *    protver < 27
@@ -4311,40 +4358,24 @@ static gps_mask_t ubx_msg_sec_uniqid(struct gps_device_t *session,
  * Time Sync products only
  */
 static gps_mask_t ubx_msg_tim_svin(struct gps_device_t *session,
-                                   unsigned char *buf, size_t data_len)
+                                   unsigned char *buf, size_t data_len UNUSED)
 {
     gps_mask_t mask = ONLINE_SET;
-    uint32_t dur;
-    int32_t meanX;
-    int32_t meanY;
-    int32_t meanZ;
-    uint32_t meanV;
-    uint32_t obs;
-    uint8_t valid;
-    uint8_t active;
-
-    if (28 > data_len) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: TIM-SVIN: runt payload len %zd", data_len);
-        return 0;
-    }
-
-    dur = getleu32(buf, 0);
-    meanX = getles32(buf, 4);
-    meanY = getles32(buf, 8);
-    meanZ = getles32(buf, 12);
-    meanV = getleu32(buf, 16);
-    obs = getleu32(buf, 20);
-    valid = getub(buf, 24);
-    active = getub(buf, 25);
+    unsigned long dur = getleu32(buf, 0);
+    long meanX = getles32(buf, 4);
+    long meanY = getles32(buf, 8);
+    long meanZ = getles32(buf, 12);
+    unsigned long meanV = getleu32(buf, 16);
+    unsigned long obs = getleu32(buf, 20);
+    unsigned valid = getub(buf, 24);
+    unsigned active = getub(buf, 25);
     // two reserved bytes
 
     // casts for 32 bit compatibility
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX: TIM-SVIN: dur=%lu meanX=%ld meanY=%ld meanZ=%ld meanV=%lu "
              "obs=%lu valid=%u active=%u\n",
-             (unsigned long)dur, (long)meanX, (long)meanY, (long)meanZ,
-             (long)meanV, (unsigned long)obs, valid, active);
+             dur, meanX, meanY, meanZ, meanV, obs, valid, active);
     return mask;
 }
 
@@ -4683,7 +4714,12 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_nav_status(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SVIN:
-        mask = ubx_msg_tim_svin(session, &buf[UBX_PREFIX_LEN], data_len);
+        if (40 > data_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "UBX: NAV-SVIN: runt payload len %zd", data_len);
+            break;
+        }
+        mask = ubx_msg_nav_svin(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SVINFO:
         mask = ubx_msg_nav_svinfo(session, &buf[UBX_PREFIX_LEN], data_len);
@@ -4791,7 +4827,12 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-SMEAS\n");
         break;
     case UBX_TIM_SVIN:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-SVIN\n");
+        if (28 > data_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "UBX: TIM-SVIN: runt payload len %zd", data_len);
+            break;
+        }
+        mask = ubx_msg_tim_svin(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_TIM_TM:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: TIM-TM\n");
