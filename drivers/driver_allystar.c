@@ -1578,12 +1578,12 @@ static gps_mask_t msg_decode(struct gps_device_t *session,
     case ACK_NAK:
         needed_len = 2;
         msg_name = "ACK-NAK";
-        p_decode = msg_ack_ack;
+        p_decode = msg_ack_nak;
         break;
     case ACK_ACK:
         needed_len = 2;
         msg_name = "ACK-ACK";
-        p_decode = msg_ack_nak;
+        p_decode = msg_ack_ack;
         break;
     case CFG_ANTIJAM:
         needed_len = 3;
