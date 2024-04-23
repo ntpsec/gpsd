@@ -113,6 +113,7 @@ typedef enum {
     RXM_DUMPRAW     = MSGID(ALLY_RXM, 0x01),   // -DUM and -DUMPRAW the same??
     RXM_DUM         = MSGID(ALLY_RXM, 0x01),
     RXM_GALSAR      = MSGID(ALLY_RXM, 0x02),
+    RXM_UNK         = MSGID(ALLY_RXM, 0x57),
 } ally_msgs_t;
 
 // 2 bytes leader, 2 bytes ID, 2 bytes payload length
@@ -323,7 +324,7 @@ bool ally_write(struct gps_device_t * session,
     session->msgbuf[5] = (payload_len >> 8) & 0xff;
 
     if ((sizeof(session->msgbuf) - 8) <= payload_len) {
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
+        GPSD_LOG(LOG_WARN, &session->context->errout,
                  "=> GPS: ALLYL class: %02x, id: %02x, len: %zd TOO LONG!\n",
                  msg_class, msg_id, payload_len);
     }
@@ -349,6 +350,138 @@ bool ally_write(struct gps_device_t * session,
     count = gpsd_write(session, session->msgbuf, session->msgbuflen);
     ok = (count == (ssize_t) session->msgbuflen);
     return ok;
+}
+
+/* ALLYSTAR "svid" to ubx_gnssid, ubx_svid, ubs_sigid
+ * Sort of documented in the $GPGSV section.
+ * But the ranges overlap, so many PRNs are ambiguos...
+ *
+ * Returns ubx_svid
+           0 on error
+ */
+static unsigned ally_svid_to_ids(struct gps_device_t *session,
+                                 unsigned svid, unsigned *ubx_gnssid,
+                                 unsigned *ubx_sigid)
+{
+    unsigned ubx_svid = 0;
+    *ubx_gnssid = 0;
+    *ubx_sigid = 0;
+
+    if (1 <= svid &&
+        32 >- svid) {
+        // GPS
+        *ubx_gnssid = 0;
+        *ubx_sigid = 0;
+        ubx_svid = svid;
+    } else if (40 <= svid &&
+        54 >= svid) {
+        // SBAS 40-54, not 40-58??
+        *ubx_gnssid = 1;
+        *ubx_sigid = 0;
+        ubx_svid = svid + 80;
+    } else if (65 <= svid &&
+        96 >= svid) {
+        // GLONASS G1 OF
+        *ubx_gnssid = 6;
+        *ubx_sigid = 0;
+        ubx_svid = svid;
+    } else if (127 <= svid &&
+        141 >= svid) {
+        // SBAS, 127-151, not 120-158?
+        *ubx_gnssid = 1;
+        *ubx_sigid = 0;
+        ubx_svid = svid;
+    } else if (193 <= svid &&
+        199 >= svid) {
+        // QZSS L1 C/A
+        *ubx_gnssid = 5;
+        *ubx_sigid = 0;
+        ubx_svid = svid - 192;
+    } else if (201 <= svid &&
+        236 >= svid) {
+        // BDS N1
+        *ubx_gnssid = 3;
+        *ubx_sigid = 0;
+        ubx_svid = svid;
+    } else if (301 <= svid &&
+        336 >= svid) {
+        // Galileo E1 C
+        *ubx_gnssid = 2;
+        *ubx_sigid = 0;
+        ubx_svid = svid - 300;
+    } else if (401 <= svid &&
+        432 >= svid) {
+        // GPS L1C NMEA sig 9
+        *ubx_gnssid = 0;
+        *ubx_sigid = 0;    // wrong...
+        ubx_svid = svid - 400;
+    } else if (501 <= svid &&
+        532 >= svid) {
+        // GPS L2CM
+        *ubx_gnssid = 2;
+        *ubx_sigid = 4;
+        ubx_svid = svid - 500;
+    } else if (565 <= svid &&
+        596 >= svid) {
+        // GLONASS G2
+        *ubx_gnssid = 6;
+        *ubx_sigid = 2;
+        ubx_svid = svid - 564;
+    } else if (601 <= svid &&
+        663 >= svid) {
+        // BDS B1C, overlaps GPS L6, 651-682!
+        *ubx_gnssid = 3;
+        *ubx_sigid = 5;      // 5 or 6??
+        ubx_svid = svid - 600;
+    } else if (651 <= svid &&
+        682 >= svid) {
+        // GPS L5, overlaps BDS B1C 601-663
+        *ubx_gnssid = 0;
+        *ubx_sigid = 0;      // wrong....
+        ubx_svid = svid - 650;
+    } else if (701 <= svid &&
+        763 >= svid) {
+        // BDS B1I
+        *ubx_gnssid = 3;
+        *ubx_sigid = 1;      // could be 0 or 1?
+        ubx_svid = svid - 700;
+    } else if (801 <= svid &&
+        863 >= svid) {
+        // BDS B3I, overlaps BDS B2A, 851-914
+        *ubx_gnssid = 3;
+        *ubx_sigid = 2;      // wrong....
+        ubx_svid = svid - 850;
+    } else if (843 <= svid &&
+        849 >= svid) {
+        // QZSS, L5, overlaps BDS B3I, 801-863
+        *ubx_gnssid = 5;
+        *ubx_sigid = 9;      // ??
+        ubx_svid = svid - 842;
+    } else if (851 <= svid &&
+        913 >= svid) {
+        // BDS B2A - overlaps BDS B3I 801-863, IRNSS L5 901-918
+        *ubx_gnssid = 3;
+        *ubx_sigid = 7;      // ??
+        ubx_svid = svid - 850;
+    } else if (901 <= svid &&
+        918 >= svid) {
+        // NavIC (IRNSS) L5
+        *ubx_gnssid = 7;
+        *ubx_sigid = 7;      // ??
+        ubx_svid = svid - 900;
+    } else if (951 <= svid &&
+        986 >= svid) {
+        // GAL E5A
+        *ubx_gnssid = 2;
+        *ubx_sigid = 3;      // Could be 3 or 4?
+        ubx_svid = svid - 950;
+    } else {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY:ally_svid_to_ids(%u) unknown svid\n", svid);
+        *ubx_gnssid = 0;
+        ubx_svid = 0;
+    }
+    return ubx_svid;
 }
 
 // ACK-ACK, ACK-NAK
@@ -1008,7 +1141,7 @@ static gps_mask_t msg_nav_pvt(struct gps_device_t *session,
     long long headAcc = getleu32(buf, 72);
     int pDOP = getles16(buf, 76);
     // Different than headMot ??
-    unsigned long long headVeh = getles32(buf, 84); 
+    unsigned long long headVeh = getles32(buf, 84);
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
     MSTOTS(&ts_tow, session->driver.ubx.iTOW);
@@ -1247,6 +1380,15 @@ static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
         unsigned svid = getleu16(buf, idx);         // NMEA PRN
         unsigned eph_state = getub(buf, idx + 2);   // ephemeris state
         unsigned alm_state = getub(buf, idx + 3);   // ephemeris state
+        unsigned ubx_gnssid, ubx_sigid;
+
+        unsigned ubx_svid = ally_svid_to_ids(session, svid, &ubx_gnssid,
+                                             &ubx_sigid);
+
+        GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                 "ALLY: NAV-SVSTATE: svid %4u ubx_gnssid %u ubx_svid %u "
+                 "ubx_sigid %u\n",
+                 svid, ubx_gnssid, ubx_svid, ubx_sigid);
 
         GPSD_LOG(LOG_INFO, &session->context->errout,
                  "ALLY: NAV-SVSTATE: svid %4u "
@@ -1404,12 +1546,20 @@ static gps_mask_t msg_nav_velned(struct gps_device_t *session,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "ALLY: NAV-VELNED: iTOW %lld vNED %.2f %.2f %.2f sAcc %.2f\n",
              (long long)session->driver.ubx.iTOW,
-             session->newdata.ecef.vx,
-             session->newdata.ecef.vy,
-             session->newdata.ecef.vz,
+             session->newdata.NED.velN,
+             session->newdata.NED.velE,
+             session->newdata.NED.velD,
              session->newdata.ecef.vAcc);
     return mask;
 }
+
+/* RXM-*
+ * undocumented
+ * Class RXM, ID 0x01, payload 1, enables RXM-x57.
+ * Class RXM, ID 0x01, payload 0, disable RXM-x57.
+ *
+ * RXM-x57 undocumented.
+ */
 
 /* msg_nav() -- handle CLASS-CFG, CLASS-NAV and CLASS-MON
  */
@@ -1567,7 +1717,6 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
 {
     size_t payload_len;
     unsigned  msg_class;
-    unsigned  msg_id;
     unsigned msgid = getbes16(buf, 2);
     gps_mask_t mask = 0;
 
@@ -1586,7 +1735,6 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
 
     // extract message id and length
     msg_class = getub(buf, 2);
-    msg_id = getub(buf, 3);
     payload_len = getles16(buf, 4);
 
     if ((len - 8) != payload_len) {
@@ -1609,27 +1757,17 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
         mask = msg_ack(session, buf, payload_len);
         break;
     case ALLY_AID:
-        // Deprecated
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: AID- %02x length %zu/%zu)\n",
-                 msg_id, len, payload_len);
-        break;
+        FALLTHROUGH
     case ALLY_CFG:
         FALLTHROUGH
     case ALLY_MON:
         FALLTHROUGH
     case ALLY_NAV:
-        mask = msg_nav(session, buf, payload_len);
-        break;
+        FALLTHROUGH
     case ALLY_RXM:
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: RXM- %02x length %zu/%zu)\n",
-                 msg_id, len, payload_len);
-        break;
+        FALLTHROUGH
     default:
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: unknown packet id x%02x %02x length %zu/%zu)\n",
-                 msg_class, msg_id, len, payload_len);
+        mask = msg_nav(session, buf, payload_len);
         break;
     }
 
@@ -1686,11 +1824,9 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
             (void)ally_write(session, ALLY_CFG, 0x0e, NULL, 0);
             break;
         case 44:
-            // turn on rate one NAV-PVT
-            // prolly no need for NAV-AUTO and NAV-POLL
-            putbe16(msg, 0, NAV_PVT);
-            msg[2] = 0x01;          // rate, one
-            (void)ally_write(session, ALLY_CFG, 0x01, msg, 3);
+            // turn off RXM-0x01
+            msg[0] = 0x00;          // enable?
+            (void)ally_write(session, ALLY_RXM, 0x01, msg, 1);
             break;
         default:
             break;
