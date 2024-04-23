@@ -293,6 +293,22 @@ static struct flist_t fsig_sigFlags[] = {
     {0, 0, NULL},
 };
 
+// UBX-NAV-SVIN active
+// UBX-TIM-SVIN active
+static struct vlist_t vsvin_active[] = {
+    {0, "Inactive"},
+    {1, "Active"},
+    {0, NULL},
+};
+
+// UBX-NAV-SVIN valid
+// UBX-TIM-SVIN valid
+static struct vlist_t vsvin_valid[] = {
+    {0, "Invalid"},
+    {1, "Valid"},
+    {0, NULL},
+};
+
 // UBX-NAV-SVINFO flags
 static struct flist_t fsvinfo_flags[] = {
     {1, 1, "svUsed"},
@@ -3512,9 +3528,10 @@ static gps_mask_t ubx_msg_nav_svin(struct gps_device_t *session,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX: NAV-SVIN: iTOW %llu dur=%lu meanX=%lld meanY=%lld "
              "meanZ=%lld meanAcc=%lu "
-             "obs=%lu valid=%u active=%u\n",
+             "obs=%lu valid=%u(%s) active=%u(%s)\n",
              (long long)iTOW, dur, meanX, meanY, meanZ,
-             meanAcc, obs, valid, active);
+             meanAcc, obs, valid, val2str(valid, vsvin_valid),
+             active, val2str(active, vsvin_active));
     return mask;
 }
 
@@ -4374,8 +4391,10 @@ static gps_mask_t ubx_msg_tim_svin(struct gps_device_t *session,
     // casts for 32 bit compatibility
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX: TIM-SVIN: dur=%lu meanX=%ld meanY=%ld meanZ=%ld meanV=%lu "
-             "obs=%lu valid=%u active=%u\n",
-             dur, meanX, meanY, meanZ, meanV, obs, valid, active);
+             "obs=%lu valid=%u(%s) active=%u(%s)\n",
+             dur, meanX, meanY, meanZ, meanV, obs,
+             valid, val2str(valid, vsvin_valid),
+             active, val2str(active, vsvin_active));
     return mask;
 }
 
