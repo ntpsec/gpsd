@@ -360,110 +360,92 @@ static unsigned ally_svid_to_ids(struct gps_device_t *session,
     *ubx_gnssid = 0;
     *ubx_sigid = 0;
 
-    if (1 <= svid &&
-        32 >= svid) {
+    if (IN(1, svid, 32)) {
         // GPS
         *ubx_gnssid = 0;
         *ubx_sigid = 0;
         ubx_svid = svid;
-    } else if (40 <= svid &&
-        54 >= svid) {
+    } else if (IN(40, svid, 54)) {
         // SBAS 40-54, not 40-58??
         *ubx_gnssid = 1;
         *ubx_sigid = 0;
         ubx_svid = svid + 80;
-    } else if (65 <= svid &&
-        96 >= svid) {
+    } else if (IN(65, svid, 96)) {
         // GLONASS G1 OF
         *ubx_gnssid = 6;
         *ubx_sigid = 0;
         ubx_svid = svid;
-    } else if (127 <= svid &&
-        141 >= svid) {
+    } else if (IN(127, svid, 141)) {
         // SBAS, 127-151, not 120-158?
         *ubx_gnssid = 1;
         *ubx_sigid = 0;
         ubx_svid = svid;
-    } else if (193 <= svid &&
-        199 >= svid) {
+    } else if (IN(193, svid, 199)) {
         // QZSS L1 C/A
         *ubx_gnssid = 5;
         *ubx_sigid = 0;
         ubx_svid = svid - 192;
-    } else if (201 <= svid &&
-        263 >= svid) {
+    } else if (IN(201, svid, 263)) {
         // BDS B1
         *ubx_gnssid = 3;
         *ubx_sigid = 0;
         ubx_svid = svid - 200;
-    } else if (301 <= svid &&
-        336 >= svid) {
+    } else if (IN(301, svid, 336)) {
         // Galileo E1 C
         *ubx_gnssid = 2;
         *ubx_sigid = 0;
         ubx_svid = svid - 300;
-    } else if (401 <= svid &&
-        432 >= svid) {
+    } else if (IN(401, svid, 432)) {
         // GPS L1C NMEA sig 9
         *ubx_gnssid = 0;
         *ubx_sigid = 0;    // wrong...
         ubx_svid = svid - 400;
-    } else if (501 <= svid &&
-        532 >= svid) {
+    } else if (IN(501, svid, 532)) {
         // GPS L2CM
         *ubx_gnssid = 2;
         *ubx_sigid = 4;
         ubx_svid = svid - 500;
-    } else if (565 <= svid &&
-        596 >= svid) {
+    } else if (IN(565, svid, 596)) {
         // GLONASS G2
         *ubx_gnssid = 6;
         *ubx_sigid = 2;
         ubx_svid = svid - 564;
-    } else if (601 <= svid &&
-        663 >= svid) {
+    } else if (IN(601, svid, 663)) {
         // BDS B1C, overlaps GPS L6, 651-682!
         *ubx_gnssid = 3;
         *ubx_sigid = 5;      // 5 or 6??
         ubx_svid = svid - 600;
-    } else if (651 <= svid &&
-        682 >= svid) {
+    } else if (IN(651, svid, 682)) {
         // GPS L5, overlaps BDS B1C 601-663
         *ubx_gnssid = 0;
         *ubx_sigid = 0;      // wrong....
         ubx_svid = svid - 650;
-    } else if (701 <= svid &&
-        763 >= svid) {
+    } else if (IN(701, svid, 763)) {
         // BDS B1I
         *ubx_gnssid = 3;
         *ubx_sigid = 1;      // could be 0 or 1?
         ubx_svid = svid - 700;
-    } else if (801 <= svid &&
-        863 >= svid) {
+    } else if (IN(801, svid, 863)) {
         // BDS B3I, overlaps BDS B2A, 851-914
         *ubx_gnssid = 3;
         *ubx_sigid = 2;      // wrong....
         ubx_svid = svid - 850;
-    } else if (843 <= svid &&
-        849 >= svid) {
+    } else if (IN(843, svid, 849)) {
         // QZSS, L5, overlaps BDS B3I, 801-863
         *ubx_gnssid = 5;
         *ubx_sigid = 9;      // ??
         ubx_svid = svid - 842;
-    } else if (851 <= svid &&
-        913 >= svid) {
+    } else if (IN(851, svid, 913)) {
         // BDS B2A - overlaps BDS B3I 801-863, IRNSS L5 901-918
         *ubx_gnssid = 3;
         *ubx_sigid = 7;      // ??
         ubx_svid = svid - 850;
-    } else if (901 <= svid &&
-        918 >= svid) {
+    } else if (IN(901, svid, 918)) {
         // NavIC (IRNSS) L5
         *ubx_gnssid = 7;
         *ubx_sigid = 7;      // ??
         ubx_svid = svid - 900;
-    } else if (951 <= svid &&
-        986 >= svid) {
+    } else if (IN(951, svid, 986)) {
         // GAL E5A
         *ubx_gnssid = 2;
         *ubx_sigid = 3;      // Could be 3 or 4?

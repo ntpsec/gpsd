@@ -109,7 +109,7 @@ extern "C" {
  *       Add val2sstr() and flags2str()
  *       Add ve_err_deviation, vn_err_deviationv, vu_err_deviation to gst_t
  *       Move gst_t out of gps_data_t union.
- *       Add ROWS()
+ *       Add ROWS(), IN() macrosa
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -124,6 +124,9 @@ extern "C" {
 
 // number of rows in an array.
 #define ROWS(a) (sizeof(a) / sizeof(a[0]))
+
+// IN(v, min, max), True if vl in range min to max, inclusive
+#define IN(min, val, max) (((min) <= (val)) && ((val) <= (max)))
 
 // normalize degrees to 0 to 359
 #define DEG_NORM(deg) \
