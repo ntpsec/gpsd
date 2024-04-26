@@ -1791,9 +1791,11 @@ static gps_mask_t ally_parse(struct gps_device_t * session, unsigned char *buf,
             (void)ally_write(session, ALLY_CFG, 0x0e, NULL, 0);
             break;
         case 44:
+#if 0       // Debug code
             // turn off RXM-0x01
             msg[0] = 0x00;          // enable?
             (void)ally_write(session, ALLY_RXM, 0x01, msg, 1);
+#endif
             break;
         default:
             break;
