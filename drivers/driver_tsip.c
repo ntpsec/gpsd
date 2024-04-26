@@ -1678,9 +1678,7 @@ static gps_mask_t decode_x47(struct gps_device_t *session, const char *buf,
 {
     gps_mask_t mask = 0;
     char buf2[BUFSIZ];
-    int i, j;
-    short u1;          // PRN
-    double f1;         // SNR
+    int i;
 
     // satellite count, RES SMT 360 doc says 12 max
     int count = getub(buf, 0);
@@ -1688,24 +1686,27 @@ static gps_mask_t decode_x47(struct gps_device_t *session, const char *buf,
     // Status code, see vgnss_decode_status
     gpsd_zero_satellites(&session->gpsdata);
 
-    if ((5 * count + 1) != len) {
+    if ((5 * count + 1) > len) {
 	*pbad_len = 5 * count + 1;
 	return mask;
     }
     *pbad_len = 0;
     buf2[0] = '\0';
     for (i = 0; i < count; i++) {
-	u1 = getub(buf, 5 * i + 1);
-	if (0 > (f1 = getbef32(buf, 5 * i + 2))) {
-	    f1 = 0.0;
+        unsigned j;
+	int PRN = getub(buf, 5 * i + 1);
+	double snr = getbef32(buf, 5 * i + 2);
+
+	if (0 > snr) {
+	    snr = 0.0;
 	}
 	for (j = 0; j < TSIP_CHANNELS; j++) {
-	    if (session->gpsdata.skyview[j].PRN == u1) {
-		session->gpsdata.skyview[j].ss = f1;
+	    if (session->gpsdata.skyview[j].PRN == PRN) {
+		session->gpsdata.skyview[j].ss = snr;
 		break;
 	    }
 	}
-	str_appendf(buf2, sizeof(buf2), " %u=%.1f", u1, f1);
+	str_appendf(buf2, sizeof(buf2), " %u=%.1f", PRN, snr);
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
 	     "TSIP x47: Signal Levels: (%d):%s\n", count, buf2);
@@ -1878,7 +1879,16 @@ static gps_mask_t decode_x4c(struct gps_device_t *session, const char *buf)
     return mask;
 }
 
-// Decode x54
+/* Decode  Bias and Bias Rate Report (0x54)
+ * Present in:
+ *   pre-2000 models
+ *   Acutime 360
+ *   ICM SMT 360  (undocumented)
+ *   RES SMT 360  (undocumented)
+ * Not Present in:
+ *   Copernicus II (2009)
+ *   Resolution SMTx
+ */
 static gps_mask_t decode_x54(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
@@ -2229,7 +2239,7 @@ static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
 
     count = getub(buf, 17);
 
-    if ((18 + count) != len) {
+    if ((18 + count) > len) {
 	*pbad_len = 18 + count;
 	return mask;
     }
@@ -2328,7 +2338,7 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
 
     unsigned fix_dim = getub(buf, 0);     // nsvs/dimension
     int count = (int)((fix_dim >> 4) & 0x0f);
-    if ((17 + count) != len) {
+    if ((17 + count) > len) {
 	*pbad_len = 17 + count;
         return 0;
     }
@@ -2964,37 +2974,49 @@ static gps_mask_t decode_x8f_ab(struct gps_device_t *session, const char *buf)
                           sizeof(ts_buf)),
              gps_maskdump(mask));
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIP: tf::%s\n",
+             "TSIP: tf:%s\n",
              flags2str(time_flag, vtiming, buf2, sizeof(buf2)));
 
     return mask;
 }
 
-// decode Superpacket x8f-ac
+/* decode Supplemental Timing Packet (0x8f-ac)
+ * present in:
+ *   ThunderboltE
+ *   ICM SMT 360
+ *   RES SMT 360
+ *   Resolution SMTx
+ * Not Present in:
+ *   pre-2000 models
+ *   Lassen iQ
+ *   Copernicus II (2009)
+ */
 static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
-    unsigned rec_mode;
-    unsigned disc_mode;
-    unsigned survey_prog;
-    unsigned crit_alarm;
-    unsigned minor_alarm;
-    unsigned decode_stat;
-    double fqErr;             // PPS Offset. positive is slow.
     char buf2[BUFSIZ];
     char buf3[BUFSIZ];
 
     // byte 0 is Subpacket ID
-    rec_mode = getub(buf, 1);         // Receiver Mode
+    unsigned rec_mode = getub(buf, 1);         // Receiver Mode
     // Disciplining Mode, reserved on Resolution SMTx
-    disc_mode = getub(buf, 2);
+    unsigned disc_mode = getub(buf, 2);
     // Self-Survey Progress
-    survey_prog = getub(buf, 3);
+    unsigned survey_prog = getub(buf, 3);
     // ignore 4-7, Holdover Duration, reserved on Resolution SMTx
     // ignore 8-9, Critical Alarms, reserved on Resolution SMTx
-    crit_alarm = getbeu16(buf, 8);
+    unsigned crit_alarm = getbeu16(buf, 8);
     // Minor Alarms
-    minor_alarm = getbeu16(buf, 10);
+    unsigned minor_alarm = getbeu16(buf, 10);
+    unsigned decode_stat = getub(buf, 12);        // GNSS Decoding Status
+    // ignore 13, Disciplining Activity
+    // ignore 14, PPS indication
+    // ignore 15, PPS reference
+    /* PPS Offset in ns
+     * save as (long)pico seconds
+     * can't really use it as it is not referenced to any PPS */
+    double fqErr = getbef32(buf, 16);          // PPS Offset. positive is slow.
+
     switch (minor_alarm & 6) {
     case 2:
         session->newdata.ant_stat = ANT_OPEN;
@@ -3007,14 +3029,6 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
         break;
     }
 
-    decode_stat = getub(buf, 12);        // GNSS Decoding Status
-    // ignore 13, Disciplining Activity
-    // ignore 14, PPS indication
-    // ignore 15, PPS reference
-    /* PPS Offset in ns
-     * save as (long)pico seconds
-     * can't really use it as it is not referenced to any PPS */
-    fqErr = getbef32(buf, 16);
     session->gpsdata.qErr = (long)(fqErr * 1000);
     // ignore 20-23, Clock Offset
     // ignore 24-27, DAC Value
@@ -3181,7 +3195,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (43 != len) {
+        if (43 > len) {
             bad_len = 43;
             break;
         }
@@ -3333,7 +3347,7 @@ static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
          *   Lassen iQ
          *   Copernicus II (2009)
          */
-        if (68 != len) {
+        if (68 > len) {
             bad_len = 68;
             break;
         }
@@ -5047,7 +5061,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Resolution SMTx
          */
-        if (10 != len) {
+        if (10 > len) {
             bad_len = 10;
             break;
         }
@@ -5077,7 +5091,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Not Present in:
          *   Copernicus II (2009)
          */
-        if (20 != len) {
+        if (20 > len) {
             bad_len = 20;
             break;
         }
@@ -5156,7 +5170,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (20 != len) {
+        if (20 > len) {
             bad_len = 20;
             break;
         }
@@ -5177,7 +5191,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Not in:
          *   Thunderbolt (2003)
          */
-        if (3 != len) {
+        if (3 > len) {
             bad_len = 3;
             break;
         }
@@ -5193,7 +5207,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (17 != len) {
+        if (17 > len) {
             bad_len = 17;
             break;
         }
@@ -5208,7 +5222,12 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360  (undocumented)
          * Not Present in:
          *   Copernicus II (2009)
+         *   Resolution SMTx
          */
+        if (12 > len) {
+            bad_len = 12;
+            break;
+        }
          mask = decode_x54(session, buf);
         break;
     case 0x55:
@@ -5225,7 +5244,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360:     12 02 00 08
          *   Resolution SMTx: 12 02 00 08
          */
-        if (4 != len) {
+        if (4 > len) {
             bad_len = 4;
             break;
         }
@@ -5239,7 +5258,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (20 != len) {
+        if (20 > len) {
             bad_len = 20;
             break;
         }
@@ -5253,7 +5272,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (8 != len) {
+        if (8 > len) {
             bad_len = 8;
             break;
         }
@@ -5285,7 +5304,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (24 != len) {
+        if (24 > len) {
             bad_len = 24;
             break;
         }
@@ -5305,7 +5324,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   Copernicus, Copernicus II
          *   Thunderbold E
          */
-        if (26 != len) {
+        if (26 > len) {
             bad_len = 26;
             break;
         }
@@ -5367,7 +5386,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (1 != len) {
+        if (1 > len) {
             bad_len = 1;
             break;
         }
@@ -5398,7 +5417,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (36 != len) {
+        if (36 > len) {
             bad_len = 36;
             break;
         }
