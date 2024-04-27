@@ -1884,6 +1884,14 @@ static bool speed(struct gps_device_t *session, speed_t speed,
     msg[2] = 0x00;          // WAG: UART0
     putbe32(msg, 4, speed);
     (void)ally_write(session, ALLY_CFG, 0x01, msg, 8);
+
+    if ((speed_t)0 != session->context->fixed_port_speed) {
+        // save new speed as the fixed speed
+        session->context->fixed_port_speed = speed;
+    }
+    // change port speed to new speed.  Allystar is alway 8N1
+    gpsd_set_speed(session, speed, 'N', 1);
+
     return true;
 }
 
