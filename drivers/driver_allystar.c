@@ -1872,11 +1872,11 @@ static bool speed(struct gps_device_t *session, speed_t speed,
     memset(msg, '\0', sizeof(msg));
 
     GPSD_LOG(LOG_WARN, &session->context->errout,
-             "ALLY: baudrate %u\n", speed);
+             "ALLY: baudrate %u\n", (unsigned int) speed);
 
     if (0 == speed) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ALLY: invalid baudrate %u\n", speed);
+                 "ALLY: invalid baudrate %u\n", (unsigned int) speed);
         return 0;
     }
     // poll CFG-PRT for UART0
