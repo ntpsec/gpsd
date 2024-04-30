@@ -1879,11 +1879,11 @@ static bool speed(struct gps_device_t *session, speed_t speed,
                  "ALLY: invalid baudrate %u\n", (unsigned int) speed);
         return 0;
     }
-    // poll CFG-PRT for UART0
-    putbe16(msg, 0, CFG_PRT);
-    msg[2] = 0x00;          // WAG: UART0
-    putbe32(msg, 4, speed);
-    (void)ally_write(session, ALLY_CFG, 0x01, msg, 8);
+    // set CFG-PRT for UART0
+    msg[0] = 0x00;          // assume: UART0
+    // 1 to 3, reserved.
+    putle32(msg, 4, speed);
+    (void)ally_write(session, ALLY_CFG, CFG_PRT & 0x0ff, msg, 8);
 
     if ((speed_t)0 != session->context->fixed_port_speed) {
         // save new speed as the fixed speed
