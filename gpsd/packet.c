@@ -3051,7 +3051,7 @@ void packet_parse(struct gps_lexer_t *lexer)
  */
 ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
 {
-    struct gps_device_t session = {0};
+    struct gps_device_t session = {{0}};
     ssize_t retval;
     ssize_t inbufptrcnt = lexer->inbufptr - lexer->inbuffer;
 
