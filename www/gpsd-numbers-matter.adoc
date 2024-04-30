@@ -575,7 +575,7 @@ On casual inspection, you should notice that data with a Bayesian
 Distribution is symmetric about the center.  But a quick look at a
 *gpsprof* plot that GNSS data is not symmetric about the center.
 
-In statistics, this property is called *skewness*[[SKEW]].  A normal
+In statistics, this property is called *skewness*<<SKEW>>.  A normal
 distribution has a skewness of zero.  The skewness of latitude,
 longitude, and altitude is often between negative 3 and negative 5 when
 measured at my office.  Another confirmation that GNSS data is not
@@ -585,7 +585,7 @@ Bayesian.
 
 Another property of a data distribution is the shape of the "tail" of
 the data as it gets further from the peak.  In statistics, this property
-is called *kurtosis*[[JURTOSIS]].
+is called *kurtosis*<<KURTOSIS>>.
 
 A normal distribution has a kurtosis of three.  A kurtosis greater than
 three means there are more outliers than in a normal distribution.  The
