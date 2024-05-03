@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 8 April 2024
+:date: 5 May 2024
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -145,8 +145,16 @@ altMSL is altHAE minus geoidSep.
 2=Short, +
 3=Open.
 
+
 |climb |No |numeric |Climb (positive) or sink (negative) rate, meters
 per second.
+
+|clockbias |No |numeric |Offset of local GNSS clock relative to UTC, in
+ns.  AKA Clock Offset.  Sometimes given as Part Per Billion (ppb) which
+is the same as ns.
+
+|clockdrift |No |numeric |The rate at which the local clock is drifting.
+In ns/s.
 
 |datum |No |string |Current datum. Hopefully WGS84.
 
