@@ -590,6 +590,10 @@ void gpsd_set_speed(struct gps_device_t *session,
         parity = session->context->fixed_port_framing[1];
         stopbits = session->context->fixed_port_framing[2] - '0';
     }
+    if (2 < stopbits) {
+        // invalid stop bits
+        stopbits = 0;
+    }
 
     /*
      * Yes, you can set speeds that aren't in the hunt loop.  If you
@@ -987,6 +991,10 @@ int gpsd_serial_open(struct gps_device_t *session)
         new_parity = session->context->fixed_port_framing[1];
         new_stop = session->context->fixed_port_framing[2] - '0';
     }
+    if (2 < new_stop) {
+        // invalid stop bits
+        new_stop = 0;
+    }
     // FIXME: setting speed twice??
     gpsd_set_speed(session, new_speed, new_parity, new_stop);
 
@@ -1134,6 +1142,7 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
 
             // More stop bits to try?
             if (2 <= session->gpsdata.dev.stopbits++) {
+                session->gpsdata.dev.stopbits = 0;  // restart at 0
                 return false;   // hunt is over, no sync.  Restart hunt?
             }
         }
@@ -1145,6 +1154,10 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
             // ignore length, stopbits=2 forces length 7.
             new_parity = session->context->fixed_port_framing[1];
             new_stop = session->context->fixed_port_framing[2] - '0';
+        }
+        if (2 < new_stop) {
+            // invalid stop bits
+            new_stop = 0;
         }
 
         gpsd_set_speed(session, rates[session->baudindex], new_parity,
