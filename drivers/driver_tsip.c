@@ -361,6 +361,38 @@ static struct vlist_t vgnss_decode_status[] = {
     {0, NULL},
 };
 
+/* Disciplining Activity
+ * Used in x46, x8f-ac */
+static struct vlist_t vdisc_act[] = {
+    {0, "Phase Locking"},
+    {1, "OSC Wrm-up"},
+    {2, "Freq lokgin"},
+    {3, "Placing PPS"},
+    {4, "Init Loop FIlter"},
+    {5, "Comp OCXO"},
+    {6, "Inactive"},
+    {7, "Not used"},
+    {8, "REcovery Mode"},
+    {0, NULL},
+};
+
+/* PPS indication
+ * Used in x46, x8f-ac */
+static struct vlist_t vpps_ind[] = {
+    {0, "PPS Good"},
+    {1, "PPS Ungood"},
+    {0, NULL},
+};
+
+/* PPS Reference
+ * Used in x46, x8f-ac */
+static struct vlist_t vpps_ref[] = {
+    {0, "GNSS"},
+    {1, "Externa;"},
+    {0xff, "None;"},
+    {0, NULL},
+};
+
 /* Packet Broadcast Mask
  * Used in x8f-a3 */
 static struct flist_t vpbm_mask0[] = {
@@ -3009,13 +3041,18 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
     // Minor Alarms
     unsigned minor_alarm = getbeu16(buf, 10);
     unsigned decode_stat = getub(buf, 12);        // GNSS Decoding Status
-    // ignore 13, Disciplining Activity
-    // ignore 14, PPS indication
-    // ignore 15, PPS reference
+    // Disciplining Activity, ICM SMT 360 Only
+    unsigned disc_act = getub(buf, 13);
+    // PPS indication, RES SMT 360 Only
+    unsigned pps_ind = getub(buf, 14);
+    unsigned pps_ref = getub(buf, 15);            // PPS reference
     /* PPS Offset in ns
      * save as (long)pico seconds
      * can't really use it as it is not referenced to any PPS */
     double fqErr = getbef32(buf, 16);          // PPS Offset. positive is slow.
+    double clk_off = getbef32(buf, 20);        // Clock Offset (bias)
+    // ignore 24-27, DAC Value (ICM SMT 360 Only)
+    double dac_v = getbef32(buf, 28);          // DAC Voltage
 
     switch (minor_alarm & 6) {
     case 2:
@@ -3030,11 +3067,9 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
     }
 
     session->gpsdata.qErr = (long)(fqErr * 1000);
-    // ignore 20-23, Clock Offset
-    // ignore 24-27, DAC Value
-    // ignore 28-31, DAC Voltage
     // 32-35, Temperature degrees C
     session->newdata.temp = getbef32(buf, 32);
+    session->newdata.clockbias = clk_off;
     session->newdata.latitude = getbed64(buf, 36) * RAD_2_DEG;
     session->newdata.longitude = getbed64(buf, 44) * RAD_2_DEG;
     // SMT 360 doc says this is always altHAE in meters
@@ -3042,6 +3077,11 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
     // ignore 60-63, always zero
     // ignore 64-67, reserved
 
+    // PPS indication
+    if (3026 == session->driver.tsip.hardware_code) {
+        // only ICM SMT 360 has disciplining activity
+        // disc_act = 10;
+    }
     // We don;t know enough to set status, probably TIME_TIME
 
     // Decode Fix modes
@@ -3155,18 +3195,21 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
     mask |= LATLON_SET | ALTITUDE_SET | MODE_SET;
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIP x8f-ac: SP-TPS: lat=%.2f lon=%.2f altHAE=%.2f "
-             "mode %d status %d  temp %.1f fqErr %.4f rm x%x dm %u "
+             "mode %d status %d  temp %.1f disc %u pps_ind %u pps_ref %u "
+             "fqErr %.4f clko %f DACV %f rm x%x dm %u "
              "sp %u ca %x ma x%x gds x%x\n",
              session->newdata.latitude,
              session->newdata.longitude,
              session->newdata.altHAE,
              session->newdata.mode,
              session->newdata.status,
-             session->newdata.temp, fqErr, rec_mode,
+             session->newdata.temp,
+             disc_act, pps_ind, pps_ref, fqErr, clk_off, dac_v,  rec_mode,
              disc_mode, survey_prog, crit_alarm,
              minor_alarm, decode_stat);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIP: mode:%s status:%s rm:%s gds:%s ca:%s ma:%s\n",
+             "TSIP: mode:%s status:%s rm:%s gds:%s ca:%s ma:%s disc_act %s "
+             "pps_ing %s pps_ref %s\n",
              val2str(session->newdata.mode, vmode_str),
              val2str(session->newdata.status, vstatus_str),
              val2str(rec_mode, vrec_mode),
@@ -3174,7 +3217,10 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
              flags2str(crit_alarm, vcrit_alarms, buf2,
                        sizeof(buf2)),
              flags2str(minor_alarm, vminor_alarms, buf3,
-                       sizeof(buf3)));
+                       sizeof(buf3)),
+             val2str(disc_act, vdisc_act),
+             val2str(pps_ind, vpps_ind),
+             val2str(pps_ref, vpps_ref));
     return mask;
 }
 
