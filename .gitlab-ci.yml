@@ -10,18 +10,21 @@ variables:
   CCACHE_COMPILERCHECK: "content"
   DEBIAN_FRONTEND: 'noninteractive'
 
-.debian_build:
+.debian_script:
   script:
     - apt update && apt -y install --no-install-recommends eatmydata
     - eatmydata -- apt -y dist-upgrade
     - eatmydata -- apt -y install --no-install-recommends ${PACKAGES}
     - if [ -n "${EXPERIMENTAL_PACKAGES}" ]; then apt -y install --no-install-recommends -t experimental ${EXPERIMENTAL_PACKAGES}; fi
     - eatmydata -- .ci-build/build.sh
+
+.debian_build:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
     - if: $CI_PIPELINE_SOURCE != "schedule"
       when: always
+  extends: .debian_script
 
 alpine-3:
   image: alpine:3
@@ -259,7 +262,7 @@ coverity:
   artifacts:
     paths:
       - cov-int
-  extends: .debian_build
+  extends: .debian_script
 
 
 # as long as sconstruct has so many options, this does not make sense
