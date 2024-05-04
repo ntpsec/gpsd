@@ -495,10 +495,12 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
     if (0 < gpsdata->fix.jam){
         str_appendf(reply, replylen, ",\"jam\":%u", gpsdata->fix.jam);
     }
-    if (0 != gpsdata->fix.clockbias &&
-        0 != gpsdata->fix.clockdrift){
-        str_appendf(reply, replylen, ",\"clockbias\":%lld,\"clockdrift\":%lld",
-                    (long long)gpsdata->fix.clockbias,
+    if (0 != gpsdata->fix.clockbias) {
+        str_appendf(reply, replylen, ",\"clockbias\":%lld",
+                    (long long)gpsdata->fix.clockbias);
+    }
+    if (0 != gpsdata->fix.clockdrift) {
+        str_appendf(reply, replylen, ",\"clockdrift\":%lld",
                     (long long)gpsdata->fix.clockdrift);
     }
     if (0 != (changed & NAVDATA_SET)) {

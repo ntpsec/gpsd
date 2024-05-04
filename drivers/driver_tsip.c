@@ -1559,15 +1559,16 @@ static gps_mask_t decode_x43(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
     timespec_t ts_tow;
-    double vx = getbef32(buf, 0);       // X velocity
-    double vy = getbef32(buf, 4);       // Y velocity
-    double vz = getbef32(buf, 8);       // Z velocity
-    double f4 = getbef32(buf, 12);      // bias rate
-    double ftow = getbef32(buf, 16);    // time-of-fix
+    double vx = getbef32(buf, 0);               // X velocity, m/s
+    double vy = getbef32(buf, 4);               // Y velocity, m/s
+    double vz = getbef32(buf, 8);               // Z velocity, m/s
+    double bias_rate = getbef32(buf, 12);       // bias rate, m/s
+    double ftow = getbef32(buf, 16);            // time-of-fix
 
     session->newdata.ecef.vx = vx;
     session->newdata.ecef.vy = vy;
     session->newdata.ecef.vz = vz;
+
     DTOTS(&ts_tow, ftow);
     session->newdata.time = gpsd_gpstime_resolv(session,
 						session->context->gps_week,
@@ -1582,7 +1583,7 @@ static gps_mask_t decode_x43(struct gps_device_t *session, const char *buf)
 	     session->newdata.ecef.vx,
 	     session->newdata.ecef.vy,
 	     session->newdata.ecef.vz,
-	     f4, ftow);
+	     bias_rate, ftow);
     return mask;
 }
 
@@ -1752,19 +1753,19 @@ static gps_mask_t decode_x4a(struct gps_device_t *session, const char *buf)
     gps_mask_t mask = 0;
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
-    double lat = getbef32(buf, 0) * RAD_2_DEG;  // lat
-    double lon = getbef32(buf, 4) * RAD_2_DEG;  // lon
-    double d1 = getbef32(buf, 8);               // alt
-    double f1 = getbef32(buf, 12);              // clock bias
-    double ftow = getbef32(buf, 16);            // time-of-fix
+    double lat = getbef32(buf, 0) * RAD_2_DEG;   // lat
+    double lon = getbef32(buf, 4) * RAD_2_DEG;   // lon
+    double alt = getbef32(buf, 8);               // alt
+    double clock_bias = getbef32(buf, 12);       // clock bias, m/s
+    double ftow = getbef32(buf, 16);             // time-of-fix
 
     session->newdata.latitude = lat;
     session->newdata.longitude = lon;
     // depending on GPS config, could be either WGS84 or MSL
     if (0 == session->driver.tsip.alt_is_msl) {
-	session->newdata.altHAE = d1;
+	session->newdata.altHAE = alt;
     } else {
-	session->newdata.altMSL = d1;
+	session->newdata.altMSL = alt;
     }
 
     if (0 != (session->context->valid & GPS_TIME_VALID)) {
@@ -1786,7 +1787,7 @@ static gps_mask_t decode_x4a(struct gps_device_t *session, const char *buf)
 	     "alt=%.2f cbias %.2f\n",
 	     timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
 	     session->newdata.latitude,
-	     session->newdata.longitude, d1, f1);
+	     session->newdata.longitude, alt, clock_bias);
     return mask;
 }
 
@@ -1925,9 +1926,9 @@ static gps_mask_t decode_x54(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
     timespec_t ts_tow;
-    double bias = getbef32(buf, 0);         // Bias
-    double bias_rate = getbef32(buf, 4);    // Bias rate
-    double ftow = getbef32(buf, 8);         // tow
+    double clock_bias = getbef32(buf, 0);         // clock Bias, m
+    double clock_rate = getbef32(buf, 4);         // clock Bias rate, m/s
+    double ftow = getbef32(buf, 8);               // tow
 
     DTOTS(&ts_tow, ftow);
     session->newdata.time =
@@ -1940,7 +1941,7 @@ static gps_mask_t decode_x54(struct gps_device_t *session, const char *buf)
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
 	    "TSIP x54: BBRR: Bias %f brate %f tow %f\n",
-            bias, bias_rate, ftow);
+            clock_bias, clock_rate, ftow);
     return mask;
 }
 
@@ -2014,6 +2015,9 @@ static gps_mask_t decode_x56(struct gps_device_t *session, const char *buf)
     session->newdata.NED.velN = f2;
     session->newdata.NED.velE = f1;
     session->newdata.NED.velD = -f3;
+    // short circuit to gpsdata.
+    session->gpsdata.fix.clockbias = cbias;
+
     mask |= VNED_SET | TIME_SET | NTPTIME_IS;
     if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
 	mask |= CLEAR_IS;
@@ -2494,12 +2498,15 @@ static gps_mask_t decode_x83(struct gps_device_t *session, const char *buf)
     double ecefx = getbed64(buf, 0);            // X
     double ecefy = getbed64(buf, 8);            // Y
     double ecefz = getbed64(buf, 16);           // Z
-    double d3 = getbed64(buf, 24);              // clock bias
+    double clock_bias = getbed64(buf, 24);      // clock bias
     double ftow = getbef32(buf, 32);            // time-of-fix
 
     session->newdata.ecef.x = ecefx;
     session->newdata.ecef.y = ecefy;
     session->newdata.ecef.z = ecefz;
+    // short circuit to gpsdata.
+    session->gpsdata.fix.clockbias = clock_bias;
+
     DTOTS(&ts_tow, ftow);
     session->newdata.time = gpsd_gpstime_resolv(session,
 						session->context->gps_week,
@@ -2523,11 +2530,11 @@ static gps_mask_t decode_x83(struct gps_device_t *session, const char *buf)
 	session->driver.tsip.last_tow = ts_tow;
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "TSIP x83: DP-XYZ: %f %f %f %f tow %f mode %u\n",
+	     "TSIP x83: DP-XYZ: %f %f %f cbias %f tow %f mode %u\n",
 	     session->newdata.ecef.x,
 	     session->newdata.ecef.y,
 	     session->newdata.ecef.z,
-	     d3, ftow,
+	     clock_bias, ftow,
 	     session->newdata.mode);
     return mask;
 }
@@ -2553,6 +2560,7 @@ static gps_mask_t decode_x84(struct gps_device_t *session, const char *buf)
 	session->newdata.altMSL = d1;
     }
     mask |= ALTITUDE_SET;
+
     if (0 != (session->context->valid & GPS_TIME_VALID)) {
 	// fingers crossed receiver set to UTC, not GPS.
 	DTOTS(&ts_tow, ftow);
@@ -2893,36 +2901,46 @@ static gps_mask_t decode_x8f_a6(struct gps_device_t *session, const char *buf)
 static gps_mask_t decode_x8f_a7(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
-    double d1, d2;
-    int s1, s2;
 
     // we assume the receiver not in some crazy mode, and is GPS time
-    unsigned long tow = getbeu32(buf, 2);          // gpstime in seconds
-    unsigned u1 = buf[1];                          // format, 0 Float, 1 Int
+    unsigned long tow = getbeu32(buf, 2);         // gpstime in seconds
+    unsigned fmt = buf[1];                        // format, 0 Float, 1 Int
 
-    if (0 == u1) {
+    if (0 == fmt) {
 	// floating point mode
-	d1 = getbef32(buf, 6);   // clock bias (combined)
-	d2 = getbef32(buf, 10);  // clock bias rate (combined)
+	double clock_bias = getbef32(buf, 6);     // clock bias (combined)
+	double clock_rate = getbef32(buf, 10);    // clock bias rate (combined)
+
+        // short circuit to gpsdata
+        session->gpsdata.fix.clockbias = clock_bias / 1e9;
+        session->gpsdata.fix.clockdrift = clock_rate / 1e9;
+
 	// FIXME: decode the individual biases
 	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "TSIP x8f-a7: tow %llu mode %u bias %e "
+		 "TSIP x8f-a7: tow %llu fmt %u bias %e "
 		 "bias rate %e\n",
-		 (long long unsigned)tow, u1, d1, d2);
-    } else if (1 == u1) {
+		 (long long unsigned)tow, fmt, clock_bias, clock_rate);
+    } else if (1 == fmt) {
 	// integer mode
-	s1 = getbeu16(buf, 6);    // Clock Bias (combined)
-	s2 = getbeu16(buf, 8);    // Clock Bias rate (combined)
+	int clock_bias = getbes16(buf, 6);   // Clock Bias (combined) 0.1ns
+	int clock_rate = getbes16(buf, 8);   // Clock Bias rate (combined) ps
+
+        // short circuit to gpsdata
+        session->gpsdata.fix.clockbias = clock_bias / 10;
+        session->gpsdata.fix.clockdrift = clock_rate / 1000;
+
 	// FIXME: decode the individual biases
 	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "TSIP x8f-a7: tow %llu mode %u bias %d "
-		 "bias rate %d\n",
-		 (long long unsigned)tow, u1, s1, s2);
+		 "TSIP x8f-a7: tow %llu mode %u bias %ld "
+		 "bias rate %ld\n",
+		 (long long unsigned)tow, fmt,
+                 session->gpsdata.fix.clockbias,
+                 session->gpsdata.fix.clockdrift);
     } else {
 	// unknown mode
 	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "TSIP x8f-a7: tow %llu mode %u. Unnown mode\n",
-		 (long long unsigned)tow, u1);
+		 "TSIP x8f-a7: tow %llu fmt %u. Unnown mode\n",
+		 (long long unsigned)tow, fmt);
     }
     return mask;
 }
@@ -3069,7 +3087,8 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
     session->gpsdata.qErr = (long)(fqErr * 1000);
     // 32-35, Temperature degrees C
     session->newdata.temp = getbef32(buf, 32);
-    session->newdata.clockbias = clk_off;
+    // short circuit to gpsdata.
+    session->gpsdata.fix.clockbias = clk_off;
     session->newdata.latitude = getbed64(buf, 36) * RAD_2_DEG;
     session->newdata.longitude = getbed64(buf, 44) * RAD_2_DEG;
     // SMT 360 doc says this is always altHAE in meters
