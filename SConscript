@@ -793,7 +793,7 @@ Required because libc's are random about it.
         #include <stddef.h>
         #include <string.h>
 
-        int main() {
+        int main(void) {
             char buf[100];
             int ret;
 
