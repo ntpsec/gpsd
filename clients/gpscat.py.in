@@ -144,7 +144,11 @@ if __name__ == '__main__':
             s.connect((options.target, 1))
             tty = s.fileno()
         else:                            # Ordinary device
-            tty = os.open(options.target, os.O_RDWR)
+            try:
+                tty = os.open(options.target, os.O_RDWR)
+            except Exception as e:
+                print("ERROR: %s.\n" % e)
+                exit(1)
 
         if options.speed is not None:
             (iflag, oflag, cflag, lflag, ispeed, ospeed, cc) = \
