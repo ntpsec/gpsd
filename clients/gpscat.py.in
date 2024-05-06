@@ -1,7 +1,7 @@
 #!@PYSHEBANG@
 #
 # @GENERATED@
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -29,13 +29,13 @@ except ImportError as e:
     sys.stderr.write(
         "gpscat: can't load Python gps libraries -- check PYTHONPATH.\n")
     sys.stderr.write("%s\n" % e)
-    sys.exit(1)
+    exit(1)
 
 gps_version = '@VERSION@'
 if gps.__version__ != gps_version:
     sys.stderr.write("gpscat: ERROR: need gps module version %s, got %s\n" %
                      (gps_version, gps.__version__))
-    sys.exit(1)
+    exit(1)
 
 
 # The spec says 82, but some receivers (TN-200, GSW 2.3.2) output 86 characters
@@ -64,7 +64,7 @@ def hexdump(st):
 def reporter(errlevel, mesg):
     """Report errors, depending on log level."""
     if errlevel <= options.debug:
-        sys.stdout.write(mesg)
+        sys.stderr.write(mesg)
 
 
 if __name__ == '__main__':
@@ -147,7 +147,7 @@ if __name__ == '__main__':
             try:
                 tty = os.open(options.target, os.O_RDWR)
             except Exception as e:
-                print("ERROR: %s.\n" % e)
+                print("gpscat: ERROR: %s.\n" % e)
                 exit(1)
 
         if options.speed is not None:
@@ -155,10 +155,9 @@ if __name__ == '__main__':
                 termios.tcgetattr(tty)
             try:
                 ispeed = ospeed = eval("termios.B%d" % options.speed)
-            except AttributeError:
-                sys.stderr.write("gpscat: unknown baud rate %d\n" %
-                                 options.speed)
-                raise SystemExit(1)
+            except AttributeError as e:
+                sys.stderr.write("gpscat: ERROR: %s\n" % e)
+                exit(1)
             if options.stopbits:
                 cflag &= ~termios.CSIZE
                 cflag |= (termios.CS8, termios.CS7)[options.stopbits - 1]
@@ -188,21 +187,25 @@ if __name__ == '__main__':
                     buf = os.read(tty, NMEA_MAX)
                     if not buf:
                         break
-                    sys.stdout.write(hexdump(buf))
+                    print(hexdump(buf))
                 else:
                     (length, ptype, packet, counter) = getter.get(tty)
                     seqno += 1
                     if 0 == length:
                         break
                     if options.typeflag:
-                        sys.stdout.write('%d (%d@%d): %s\n' % (ptype, length,
-                                         counter - length, hexdump(packet)))
+                        try:
+                            print('%d (%d@%d): %s\n' % (ptype, length,
+                                  counter - length, hexdump(packet)))
+                        except Exception as e:
+                            sys.stderr.write("%s\n" % e)
+                            exit(1)
                     else:
-                        sys.stdout.write(hexdump(packet) + "\n")
+                        print(hexdump(packet) + "\n")
     except KeyboardInterrupt:
         if options.rawmode:
-            sys.stdout.write("\n")
-        raise SystemExit(0)
+            print("\n")
+        exit(0)
 
 # Local variables:
 # mode: python
