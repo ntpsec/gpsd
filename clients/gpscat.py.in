@@ -197,6 +197,11 @@ if __name__ == '__main__':
                         try:
                             print('%d (%d@%d): %s\n' % (ptype, length,
                                   counter - length, hexdump(packet)))
+                        except BrokenPipeError:
+                            # stdout piped to a prgram that died. 
+                            # Like "head" does by default.
+                            # die quietly
+                            exit(1)
                         except Exception as e:
                             sys.stderr.write("%s\n" % e)
                             exit(1)
