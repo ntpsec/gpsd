@@ -434,13 +434,13 @@ char gpsd_get_parity(const struct gps_device_t *dev)
     return parity;
 }
 
-// return the stop bits for a device.  0, 1 or 2
+// return the stop bits for a device.  1 or 2
 int gpsd_get_stopbits(const struct gps_device_t *dev)
 {
-    int stopbits = 0;
-    if (CS8 == (dev->ttyset.c_cflag & CS8)) {
-        stopbits = 1;
-    } else if ((CS7 | CSTOPB) == (dev->ttyset.c_cflag & (CS7 | CSTOPB))) {
+    int stopbits = 1;
+
+    if (CSTOPB == (dev->ttyset.c_cflag & CSTOPB)) {
+        // xx2
         stopbits = 2;
     }
     return stopbits;
@@ -586,13 +586,14 @@ void gpsd_set_speed(struct gps_device_t *session,
         speed = session->context->fixed_port_speed;
     }
     if ('\0' != session->context->fixed_port_framing[0]) {
+        // Forced framing?
         // ignore length, stopbits=2 forces length 7.
         parity = session->context->fixed_port_framing[1];
         stopbits = session->context->fixed_port_framing[2] - '0';
     }
-    if (2 < stopbits) {
-        // invalid stop bits
-        stopbits = 0;
+    if (!IN(1, stopbits, 2)) {
+        // invalid stop bits, Assume 8x1
+        stopbits = 1;
     }
 
     /*
@@ -987,13 +988,14 @@ int gpsd_serial_open(struct gps_device_t *session)
         new_parity = 'N';
         new_stop = 1;
     } else {
+        // Forced framing
         // ignore length, stopbits=2 forces length 7.
         new_parity = session->context->fixed_port_framing[1];
         new_stop = session->context->fixed_port_framing[2] - '0';
     }
-    if (2 < new_stop) {
-        // invalid stop bits
-        new_stop = 0;
+    if (!IN(1, new_stop, 2)) {
+        // invalid stop bits, assume 1
+        new_stop = 1;
     }
     // FIXME: setting speed twice??
     gpsd_set_speed(session, new_speed, new_parity, new_stop);
@@ -1132,18 +1134,18 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         }
 #endif  // TIOCGICOUNT
 
-        if ((unsigned int)((sizeof(rates) / sizeof(rates[0])) - 1) <=
-            session->baudindex++) {
+        if (ROWS(rates) <= ++session->baudindex) {
 
-            session->baudindex = 0;
-            if ('\0' != session->context->fixed_port_framing[0]) {
-                return false;   // hunt is over, no sync.  Restart hunt?
-            }
-
-            // More stop bits to try?
-            if (2 <= session->gpsdata.dev.stopbits++) {
-                session->gpsdata.dev.stopbits = 0;  // restart at 0
-                return false;   // hunt is over, no sync.  Restart hunt?
+            // start over, maybe with new stop bits.
+            session->baudindex = 1;  // skip reates[0]. which os B0.
+            if ('\0' == session->context->fixed_port_framing[0]) {
+                // This toggles from 7N2 to 8N1, and back to 7N2
+                // FIXME?? Also try 8E1 and 8O1 ??  For Trimble
+                if (2 == session->gpsdata.dev.stopbits) {
+                    session->gpsdata.dev.stopbits = 1;  // restart at 1
+                } else {
+                    session->gpsdata.dev.stopbits = 2;  // increment to 2
+                }
             }
         }
 
@@ -1151,13 +1153,10 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
             new_parity = session->gpsdata.dev.parity;
             new_stop = session->gpsdata.dev.stopbits;
         } else {
+            // fixed framing
             // ignore length, stopbits=2 forces length 7.
             new_parity = session->context->fixed_port_framing[1];
             new_stop = session->context->fixed_port_framing[2] - '0';
-        }
-        if (2 < new_stop) {
-            // invalid stop bits
-            new_stop = 0;
         }
 
         gpsd_set_speed(session, rates[session->baudindex], new_parity,
