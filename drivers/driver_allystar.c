@@ -226,6 +226,22 @@ static struct vlist_t vfixType[] = {
     {0, NULL},
 };
 
+/* NAV-SVINFO flags
+ * Undocumented.
+ * This is a guess based on UBX-NAV-SVINFO
+ * Only  diffCorr,orbitAvail,orbitEphs seem to be used. */
+static struct flist_t fsvinfo_flags[] = {
+    {1, 1, "svUsed"},
+    {2, 2, "diffCorr"},
+    {4, 4, "orbitAvail"},
+    {8, 8, "orbitEph"},
+    {0x10, 0x10, "unhealthy"},
+    {0x20, 0x20, "orbitAlm"},
+    {0x40, 0x40, "orbitAop"},
+    {0x80, 0x80, "smoothed"},
+    {0, 0, NULL},
+};
+
 // NAV-TIME flags
 static struct flist_t vtime_flags[] = {
     {1, 1, "week"},
@@ -429,7 +445,7 @@ static unsigned ally_svid_to_ids(struct gps_device_t *session,
         // BDS B3I, overlaps BDS B2A, 851-914
         *ubx_gnssid = 3;
         *ubx_sigid = 2;      // wrong....
-        ubx_svid = svid - 850;
+        ubx_svid = svid - 800;
     } else if (IN(843, svid, 849)) {
         // QZSS, L5, overlaps BDS B3I, 801-863
         *ubx_gnssid = 5;
@@ -456,6 +472,15 @@ static unsigned ally_svid_to_ids(struct gps_device_t *session,
         *ubx_gnssid = 0;
         ubx_svid = 0;
     }
+    if (200 < ubx_svid) {
+        // Huh?  Paranoia.
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY:ally_svid_to_ids(%u) gnssid %u usvid %u usigid %u\n",
+                 svid, *ubx_gnssid, ubx_svid,  *ubx_sigid);
+        *ubx_sigid = 0;
+        *ubx_gnssid = 0;
+        ubx_svid = 0;
+     }
     return ubx_svid;
 }
 
@@ -837,7 +862,7 @@ static gps_mask_t msg_nav_auto(struct gps_device_t *session,
              session->gpsdata.dop.vdop,
              satInUse, satInView);
      GPSD_LOG(LOG_IO, &session->context->errout,
-              "UBX: NAV-SUTO: fixstate %u(%s) mode %u(%s) status %u(%s)\n",
+              "ALLY: NAV-SUTO: fixstate %u(%s) mode %u(%s) status %u(%s)\n",
              fixstate, val2str(fixstate, vfixstate),
              session->newdata.mode,
              val2str(session->newdata.mode, vmode_str),
@@ -1230,7 +1255,7 @@ static gps_mask_t msg_nav_pvt(struct gps_device_t *session,
              session->gpsdata.dop.pdop,
              headVeh / 1e5);
      GPSD_LOG(LOG_IO, &session->context->errout,
-              "UBX: NAV-PVT fixType %u(%s) mode %u(%s) status %u(%s)\n",
+              "ALLY: NAV-PVT fixType %u(%s) mode %u(%s) status %u(%s)\n",
              fixType, val2str(fixType, vfixType),
              session->newdata.mode,
              val2str(session->newdata.mode, vmode_str),
@@ -1244,6 +1269,13 @@ static gps_mask_t msg_nav_pvt(struct gps_device_t *session,
  * Sort of like UBX-NAV-SVINFO
  *   UBX is (8 + 12 * numCh)
  *   ALLYSTAR if (8 + 24 *numCh)
+ *
+ * NOT USED BECAUSE:
+ *   some fields not doccumented: flags, quality
+ *   reports a cno, but does not say for L1, L2, etc.
+ *   no way to know if a sat used, or unhealthy
+ *
+ * Have to use NMEA for this data.
  *
  */
 static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
@@ -1271,6 +1303,7 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
     gpsd_zero_satellites(&session->gpsdata);
     nsv = 0;
     for (i = st = 0; i < nchan; i++) {
+        char buf2[80];
         // No info on sigid???
         unsigned off = 24 * i;
         unsigned nmea_PRN;
@@ -1316,12 +1349,17 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
             session->gpsdata.skyview[st].azimuth = (double)az;
         }
         session->gpsdata.skyview[st].prRes = prRes / 100.0;
+
+        /* Undocumented, but (quality & 7) seems to be same as
+         * tje u-blox qulityInd */
+        session->gpsdata.skyview[st].qualityInd = quality & 7;
+
         // No health data, no used data.
         // flags and quality undocumented.
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "ALLY: NAV-SVINFO ally_svid %u  gnssid %d(%s) svid %d "
                  "sigid %d flags x%x az %.0f el %.0f cno %.0f prRes %.2f "
-                 "quality x%x, prRate %f pr %.4f\n",
+                 "quality %u, prRate %f pr %.4f\n",
                  ally_svid,
                  session->gpsdata.skyview[st].gnssid,
                  val2str(session->gpsdata.skyview[st].gnssid, vgnssId),
@@ -1330,9 +1368,15 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
                  session->gpsdata.skyview[st].elevation,
                  session->gpsdata.skyview[st].ss,
                  session->gpsdata.skyview[st].prRes,
-                 quality,
+                 session->gpsdata.skyview[st].qualityInd,
                  session->gpsdata.skyview[st].prRate,
                  session->gpsdata.skyview[st].pr);
+        /* flags undocumented, here we assume same as UBX-NAV-SVINFO
+         * only  diffCorr,orbitAvail,orbitEphs seem to be used.
+         * how do we know if a dat is used in the fix?? */
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "ALLY: NAV-SVINFO flags %ss\n",
+                 flags2str(flags, fsvinfo_flags, buf2, sizeof(buf2)));
         st++;
     }
 
@@ -1357,6 +1401,12 @@ static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
     // char ts_buf[TIMESPEC_LEN];
 
     unsigned numSV = getub(buf, 4);                // 32 bits?!?!
+
+    if (payload_len < (8 + (4 * numSV))) {
+        // length check
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV-SVSTATE: bad length %zd", payload_len);
+    }
     session->driver.ubx.iTOW = getleu32(buf, 0);   // iTow, ms
     // 5 reserved
 
@@ -1387,9 +1437,9 @@ static gps_mask_t msg_nav_svstate(struct gps_device_t *session,
                  alm_state,
                  (alm_state >> 4) & 0x0f,
                  (alm_state >> 2) & 0x03,
-                 val2str((eph_state >> 2) & 0x03, vsvstate_src),
+                 val2str((alm_state >> 2) & 0x03, vsvstate_src),
                  alm_state & 0x03,
-                 val2str(eph_state & 0x03, vsvstate_src));
+                 val2str(alm_state & 0x03, vsvstate_src));
     }
     return mask;
 }
