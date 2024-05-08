@@ -1860,9 +1860,9 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
 }
 
 /* speed()
- * WIP: implement speed changing.
  * Luckily ALLYSTAR is only 8N1.
- * Unluckily, no way to know what port we are on...
+ * Unluckily, no way to know what port we are on.
+ * So we assume UART0
  */
 static bool speed(struct gps_device_t *session, speed_t speed,
                   char parity UNUSED, int stopbits UNUSED)
@@ -1894,7 +1894,6 @@ static bool speed(struct gps_device_t *session, speed_t speed,
 
     return true;
 }
-
 
 static void event_hook(struct gps_device_t *session, event_t event)
 {
