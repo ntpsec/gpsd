@@ -2,7 +2,7 @@
 class ubx
 '''
 
-# This file is Copyright 2020 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -1625,6 +1625,8 @@ class ubx(object):
          "BeiDou B1I"),
         ("CFG-SIGNAL-BDS_B2_ENA", 0x1031000e, "L", 1, "",
          "BeiDou B2I"),
+        ("CFG-SIGNAL-BDS_B1C_ENA", 0x1031000f, "L", 1, "",
+         "BeiDou B1C"),
         ("CFG-SIGNAL-QZSS_ENA", 0x10310024, "L", 1, "",
          "QZSS enable"),
         ("CFG-SIGNAL-QZSS_L1CA_ENA", 0x10310012, "L", 1, "",
