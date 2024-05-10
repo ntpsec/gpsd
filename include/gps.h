@@ -3098,7 +3098,8 @@ extern short ubx2_to_prn(int gnssId, int svId);
  * precomputed so C does not recompute every time */
 #define WGS84E2 0.006739496742333464    // 2nd eccentricy squared
 
-#define CLIGHT      299792458.0  // speed of light (m/s)
+#define CLIGHT      299792458.0         // speed of light, in vacuum (m/s)
+#define CLIGHTAIR   299702547.2360      // speed of light, in air (m/s)
 
 // gpsd_open() and netlib_connectsock() error return values
 #define NL_NOSERVICE    -1      // can't get service entry
