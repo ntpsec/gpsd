@@ -1,5 +1,5 @@
 /*
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #include "../include/gpsd_config.h"  // must be before all includes
@@ -285,9 +285,8 @@ static int packet_test(struct map *mp)
     if (lexer.type != mp->type) {
         printf("%2ti: %s test FAILED (packet type %d wrong).\n",
                mp - singletests + 1, mp->legend, lexer.type);
-    } else if (memcmp
-             (mp->test + mp->garbage_offset, lexer.outbuffer,
-              lexer.outbuflen)) {
+    } else if (memcmp(mp->test + mp->garbage_offset, lexer.outbuffer,
+                     lexer.outbuflen)) {
         printf("%2ti: %s test FAILED (data garbled).\n", mp - singletests + 1,
                mp->legend);
         ++failure;
@@ -320,7 +319,7 @@ static void runon_test(struct map *mp)
     do {
         st = packet_get(nullfd, &lexer);
         //printf("packet_parse() returned %zd\n", st);
-    } while (st > 0);
+    } while (0 < st);
 
     // pacify coverity by closing nullfd
     (void)close(nullfd);
@@ -332,34 +331,32 @@ static int property_check(void)
     int status;
 
     for (dp = gpsd_drivers; *dp; dp++) {
-        if (*dp == NULL ||
-            (*dp)->packet_type == COMMENT_PACKET) {
+        if (COMMENT_PACKET == (*dp)->packet_type) {
             continue;
         }
-
         if (CONTROLLABLE(*dp)) {
             (void)fputs("control\t", stdout);
         } else {
             (void)fputs(".\t", stdout);
         }
-        if ((*dp)->event_hook != NULL) {
-            (void)fputs("hook\t", stdout);
-        } else {
+        if (NULL == (*dp)->event_hook) {
             (void)fputs(".\t", stdout);
+        } else {
+            (void)fputs("hook\t", stdout);
         }
-        if ((*dp)->trigger != NULL) {
+        if (NULL != (*dp)->trigger) {
             (void)fputs("trigger\t", stdout);
-        } else if ((*dp)->probe_detect != NULL) {
+        } else if (NULL != (*dp)->probe_detect) {
             (void)fputs("probe\t", stdout);
         } else {
             (void)fputs(".\t", stdout);
         }
-        if ((*dp)->control_send != NULL) {
-            (void)fputs("send\t", stdout);
-        } else {
+        if (NULL == (*dp)->control_send) {
             (void)fputs(".\t", stdout);
+        } else {
+            (void)fputs("send\t", stdout);
         }
-        if ((*dp)->packet_type > NMEA_PACKET) {
+        if (NMEA_PACKET < (*dp)->packet_type) {
             (void)fputs("binary\t", stdout);
         } else {
             (void)fputs("NMEA\t", stdout);
@@ -374,16 +371,17 @@ static int property_check(void)
 
     status = EXIT_SUCCESS;
     for (dp = gpsd_drivers; *dp; dp++) {
-        if (*dp == NULL ||
-            (*dp)->packet_type == COMMENT_PACKET) {
+        if (COMMENT_PACKET == (*dp)->packet_type) {
             continue;
         }
-        if (CONTROLLABLE(*dp) && (*dp)->control_send == NULL) {
+        if (CONTROLLABLE(*dp) &&
+            NULL == (*dp)->control_send) {
             (void)fprintf(stderr, "%s has control methods but no send\n",
                           (*dp)->type_name);
             status = EXIT_FAILURE;
         }
-        if ((*dp)->event_hook != NULL && (*dp)->control_send == NULL) {
+        if (NULL != (*dp)->event_hook &&
+            NULL == (*dp)->control_send) {
             (void)fprintf(stderr, "%s has event hook but no send\n",
                           (*dp)->type_name);
             status = EXIT_FAILURE;
@@ -414,6 +412,8 @@ int main(int argc, char *argv[])
             break;
         case 'v':
             verbose = atoi(optarg);
+            break;
+        default:
             break;
         }
     }
