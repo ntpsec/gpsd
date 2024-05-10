@@ -29,13 +29,13 @@ except ImportError as e:
     sys.stderr.write(
         "gpscat: can't load Python gps libraries -- check PYTHONPATH.\n")
     sys.stderr.write("%s\n" % e)
-    exit(1)
+    sys.exit(1)
 
 gps_version = '@VERSION@'
 if gps.__version__ != gps_version:
     sys.stderr.write("gpscat: ERROR: need gps module version %s, got %s\n" %
                      (gps_version, gps.__version__))
-    exit(1)
+    sys.exit(1)
 
 
 # The spec says 82, but some receivers (TN-200, GSW 2.3.2) output 86 characters
@@ -148,7 +148,7 @@ if __name__ == '__main__':
                 tty = os.open(options.target, os.O_RDWR)
             except Exception as e:
                 print("gpscat: ERROR: %s.\n" % e)
-                exit(1)
+                sys.exit(1)
 
         if options.speed is not None:
             (iflag, oflag, cflag, lflag, ispeed, ospeed, cc) = \
@@ -157,7 +157,7 @@ if __name__ == '__main__':
                 ispeed = ospeed = eval("termios.B%d" % options.speed)
             except AttributeError as e:
                 sys.stderr.write("gpscat: ERROR: %s\n" % e)
-                exit(1)
+                sys.exit(1)
             if options.stopbits:
                 cflag &= ~termios.CSIZE
                 cflag |= (termios.CS8, termios.CS7)[options.stopbits - 1]
@@ -198,19 +198,19 @@ if __name__ == '__main__':
                             print('%d (%d@%d): %s\n' % (ptype, length,
                                   counter - length, hexdump(packet)))
                         except BrokenPipeError:
-                            # stdout piped to a prgram that died. 
+                            # stdout piped to a prgram that died.
                             # Like "head" does by default.
                             # die quietly
-                            exit(1)
+                            sys.exit(1)
                         except Exception as e:
                             sys.stderr.write("%s\n" % e)
-                            exit(1)
+                            sys.exit(1)
                     else:
                         print(hexdump(packet) + "\n")
     except KeyboardInterrupt:
         if options.rawmode:
             print("\n")
-        exit(0)
+        sys.exit(0)
 
 # Local variables:
 # mode: python
