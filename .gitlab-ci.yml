@@ -10,21 +10,28 @@ variables:
   CCACHE_COMPILERCHECK: "content"
   DEBIAN_FRONTEND: 'noninteractive'
 
-.debian_script:
+.when_push:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: always
+    - when: never
+
+.when_sched:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: manual
+    - when: never
+
+.debian_build:
   script:
     - apt update && apt -y install --no-install-recommends eatmydata
     - eatmydata -- apt -y dist-upgrade
     - eatmydata -- apt -y install --no-install-recommends ${PACKAGES}
     - if [ -n "${EXPERIMENTAL_PACKAGES}" ]; then apt -y install --no-install-recommends -t experimental ${EXPERIMENTAL_PACKAGES}; fi
     - eatmydata -- .ci-build/build.sh
-
-.debian_build:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: never
-    - if: $CI_PIPELINE_SOURCE != "schedule"
-      when: always
-  extends: .debian_script
+  extends: .when_push
 
 alpine-3:
   image: alpine:3
@@ -33,16 +40,11 @@ alpine-3:
     - apk update
     - apk add scons python3-dev libcap-dev ncurses-dev build-base bash linux-headers musl-dev ccache
     - .ci-build/build.sh
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: never
-    - if: $CI_PIPELINE_SOURCE != "schedule"
-      when: always
+  extends: .when_sched
 
 debian-experimental:gcc:
   allow_failure: true
   image: debian:experimental
-  stage: build
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
     PACKAGES: 'bc build-essential ccache
@@ -50,14 +52,12 @@ debian-experimental:gcc:
         libqt5network5t64 libusb-1.0-0-dev pps-tools
         python3-all python-is-python3 python3-setuptools
         qtbase5-dev scons'
-
     EXPERIMENTAL_PACKAGES: 'gcc g++'
   extends: .debian_build
 
 debian-unstable:clang:
   allow_failure: true
   image: debian:unstable
-  stage: build
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
     CC: 'clang'
@@ -73,7 +73,6 @@ debian-experimental:clang:
   # FIXME!
   allow_failure: true
   image: debian:experimental
-  stage: build
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
     CC: 'clang'
@@ -88,7 +87,7 @@ debian-experimental:clang:
 
 debian-unstable:minimal:
   image: debian:unstable
-  stage: build
+  stage: .pre
   variables:
     SCONSOPTS: 'aivdm=no ashtech=no bluez=no control_socket=no controlsend=no coveraging=no dbus_export=no debug=no earthmate=no evermore=no force_global=no fury=no fv18=no garmin=no garmintxt=no geostar=no gpsclock=no gpsdclients=no greis=no implicit_link=no isync=no itrax=no leapfetch=no libgpsmm=no magic_hat=no manbuild=no minimal=no mtk3301=no navcom=no ncurses=no netfeed=no nmea0183=no nmea2000=no nostrip=no ntrip=no oncore=no oscillator=no passthrough=no profiling=no python=no qt=no reconfigure=no shared=no shm_export=no sirf=no skytraq=no slow=no socket_export=yes squelch=no superstar2=no systemd=no timeservice=no tnt=no tripmate=no tsip=no usb=no xgps=no'
     NOCHECK: 'true'
@@ -97,47 +96,35 @@ debian-unstable:minimal:
   extends: .debian_build
 
 fedora-latest:
-  # Broken 8 Feb 2022
   allow_failure: true
   image: fedora:latest
-  stage: build
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
   script:
     - dnf install -y eatmydata
     - eatmydata -- dnf install -y ccache diffutils bluez-libs-devel dbus-devel gcc-c++ ncurses-devel python3-setuptools qt5-qtbase-devel scons pps-tools-devel
     - eatmydata .ci-build/build.sh
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: never
-    - if: $CI_PIPELINE_SOURCE != "schedule"
-      when: always
+  extends: .when_push
 
 centos-7-latest:
   allow_failure: true
   interruptible: true
   when: on_success
   image: centos:centos7
-  stage: build
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
   script:
     - yum -y update
     - yum -y install epel-release
-    - yum -y install eatmydata  # Should be early but after EPEL
-    - eatmydata -- yum -y install diffutils python2-scons bc gcc gcc-c++ bluez-libs-devel dbus-devel ncurses-devel python-devel pps-tools-devel libusbx-devel qt-devel gtk3-devel pyserial pycairo rubygem-ccache
     - eatmydata -- .ci-build/build.sh
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: never
-    - if: $CI_PIPELINE_SOURCE != "schedule"
-      when: always
+    - eatmydata -- yum -y install diffutils python2-scons bc gcc gcc-c++ bluez-libs-devel dbus-devel ncurses-devel python-devel pps-tools-devel libusbx-devel qt-devel gtk3-devel pyserial pycairo rubygem-ccache
+    - yum -y install eatmydata  # Should be early but after EPEL
+  extends: .when_push
 
 alma-8-minimal:
   allow_failure: true
   interruptible: true
   image: almalinux:8
-  stage: build
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
   script:
@@ -148,11 +135,7 @@ alma-8-minimal:
     - eatmydata -- dnf -y install diffutils python3-scons bc ncurses-devel qt5-qtbase-devel pps-tools-devel libnsl2-devel bluez-libs-devel platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial python3-cairo python3-gobject-base ccache python3
     - eatmydata -- ln -sv scons-3 /usr/bin/scons&&ln -sv python3 /usr/bin/python
     - eatmydata -- .ci-build/build.sh
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: never
-    - if: $CI_PIPELINE_SOURCE != "schedule"
-      when: always
+  extends: .when_push
 
 # to avoid failed builds on MRs/forks where no builder with the
 # tag `freebsd` is available, run this job only if
@@ -164,7 +147,6 @@ freebsd:
   rules:
     - if: '$HAVE_FREEBSD != "true"'
       when: never
-  stage: build
   variables:
     # 1 Oct 20, 0.01250, 0.02, are too short
     WRITE_PAD: '0.05'
@@ -173,6 +155,7 @@ freebsd:
   script:
     - .ci-build/build.sh
   timeout: 2 h
+  extends: .when_sched
 
 # to avoid failed builds on MRs/forks where no builder with the
 # tag `sparc64` is available, run this job only if
@@ -186,13 +169,13 @@ sparc64-linux:
   rules:
     - if: '$HAVE_SPARC64_LINUX != "true"'
       when: never
-  stage: build
   tags:
     - sparc64
     - linux
   script:
     - .ci-build/build.sh
   timeout: 1 h 10m
+  extends: .when_sched
 
 # to avoid failed builds on MRs/forks where no builder with the
 # tag `mips64le` is available, run this job only if
@@ -202,17 +185,16 @@ mips64le-linux:
   rules:
     - if: '$HAVE_MIPS64LE_LINUX != "true"'
       when: never
-  stage: build
   tags:
     - mips64le
     - linux
   script:
     - .ci-build/build.sh
+  extends: .when_sched
 
 scan-build:
   allow_failure: true
   image: debian:unstable
-  stage: test
   needs: ["alpine-3"]
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
@@ -233,16 +215,6 @@ scan-build:
 coverity:
   allow_failure: true
   image: debian:latest
-  stage: test
-  needs: ["alpine-3"]
-  # test for what broke coverity - gem 28 Nov 2023
-  rules:
-     - if: '$COVERITY_SCAN_PROJECT_NAME != /.+/'
-       when: never
-     - if: '$COVERITY_SCAN_TOKEN != /.+/'
-       when: never
-     - if: '$COVERITY_USER_EMAIL != /.+/'
-       when: never
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
     SCAN_BUILD: 'cov-analysis-linux64-*/bin/cov-build --dir cov-int'
@@ -274,7 +246,7 @@ coverity:
   artifacts:
     paths:
       - cov-int
-  extends: .debian_script
+  extends: .when_sched
 
 
 # as long as sconstruct has so many options, this does not make sense
@@ -282,7 +254,6 @@ coverity:
 #
 #test-options:
 #  image: debian:unstable
-#  stage: test
 #  needs: ["debian-unstable:gcc"]
 #  variables:
 #    DEBIAN_FRONTEND: 'noninteractive'
@@ -292,17 +263,8 @@ coverity:
 #  - .ci-build/test_options.sh
 #
 
-.should_build_pages: &should_build_pages
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
-      when: never
-    - if: $CI_PIPELINE_SOURCE != "schedule"
-      when: never
-    - when: always
-
 pages:
   image: alpine:latest
-  stage: build
   script:
     - apk update && apk add python3 asciidoctor scons rsync musl-dev gcc
     - gem install rouge
@@ -312,4 +274,4 @@ pages:
   artifacts:
     paths:
       - public
-  <<: *should_build_pages
+  extends: .when_sched
