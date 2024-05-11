@@ -244,21 +244,30 @@ coverity:
     SCONSOPTS: 'qt=yes xgps=yes'
     SCAN_BUILD: 'cov-analysis-linux64-*/bin/cov-build --dir cov-int'
     NOCHECK: 'true'
-    PACKAGES: 'bc build-essential clang clang-tools
+    PACKAGES: 'bc build-essential ca-certificates clang clang-tools curl git
         libbluetooth-dev libdbus-1-dev libglib2.0-dev
         libncurses-dev libqt5network5 libusb-1.0-0-dev
         pps-tools python-is-python3 python3-all python3-setuptools
         qtbase5-dev scons'
-  before_script:
-    - apt update && apt -y install curl git
-    - curl -o /tmp/cov-analysis-linux64.tgz https://scan.coverity.com/download/linux64 --form project=$COVERITY_SCAN_PROJECT_NAME --form token=$COVERITY_SCAN_TOKEN
-    - tar xfz /tmp/cov-analysis-linux64.tgz
-  after_script:
-    - tar cfz cov-int.tar.gz cov-int
+  script:
+    - \[ -n "$COVERITY_SCAN_PROJECT_NAME" ] || return 1
+    - \[ -n "$COVERITY_SCAN_TOKEN" ] || return 1
+    - \[ -n "$COVERITY_USER_EMAIL" ] || return 1
+    - apt update
+    - apt -y install --no-install-recommends eatmydata
+    - eatmydata -- apt -y install --no-install-recommends ${PACKAGES}
+    - eatmydata -- curl -o /tmp/cov-analysis-linux64.tgz -D -
+      https://scan.coverity.com/download/linux64
+      --form project=$COVERITY_SCAN_PROJECT_NAME
+      --form token=$COVERITY_SCAN_TOKEN
+    - eatmydata -- tar xfz /tmp/cov-analysis-linux64.tgz
+    - eatmydata -- .ci-build/build.sh
+    - eatmydata -- tar cfz cov-int.tar.gz cov-int
     - curl https://scan.coverity.com/builds?project=$COVERITY_SCAN_PROJECT_NAME
       --form token=$COVERITY_SCAN_TOKEN --form email=$COVERITY_USER_EMAIL
-      --form file=@cov-int.tar.gz --form version="`git describe --tags`"
-      --form description="`git describe --tags` / $CI_COMMIT_TITLE / $CI_COMMIT_REF_NAME:$CI_PIPELINE_ID "
+      -D - --form file=@cov-int.tar.gz
+      --form version="`git describe --tags`"
+      --form description="`git describe --tags` / $CI_COMMIT_TITLE / $CI_COMMIT_REF_NAME:$CI_PIPELINE_ID"
   artifacts:
     paths:
       - cov-int
