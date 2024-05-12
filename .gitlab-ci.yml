@@ -104,8 +104,9 @@ fedora-latest:
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
   script:
-    - dnf install -y ccache diffutils bluez-libs-devel dbus-devel gcc-c++ ncurses-devel python3-setuptools qt5-qtbase-devel scons pps-tools-devel
-    - .ci-build/build.sh
+    - dnf install -y eatmydata
+    - eatmydata -- dnf install -y ccache diffutils bluez-libs-devel dbus-devel gcc-c++ ncurses-devel python3-setuptools qt5-qtbase-devel scons pps-tools-devel
+    - eatmydata .ci-build/build.sh
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
@@ -123,8 +124,9 @@ centos-7-latest:
   script:
     - yum -y update
     - yum -y install epel-release
-    - yum -y install diffutils python2-scons bc gcc gcc-c++ bluez-libs-devel dbus-devel ncurses-devel python-devel pps-tools-devel libusbx-devel qt-devel gtk3-devel pyserial pycairo rubygem-ccache
-    - .ci-build/build.sh
+    - yum -y install eatmydata  # Should be early but after EPEL
+    - eatmydata -- yum -y install diffutils python2-scons bc gcc gcc-c++ bluez-libs-devel dbus-devel ncurses-devel python-devel pps-tools-devel libusbx-devel qt-devel gtk3-devel pyserial pycairo rubygem-ccache
+    - eatmydata -- .ci-build/build.sh
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
@@ -139,12 +141,13 @@ alma-8-minimal:
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
   script:
-    - dnf -y install dnf-plugins-core
-    - dnf config-manager --set-enabled powertools
     - dnf -y install epel-release
-    - dnf -y install diffutils python3-scons bc ncurses-devel qt5-qtbase-devel pps-tools-devel libnsl2-devel bluez-libs-devel platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial python3-cairo python3-gobject-base ccache python3
-    - ln -sv scons-3 /usr/bin/scons&&ln -sv python3 /usr/bin/python
-    - .ci-build/build.sh
+    - dnf -y install -y eatmydata  # Should be early but after EPEL
+    - eatmydata -- dnf -y install dnf-plugins-core
+    - eatmydata -- dnf config-manager --set-enabled powertools
+    - eatmydata -- dnf -y install diffutils python3-scons bc ncurses-devel qt5-qtbase-devel pps-tools-devel libnsl2-devel bluez-libs-devel platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial python3-cairo python3-gobject-base ccache python3
+    - eatmydata -- ln -sv scons-3 /usr/bin/scons&&ln -sv python3 /usr/bin/python
+    - eatmydata -- .ci-build/build.sh
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
