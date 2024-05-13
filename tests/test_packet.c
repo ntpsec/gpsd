@@ -330,7 +330,7 @@ static int property_check(void)
     const struct gps_type_t **dp;
     int status;
 
-    for (dp = gpsd_drivers; *dp; dp++) {
+    for (dp = gpsd_drivers; NULL != *dp; dp++) {
         if (COMMENT_PACKET == (*dp)->packet_type) {
             continue;
         }
@@ -370,7 +370,7 @@ static int property_check(void)
     }
 
     status = EXIT_SUCCESS;
-    for (dp = gpsd_drivers; *dp; dp++) {
+    for (dp = gpsd_drivers; NULL != *dp; dp++) {
         if (COMMENT_PACKET == (*dp)->packet_type) {
             continue;
         }
