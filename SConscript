@@ -20,9 +20,13 @@ import subprocess
 import sys
 import time
 try:
-    from setuptools import sysconfig
+    # sysconfig since 2.7, still in 3.13
+    import sysconfig
+    PYTHON_SYSCONFIG_IMPORT = 'import sysconfig'
 except:
+    # distutils gone in 3.13, but needed for 2.6
     from distutils import sysconfig
+    PYTHON_SYSCONFIG_IMPORT = 'from distutils import sysconfig'
 import SCons
 
 # scons does not like targets that come and go (if cleaning, if python,
@@ -265,7 +269,6 @@ website = "https://gpsd.io/"
 # Hosting information ends here
 
 
-PYTHON_SYSCONFIG_IMPORT = 'from distutils import sysconfig'
 
 # Utility productions
 
@@ -1543,18 +1546,9 @@ if not cleaning and not helping:
 
 # Set up configuration for target Python
 
-PYTHON_LIBDIR_CALL = 'sysconfig.get_python_lib()'
-
-PYTHON_CONFIG_NAMES = ['SO']  # Now a fairly degenerate list
-PYTHON_CONFIG_QUOTED = ["'%s'" % s for s in PYTHON_CONFIG_NAMES]
-PYTHON_CONFIG_CALL = ('sysconfig.get_config_vars(%s)'
-                      % ', '.join(PYTHON_CONFIG_QUOTED))
-
-
-python_config = {}  # Dummy for all non-Python-build cases
+PYTHON_LIBDIR_CALL = "sysconfig.get_path('purelib')"
 
 target_python_path = ''
-py_config_text = str(eval(PYTHON_CONFIG_CALL))
 python_libdir = str(eval(PYTHON_LIBDIR_CALL))
 
 # flag if we have xgps* dependencies, so xgps* should run OK
@@ -1627,17 +1621,6 @@ if not cleaning and not helping and config.env['python']:
         announce("Ensure your PYTHONPATH includes %s" % python_module_dir,
                  end=True)
         python_module_dir += 'gps'
-
-        py_config_text = config.GetPythonValue('config vars',
-                                               PYTHON_SYSCONFIG_IMPORT,
-                                               PYTHON_CONFIG_CALL,
-                                               brief=True)
-        py_config_text = polystr(py_config_text)
-        py_config_vars = ast.literal_eval(py_config_text)
-        py_config_vars = [[] if x is None else x for x in py_config_vars]
-        python_config = dict(zip(PYTHON_CONFIG_NAMES, py_config_vars))
-        # debug
-        # announce(python_config)
 
         # aiogps is only available on Python >= 3.6
         sysver = config.GetPythonValue('target version',
