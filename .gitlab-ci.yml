@@ -27,7 +27,9 @@ variables:
     - apt update && apt -y install --no-install-recommends eatmydata
     - eatmydata -- apt -y dist-upgrade
     - eatmydata -- apt -y install --no-install-recommends ${PACKAGES}
-    - if [ -n "${EXPERIMENTAL_PACKAGES}" ]; then apt -y install --no-install-recommends -t experimental ${EXPERIMENTAL_PACKAGES}; fi
+    - if [ -n "${EXPERIMENTAL_PACKAGES}" ]; then
+      apt -y install --no-install-recommends
+      -t experimental ${EXPERIMENTAL_PACKAGES}; fi
     - eatmydata -- .ci-build/build.sh
   extends: .when_push
 
@@ -87,7 +89,18 @@ debian-unstable:minimal:
   image: debian:unstable
   stage: .pre
   variables:
-    SCONSOPTS: 'aivdm=no ashtech=no bluez=no control_socket=no controlsend=no coveraging=no dbus_export=no debug=no earthmate=no evermore=no force_global=no fury=no fv18=no garmin=no garmintxt=no geostar=no gpsclock=no gpsdclients=no greis=no implicit_link=no isync=no itrax=no leapfetch=no libgpsmm=no magic_hat=no manbuild=no minimal=no mtk3301=no navcom=no ncurses=no netfeed=no nmea0183=no nmea2000=no nostrip=no ntrip=no oncore=no oscillator=no passthrough=no profiling=no python=no qt=no reconfigure=no shared=no shm_export=no sirf=no skytraq=no slow=no socket_export=yes squelch=no superstar2=no systemd=no timeservice=no tnt=no tripmate=no tsip=no usb=no xgps=no'
+    SCONSOPTS: 'aivdm=no ashtech=no bluez=no control_socket=no
+      controlsend=no coveraging=no dbus_export=no debug=no
+      earthmate=no evermore=no force_global=no fury=no fv18=no
+      garmin=no garmintxt=no geostar=no gpsclock=no gpsdclients=no
+      greis=no implicit_link=no isync=no itrax=no leapfetch=no
+      libgpsmm=no magic_hat=no manbuild=no minimal=no mtk3301=no
+      navcom=no ncurses=no netfeed=no nmea0183=no nmea2000=no
+      nostrip=no ntrip=no oncore=no oscillator=no passthrough=no
+      profiling=no python=no qt=no reconfigure=no shared=no
+      shm_export=no sirf=no skytraq=no slow=no socket_export=yes
+      squelch=no superstar2=no systemd=no timeservice=no tnt=no
+      tripmate=no tsip=no usb=no xgps=no'
     NOCHECK: 'true'
     PACKAGES: 'asciidoctor build-essential ccache python-is-python3 python3-all
         python3-setuptools scons'
@@ -100,7 +113,9 @@ fedora-latest:
     SCONSOPTS: 'qt=yes xgps=yes'
   script:
     - dnf install -y eatmydata
-    - eatmydata -- dnf install -y ccache diffutils bluez-libs-devel dbus-devel gcc-c++ ncurses-devel python3-setuptools qt5-qtbase-devel scons pps-tools-devel
+    - eatmydata -- dnf install -y ccache diffutils
+      bluez-libs-devel dbus-devel gcc-c++ ncurses-devel
+      python3-setuptools qt5-qtbase-devel scons pps-tools-devel
     - eatmydata .ci-build/build.sh
   extends: .when_push
 
@@ -132,7 +147,10 @@ alma-8-minimal:
     - dnf -y install -y eatmydata  # Should be early but after EPEL
     - eatmydata -- dnf -y install dnf-plugins-core
     - eatmydata -- dnf config-manager --set-enabled powertools
-    - eatmydata -- dnf -y install diffutils python3-scons bc ncurses-devel qt5-qtbase-devel pps-tools-devel libnsl2-devel bluez-libs-devel platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial python3-cairo python3-gobject-base ccache python3
+    - eatmydata -- dnf -y install diffutils python3-scons bc ncurses-devel
+      qt5-qtbase-devel pps-tools-devel libnsl2-devel bluez-libs-devel
+      platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial
+      python3-cairo python3-gobject-base ccache python3
     - eatmydata -- ln -sv scons-3 /usr/bin/scons&&ln -sv python3 /usr/bin/python
     - eatmydata -- .ci-build/build.sh
   extends: .when_push
@@ -258,7 +276,11 @@ coverity:
 #    DEBIAN_FRONTEND: 'noninteractive'
 #  when: manual
 #  script:
-#  - apt update && apt -y install build-essential debhelper po-debconf python3-all-dev python3-all-dbg libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools
+#  - apt update && apt -y install build-essential debhelper
+#    po-debconf python3-all-dev python3-all-dbg libncurses-dev
+#    libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev
+#    libbluetooth-dev qtbase5-dev libqt5network5 lsb-release
+#    bc dpkg-dev scons chrpath dh-buildinfo pps-tools
 #  - .ci-build/test_options.sh
 #
 
