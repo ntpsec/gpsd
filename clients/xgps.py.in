@@ -1262,6 +1262,8 @@ frame * {
             column.add_attribute(renderer, 'text', i)
             # required for set_fixed_height_mode(True)
             column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+            column.set_min_width(14)  # minimum claim is 13 expand by 1
+            column.set_resizable(True)
             sat_view.append_column(column)
 
         self.row_iters = []
@@ -1533,7 +1535,6 @@ frame * {
             return ("% 14.3f %s%s" %
                     (value * self.conversions.altfactor,
                      self.conversions.altunits, speedunit))
-
         return "n/a"
 
     def update_err(self, data, errtype):
