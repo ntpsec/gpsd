@@ -1665,7 +1665,7 @@ frame * {
     def set_step_of_grid(self, system, handle):
         """Change the step of grid."""
         # print("set_step_of_grid:", system, handle)
-        if hasattr(self, 'skyview') and self.skyview is not None:
+        if hasattr(self, 'sky_view') and self.sky_view is not None:
             self.sky_view.step_of_grid = handle
 
     def set_deg(self, _unused, handle):
