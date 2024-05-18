@@ -1,5 +1,5 @@
 = gpssnmp(1)
-:date: 8 September 2022
+:date: 18 May 2024
 :keywords: gps, gpsd, gpssnmp
 :manmanual: GPSD Documentation
 :mansource: GPSD Version {gpsdver}
@@ -90,7 +90,7 @@ this functionality on an already working snmpd installation, add this to your
 # be sure SNMPv2 community "public" can access all MIBs:
 rocommunity public  localhost
 
-# configure pass-thur of GPSD-MIB to gpssnmp
+# configure pass-thru of GPSD-MIB to gpssnmp
 pass .1.3.6.1.4.1.59054  /usr/local/bin/gpssnmp
 ----
 
@@ -147,5 +147,6 @@ pass_persist .1.3.6.1.4.1.59054  /usr/local/bin/gpssnmp --persist
 
 == COPYING
 
-This file is Copyright 2022 by the GPSD project +
-SPDX-License-Identifier: BSD-2-clause
+SPDX-FileCopyrightText: The GPSD project +
+SPDX-FileType: DOCUMENTATION +
+SPDX-License-Identifier: BSD-2-clause 
