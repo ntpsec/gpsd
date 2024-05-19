@@ -9,10 +9,9 @@ DESCRIPTION
 
    Most of these should be static.
 
-PERMISSIONS
-  Written by Eric S. Raymond, 2009
-  This file is Copyright 2010 by the GPSD project
-  SPDX-License-Identifier: BSD-2-clause
+Written by Eric S. Raymond, 2009
+This file is Copyright by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
 
@@ -582,8 +581,11 @@ void json_sky_dump(const struct gps_device_t *session,
 {
     int i, reported = 0, used = 0;
     const struct gps_data_t *datap = &session->gpsdata;
+    size_t header_len;       // a guard to prevent sending empty messages
 
+    // FIXME: asserts must die
     assert(replylen > sizeof(char *));
+
     (void)strlcpy(reply, "{\"class\":\"SKY\"", replylen);
     if ('\0' != datap->dev.path[0]) {
         str_appendf(reply, replylen, ",\"device\":\"%s\"", datap->dev.path);
@@ -596,6 +598,8 @@ void json_sky_dump(const struct gps_device_t *session,
                        timespec_to_iso8601(datap->skyview_time,
                                       tbuf, sizeof(tbuf)));
     }
+    header_len = strnlen(reply, replylen);
+
     if (0 != isfinite(datap->dop.gdop)) {
         str_appendf(reply, replylen, ",\"gdop\":%.2f", datap->dop.gdop);
     }
@@ -703,7 +707,12 @@ void json_sky_dump(const struct gps_device_t *session,
         str_appendf(reply, replylen, ",\"uSat\":%u",
                     session->nmea.gga_sats_used);
     }
-    (void)strlcat(reply, "}\r\n", replylen);
+    if (header_len == strnlen(reply, replylen)) {
+        // empty message, slip it
+        *reply = '\0';
+    } else {
+        (void)strlcat(reply, "}\r\n", replylen);
+    }
 }
 
 void json_device_dump(const struct gps_device_t *device,
@@ -4726,6 +4735,10 @@ void json_data_report(const gps_mask_t changed,
     struct gps_data_t *datap = &session->gpsdata;
     size_t buf_len;
     buf[0] = '\0';
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "json_data_report(%s) changed %s\n",
+             session->gpsdata.dev.path, gps_maskdump(changed));
 
     if (0 != (changed & REPORT_IS)) {
         buf_len = strnlen(buf, MAX_PACKET_LENGTH);
