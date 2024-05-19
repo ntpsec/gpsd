@@ -634,9 +634,12 @@ static void decode(FILE *fpin, FILE *fpout)
                       json, gps_maskdump(changed));
 #endif
         // mask should match what's in gpsd/gpsd.c report_data()
-        if (0 == (changed & (AIS_SET | ATTITUDE_SET | GST_SET | IMU_SET |
-                             REPORT_IS | RAW_IS | RTCM2_SET | RTCM3_SET |
-                             SATELLITE_SET | SUBFRAME_SET))) {
+        if (0 != (changed & (ATTITUDE_SET | LATLON_SET | MODE_SET))) {
+            changed |= REPORT_IS;
+        }
+        if (0 == (changed & (AIS_SET | ATTITUDE_SET | GST_SET | DOP_SET |
+                             IMU_SET | RAW_IS |  REPORT_IS| RTCM2_SET |
+                             RTCM3_SET | SATELLITE_SET | SUBFRAME_SET))) {
             continue;
         }
         if (!filter(changed, &session)) {
