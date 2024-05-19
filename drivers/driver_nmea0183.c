@@ -242,8 +242,10 @@ static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
     mday = DD(ddmmyy);
 
     // check for century wrap
-    if (session->nmea.date.tm_year % 100 == 99 && yy == 0)
+    if (99 == (session->nmea.date.tm_year % 100) &&
+        0 == yy) {
         gpsd_century_update(session, session->context->century + 100);
+    }
     year = (session->context->century + yy);
 
     /* 32 bit systems will break in 2038.
@@ -1270,11 +1272,13 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     }
     mask |= MODE_SET;
 
-    // BT-451, and others, send 99.99 for invalid DOPs
+    // BT-451 sends 99.99 for invalid DOPs
+    // Jackson Labs send 99.00 for invalid DOPs
+    // Skytraq send 0.00 for invalid DOPs
     if ('\0' != field[8][0]) {
         double hdop;
         hdop = safe_atof(field[8]);
-        if (99.0 > hdop) {
+        if (IN(0.01, hdop, 89.99)) {
             // why not to newdata?
             session->gpsdata.dop.hdop = hdop;
             mask |= DOP_SET;
@@ -1702,24 +1706,27 @@ static gps_mask_t processGSA(int count, char *field[],
             double dop;
 
             // Just ignore the last fields of the Navior CH-4701
+
+            // BT-451 sends 99.99 for invalid DOPs
+            // Jackson Labs send 99.00 for invalid DOPs
+            // Skytraq send 0.00 for invalid DOPs
             if ('\0' != field[15][0]) {
                 dop = safe_atof(field[15]);
-                if (99.0 > dop) {
+                if (IN(0.01, dop, 89.99)) {
                     session->gpsdata.dop.pdop = dop;
                     mask |= DOP_SET;
                 }
             }
-            // BT-451, and others, send 99.99 for invalid DOPs
             if ('\0' != field[16][0]) {
                 dop = safe_atof(field[16]);
-                if (99.0 > dop) {
+                if (IN(0.01, dop, 89.99)) {
                     session->gpsdata.dop.hdop = dop;
                     mask |= DOP_SET;
                 }
             }
             if ('\0' != field[17][0]) {
                 dop = safe_atof(field[17]);
-                if (99.0 > dop) {
+                if (IN(0.01, dop, 89.99)) {
                     session->gpsdata.dop.vdop = dop;
                     mask |= DOP_SET;
                 }
