@@ -2276,11 +2276,32 @@ static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
     char buf2[80];
     int i, count;
     unsigned fixdm = getub(buf, 0);          // fix dimension, mode
-    session->gpsdata.dop.pdop = getbef32(buf, 1);
-    session->gpsdata.dop.hdop = getbef32(buf, 5);
-    session->gpsdata.dop.vdop = getbef32(buf, 9);
+    double pdop = getbef32(buf, 1);
+    double hdop = getbef32(buf, 5);
+    double vdop = getbef32(buf, 9);
     // RES SMT 360 and ICM SMT 360 always report tdop == 1
-    session->gpsdata.dop.tdop = getbef32(buf, 13);
+    double tdop = getbef32(buf, 13);
+
+    if (IN(0.01, pdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.pdop = pdop;
+        mask |= DOP_SET;
+    }
+    if (IN(0.01, hdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.hdop = hdop;
+        mask |= DOP_SET;
+    }
+    if (IN(0.01, vdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.vdop = vdop;
+        mask |= DOP_SET;
+    }
+    if (IN(0.01, tdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.tdop = tdop;
+        mask |= DOP_SET;
+    }
 
     count = getub(buf, 17);
 
@@ -2342,7 +2363,6 @@ static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
     mask |= MODE_SET;
 
     session->gpsdata.satellites_used = count;
-    mask |= DOP_SET;
 
     memset(session->driver.tsip.sats_used, 0,
 	    sizeof(session->driver.tsip.sats_used));
@@ -2361,11 +2381,7 @@ static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
 	     session->newdata.mode,
 	     session->newdata.status,
 	     session->gpsdata.satellites_used,
-	     session->gpsdata.dop.pdop,
-	     session->gpsdata.dop.hdop,
-	     session->gpsdata.dop.vdop,
-	     session->gpsdata.dop.tdop,
-	     buf2, fixdm);
+	     pdop, hdop, vdop, tdop, buf2, fixdm);
     GPSD_LOG(LOG_IO, &session->context->errout,
 	     "TSIP: fixd:%s\n",
 	     flags2str(fixdm, vfix, buf2, sizeof(buf2)));
@@ -2383,11 +2399,38 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
 
     unsigned fix_dim = getub(buf, 0);     // nsvs/dimension
     int count = (int)((fix_dim >> 4) & 0x0f);
+    double pdop = getbef32(buf, 1);
+    double hdop = getbef32(buf, 5);
+    double vdop = getbef32(buf, 9);
+    double tdop = getbef32(buf, 13);
+
     if ((17 + count) > len) {
 	*pbad_len = 17 + count;
         return 0;
     }
     *pbad_len = 0;
+
+    session->gpsdata.satellites_used = count;
+    if (IN(0.01, pdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.pdop = pdop;
+        mask |= DOP_SET;
+    }
+    if (IN(0.01, hdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.hdop = hdop;
+        mask |= DOP_SET;
+    }
+    if (IN(0.01, vdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.vdop = vdop;
+        mask |= DOP_SET;
+    }
+    if (IN(0.01, tdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.tdop = tdop;
+        mask |= DOP_SET;
+    }
 
     /*
      * This looks right, but it sets a spurious mode value when
@@ -2438,13 +2481,6 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
     }
     mask |= MODE_SET;
 
-    session->gpsdata.satellites_used = count;
-    session->gpsdata.dop.pdop = getbef32(buf, 1);
-    session->gpsdata.dop.hdop = getbef32(buf, 5);
-    session->gpsdata.dop.vdop = getbef32(buf, 9);
-    session->gpsdata.dop.tdop = getbef32(buf, 13);
-    mask |= DOP_SET;
-
     memset(session->driver.tsip.sats_used, 0,
            sizeof(session->driver.tsip.sats_used));
     buf2[0] = '\0';
@@ -2464,10 +2500,7 @@ static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
              session->newdata.status,
              session->newdata.mode,
              session->gpsdata.satellites_used,
-             session->gpsdata.dop.pdop,
-             session->gpsdata.dop.hdop,
-             session->gpsdata.dop.vdop,
-             session->gpsdata.dop.tdop, buf2);
+             pdop, hdop, vdop, tdop, buf2);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "TSIP: fix::%s\n",
              flags2str(fix_dim, vfix, buf2, sizeof(buf2)));
@@ -4379,7 +4412,13 @@ static gps_mask_t decode_xa1_11(struct gps_device_t *session, const char *buf)
     double d5  = getbef32(buf, 34);            // velocity Y or N
     double d6  = getbef32(buf, 38);            // velocity Z or U
 
-    session->gpsdata.dop.pdop = getbef32(buf, 42);  // PDOP, surveyed/current
+    double pdop = getbef32(buf, 42);  // PDOP, surveyed/current
+
+    if (IN(0.01, pdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.pdop = pdop;
+        mask |= DOP_SET;
+    }
     session->newdata.eph = getbef32(buf, 46);  // eph, 0 - 100, unknown units
     session->newdata.epv = getbef32(buf, 50);  // epv, 0 - 100, unknown units
     mask |= DOP_SET;
@@ -4439,7 +4478,7 @@ static gps_mask_t decode_xa1_11(struct gps_device_t *session, const char *buf)
              session->newdata.mode,
              session->newdata.status,
              pmask, ftype, d1, d2, d3, d4, d5, d6,
-             session->gpsdata.dop.pdop,
+             pdop,
              session->newdata.eph,
              session->newdata.epv);
     GPSD_LOG(LOG_IO, &session->context->errout,
@@ -4591,11 +4630,33 @@ static gps_mask_t decode_xa3_11(struct gps_device_t *session, const char *buf)
     unsigned rec_status = getub(buf, 5);              // status
     unsigned ssp = getub(buf, 6);              // self survey progress 0 - 100
 
-    session->gpsdata.dop.pdop = getbef32(buf, 7);     // PDOP
-    session->gpsdata.dop.hdop = getbef32(buf, 11);    // HDOP
-    session->gpsdata.dop.vdop = getbef32(buf, 15);    // VDOP
-    session->gpsdata.dop.tdop = getbef32(buf, 19);    // TDOP
+    double pdop = getbef32(buf, 7);     // PDOP
+    double hdop = getbef32(buf, 11);    // HDOP
+    double vdop = getbef32(buf, 15);    // VDOP
+    double tdop = getbef32(buf, 19);    // TDOP
+
     session->newdata.temp = getbef32(buf, 23);        // Temperature, degrees C
+
+    if (IN(0.01, pdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.pdop = pdop;
+        mask |= DOP_SET;
+    }
+    if (IN(0.01, hdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.hdop = hdop;
+        mask |= DOP_SET;
+    }
+    if (IN(0.01, vdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.vdop = vdop;
+        mask |= DOP_SET;
+    }
+    if (IN(0.01, tdop, 89.99)) {
+        // why not to newdata?
+        session->gpsdata.dop.tdop = tdop;
+        mask |= DOP_SET;
+    }
 
     // don't have tow, so use the one from xa2-00, if any
     session->driver.tsip.last_a311 = session->driver.tsip.last_a200;
@@ -4606,7 +4667,7 @@ static gps_mask_t decode_xa3_11(struct gps_device_t *session, const char *buf)
         // is after xa2-00 and the sats.  Push out any lingering sats.
         mask |= SATELLITE_SET;
     }
-    mask |= REPORT_IS | DOP_SET;
+    mask |= REPORT_IS;
     switch (rec_status) {
     case 0:         // 2D
         session->newdata.mode = MODE_2D;
@@ -4655,7 +4716,7 @@ static gps_mask_t decode_xa3_11(struct gps_device_t *session, const char *buf)
         break;
     }
 
-    if (10.0 < session->gpsdata.dop.pdop) {
+    if (10.0 < pdop) {
         session->newdata.status = STATUS_DR;
         mask |= STATUS_SET;
     }
@@ -4666,10 +4727,7 @@ static gps_mask_t decode_xa3_11(struct gps_device_t *session, const char *buf)
              session->newdata.mode,
              session->newdata.status,
              rec_mode, rec_status, ssp,
-             session->gpsdata.dop.pdop,
-             session->gpsdata.dop.hdop,
-             session->gpsdata.dop.vdop,
-             session->gpsdata.dop.tdop,
+             pdop, hdop, vdop, tdop,
              session->newdata.temp);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "TSIPv1: mode:%s status:%s rm:%s stat:%s\n",
