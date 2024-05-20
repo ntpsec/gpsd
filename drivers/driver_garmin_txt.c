@@ -107,7 +107,7 @@ invalid data.
 ***************************************************/
 
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <math.h>
 #include <stdbool.h>
@@ -119,8 +119,8 @@ invalid data.
 
 #ifdef GARMINTXT_ENABLE
 
-/* Simple text message is fixed length, 55 chars text data + 2 characters EOL */
-/* buffer for text processing */
+// Simple text message is fixed length, 55 chars text data + 2 characters EOL
+// buffer for text processing
 #define TXT_BUFFER_SIZE 13
 
 /**************************************************************************
@@ -130,16 +130,16 @@ invalid data.
  *       -2: data not valid
  *
  * examples with context->errout.debug == 0:
-
+ *
  *  gar_decode(context, cbuf, 9, "EW", 100000.0, &result);
  *  E01412345 -> +14.12345
-
+ *
  *  gar_decode(context, cbuf, 9, "EW", 100000.0, &result);
  *  W01412345 -> -14.12345
-
+ *
  *  gar_decode(context, cbuf, 3, "", 10.0, &result);
  *  123 -> +12.3
-
+ *
 **************************************************************************/
 static int gar_decode(const struct gps_context_t *context,
                       const char *data, const size_t length,
@@ -148,62 +148,68 @@ static int gar_decode(const struct gps_context_t *context,
 {
     char buf[10];
     float sign = 1.0;
-    int preflen = (int)strnlen(prefix, 3);
     int offset = 1;      // assume one character prefix (E,W,S,N,U,D, etc)
     long int intresult;
 
-    if (length >= sizeof(buf)) {
-        GPSD_LOG(LOG_ERROR, &context->errout, "internal buffer too small\n");
+    if (1 > length) {
+        GPSD_LOG(LOG_ERROR, &context->errout, "GTXT: field too short %zu\n",
+                 length);
         return -1;
     }
 
-    memset(buf, 0, (int)sizeof(buf));
-    (void)strlcpy(buf, data, length);
-    GPSD_LOG(LOG_RAW, &context->errout, "Decoded string: %s\n", buf);
+    if (sizeof(buf) <= length) {
+        GPSD_LOG(LOG_ERROR, &context->errout,
+                 "GTXT: internal buffer too small\n");
+        return -1;
+    }
 
-    if (strchr(buf, '_') != NULL) {
-        /* value is not valid, ignore it */
+    memset(buf, 0, sizeof(buf));
+    (void)strlcpy(buf, data, length);
+    GPSD_LOG(LOG_RAW, &context->errout, "GTXT: Decoded string: %s\n", buf);
+
+    if (NULL != strchr(buf, '_')) {
+        // value is not valid, ignore it
         return -2;
     }
 
-    /* parse prefix */
+    // parse prefix
     do {
-        if (preflen == 0) {
-            offset = 0;         /* only number, no prefix */
+        if ('\0' == prefix[0]) {
+            offset = 0;         // only number, no prefix
             break;
         }
-        /* second character in prefix is flag for negative number */
-        if (preflen >= 2) {
+        // second character in prefix is flag for negative number
+        if ('\0' != prefix[1]) {
             if (buf[0] == prefix[1]) {
                 sign = -1.0;
                 break;
             }
+            // 2nd prefix char not match
         }
-        /* first character in prefix is flag for positive number */
-        if (preflen >= 1) {
-            if (buf[0] == prefix[0]) {
-                sign = 1.0;
-                break;
-            }
+        // first character in prefix is flag for positive number
+        if (buf[0] == prefix[0]) {
+            sign = 1.0;
+            break;
         }
         GPSD_LOG(LOG_WARN, &context->errout,
-                 "Unexpected char \"%c\" in data \"%s\"\n",
+                 "GTXT: Unexpected char \"%c\" in data \"%s\"\n",
                  buf[0], buf);
         return -1;
     } while (0);
 
     if (strspn(buf + offset, "0123456789") != length - offset) {
-        GPSD_LOG(LOG_WARN, &context->errout, "Invalid value %s\n", buf);
+        GPSD_LOG(LOG_WARN, &context->errout, "GTXT: Invalid value %s\n", buf);
         return -1;
     }
 
     intresult = atol(buf + offset);
-    if (intresult == 0L)
-        sign = 0.0;             /*  don't create negative zero */
+    if (0L == intresult) {
+        sign = 0.0;             //  don't create negative zero
+    }
 
     *result = (double)intresult / dividor * sign;
 
-    return 0;                   /* SUCCESS */
+    return 0;                   // SUCCESS
 }
 
 /**************************************************************************
@@ -217,38 +223,38 @@ static int gar_int_decode(const struct gps_context_t *context,
                           const unsigned int min, const unsigned int max,
                           unsigned int *result)
 {
-    char buf[6];
+    char buf[10];
     unsigned int res;
 
-    if (length >= sizeof(buf)) {
-        GPSD_LOG(LOG_ERROR, &context->errout, "internal buffer too small\n");
+    if (sizeof(buf) <= length ) {
+        GPSD_LOG(LOG_ERROR, &context->errout,
+                 "GTXT: internal buffer too small\n");
         return -1;
     }
 
-    memset(buf, 0, (int)sizeof(buf));
+    memset(buf, 0, sizeof(buf));
     (void)strlcpy(buf, data, length);
-    GPSD_LOG(LOG_RAW, &context->errout, "Decoded string: %s\n", buf);
+    GPSD_LOG(LOG_RAW, &context->errout, "GTXT: Decoded string: %s\n", buf);
 
-    if (strchr(buf, '_') != NULL) {
-        /* value is not valid, ignore it */
+    if (NULL != strchr(buf, '_')) {
+        // value is not valid, ignore it
         return -2;
     }
 
     if (strspn(buf, "0123456789") != length) {
-        GPSD_LOG(LOG_WARN, &context->errout, "Invalid value %s\n", buf);
+        GPSD_LOG(LOG_WARN, &context->errout, "GTXT: Invalid value %s\n", buf);
         return -1;
     }
 
     res = (unsigned)atoi(buf);
-    if ((res >= min) && (res <= max)) {
+    if (IN(min, res, max)) {
         *result = res;
-        return 0;               /* SUCCESS */
-    } else {
-        GPSD_LOG(LOG_WARN, &context->errout,
-                 "Value %u out of range <%u, %u>\n", res, min,
-                 max);
-        return -1;
+        return 0;               // SUCCESS
     }
+    GPSD_LOG(LOG_WARN, &context->errout,
+             "GTXT: Value %u out of range <%u, %u>\n", res, min,
+             max);
+    return -1;
 }
 
 
@@ -258,66 +264,73 @@ static int gar_int_decode(const struct gps_context_t *context,
  *
  **************************************************************************/
 
+// parse GARMIN Simple Text sentence, unpack it into a session structure
 gps_mask_t garmintxt_parse(struct gps_device_t * session)
 {
-/* parse GARMIN Simple Text sentence, unpack it into a session structure */
 
     gps_mask_t mask = 0;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "Garmin Simple Text packet, len %zd: %s\n",
+             "GTXT: Garmin Simple Text packet, len %zd: %s\n",
              session->lexer.outbuflen, (char*)session->lexer.outbuffer);
 
-    if (session->lexer.outbuflen < 54) {
+    if (54 > session->lexer.outbuflen) {
         /* trailing CR and LF can be ignored; ('@' + 54x 'DATA' + '\r\n')
          * has length 57 */
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Message is too short, rejected.\n");
+                 "GTXT: Message is too short, rejected.\n");
         return ONLINE_SET;
     }
 
     session->lexer.type = GARMINTXT_PACKET;
 
-    /* only one message, set cycle start */
+    // only one message, set cycle start
     session->cycle_end_reliable = true;
     do {
-        struct tm gdate;                /* date part of last sentence time */
+        struct tm gdate;                // date part of last sentence time
         unsigned int result;
         char *buf = (char *)session->lexer.outbuffer + 1;
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "Timestamp: %.12s\n", buf);
 
-        /* year */
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "GTXT: Timestamp: %.12s\n", buf);
+
+        // year
         if (0 != gar_int_decode(session->context,
-                                buf + 0, 2, 0, 99, &result))
+                                buf + 0, 2, 0, 99, &result)) {
             break;
+        }
         gdate.tm_year = (session->context->century + (int)result) - 1900;
-        /* month */
+        // month
         if (0 != gar_int_decode(session->context,
-                                buf + 2, 2, 1, 12, &result))
+                                buf + 2, 2, 1, 12, &result)) {
             break;
+        }
         gdate.tm_mon = (int)result - 1;
-        /* day */
+        // day
         if (0 != gar_int_decode(session->context,
-                                buf + 4, 2, 1, 31, &result))
+                                buf + 4, 2, 1, 31, &result)) {
             break;
+        }
         gdate.tm_mday = (int)result;
-        /* hour */
+        // hour
         if (0 != gar_int_decode(session->context,
-                                buf + 6, 2, 0, 23, &result))
+                                buf + 6, 2, 0, 23, &result)) {
             break;
-        /* mday update?? */
+        }
+        // mday update??
         gdate.tm_hour = (int)result;
-        /* minute */
+        // minute
         if (0 != gar_int_decode(session->context,
-                                buf + 8, 2, 0, 59, &result))
+                                buf + 8, 2, 0, 59, &result)) {
             break;
+        }
         gdate.tm_min = (int)result;
-        /* second */
-        /* second value can be even 60, occasional leap second */
+        // second
+        // second value can be even 60, occasional leap second
         if (0 != gar_int_decode(session->context,
-                                buf + 10, 2, 0, 60, &result))
+                                buf + 10, 2, 0, 60, &result)) {
             break;
+        }
         gdate.tm_sec = (int)result;
         session->newdata.time.tv_sec = mkgmtime(&gdate);
         session->newdata.time.tv_nsec = 0;
@@ -330,66 +343,73 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
     session->newdata.status = STATUS_UNK;
     mask |= MODE_SET | STATUS_SET | CLEAR_IS | REPORT_IS;
 
-    /* process position */
+    // process position
 
     do {
         double lat, lon;
         unsigned int degfrag;
         char status;
 
-        /* Latitude, [NS]ddmmmmm */
-        /* decode degrees of Latitude */
+        // Latitude, [NS]ddmmmmm
+        // decode degrees of Latitude
         if (0 !=
             gar_decode(session->context,
                 (char *)session->lexer.outbuffer + 13, 3, "NS", 1.0,
-                &lat))
+                &lat)) {
             break;
-        /* decode minutes of Latitude */
+        }
+        // decode minutes of Latitude
         if (0 !=
             gar_int_decode(session->context,
                            (char *)session->lexer.outbuffer + 16, 5, 0,
-                           99999, &degfrag))
+                           99999, &degfrag)) {
             break;
+        }
         lat += degfrag * 100.0 / 60.0 / 100000.0;
         session->newdata.latitude = lat;
 
-        /* Longitude, [EW]dddmmmmm */
-        /* decode degrees of Longitude */
+        // Longitude, [EW]dddmmmmm
+        // decode degrees of Longitude
         if (0 !=
             gar_decode(session->context,
                        (char *)session->lexer.outbuffer + 21, 4, "EW", 1.0,
-                       &lon))
+                       &lon)) {
             break;
-        /* decode minutes of Longitude */
+        }
+        // decode minutes of Longitude
         if (0 !=
             gar_int_decode(session->context,
                            (char *)session->lexer.outbuffer + 25, 5, 0,
-                           99999, &degfrag))
+                           99999, &degfrag)) {
             break;
+        }
         lon += degfrag * 100.0 / 60.0 / 100000.0;
         session->newdata.longitude = lon;
         session->newdata.geoid_sep = wgs84_separation(lat, lon);
 
-        /* fix mode, GPS status, [gGdDS_] */
+        // fix mode, GPS status, [gGdDS_]
         status = (char)session->lexer.outbuffer[30];
 
         switch (status) {
+        case 'D':
+            session->newdata.mode = MODE_3D;
+            session->newdata.status = STATUS_DGPS;
+            break;
         case 'G':
-        case 'S':               /* 'S' is DEMO mode, assume 3D position */
             session->newdata.mode = MODE_3D;
             session->newdata.status = STATUS_GPS;
             break;
-        case 'D':
+        case 'S':
             session->newdata.mode = MODE_3D;
+            session->newdata.status = STATUS_SIM;
+            break;
+        case 'd':
+            session->newdata.mode = MODE_2D;
             session->newdata.status = STATUS_DGPS;
             break;
         case 'g':
             session->newdata.mode = MODE_2D;
             session->newdata.status = STATUS_GPS;
-            break;
-        case 'd':
-            session->newdata.mode = MODE_2D;
-            session->newdata.status = STATUS_DGPS;
             break;
         default:
             session->newdata.mode = MODE_NO_FIX;
@@ -398,50 +418,55 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
         mask |= MODE_SET | STATUS_SET | LATLON_SET;
     } while (0);
 
-    /* EPH */
+    // EPH
     do {
         double eph;
         if (0 !=
             gar_decode(session->context,
                        (char *)session->lexer.outbuffer + 31, 3, "", 1.0,
-                       &eph))
+                       &eph)) {
             break;
-        /* this conversion looks dodgy... */
+        }
+        // this conversion looks dodgy...
         session->newdata.eph = eph * (GPSD_CONFIDENCE / CEP50_SIGMA);
         mask |= HERR_SET;
     } while (0);
 
-    /* Altitude */
+    // Altitude
     do {
         double alt;
         if (0 !=
             gar_decode(session->context,
                        (char *)session->lexer.outbuffer + 34, 6, "+-", 1.0,
-                       &alt))
+                       &alt)) {
             break;
-        /* alt is MSL */
+        }
+        // alt is MSL
         session->newdata.altMSL = alt;
-        /* Let gpsd_error_model() deal with altHAE */
+        // Let gpsd_error_model() deal with altHAE
         mask |= ALTITUDE_SET;
     } while (0);
 
-    /* Velocities, meters per second */
+    // Velocities, meters per second
     do {
         double ewvel, nsvel;
         double climb;
 
         if (0 != gar_decode(session->context,
                             (char *)session->lexer.outbuffer + 40, 5,
-                            "EW", 10.0, &ewvel))
+                            "EW", 10.0, &ewvel)) {
             break;
+        }
         if (0 != gar_decode(session->context,
                             (char *)session->lexer.outbuffer + 45, 5,
-                            "NS", 10.0, &nsvel))
+                            "NS", 10.0, &nsvel)) {
             break;
+        }
         if (0 != gar_decode(session->context,
                             (char *)session->lexer.outbuffer + 50, 5,
-                            "UD", 100.0, &climb))
+                            "UD", 100.0, &climb)) {
             break;
+        }
 
         session->newdata.NED.velN = ewvel;
         session->newdata.NED.velE = nsvel;
@@ -452,7 +477,8 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "GTXT: time=%lld, lat=%.2f lon=%.2f altMSL=%.2f "
              "climb=%.2f eph=%.2f mode=%d status=%d\n",
-             (long long)session->newdata.time.tv_sec, session->newdata.latitude,
+             (long long)session->newdata.time.tv_sec,
+             session->newdata.latitude,
              session->newdata.longitude, session->newdata.altMSL,
              session->newdata.climb, session->newdata.eph,
              session->newdata.mode,
@@ -460,5 +486,5 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
     return mask;
 }
 
-#endif /* GARMINTXT_ENABLE */
+#endif  // GARMINTXT_ENABLE
 // vim: set expandtab shiftwidth=4
