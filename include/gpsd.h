@@ -241,7 +241,7 @@ struct gps_lexer_t {
 #define RTCM3_PACKET            20
 #define JSON_PACKET             21
 // end of non GPS type packets, AIVDM is GPS type??
-#define PACKET_TYPES            221      // increment this as necessary
+#define PACKET_TYPES            22      // increment this as necessary
 
 #define TEXTUAL_PACKET_TYPE(n)  ((((n)>=NMEA_PACKET) && ((n)<=MAX_TEXTUAL_TYPE)) || (n)==JSON_PACKET)
 #define GPS_PACKET_TYPE(n)      (((n)>=NMEA_PACKET) && ((n)<=MAX_GPSPACKET_TYPE))
