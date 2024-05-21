@@ -1,5 +1,4 @@
 /****************************************************************************
-
 NAME
    gpsd_json.c - move data between in-core and JSON structures
 
@@ -17,7 +16,6 @@ SPDX-License-Identifier: BSD-2-clause
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
-#include <assert.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdio.h>
@@ -256,7 +254,6 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
 {
     struct gps_data_t *gpsdata = &session->gpsdata;
 
-    assert(replylen > sizeof(char *));
     (void)strlcpy(reply, "{\"class\":\"TPV\"", replylen);
     if (gpsdata->dev.path[0] != '\0')
         // Note: Assumes /dev paths are always plain ASCII
@@ -543,7 +540,8 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
 void json_noise_dump(const struct gps_data_t *gpsdata,
                      char *reply, size_t replylen)
 {
-    assert(replylen > sizeof(char *));
+    size_t header_len;       // a guard to prevent sending empty messages
+
     (void)strlcpy(reply, "{\"class\":\"GST\"", replylen);
     if ('\0' != gpsdata->dev.path[0]) {
         str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
@@ -555,6 +553,8 @@ void json_noise_dump(const struct gps_data_t *gpsdata,
                    timespec_to_iso8601(gpsdata->gst.utctime,
                                        tbuf, sizeof(tbuf)));
     }
+    header_len = strnlen(reply, replylen);
+
 #define ADD_GST_FIELD(tag, field) do {                     \
     if (0 != isfinite(gpsdata->gst.field))              \
         str_appendf(reply, replylen, ",\"" tag "\":%.3f", gpsdata->gst.field); \
@@ -573,7 +573,12 @@ void json_noise_dump(const struct gps_data_t *gpsdata,
 
 #undef ADD_GST_FIELD
 
-    (void)strlcat(reply, "}\r\n", replylen);
+    if (header_len == strnlen(reply, replylen)) {
+        // empty message, slip it
+        *reply = '\0';
+    } else {
+        (void)strlcat(reply, "}\r\n", replylen);
+    }
 }
 
 void json_sky_dump(const struct gps_device_t *session,
@@ -582,9 +587,6 @@ void json_sky_dump(const struct gps_device_t *session,
     int i, reported = 0, used = 0;
     const struct gps_data_t *datap = &session->gpsdata;
     size_t header_len;       // a guard to prevent sending empty messages
-
-    // FIXME: asserts must die
-    assert(replylen > sizeof(char *));
 
     (void)strlcpy(reply, "{\"class\":\"SKY\"", replylen);
     if ('\0' != datap->dev.path[0]) {
@@ -1334,7 +1336,6 @@ void json_raw_dump(const struct gps_data_t *gpsdata,
 {
     int i;
 
-    assert(replylen > sizeof(char *));
     if (0 == gpsdata->raw.mtime.tv_sec) {
         // no data to dump
         return;
