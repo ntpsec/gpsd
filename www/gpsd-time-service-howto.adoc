@@ -46,7 +46,7 @@ into more detail about the steps.
 . If you persistently fail to get live PPS, (a) you may have a
   skyview problem, (b) you may have a cabling problem, (c) your GPS
   may not support PPS, (d) you may have a gpsd or kernel configuration
-  problem, (e) you may have a device problem, (e) there may be a bug
+  problem, (e) you may have a device problem, (f) there may be a bug
   in the core GPSD code used by gpsmon.  These are listed in roughly
   decreasing probability.  Troubleshoot appropriately.
 
