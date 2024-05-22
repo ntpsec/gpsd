@@ -1923,7 +1923,9 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
     }
 
 #ifdef SHM_EXPORT_ENABLE
+    // a few things are not per-subscriber reports
     // should match clients/gpsdecode.c decode()
+    // FIXME?  Maybe update shm on all changes??
     if (0 != (changed & (AIS_SET | ATTITUDE_SET | GST_SET | DOP_SET |
                          IMU_SET | RAW_IS |  REPORT_IS| RTCM2_SET |
                          RTCM3_SET | SATELLITE_SET | SUBFRAME_SET))) {
@@ -1931,6 +1933,20 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
         shm_update(&context, &device->gpsdata);
     }
 #endif  // SHM_EXPORT_ENABLE
+
+    if (0 == (changed & (PASSTHROUGH_IS | REPORT_IS))) {
+        // Not reporting this, this time.  Save change for later
+        device->gpsdata.set_pending |= changed;
+    } else {
+        // reporting now
+        // also get pending changes
+        changed |= device->gpsdata.set_pending;
+        device->gpsdata.set_pending = 0;
+    }
+    GPSD_LOG(LOG_DATA, &context.errout,
+             "changed: %s set_pending %s\n",
+             gps_maskdump(changed),
+             gps_maskdump(device->gpsdata.set_pending));
 
 #ifdef SOCKET_EXPORT_ENABLE
     // update all subscribers associated with this device
@@ -1952,6 +1968,9 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 
         // report raw packets to users subscribed to those
         raw_report(sub, device);
+
+        // FIXME: get rid of this define, used only once.
+#define DATA_IS ~(ONLINE_SET | PACKET_SET | CLEAR_IS | REPORT_IS)
 
         // some listeners may be in watcher mode
         if (sub->policy.watcher) {
@@ -2336,6 +2355,8 @@ int main(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         }
     }
+
+    // context.errout.debug = 9;  // force full debug.
 
     // sanity check
     if (MAX_DEVICES < (argc - optind)) {
@@ -2939,8 +2960,11 @@ int main(int argc, char *argv[])
                 if (5 <= llabs(delta.tv_sec)) {
                     // cast for 32-bit intptr_t
                     GPSD_LOG(LOG_PROG, &context.errout,
-                        "gpsd_multipoll(%ld) DEVICE_UNCHANGED for %lld\n",
-                        (long)device->gpsdata.gps_fd, (long long)delta.tv_sec);
+                        "gpsd_multipoll(%ld) DEVICE_UNCHANGED for %lld "
+                        "servicetype %d sourcetype %u\n",
+                        (long)device->gpsdata.gps_fd, (long long)delta.tv_sec,
+                        device->servicetype,
+                        device->sourcetype);
                     if (time_warp) {
                         // ugh, start over...
                         device->lexer.pkt_time = now;
@@ -2957,7 +2981,7 @@ int main(int argc, char *argv[])
                             gpsd_close(device);
                         }
                     }
-                    // else, gpsd://, udp://
+                    // else, gpsd://, udp://, pty, etc.
                 }
                 break;
             default:

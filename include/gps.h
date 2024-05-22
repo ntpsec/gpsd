@@ -99,7 +99,7 @@ extern "C" {
  *       Move gpsd_hexpack() to here as gps_hexpack()
  *       Move gpsd_hexdump() to here as gps_hexdump()
  *       Add prRes, prRate, pr, and qualityInd to satellite_t
- *       Add fixsource_t and watch_t to gps_data_t
+ *       Add fixsource_t, watch_t, set_pending to gps_data_t
  *       move privdata_t here from libgps/gps_sock.c
  *       Add rot (Rate Of Turn), mheading, to struct attitude_t
  *       Add wtemp, temp, ant_stat, jam, clockbias and clockddrift to gps_fix_t
@@ -2873,6 +2873,7 @@ struct gps_data_t {
 #define IMU_SET         (1llu<<43)
 #define EOF_SET         (1llu<<44)
 #define SET_HIGH_BIT    45
+    gps_mask_t set_pending;     // Deferred set, waiting to be sent.
     timespec_t online;          /* NZ if GPS is on line, 0 if not.
                                  *
                                  * Note: gpsd clears this time when sentences

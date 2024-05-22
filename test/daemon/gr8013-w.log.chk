@@ -20,6 +20,7 @@ $GLGSV,3,3,10,86,64,319,44,87,12,289,25*6B
 {"class":"SKY","gdop":1.82,"hdop":0.93,"pdop":1.59,"tdop":0.81,"xdop":0.57,"ydop":0.66,"vdop":1.29,"nSat":24,"uSat":19,"satellites":[{"PRN":4,"gnssid":0,"svid":4,"az":250.0,"el":7.0,"ss":9.0,"used":false},{"PRN":7,"gnssid":0,"svid":7,"az":306.0,"el":13.0,"ss":37.0,"used":true},{"PRN":8,"gnssid":0,"svid":8,"az":175.0,"el":12.0,"ss":15.0,"used":false},{"PRN":13,"gnssid":0,"svid":13,"az":20.0,"el":8.0,"ss":37.0,"used":true},{"PRN":15,"gnssid":0,"svid":15,"az":51.0,"el":15.0,"ss":29.0,"used":true},{"PRN":16,"gnssid":0,"svid":16,"az":210.0,"el":49.0,"ss":23.0,"used":true},{"PRN":18,"gnssid":0,"svid":18,"az":102.0,"el":56.0,"ss":27.0,"used":true},{"PRN":19,"gnssid":0,"svid":19,"az":293.0,"el":38.0,"ss":33.0,"used":true},{"PRN":20,"gnssid":0,"svid":20,"az":40.0,"el":7.0,"ss":18.0,"used":true},{"PRN":21,"gnssid":0,"svid":21,"az":72.0,"el":36.0,"ss":31.0,"used":true},{"PRN":22,"gnssid":0,"svid":22,"az":164.0,"el":46.0,"ss":26.0,"used":true},{"PRN":26,"gnssid":0,"svid":26,"az":186.0,"el":25.0,"ss":21.0,"used":true},{"PRN":27,"gnssid":0,"svid":27,"az":289.0,"el":72.0,"ss":19.0,"used":true},{"PRN":30,"gnssid":0,"svid":30,"az":336.0,"el":8.0,"ss":24.0,"used":false},{"PRN":69,"gnssid":6,"svid":5,"az":29.0,"el":22.0,"ss":34.0,"used":true},{"PRN":70,"gnssid":6,"svid":6,"az":93.0,"el":52.0,"ss":27.0,"used":true},{"PRN":71,"gnssid":6,"svid":7,"az":157.0,"el":27.0,"ss":25.0,"used":true},{"PRN":76,"gnssid":6,"svid":12,"az":257.0,"el":25.0,"ss":21.0,"used":true},{"PRN":77,"gnssid":6,"svid":13,"az":318.0,"el":28.0,"ss":33.0,"used":true},{"PRN":78,"gnssid":6,"svid":14,"az":3.0,"el":3.0,"ss":0.0,"used":false},{"PRN":84,"gnssid":6,"svid":20,"az":98.0,"el":5.0,"ss":12.0,"used":false},{"PRN":85,"gnssid":6,"svid":21,"az":83.0,"el":51.0,"ss":26.0,"used":true},{"PRN":86,"gnssid":6,"svid":22,"az":319.0,"el":64.0,"ss":44.0,"used":true},{"PRN":87,"gnssid":6,"svid":23,"az":289.0,"el":12.0,"ss":25.0,"used":true}]}
 $GNGLL,5230.88855,N,01327.85591,E,181141.00,A,A*70
 {"class":"TPV","mode":3,"time":"2035-02-02T18:11:41.000Z","ept":0.005,"lat":52.514809167,"lon":13.464265167,"altHAE":104.7000,"altMSL":62.6000,"alt":62.6000,"epx":8.515,"epy":9.839,"epv":29.670,"magvar":4.1,"speed":0.016,"geoidSep":42.100,"eph":17.670,"sep":30.210}
+{"class":"SKY","gdop":1.82,"hdop":0.93,"pdop":1.59,"tdop":0.81,"xdop":0.57,"ydop":0.66,"vdop":1.29,"uSat":12}
 $GNGST,181141.00,46,,,,4.7,1.9,5.3*4A
 {"class":"GST","time":"2035-02-02T18:11:41.000Z","rms":46.000,"lat":4.700,"lon":1.900,"alt":5.300}
 $GNZDA,181141.00,19,06,2015,00,00*7C
@@ -45,6 +46,8 @@ $GNGST,181142.00,46,,,,4.7,1.9,5.3*49
 $GNZDA,181142.00,19,06,2015,00,00*7F
 $GNGBS,181142.00,4.7,1.9,5.3,87,,-54900.3,57.3*45
 {"class":"TPV","mode":3,"time":"2035-02-02T18:11:42.000Z","ept":0.005,"lat":52.514809333,"lon":13.464264333,"altHAE":104.5000,"altMSL":62.4000,"alt":62.4000,"epx":1.900,"epy":4.700,"epv":5.300,"magvar":4.1,"speed":0.014,"climb":-0.200,"eps":9.40,"epc":10.60,"geoidSep":42.100,"eph":17.670,"sep":30.210}
+{"class":"GST","time":"2035-02-02T18:11:42.000Z","rms":46.000,"lat":4.700,"lon":1.900,"alt":5.300}
+{"class":"SKY","gdop":1.31,"hdop":0.93,"pdop":1.59,"tdop":0.60,"xdop":0.39,"ydop":0.47,"vdop":1.29,"uSat":12}
 $GNRMC,181143.00,A,5230.88858,N,01327.85582,E,0.011,,190615,,,A*6E
 $GNVTG,,T,,M,0.011,N,0.021,K,A*3E
 $GNGGA,181143.00,5230.88858,N,01327.85582,E,1,12,0.93,62.2,M,42.1,M,,*70
@@ -66,3 +69,5 @@ $GNGST,181143.00,45,,,,4.7,1.9,5.3*4B
 $GNZDA,181143.00,19,06,2015,00,00*7E
 $GNGBS,181143.00,4.7,1.9,5.3,87,,-54898.6,57.2*40
 {"class":"TPV","mode":3,"time":"2035-02-02T18:11:43.000Z","ept":0.005,"lat":52.514809667,"lon":13.464263667,"altHAE":104.3000,"altMSL":62.2000,"alt":62.2000,"epx":1.900,"epy":4.700,"epv":5.300,"magvar":4.1,"speed":0.006,"climb":-0.200,"eps":9.40,"epc":10.60,"geoidSep":42.100,"eph":17.670,"sep":30.210}
+{"class":"GST","time":"2035-02-02T18:11:43.000Z","rms":45.000,"lat":4.700,"lon":1.900,"alt":5.300}
+{"class":"SKY","gdop":1.31,"hdop":0.93,"pdop":1.59,"tdop":0.60,"xdop":0.39,"ydop":0.47,"vdop":1.29,"uSat":12}

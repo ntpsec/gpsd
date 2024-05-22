@@ -411,7 +411,6 @@ typedef enum {
 #define PASSTHROUGH_IS  INTERNAL_SET(9)         // passthrough mode
 #define EOF_IS          INTERNAL_SET(10)        // synthetic EOF
 #define GOODTIME_IS     INTERNAL_SET(11)        // time good even if no pos fix
-#define DATA_IS ~(ONLINE_SET|PACKET_SET|CLEAR_IS|REPORT_IS)
 
 typedef unsigned int driver_mask_t;
 #define DRIVER_NOFLAGS  0x00000000u
