@@ -1073,11 +1073,14 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
     // don't waste time in the hunt loop if this is not actually a tty
     // FIXME: Check for ttys like /dev/ttyACM that have no speed.
     if (0 >= gpsd_serial_isatty(session)) {
+        // This catches SERVICE_TCP, SERVICE_PIPE, SERVICE_GPSD, etc.
         return false;
     }
 
-    // ...or if it's nominally a tty but delivers only PPS and no data
-    if (SOURCE_PPS == session->sourcetype) {
+    /* ...or if it's nominally a tty but delivers only PPS and no data
+     * ...or if it's a PTY, which has no speed. */
+    if (SOURCE_PPS == session->sourcetype ||
+        SOURCE_PTY == session->sourcetype) {
         return false;
     }
 
