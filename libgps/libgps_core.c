@@ -547,11 +547,18 @@ void libgps_dump_state(struct gps_data_t *collect)
         (void)fprintf(debugfp, "MODE: mode: %d (%s)\n",
                       collect->fix.mode, mode_values[collect->fix.mode]);
     }
-    if (SATELLITE_SET & collect->set) {
+    if (DOP_SET & collect->set) {
         (void)fprintf(debugfp,
-                      "DOP: satellites %d, pdop=%lf, hdop=%lf, vdop=%lf\n",
-                      collect->satellites_used, collect->dop.pdop,
-                      collect->dop.hdop, collect->dop.vdop);
+                      "DOP: satellites %d gdop %f hdop %f pdop %f tdop %f "
+                      "vdop %f xdop %f ydop %f\n",
+                      collect->satellites_used,
+                      collect->dop.gdop,
+                      collect->dop.hdop,
+                      collect->dop.pdop,
+                      collect->dop.tdop,
+                      collect->dop.vdop,
+                      collect->dop.xdop,
+                      collect->dop.ydop);
     }
     if (VERSION_SET & collect->set) {
         (void)fprintf(debugfp, "VERSION: release=%s rev=%s proto=%d.%d\n",
