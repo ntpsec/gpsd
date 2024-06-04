@@ -1111,10 +1111,6 @@ static gps_mask_t ubx_msg_hnr_att(struct gps_device_t *session,
         return 0;
     }
 
-    if (19 > session->driver.ubx.protver) {
-        // this GPS is at least protver 19.2
-        session->driver.ubx.protver = 19;
-    }
     // don't set session->driver.ubx.iTOW, HNR is off-cycle
     iTOW = getleu32(buf, 0);
     MSTOTS(&ts_tow, iTOW);
@@ -1162,10 +1158,6 @@ static gps_mask_t ubx_msg_hnr_ins(struct gps_device_t *session,
         return 0;
     }
 
-    if (19 > session->driver.ubx.protver) {
-        // this GPS is at least protver 19.1
-        session->driver.ubx.protver = 19;
-    }
     version  = (unsigned int)getub(buf, 0);
 
     bitfield0 = getleu32(buf, 0);
@@ -1256,10 +1248,6 @@ static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
         return 0;
     }
 
-    if (19 > session->driver.ubx.protver) {
-        // this GPS is at least protver 19
-        session->driver.ubx.protver = 19;
-    }
     // don't set session->driver.ubx.iTOW, HNR is off-cycle
     iTOW = getleu32(buf, 0);
     // valid same as UBX-NAV-PVT valid
@@ -1431,10 +1419,6 @@ static gps_mask_t ubx_msg_inf(struct gps_device_t *session,
     }
     if (INT_MAX < data_len) {
         data_len = INT_MAX;
-    }
-    if (13 > session->driver.ubx.protver) {
-        // we are at least 13
-        session->driver.ubx.protver = 13;
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: %s: %.*s\n",
@@ -1948,10 +1932,7 @@ static gps_mask_t ubx_msg_mon_hw(struct gps_device_t *session,
                  "UBX: MON-HW: runt payload len %zd\n", data_len);
         return 0;
     }
-    if (12 > session->driver.ubx.protver) {
-        // least protver 12
-        session->driver.ubx.protver = 12;
-    }
+
     noisePerMs = getleu16(buf, 16);
     agcCnt = getleu16(buf, 18);         // 0 to 8191
     aStatus = getub(buf, 20);
@@ -2406,10 +2387,6 @@ static gps_mask_t ubx_msg_nav_eell(struct gps_device_t *session,
         return 0;
     }
 
-    if (18 > session->driver.ubx.protver) {
-        // this GPS is at least protver 18
-        session->driver.ubx.protver = 18;
-    }
     session->driver.ubx.iTOW = getleu32(buf, 0);
     version = getub(buf, 4);
     errEllipseOrient = getleu16(buf, 6);
@@ -2438,10 +2415,6 @@ static gps_mask_t ubx_msg_nav_eoe(struct gps_device_t *session,
         return 0;
     }
 
-    if (18 > session->driver.ubx.protver) {
-        // this GPS is at least protver 18
-        session->driver.ubx.protver = 18;
-    }
     session->driver.ubx.iTOW = getleu32(buf, 0);
     GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-EOE: iTOW=%lld\n",
              (long long)session->driver.ubx.iTOW);
@@ -2653,10 +2626,6 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
         return 0;
     }
 
-    if (14 > session->driver.ubx.protver) {
-        // this GPS is at least protver 14
-        session->driver.ubx.protver = 14;
-    }
     session->driver.ubx.iTOW = getleu32(buf, 0);
     valid = getub(buf, 11);
     fixType = getub(buf, 20);
@@ -2952,10 +2921,6 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
         return 0;
     }
 
-    if (15 > session->driver.ubx.protver) {
-        // this GPS is at least protver 15
-        session->driver.ubx.protver = 15;
-    }
     session->driver.ubx.iTOW = getleu32(buf, 0);
     MSTOTS(&ts_tow, session->driver.ubx.iTOW);
     session->gpsdata.skyview_time =
@@ -3140,10 +3105,6 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
         return 0;
     }
 
-    if (27 > session->driver.ubx.protver) {
-        // this GPS is at least protver 27
-        session->driver.ubx.protver = 27;
-    }
     session->driver.ubx.iTOW = getleu32(buf, 0);
     MSTOTS(&ts_tow, session->driver.ubx.iTOW);
     session->gpsdata.skyview_time =
@@ -4475,6 +4436,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     size_t data_len;
     unsigned short msgid;
     gps_mask_t mask = 0;
+    unsigned char min_protver = 0;
 
     // the packet at least contains a head long enough for an empty message
     if (UBX_PREFIX_LEN > len) {
@@ -4538,12 +4500,15 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
 
     case UBX_HNR_ATT:
+        min_protver = 19;       // actually 19.2
         mask = ubx_msg_hnr_att(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_HNR_INS:
+        min_protver = 19;       // actually 19.1
         mask = ubx_msg_hnr_ins(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_HNR_PVT:
+        min_protver = 19;
         mask = ubx_msg_hnr_pvt(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
@@ -4558,6 +4523,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_INF_USER:
         FALLTHROUGH
     case UBX_INF_WARNING:
+        min_protver = 13;
         mask = ubx_msg_inf(session, buf, data_len);
         break;
 
@@ -4599,6 +4565,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: MON-GNSS\n");
         break;
     case UBX_MON_HW:
+        min_protver = 12;
         mask = ubx_msg_mon_hw(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_HW2:
@@ -4667,12 +4634,14 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_nav_dop(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_EELL:
+        min_protver = 18;
         mask = ubx_msg_nav_eell(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_EKFSTATUS:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-EKFSTATUS\n");
         break;
     case UBX_NAV_EOE:
+        min_protver = 18;
         mask = ubx_msg_nav_eoe(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_GEOFENCE:
@@ -4703,9 +4672,11 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-POSUTM\n");
         break;
     case UBX_NAV_PVT:
+        min_protver = 14;
         mask = ubx_msg_nav_pvt(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_RELPOSNED:
+        min_protver = 20;
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-RELPOSNED\n");
         mask = ubx_msg_nav_relposned(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
@@ -4713,6 +4684,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-RESETODO\n");
         break;
     case UBX_NAV_SAT:
+        min_protver = 15;
         mask = ubx_msg_nav_sat(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SBAS:
@@ -4720,6 +4692,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_nav_sbas(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SIG:
+        min_protver = 27;
         mask = ubx_msg_nav_sig(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SOL:
@@ -4815,6 +4788,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_rxm_sfrb(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_SFRBX:
+        min_protver = 17;
         mask = ubx_msg_rxm_sfrbx(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_SVSI:
@@ -4936,6 +4910,10 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     }
 
     // Did protver change?
+    if (min_protver > session->driver.ubx.protver) {
+        // this GPS is at least min_protver
+        session->driver.ubx.protver = min_protver;
+    }
     if (session->driver.ubx.last_protver != session->driver.ubx.protver) {
         /* Assumption: we just did init, but did not have
          * protver then, so init is not complete.  Finish now.
