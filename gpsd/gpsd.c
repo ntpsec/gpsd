@@ -50,7 +50,7 @@
 #include "../include/sockaddr.h"
 #include "../include/strfuncs.h"
 
-#if defined(SYSTEMD_ENABLE)
+#ifdef SYSTEMD_ENABLE
 #include "../include/sd_socket.h"
 #endif
 
@@ -146,13 +146,13 @@ static int maxfd;
     static bool nowait = false;
 #endif  // FORCE_NOWAIT
 static jmp_buf restartbuf;
-#if defined(SYSTEMD_ENABLE)
+#ifdef SYSTEMD_ENABLE
     static int sd_socket_count = 0;
 #endif
 
 // work around the unfinished ipv6 implementation on hurd and OSX <10.6
 #ifndef IPV6_TCLASS
-# if defined(__GNU__)
+# ifdef __GNU__
 #  define IPV6_TCLASS 61
 # elif defined(__APPLE__)
 #  define IPV6_TCLASS 36
@@ -201,27 +201,32 @@ static void typelist(void)
     }
     (void)printf("# n: mode switch, b: speed switch, "
                  "c: rate switch, *: non-NMEA packet type.\n");
-#if defined(CONTROL_SOCKET_ENABLE)
+#ifdef CONTROL_SOCKET_ENABLE
     (void)printf("# Control socket for hotplug notifications enabled.\n");
 #endif
-#if defined(DBUS_EXPORT_ENABLE)
+#ifdef DBUS_EXPORT_ENABLE
     (void)printf("# DBUS export enabled.\n");
 #endif
-#if defined(HAVE_SYS_TIMEPPS_H)
+#ifdef HAVE_SYS_TIMEPPS_H
     (void)printf("# KPPS enabled.\n");
+#else
+    (void)printf("# KPPS DIS-abled.\n");
 #endif
-#if defined(MAGIC_HAT_ENABLE)
+#ifdef TIOCMIWAIT
+    (void)printf("# TIOCMIWAIT unavailable.\n");
+#endif
+#ifdef MAGIC_HAT_ENABLE
     (void)printf("# Magic Hat enabled.\n");
 #endif
     (void)printf("# Netfeed enabled.\n"
                  "# NTRIP enabled.\n");
-#if defined(SHM_EXPORT_ENABLE)
+#ifdef SHM_EXPORT_ENABLE
     (void)printf("# Shared memory export enabled.\n");
 #endif
-#if defined(SOCKET_EXPORT_ENABLE)
+#ifdef SOCKET_EXPORT_ENABLE
     (void)printf("# Socket export enabled.\n");
 #endif
-#if defined(SYSTEMD_ENABLE)
+#ifdef SYSTEMD_ENABLE
     (void)printf("# systemd socket activation enabled.\n");
 #endif
     exit(EXIT_SUCCESS);
@@ -514,7 +519,7 @@ static int passivesocks(char *service, char *tcp_or_udp,
         INVALIDATE_SOCKET(socks[i]);
     }
 
-#if defined(SYSTEMD_ENABLE)
+#ifdef SYSTEMD_ENABLE
     if (0 < sd_socket_count) {
         for (i = 0; i < AFCOUNT && i < sd_socket_count - 1; i++) {
             socks[i] = SD_SOCKET_FDS_START + i + 1;
@@ -1835,14 +1840,17 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
          * Garmin says wait at least 3.
          * Allow override with -r option as some GPS say they always output
          * good time from an RTC */
-        GPSD_LOG(LOG_DATA, &context.errout, "NTP: no fix\n");
+        GPSD_LOG(LOG_DATA, &context.errout,
+                 "NTP: fixcnt %d < MTP_MIN_FIXES(%d)\n",
+                 device->fixcnt, NTP_MIN_FIXES);
     } else if (0 == device->newdata.time.tv_sec) {
         // it is not 1970 all over again!
-        GPSD_LOG(LOG_DATA, &context.errout, "NTP: bad new time\n");
+        GPSD_LOG(LOG_DATA, &context.errout, "NTP: new time == 0\n");
     } else if (device->newdata.time.tv_sec == device->shm_clock_lastsec) {
         /* This second already reported. Sadly, time can go backward...
          * Thus the simple != instead of > */
-        GPSD_LOG(LOG_DATA, &context.errout, "NTP: Not a new time\n");
+        GPSD_LOG(LOG_DATA, &context.errout, "NTP: Already reported %llu\n",
+                 (long long unsigned)device->shm_clock_lastsec);
     } else if (!device->ship_to_ntpd) {
         GPSD_LOG(LOG_DATA, &context.errout,
                  "NTP: No precision time report\n");
@@ -1915,7 +1923,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                 }
             }
         }
-#if defined(DBUS_EXPORT_ENABLE)
+#ifdef DBUS_EXPORT_ENABLE
         if (MODE_NO_FIX < device->gpsdata.fix.mode) {
             send_dbus_fix(device);
         }
@@ -2224,7 +2232,7 @@ int main(int argc, char *argv[])
 
 #ifdef CONTROL_SOCKET_ENABLE
     INVALIDATE_SOCKET(csock);
-#  if defined(SOCKET_EXPORT_ENABLE)
+#  ifdef SOCKET_EXPORT_ENABLE
     context.pps_hook = ship_pps_message;
 #  endif  // SOCKET_EXPORT_ENABLE
 #endif  // CONTROL_SOCKET_ENABLE
@@ -2571,7 +2579,7 @@ int main(int argc, char *argv[])
      */
     (void)ntpshm_context_init(&context);
 
-#if defined(DBUS_EXPORT_ENABLE)
+#ifdef DBUS_EXPORT_ENABLE
     // we need to connect to dbus as root
     if (initialize_dbus_connection()) {
         // the connection could not be started, maybe user does not want it
