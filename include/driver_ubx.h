@@ -1,6 +1,8 @@
 /*
- * This file is Copyright 2010 by the GPSD project
- * BSD terms apply: see the file COPYING in the distribution root for details
+ * Defines for driver_ubx.c
+ *
+ * This file is Copyright by the GPSD project
+ * SPDX-License-Identifier: BSD-2-clause
  */
 #ifndef _GPSD_UBX_H_
 #define _GPSD_UBX_H_
@@ -73,6 +75,7 @@ typedef enum {
     UBX_CFG_TP5         = UBX_MSGID(UBX_CLASS_CFG, 0x31),
     UBX_CFG_TXSLOT      = UBX_MSGID(UBX_CLASS_CFG, 0x53),
     UBX_CFG_USB         = UBX_MSGID(UBX_CLASS_CFG, 0x1b),
+    UBX_CFG_VALGET      = UBX_MSGID(UBX_CLASS_CFG, 0x8b),
 
     UBX_ESF_ALG         = UBX_MSGID(UBX_CLASS_ESF, 0x14),
     UBX_ESF_INS         = UBX_MSGID(UBX_CLASS_ESF, 0x15),

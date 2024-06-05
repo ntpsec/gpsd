@@ -682,6 +682,40 @@ static gps_mask_t ubx_msg_cfg_rate(struct gps_device_t *session,
     return 0;
 }
 
+/* UBX-CFG-VALGET
+ * Present in protVer 24 and up
+ */
+static gps_mask_t ubx_msg_cfg_valget(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
+{
+    unsigned version, layer, position;
+
+    if (4 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: CFG-VALGET, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    version = getub(buf, 0);        // version
+
+    if (1 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: CFG-VALGET, unknown version %u\n", version);
+        return 0;
+    }
+
+    layer = getub(buf, 1);           // layer
+    position = getleu16(buf, 2);     // position
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX: CFG-VALGET: version %u layer %u position %u\n",
+             version, layer, position);
+
+    // FIXME: get the key/value pairs.
+
+    return 0;
+}
+
 /* UBX-ESF-ALG
  *
  * UBX-ESF-ALG, and UBX-ESF-INS are synchronous to the GNSS epoch.
@@ -4479,8 +4513,11 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_CFG_RATE:
         // deprecated in u-blox 10
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: CFG-RATE\n");
         mask = ubx_msg_cfg_rate(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_CFG_VALGET:
+        min_protver = 24;
+        mask = ubx_msg_cfg_valget(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
     case UBX_ESF_ALG:
