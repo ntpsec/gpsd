@@ -150,9 +150,12 @@ static int faa_mode(char mode)
 
     switch (mode) {
     case '\0':  // missing
+        FALLTHROUGH
+    case 'V':   // Invalid
         newstatus = STATUS_UNK;
         break;
     case 'A':   // Autonomous
+        FALLTHROUGH
     default:
         newstatus = STATUS_GPS;
         break;
@@ -4185,13 +4188,16 @@ static gps_mask_t processRMC(int count, char *field[],
      * 12    A            FAA mode indicator (NMEA 2.3 and later)
      *                     see faa_mode() for possible mode values
      * 13    V            Nav Status (NMEA 4.1 and later)
-     *                     A=autonomous,
-     *                     D=differential,
-     *                     E=Estimated,
-     *                     M=Manual input mode
-     *                     N=not valid,
-     *                     S=Simulator,
-     *                     V=Valid
+     *                     A = autonomous,
+     *                     D = differential,
+     *                     E = Estimated (DR),
+     *                     F = RTK Float
+     *                     M = Manual input mode
+     *                     N = No fix.  Not valid,
+     *                     P = High Precision Mode
+     *                     R = RTK Integer
+     *                     S = Simulator,
+     *                     V = Invalid
      * *68        mandatory nmea_checksum
      *
      * SiRF chipsets don't return either Mode Indicator or magnetic variation.
@@ -4303,10 +4309,11 @@ static gps_mask_t processRMC(int count, char *field[],
                 newstatus = faa_mode(field[12][0]);
             }
             /*
+             * Navigation Status
              * If present, can not be NUL:
              * S = Safe
              * C = Caution
-             * U == Unsafe
+             * U = Unsafe
              * V = invalid.
              *
              * In the regressions, as of Dec 2023, field 13 is
@@ -4596,6 +4603,11 @@ static gps_mask_t processTXT(int count, char *field[],
      *   GQ (QZSS).
      *   PQ (QZSS). Quectel Quirk
      *   QZ (QZSS).
+     *
+     * Unicore undcumented:
+     *
+     * $GNTXT,01,01,01,0,500482,0000,80A0,80A0,-45.277,0*6B
+     * $GNTXT,01,01,02,0,00,10000,00,01,17,01,0001,0000,0.000*57
      */
     gps_mask_t mask = ONLINE_SET;
     int msgType = 0;
@@ -4955,6 +4967,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"GSA", NULL, 18, false, processGSA},  // DOP and Active sats
         {"GST", NULL, 8,  false, processGST},  // Pseudorange error stats
         {"GSV", NULL, 4,  false, processGSV},  // Sats in view
+        {"GYOACC", NULL, 0,  false, NULL},     // UNICORE MEMES sensor data
         {"HCR", NULL, 0,  false, NULL},        // Heading Correction, 4.10+
         // Heading, Deviation and Variation
         {"HDG", NULL, 0,  false, processHDG},
@@ -5114,6 +5127,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"RRT", NULL, 0, false, NULL},     // Report Route Transfer, NMEA 4.10+
         {"RSA", NULL, 0,  false, NULL},         // Rudder Sensor Angle
         {"RTE", NULL, 0,  false, NULL},         // ignore Routes
+        {"SNRSTAT", NULL, 0,  false, NULL},     // UNICORE, Sensor Status
         {"SM1", NULL, 0, false, NULL},     // SafteyNET, All Ships, NMEA 4.10+
         {"SM2", NULL, 0, false, NULL},     // SafteyNET, Coastal, NMEA 4.10+
         {"SM3", NULL, 0, false, NULL},     // SafteyNET, Circular, NMEA 4.10+
