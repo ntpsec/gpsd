@@ -2817,6 +2817,25 @@ static gps_mask_t processPAIR010(int c UNUSED, char *field[],
     return ONLINE_SET;
 }
 
+// PDTINFO Unicore Product Information
+static gps_mask_t processPDTINFO(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    (void)snprintf(session->subtype, sizeof(session->subtype),
+                   "%s, %s, %s",
+                   field[1], field[2], field[5]);
+    // save SW and HW Version as subtype1
+    (void)snprintf(session->subtype1, sizeof(session->subtype1),
+                   "SW %s,HW %s",
+                   field[4], field[3]);
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "NMEA0183: PDTINFO: subtype %s subtype1 %s\n",
+             session->subtype, session->subtype1);
+
+    return ONLINE_SET;
+}
+
 /* Ashtech sentences take this format:
  * $PASHDR,type[,val[,val]]*CS
  * type is an alphabetic subsentence type
@@ -4483,6 +4502,8 @@ static gps_mask_t processSNRSTAT(int count UNUSED, char *field[],
      */
 
     gps_mask_t mask = ONLINE_SET;
+    static char probe[] = "$PDTINFO\r\n";
+    static char type[] = "Unicore";
     int insstatus = atoi(field[1]);     // IMU status
     int odostatus = atoi(field[2]);     // Odometer Status
     int InstallState = atoi(field[3]);  // Install State
@@ -4500,6 +4521,14 @@ static gps_mask_t processSNRSTAT(int count UNUSED, char *field[],
              val2str(odostatus, vsnrstat_odostatus),
              val2str(InstallState, vsnrstat_InstallState),
              val2str(mapstat, vsnrstat_mapstat));
+
+    if ('\0' == session->subtype[0]) {
+        // this is Unicore
+        // Send $PDTINFO to get back $PDTINFO,....
+        (void)gpsd_write(session, probe, sizeof(probe));
+        // mark so we don't ask twice
+        (void)strlcpy(session->subtype, type, sizeof(session->subtype) - 1);
+    }
     return mask;
 }
 
@@ -5102,6 +5131,9 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // Airoha proprietary
         {"PAIR001", NULL, 3, false, processPAIR001},  // ACK/NAK
         {"PAIR010", NULL, 5, false, processPAIR010},  // Request Aiding
+
+        // Unicore proprietary
+        {"PDTINFO", NULL, 6, false, processPDTINFO},  // Product ID
 
         {"PEMT", NULL, 5, false, NULL},               // Evermore proprietary
         // Furuno proprietary
