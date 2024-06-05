@@ -6,6 +6,8 @@
   Improve TSIP and UBX intitalization.
   Gather Antenna Status (ant_stat) and Jamming (jam) and send to JSON.
   Always build u-blox, RTCM104V2, RTCM104V3 drivers.
+  Add partial support for badly documented ALLYSTAR GNSS messages.
+  Add minimal support for Unicore GNSS messages.
   
   Note: The new "chunk" code led to a short lived bug that led to
         CVE-2023-43628, a buffer overrun.  That bug never appeared in

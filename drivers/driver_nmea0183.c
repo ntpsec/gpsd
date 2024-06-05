@@ -32,6 +32,47 @@
 #include "../include/strfuncs.h"
 
 #include "../include/timespec.h"
+
+// $SNRSTAAT insstatus
+static struct vlist_t vsnrstat_insstatus[] = {
+    {-1, "Failure"},
+    {0, "Disabled"},
+    {1, "Init started"},
+    {2, "Known inst angle"},
+    {3, "Init OK"},
+    {0, NULL},
+};
+
+// $SNRSTAAT odostatus
+static struct vlist_t vsnrstat_odostatus[] = {
+    {-1, "Failure"},
+    {0, "Disabled"},
+    {1, "Init started"},
+    {2, "Known scale"},
+    {3, "Init OK"},
+    {0, NULL},
+};
+
+// $SNRSTAAT InstallState
+static struct vlist_t vsnrstat_InstallState[] = {
+    {-1, "Failure"},
+    {0, "In progress"},
+    {1, "Weak Sats"},
+    {2, "Need Acc"},
+    {3, "Low Speed"},
+    {0, NULL},
+};
+
+// $SNRSTAAT mapstat
+static struct vlist_t vsnrstat_mapstat[] = {
+    {-2, "Abnormal"},
+    {-1, "Unconfigured"},
+    {0, "No info"},
+    {1, "Unapplied"},
+    {1, "OK"},
+    {0, NULL},
+};
+
 /**************************************************************************
  *
  * Parser helpers begin here
@@ -2414,6 +2455,41 @@ static gps_mask_t processGSV(int count, char *field[],
 #undef GSV_TALKER
 }
 
+/*
+ * Unicore $GYOACC  MEMS Sensor DAta
+ * Note: Invalid sender: $GY
+ */
+static gps_mask_t processGYOACC(int c UNUSED, char *field[],
+                             struct gps_device_t *session)
+{
+    /*
+     * $GYOACC,050624,002133.10,0.004634,0.000273,0.004348,100,-4.666065,
+     *    -3.466573,7.960348,100,31,0,100,0*02
+     */
+    gps_mask_t mask = ONLINE_SET;
+    double gyroX = safe_atof(field[3]);       // deg/s
+    double gyroY = safe_atof(field[4]);       // deg/s
+    double gyroZ = safe_atof(field[5]);       // deg/s
+    unsigned gyroPeriod = atoi(field[6]);     // period in ms
+    double accX = safe_atof(field[7]);        // m/s^2
+    double accY = safe_atof(field[8]);        // m/s^2
+    double accZ = safe_atof(field[9]);        // m/s^2
+    unsigned accPeriod = atoi(field[10]);     // period in ms
+    int temp = atoi(field[11]);               // temperature C
+    unsigned speed = atoi(field[12]);         // pulses
+    unsigned pulsePeriod = atoi(field[13]);   // period in ms
+    unsigned fwd = atoi(field[14]);           // 0 == forward, 1 == reverse
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: $GYOACC %s %s gyro X %.6f Y %.6f Z %.6f per %u "
+             "acc X %.6f Y %.6f Z %.6f per %u "
+             "temp %d speed %u per %u fwd %u\n",
+             field[1], field[2], gyroX, gyroY, gyroZ, gyroPeriod,
+             accX, accY, accZ, accPeriod,
+             temp, speed, pulsePeriod, fwd);
+    return mask;
+}
+
 static gps_mask_t processHDG(int c UNUSED, char *field[],
                              struct gps_device_t *session)
 {
@@ -4396,6 +4472,39 @@ static gps_mask_t processROT(int c UNUSED, char *field[],
 }
 
 /*
+ * Unicore $SNRSTAT  Sensor status
+ * Note: Invalid sender: $SN
+ */
+static gps_mask_t processSNRSTAT(int count UNUSED, char *field[],
+                                struct gps_device_t *session)
+{
+    /*
+     * $SNRSTAT,1,1,0,0*5D
+     */
+
+    gps_mask_t mask = ONLINE_SET;
+    int insstatus = atoi(field[1]);     // IMU status
+    int odostatus = atoi(field[2]);     // Odometer Status
+    int InstallState = atoi(field[3]);  // Install State
+    int mapstat = atoi(field[4]);       // PAP status
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: SNRSTAT insstatus %d obsstatus %d InstallState %d "
+             "mapstat %d\n",
+             insstatus, odostatus, InstallState, mapstat);
+
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "NMEA0183: SNRSTAT insstatus %s obsstatus %s InstallState %s "
+             "mapstat %s\n",
+             val2str(insstatus, vsnrstat_insstatus),
+             val2str(odostatus, vsnrstat_odostatus),
+             val2str(InstallState, vsnrstat_InstallState),
+             val2str(mapstat, vsnrstat_mapstat));
+    return mask;
+}
+
+
+/*
  * Skytraq undocumented debug sentences take this format:
  * $STI,type,val*CS
  * type is a 2 char subsentence type
@@ -4967,7 +5076,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"GSA", NULL, 18, false, processGSA},  // DOP and Active sats
         {"GST", NULL, 8,  false, processGST},  // Pseudorange error stats
         {"GSV", NULL, 4,  false, processGSV},  // Sats in view
-        {"GYOACC", NULL, 0,  false, NULL},     // UNICORE MEMES sensor data
+        // UNICORE MEMES sensor data
+        {"GYOACC", NULL, 14,  false, processGYOACC},
         {"HCR", NULL, 0,  false, NULL},        // Heading Correction, 4.10+
         // Heading, Deviation and Variation
         {"HDG", NULL, 0,  false, processHDG},
@@ -5127,7 +5237,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"RRT", NULL, 0, false, NULL},     // Report Route Transfer, NMEA 4.10+
         {"RSA", NULL, 0,  false, NULL},         // Rudder Sensor Angle
         {"RTE", NULL, 0,  false, NULL},         // ignore Routes
-        {"SNRSTAT", NULL, 0,  false, NULL},     // UNICORE, Sensor Status
+        // UNICORE, Sensor Status invalid sender (SN)
+        {"SNRSTAT", NULL, 5,  false, processSNRSTAT},
         {"SM1", NULL, 0, false, NULL},     // SafteyNET, All Ships, NMEA 4.10+
         {"SM2", NULL, 0, false, NULL},     // SafteyNET, Coastal, NMEA 4.10+
         {"SM3", NULL, 0, false, NULL},     // SafteyNET, Circular, NMEA 4.10+

@@ -103,12 +103,14 @@ PERMISSIONS
  *      $GL -- GLONASS, according to IEIC 61162-1
  *      $GN -- Mixed GPS and GLONASS data, according to IEIC 61162-1
  *      $GP -- Global Positioning System.
+ *      $GY -- Unicore Gyro
  *      $HC -- Heading/compass (Airmar PB200).
  *      $II -- Integrated Instrumentation (Raytheon's SeaTalk system).
  *      $IN -- Integrated Navigation (Garmin uses this).
  *      $P  -- Vendor-specific sentence
  *      $QZ -- QZSS GPS augmentation system
  *      $SD -- Depth Sounder
+ *      $SN -- Unicore Sensor data
  *      $ST -- $STI, Skytraq Debug Output
  *      $TI -- Turn indicator (Airmar PB200).
  *      $WI -- Weather instrument (Airmar PB200, Radio Ocean ROWIND,
@@ -574,6 +576,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case NMEA_DOLLAR:
+        // We have the leading $
         switch (c) {
         case 'A':
             /* $A (SiRF Ack), $AI (Mobile Class A or B AIS Station?), or
@@ -587,7 +590,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             // codacy thinks this is impossible
             lexer->state = ECDIS_LEAD_1;
             break;
-        case 'G':           // $GP, $GN, etc.
+        case 'G':           // $GP, $GN, $GY, etc.
             lexer->state = NMEA_PUB_LEAD;
             break;
         case 'H':           // $H, Heading/compass. gyro
@@ -603,6 +606,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = QZSS_LEAD_1;
             break;
         case 'S':          // $S
+            // $SD, $SN, $ST
             lexer->state = SOUNDER_LEAD_1;
             break;
         case 'T':           // $T, Turn indicator
@@ -625,12 +629,15 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
          * according to NMEA (IEIC 61162-1) DRAFT 02/06/2009.
          * We have a log from China with a BeiDou device using $GB
          * rather than $BD.
+         *
+         * Unicore uses the non-standard $GY for IMU data.
          */
         if ('A' == c ||      // $GA, Galileo only
             'B' == c ||      // $GB, BeiDou only
             'L' == c ||      // $GL, GLONASS only
             'N' == c ||      // $GN, mixed
-            'P' == c) {      // $GP, GPS
+            'P' == c ||      // $GP, GPS
+            'Y' == c) {      // $GY, Gyro  (IMU)
             lexer->state = NMEA_LEADER_END;
         } else {
             (void)character_pushback(lexer, GROUND_STATE);
@@ -905,12 +912,11 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case SOUNDER_LEAD_1:
-        if ('D' == c) {                   // $SD, Depth-sounder leader accepted
+        if ('D' == c ||              // $SD, Depth-sounder
+            'N' == c ||              // $SN, to $SNRSTAT
+            'T' == c) {              // $ST, to $STI
+            // leader accepted
             lexer->state = NMEA_LEADER_END;
-#ifdef SKYTRAQ_ENABLE
-        } else if ('T' == c) {              // $ST leader accepted, to $STI
-            lexer->state = NMEA_LEADER_END;
-#endif  // SKYTRAQ_ENABLE
         } else {
             return character_pushback(lexer, GROUND_STATE);
         }
