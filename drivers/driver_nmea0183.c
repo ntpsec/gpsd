@@ -259,7 +259,8 @@ static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
     int year;
     unsigned i;    // NetBSD complains about signed array index
 
-    if (NULL == ddmmyy) {
+    if (NULL == ddmmyy ||
+        '\0' == ddmmyy[0]) {
         return 1;
     }
     for (i = 0; i < 6; i++) {
@@ -339,7 +340,8 @@ static int decode_hhmmss(struct tm *date, long *nsec, char *hhmmss,
     int old_hour = date->tm_hour;
     int i;
 
-    if (NULL == hhmmss) {
+    if (NULL == hhmmss ||
+        '\0' == hhmmss[0]) {
         return 1;
     }
     for (i = 0; i < 6; i++) {
@@ -355,6 +357,7 @@ static int decode_hhmmss(struct tm *date, long *nsec, char *hhmmss,
 
     date->tm_hour = DD(hhmmss);
     if (date->tm_hour < old_hour) {  // midnight wrap
+        // really??
         date->tm_mday++;
     }
     date->tm_min = DD(hhmmss + 2);
@@ -370,53 +373,38 @@ static int decode_hhmmss(struct tm *date, long *nsec, char *hhmmss,
     } else {
         *nsec = 0;
     }
+    GPSD_LOG(LOG_RAW, &session->context->errout,
+             "NMEA0183: decode_hhmmss(%s) %d %d %d %09ld\n",
+             hhmmss,
+             date->tm_hour, date->tm_min, date->tm_sec, *nsec);
 
     return 0;
 }
 
-/* update from a UTC time
+/* decode an hhmmss UTC time
+ * if valid, merge into:
+ *      session->nmea.date
+ *      session->nmea.subseconds
  *
  * return: 0 == OK,  greater than zero on failure
  */
 static int merge_hhmmss(char *hhmmss, struct gps_device_t *session)
 {
-    int old_hour = session->nmea.date.tm_hour;
-    int i;
+    struct tm date = {0};
+    timespec_t ts = {0};
+    int retcode;
 
-    if (NULL == hhmmss) {
-        return 1;
+    retcode = decode_hhmmss(&date, &ts.tv_nsec, hhmmss, session);
+    if (0 != retcode) {
+        // leave session->nmea untouched.
+        return retcode;
     }
-    for (i = 0; i < 6; i++) {
-        // NetBSD 6 wants the cast
-        if (0 == isdigit((int)hhmmss[i])) {
-            // catches NUL and non-digits
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NMEA0183: merge_hhmmss(%s), malformed time\n",  hhmmss);
-            return 2;
-        }
-    }
-    // don't check for termination, might have fractional seconds
-
-    session->nmea.date.tm_hour = DD(hhmmss);
-    if (session->nmea.date.tm_hour < old_hour) {  // midnight wrap
-        session->nmea.date.tm_mday++;
-    }
-    session->nmea.date.tm_min = DD(hhmmss + 2);
-    session->nmea.date.tm_sec = DD(hhmmss + 4);
-
+    // Good time, merge it.
+    session->nmea.date.tm_hour = date.tm_hour;
+    session->nmea.date.tm_min = date.tm_min;
+    session->nmea.date.tm_sec = date.tm_sec;
     session->nmea.subseconds.tv_sec = 0;
-    if ('.' == hhmmss[6] &&
-        // NetBSD 6 wants the cast
-        0 != isdigit((int)hhmmss[7])) {
-        // codacy hates strlen()
-        int sublen = strnlen(hhmmss + 7, 20);
-
-        i = atoi(hhmmss + 7);
-        session->nmea.subseconds.tv_nsec = (long)i *
-                                           (long)pow(10.0, 9 - sublen);
-    } else {
-        session->nmea.subseconds.tv_nsec = 0;
-    }
+    session->nmea.subseconds.tv_nsec = ts.tv_nsec;
 
     return 0;
 }
@@ -4999,9 +4987,9 @@ static gps_mask_t processZDA(int c UNUSED, char *field[],
      * like they have a variable fix reporting cycle.  But later thought
      * was to not throw out good data because it is inconvenient.
      */
-    year = atoi(field[4]);
-    mon = atoi(field[3]);
     mday = atoi(field[2]);
+    mon = atoi(field[3]);
+    year = atoi(field[4]);
     century = year - year % 100;
     if (1900 > year  ||
         2200 < year) {
