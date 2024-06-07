@@ -247,13 +247,13 @@ static int faa_mode(char mode)
 
 #define DD(s)   ((int)((s)[0]-'0')*10+(int)((s)[1]-'0'))
 
-/* sentence supplied ddmmyy, but no century part
+/* decode supplied ddmmyy, but no century part, into *date
  *
  * return: 0 == OK,  greater than zero on failure
  */
-static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
+static int decode_ddmmyy(char *ddmmyy, struct gps_device_t *session,
+                        struct tm *date)
 {
-    int yy;
     int mon;
     int mday;
     int year;
@@ -282,51 +282,59 @@ static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
     }
 
     // should be no defects left to segfault DD()
-    yy = DD(ddmmyy + 4);
-    mon = DD(ddmmyy + 2);
     mday = DD(ddmmyy);
+    mon = DD(ddmmyy + 2);
+    year = DD(ddmmyy + 4);
 
-    // check for century wrap
-    if (99 == (session->nmea.date.tm_year % 100) &&
-        0 == yy) {
-        gpsd_century_update(session, session->context->century + 100);
-    }
-    year = (session->context->century + yy);
-
-    /* 32 bit systems will break in 2038.
-     * Telix fails on GPS rollover to 2099, which 32 bit system
-     * can not handle.  So wrap at 2080.  That way 64 bit systems
-     * work until 2080, and 2099 gets reported as 1999.
-     * since GPS epoch started in 1980, allows for old NMEA to work.
-     */
-    if (2080 <= year) {
-        year -= 100;
+    // check for century wrap, so 1968 < year < 2069
+    if (69 > year) {
+        year += 100;
     }
 
-    if ((1 > mon) ||
-        (12 < mon)) {
+    if (!IN(1, mon, 12)) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: merge_ddmmyy(%s), malformed month\n",  ddmmyy);
         return 4;
-    } else if (1 > mday ||
-               31 < mday) {
+    }  // else
+    if (!IN(1, mday, 31)) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: merge_ddmmyy(%s), malformed day\n",  ddmmyy);
         return 5;
-    } else {
-        GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "NMEA0183: merge_ddmmyy(%s) sets year %d\n",
-                 ddmmyy, year);
-        session->nmea.date.tm_year = year - 1900;
-        session->nmea.date.tm_mon = mon - 1;
-        session->nmea.date.tm_mday = mday;
-    }
+    }  // else
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: merge_ddmmyy(%s) sets year %d\n",
+             ddmmyy, year);
+    date->tm_year = year;
+    date->tm_mon = mon - 1;
+    date->tm_mday = mday;
+
     GPSD_LOG(LOG_RAW, &session->context->errout,
              "NMEA0183: merge_ddmmyy(%s) %d %d %d\n",
-             ddmmyy,
-             session->nmea.date.tm_mon,
-             session->nmea.date.tm_mday,
-             session->nmea.date.tm_year);
+             ddmmyy, date->tm_mon, date->tm_mday, date->tm_year);
+    return 0;
+}
+
+/* sentence supplied ddmmyy, but no century part
+ * iff valid, merge into session_>nmea.date
+ *
+ * return: 0 == OK,  greater than zero on failure
+ */
+static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
+{
+    struct tm date = {0};
+    int retcode;
+
+    retcode = decode_ddmmyy(ddmmyy, session, &date);
+    if (0 != retcode) {
+        // leave session->nmea untouched.
+        return retcode;
+    }
+    // check for century wrap ??
+    // Good time, merge it.
+    session->nmea.date.tm_mday = date.tm_mday;
+    session->nmea.date.tm_mon = date.tm_mon;
+    session->nmea.date.tm_year = date.tm_year;
     return 0;
 }
 
