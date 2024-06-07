@@ -268,8 +268,7 @@ void gpsd_set_century(struct gps_device_t *session)
         return;
     }
 
-    if (1968 > year ||
-        2200 < year) {
+    if (!IN(1968, year, 2200)) {
         // bad year
         return;
     }
@@ -277,13 +276,11 @@ void gpsd_set_century(struct gps_device_t *session)
     context->century = year - (year % 100);
 
     date.tm_year = year - 1900;                // year, 1999..2099
-    if (1 > month ||
-        12 < month) {
+    if (!IN(1, month, 12)) {
         month = 1;
     }
-    date.tm_mon = month;                       // month 1..12
-    if (1 > day ||
-        31 < day) {
+    date.tm_mon = month - 1;                   // month 0..11
+    if (!IN(1, day, 31)) {
         day = 1;
     }
     date.tm_mday = day;                        // day 1..31
