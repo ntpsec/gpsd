@@ -312,11 +312,24 @@ timespec_t gpsd_utc_resolve(struct gps_device_t *session)
 
     /*
      * If the system clock is zero or has a small-integer value,
-     * no further sanity-checking is possible.
+     * Time is from before GPS satellites werelaunched!
+     *
+     * Or, start time from regression log.
+     *
+     * No further sanity-checking is possible.
      */
-    if (GPS_EPOCH > session->context->start_time) {
+    if (GPS_EPOCH > session->context->start_time ||
+        1 == session->regression) {
         return t;
     }
+
+#if 0      // Debug
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "leaps %d GPS_EPOCH %lld >  start_time %lld\n",
+             session->context->leap_seconds,
+             (long long)GPS_EPOCH,
+             (long long)session->context->start_time);
+#endif
 
     /* sanity check unix time against leap second.
      * Does not work well with regressions because the leap_sconds
@@ -332,7 +345,7 @@ timespec_t gpsd_utc_resolve(struct gps_device_t *session)
         (void)gmtime_r(&t.tv_sec, &session->nmea.date);   // fix NMEA date
         (void)timespec_to_iso8601(t, scr, sizeof(scr));
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "WARNING: WKRO bug: leap second %d inconsistent "
+                 "WKRO bug: leap second %d inconsistent "
                  "with %lld, corrected to %lld (%s)\n",
                  session->context->leap_seconds,
                  old_tv_sec, (long long)t.tv_sec, scr);

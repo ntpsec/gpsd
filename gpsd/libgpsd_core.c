@@ -1697,6 +1697,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
             // used by regression tests to correct
             // change start time, gps weeks, etc.
             gpsd_set_century(session);
+            session->regression = 1;
 
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "CORE: start_time %lld\n",

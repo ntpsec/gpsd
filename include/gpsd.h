@@ -111,7 +111,7 @@ extern "C" {
  *      change lexer_init() prototype
  *      Change RTCM_MAX to RTCM2_MAX to avoid confusiotn, and make it 4 longer.
  *      add shm_clock_lastsec and shm_pps_lastsec to gps_device_t;
- *      add queue to gps_device_t
+ *      add queue, regression, to gps_device_t
  *      add ALL_PACKET
  */
 
@@ -601,6 +601,8 @@ struct gps_device_t {
     struct gps_fix_t lastfix;           // not quite yet ready for oldfix
     struct gps_fix_t oldfix;            // previous fix for error modeling
     int queue;                          // Next item in init queue to request.
+    // 1 if start_time is from regression comment. Ignore WKRO fixup.
+    int regression;
     struct {
         unsigned short sats_used[MAXCHANNELS];
         int part, await;                // for tracking GSV parts
