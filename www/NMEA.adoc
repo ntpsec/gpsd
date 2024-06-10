@@ -711,7 +711,7 @@ publicly available NMEA document dated 2009.
 |TIF | TRANSIT Satellite Initial Flag
 |TRF | TRANSIT Fix Data
 |TRP | TRANSIT Satellite Predicted Direction of Rise
-|TRS | TRANSIT Satellite Operating Statu
+|TRS | TRANSIT Satellite Operating Status
 |VCD | Current at Selected Depth
 |VPE | Speed, Dead Reckoned Parallel to True Wind
 |VTA | Actual Track
