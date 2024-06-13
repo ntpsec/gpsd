@@ -251,8 +251,8 @@ static int faa_mode(char mode)
  *
  * return: 0 == OK,  greater than zero on failure
  */
-static int decode_ddmmyy(char *ddmmyy, struct gps_device_t *session,
-                        struct tm *date)
+static int decode_ddmmyy(struct tm *date, char *ddmmyy,
+                         struct gps_device_t *session)
 {
     int mon;
     int mday;
@@ -325,7 +325,7 @@ static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
     struct tm date = {0};
     int retcode;
 
-    retcode = decode_ddmmyy(ddmmyy, session, &date);
+    retcode = decode_ddmmyy(&date, ddmmyy, session);
     if (0 != retcode) {
         // leave session->nmea untouched.
         return retcode;
@@ -2475,12 +2475,36 @@ static gps_mask_t processGYOACC(int c UNUSED, char *field[],
     unsigned speed = atoi(field[12]);         // pulses
     unsigned pulsePeriod = atoi(field[13]);   // period in ms
     unsigned fwd = atoi(field[14]);           // 0 == forward, 1 == reverse
+    struct tm date = {0};
+    timespec_t ts = {0};
+
+    // Not at the same rate at the GNSS epoch. So do not use session->nmea
+    if (0 == decode_hhmmss(&date, &ts.tv_nsec, field[2], session) &&
+        0 == decode_ddmmyy(&date, field[1], session)) {
+
+        session->gpsdata.attitude.mtime.tv_sec = mkgmtime(&date);
+        session->gpsdata.attitude.mtime.tv_nsec = ts.tv_nsec;
+    } else {
+        session->gpsdata.attitude.mtime.tv_sec = 0;
+        session->gpsdata.attitude.mtime.tv_nsec = 0;
+    }
+
+    session->gpsdata.attitude.gyro_x = gyroX;
+    session->gpsdata.attitude.gyro_y = gyroY;
+    session->gpsdata.attitude.gyro_z = gyroZ;
+    session->gpsdata.attitude.acc_x = accX;
+    session->gpsdata.attitude.acc_y = accY;
+    session->gpsdata.attitude.acc_z = accZ;
+    mask |= ATTITUDE_SET;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: $GYOACC %s %s gyro X %.6f Y %.6f Z %.6f per %u "
+             "NMEA0183: $GYOACC time %lld.%09lld "
+             "gyro X %.6f Y %.6f Z %.6f per %u "
              "acc X %.6f Y %.6f Z %.6f per %u "
              "temp %d speed %u per %u fwd %u\n",
-             field[1], field[2], gyroX, gyroY, gyroZ, gyroPeriod,
+             (long long)session->gpsdata.attitude.mtime.tv_sec,
+             (long long)session->gpsdata.attitude.mtime.tv_nsec,
+             gyroX, gyroY, gyroZ, gyroPeriod,
              accX, accY, accZ, accPeriod,
              temp, speed, pulsePeriod, fwd);
     return mask;
