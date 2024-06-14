@@ -688,11 +688,8 @@ timespec_t iso8601_to_timespec(const char *isotime)
     ret.tv_nsec = usec * 1e9;
 #else  // USE_QT
     double usec = 0;
-    struct tm tm;
+    struct tm tm = {0};
 
-    memset(&tm,0,sizeof(tm));
-
-#ifdef HAVE_STRPTIME
     {
         char *dp = NULL;
         dp = strptime(isotime, "%Y-%m-%dT%H:%M:%S", &tm);
@@ -701,109 +698,7 @@ timespec_t iso8601_to_timespec(const char *isotime)
             usec = strtod(dp, NULL);
         }
     }
-#else
-    /* Fallback for systems without strptime (i.e. Windows)
-     * This is a simplistic conversion for iso8601 strings only,
-     * rather than embedding a full copy of strptime() that handles
-     * all formats.
-     * Thus avoiding needing to test for (broken) negative date/time
-     * numbers in token reading - only need to check the upper range */
-    bool failed = false;
-    char *isotime_tokenizer = strdup(isotime);
-    if (isotime_tokenizer) {
-        char *tmpbuf;
-        char *pch = strtok_r(isotime_tokenizer, "-T:", &tmpbuf);
-        int token_number = 0;
 
-        while (NULL != pch) {
-            double sec;
-            unsigned int tmp;
-
-            token_number++;
-            // Give up if encountered way too many tokens.
-            if (10 < token_number) {
-                failed = true;
-                break;
-            }
-            switch (token_number) {
-            case 1:  // Year token
-                tmp = atoi(pch);
-                if (9999 > tmp) {
-                    tm.tm_year = tmp - 1900; // Adjust to tm year
-                } else {
-                    failed = true;
-                }
-                break;
-            case 2: // Month token
-                tmp = atoi(pch);
-                if (13 > tmp) {
-                    tm.tm_mon = tmp - 1;  // Month indexing starts from zero
-                } else {
-                    failed = true;
-                }
-                break;
-            case 3: // Day token
-                tmp = atoi(pch);
-                if (32 > tmp) {
-                    tm.tm_mday = tmp;
-                } else {
-                    failed = true;
-                }
-                break;
-            case 4:  // Hour token
-                tmp = atoi(pch);
-                if (24 > tmp) {
-                    tm.tm_hour = tmp;
-                } else {
-                    failed = true;
-                }
-                break;
-            case 5:  // Minute token
-                tmp = atoi(pch);
-                if (60 > tmp) {
-                    tm.tm_min = tmp;
-                } else {
-                    failed = true;
-                }
-                break;
-            case 6:  // Seconds token
-                sec = safe_atof(pch);
-                // NB To handle timestamps with leap seconds
-                if (0 == isfinite(sec) &&
-                    0.0 <= sec &&
-                    61.5 > sec) {
-                    // Truncate to get integer value
-                    tm.tm_sec = (unsigned int)sec;
-                    // Get the fractional part (if any)
-                    usec = sec - (unsigned int)sec;
-                } else {
-                    failed = true;
-                }
-                break;
-            default:
-                break;
-            }
-            pch = strtok_r(NULL, "-T:", &tmpbuf);
-        }
-        free(isotime_tokenizer);
-        /* Split may result in more than 6 tokens if the TZ has any t's
-         * in it.  So check that we've seen enough tokens rather than
-         * an exact number */
-        if (6 > token_number) {
-              failed = true;
-        }
-    }
-    if (failed) {
-        memset(&tm,0,sizeof(tm));
-    } else {
-        /* When successful this normalizes tm so that tm_yday is set
-         * and thus tm is valid for use with other functions */
-        if ((time_t)-1 == mktime(&tm)) {
-            // Failed mktime - so reset the timestamp
-            memset(&tm,0,sizeof(tm));
-        }
-    }
-#endif
     /*
      * It would be nice if we could say mktime(&tm) - timezone + usec instead,
      * but timezone is not available at all on some BSDs. Besides, when working
