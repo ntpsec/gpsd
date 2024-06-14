@@ -1342,7 +1342,7 @@ if not cleaning and not helping:
     #  "strnlen"
     for f in ("cfmakeraw", "clock_gettime", "daemon", "fcntl", "getopt_long",
               "strlcat", "strlcpy",
-              "fork", "gmtime_r", "strptime" "strnlen"
+              "gmtime_r", "strptime" "strnlen"
               ):
         if config.CheckFunc(f):
             confdefs.append("#define HAVE_%s 1\n" % f.upper())

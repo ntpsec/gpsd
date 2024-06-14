@@ -9,7 +9,7 @@
  * History of this code prior to the creation of this file can be found
  * in the histories of those files.
  *
- * This file is Copyright 2017 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -52,8 +52,6 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts)
 
 #ifndef HAVE_DAEMON
 // Simulate Linux/BSD daemon() on platforms that don't have it
-
-#ifdef HAVE_FORK
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -100,18 +98,6 @@ int os_daemon(int nochdir, int noclose)
     // coverity[leaked_handle] Intentional handle duplication
     return 0;
 }
-#else  // !HAVE_FORK
-
-#include <errno.h>
-
-int os_daemon(int nochdir, int noclose)
-{
-    (void) nochdir; (void) noclose;
-    errno = EPERM;
-    return -1;
-}
-
-#endif  // !HAVE_FORK
 
 #else  // HAVE_DAEMON
 
