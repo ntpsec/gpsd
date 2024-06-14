@@ -86,7 +86,7 @@ int os_daemon(int nochdir, int noclose)
         (-1 == chdir("/"))) {
         return -1;
     }
-    if (0 == noclose) &&
+    if (0 == noclose &&
         -1 != (fd = open(_PATH_DEVNULL, O_RDWR, 0))) {
         (void)dup2(fd, STDIN_FILENO);
         (void)dup2(fd, STDOUT_FILENO);
@@ -288,17 +288,6 @@ size_t strlcpy(char *dst, const char *src, size_t siz)
 #endif // !HAVE_STRLCPY
 
 // End of strlcat()/strlcpy() section
-
-#ifndef HAVE_STRNLEN
-
-size_t strnlen(const char *s, size_t maxlen)
-{
-    size_t len = 0;
-    while (len < maxlen && *s++) ++len;
-    return len;
-}
-
-#endif // !HAVE_STRNLEN
 
 /*
  * Provide sincos() on platforms that don't have it.

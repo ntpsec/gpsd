@@ -1341,9 +1341,7 @@ if not cleaning and not helping:
     # These are  are POSIX 2008, so no need to check for them.
     #  "strnlen"
     for f in ("cfmakeraw", "clock_gettime", "daemon", "fcntl", "getopt_long",
-              "strlcat", "strlcpy",
-              "strnlen"
-              ):
+              "strlcat", "strlcpy"):
         if config.CheckFunc(f):
             confdefs.append("#define HAVE_%s 1\n" % f.upper())
         else:
@@ -2756,7 +2754,7 @@ cppcheck = Utility("cppcheck",
                    "-U__future__ "
                    "-ULIMITED_MAX_CLIENTS -ULIMITED_MAX_DEVICES -UAF_UNSPEC "
                    "-UINADDR_ANY -U_WIN32 -U__CYGWIN__ "
-                   "-UPATH_MAX -UHAVE_STRLCAT -UHAVE_STRLCPY -UHAVE_STRNLEN "
+                   "-UPATH_MAX -UHAVE_STRLCAT -UHAVE_STRLCPY "
                    "-UIPTOS_LOWDELAY -UIPV6_TCLASS -UTCP_NODELAY -UTIOCMIWAIT "
                    "--template gcc "
                    "--enable=all --inline-suppr "

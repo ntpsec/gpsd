@@ -114,14 +114,6 @@ size_t strlcpy(char *dst, const char *src, size_t size);
 
 // Provide strnlen() on platforms that don't have it
 
-#ifndef HAVE_STRNLEN
-
-#include <stddef.h>  // for size_t
-
-size_t strnlen(const char *s, size_t maxlen);
-
-#endif  // !HAVE_STRNLEN
-
 // Provide missing signal numbers for non-POSIX builds
 
 #ifndef SIGHUP
