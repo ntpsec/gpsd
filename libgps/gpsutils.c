@@ -853,12 +853,7 @@ char *timespec_to_iso8601(timespec_t fixtime, char isotime[], size_t len)
     }
 #endif
 
-#ifdef HAVE_GMTIME_R
     (void)gmtime_r(&fixtime.tv_sec, &when);
-#else
-    // Fallback to try with gmtime_s - primarily for Windows
-    (void)gmtime_s(&when, &fixtime.tv_sec);
-#endif
 
     /*
      * Do not mess casually with the number of decimal digits in the
