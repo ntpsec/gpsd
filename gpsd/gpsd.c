@@ -2213,9 +2213,6 @@ int main(int argc, char *argv[])
     socket_t cfd;
     static char *control_socket = NULL;
 #endif  // CONTROL_SOCKET_ENABLE
-#if defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
-    sockaddr_t fsin;
-#endif  // SOCKET_EXPORT_ENABLE || CONTROL_SOCKET_ENABLE
     static char *pid_file = NULL;
     struct gps_device_t *device;
     int i;
@@ -2805,9 +2802,11 @@ int main(int argc, char *argv[])
         for (i = 0; i < AFCOUNT; i++) {
             if (0 <= msocks[i] &&
                 FD_ISSET(msocks[i], &rfds)) {
-                socklen_t alen = (socklen_t) sizeof(fsin);
+                sockaddr_t fsin = {0};
+
+                socklen_t alen = (socklen_t)sizeof(fsin);
                 socket_t ssock =
-                    accept(msocks[i], (struct sockaddr *)&fsin, &alen);
+                    accept(msocks[i], &fsin.sa, &alen);
 
                 if (BAD_SOCKET(ssock)) {
                     GPSD_LOG(LOG_ERROR, &context.errout,
@@ -2815,20 +2814,30 @@ int main(int argc, char *argv[])
                 } else {
                     struct subscriber_t *client = NULL;
                     int opts = fcntl(ssock, F_GETFL);
-                    static struct linger linger = { 1, RELEASE_TIMEOUT };
-                    char *c_ip;
+                    struct linger linger = {1, RELEASE_TIMEOUT};
+                    char ip[INET6_ADDRSTRLEN];
 
-                    if (0 <= opts) {
-                        (void)fcntl(ssock, F_SETFL, opts | O_NONBLOCK);
+                    if (0 > opts) {
+                        GPSD_LOG(LOG_ERROR, &context.errout,
+                                 "accept: fcntl(F_GETFL): %s(%d)\n",
+                                 strerror(errno), errno);
+                    } else {
+                        opts = fcntl(ssock, F_SETFL, opts | O_NONBLOCK);
+                        if (0 > opts) {
+                            // supposedly can never happen.
+                            GPSD_LOG(LOG_ERROR, &context.errout,
+                                     "accept: fcntl(F_SETFL): %s(%d)\n",
+                                     strerror(errno), errno);
+                        }
                     }
 
-                    c_ip = netlib_sock2ip(ssock);
+                    (void)socka2a(&fsin, ip, sizeof(ip));
                     client = allocate_client();
                     if (NULL == client) {
                         // cast for 32-bit intptr_t
                         GPSD_LOG(LOG_ERROR, &context.errout,
                                  "Client %s connect on fd %ld -"
-                                 "no subscriber slots available\n", c_ip,
+                                 "no subscriber slots available\n", ip,
                                   (long)ssock);
                         (void)close(ssock);
                     } else if (-1 == setsockopt(ssock,
@@ -2847,7 +2856,7 @@ int main(int argc, char *argv[])
                         client->active = time(NULL);
                         // cast for 32-bit intptr_t
                         GPSD_LOG(LOG_SPIN, &context.errout,
-                                 "client %s (%d) connect on fd %ld\n", c_ip,
+                                 "client %s (%d) connect on fd %ld\n", ip,
                                  sub_index(client), (long)ssock);
                         json_version_dump(announce, sizeof(announce));
                         (void)throttled_write(client, announce,
@@ -2864,8 +2873,10 @@ int main(int argc, char *argv[])
         // also be open to new control-socket connections
         if (-1 < csock &&
             FD_ISSET(csock, &rfds)) {
-            socklen_t alen = (socklen_t) sizeof(fsin);
-            socket_t ssock = accept(csock, (struct sockaddr *)&fsin, &alen);
+            sockaddr_t fsin = {0};
+
+            socklen_t alen = (socklen_t)sizeof(fsin);
+            socket_t ssock = accept(csock, &fsin.sa, &alen);
 
             if (BAD_SOCKET(ssock)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
