@@ -20,6 +20,7 @@
 extern "C" {
 # endif
 
+#include <netinet/in.h>   // for sockaddr_in, sockaddr_in6
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -30,6 +31,7 @@ extern "C" {
 #else  // !HAVE_WINSOCK2_H
 #include <sys/select.h>    // for fd_set
 #endif  // !HAVE_WINSOCK2_H
+#include <sys/socket.h>   // for struct sockaddr
 #include <time.h>    // for time_t
 
 #include "gps.h"
@@ -1023,6 +1025,17 @@ extern socket_t netlib_connectsock1(int, const char *, const char *,
 // end FIXME
 extern socket_t netlib_localsocket(const char *, int);
 extern const char *netlib_errstr(const int);
+
+/* klugey definition of a socket address struct helps hide
+ * IPV4 vs. IPV6 ugliness
+ */
+typedef union sockaddr_u {
+    struct sockaddr sa;
+    struct sockaddr_in sa_in;
+    struct sockaddr_in6 sa_in6;
+} sockaddr_t;
+extern char *socka2a(sockaddr_t *, char *, size_t);
+
 extern char *netlib_sock2ip(socket_t);
 
 extern void nmea_tpv_dump(struct gps_device_t *, char[], size_t);

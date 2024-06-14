@@ -39,7 +39,6 @@
 #endif // HAVE_WINSOCK2_H
 
 #include "../include/gpsd.h"
-#include "../include/sockaddr.h"
 
 // work around the unfinished ipv6 implementation on hurd and OSX <10.6
 #ifndef IPV6_TCLASS
@@ -297,32 +296,42 @@ socket_t netlib_localsocket(const char *sockfile, int socktype)
 #endif  // HAVE_SYS_UN_H
 }
 
+// socka2a() -- convert fsin to ascii address
+char *socka2a(sockaddr_t *fsin, char *buf, size_t buflen)
+{
+    const char *r;
+
+    switch (fsin->sa.sa_family) {
+    case AF_INET:
+        r = inet_ntop(fsin->sa_in.sin_family, &(fsin->sa_in.sin_addr),
+                      buf, buflen);
+        break;
+    case AF_INET6:
+        r = inet_ntop((int)fsin->sa_in6.sin6_family,
+                      &(fsin->sa_in6.sin6_addr), buf, buflen);
+        break;
+    default:
+        (void)strlcpy(buf, "<unknown AF>", buflen);
+        r = buf;
+    }
+    if (NULL == r) {
+        (void)strlcpy(buf, "<error>", buflen);
+    }
+    return buf;
+}
+
 // retrieve the IP address corresponding to a socket
 char *netlib_sock2ip(socket_t fd)
 {
-    static char ip[INET6_ADDRSTRLEN];
-    int r = 0;
-    sockaddr_t fsin;
-    socklen_t alen = (socklen_t) sizeof(fsin);
+static char ip[INET6_ADDRSTRLEN];
+int r = 0;
+sockaddr_t fsin;
+socklen_t alen = (socklen_t) sizeof(fsin);
 
     r = getpeername(fd, &(fsin.sa), &alen);
     if (0 == r) {
-        switch (fsin.sa.sa_family) {
-        case AF_INET:
-            r = !inet_ntop(fsin.sa_in.sin_family, &(fsin.sa_in.sin_addr),
-                           ip, sizeof(ip));
-            break;
-        case AF_INET6:
-            r = !inet_ntop((int)fsin.sa_in6.sin6_family,
-                           &(fsin.sa_in6.sin6_addr), ip, sizeof(ip));
-            break;
-        default:
-            (void)strlcpy(ip, "<unknown AF>", sizeof(ip));
-            return ip;
-        }
-    }
-
-    if (0 != r) {
+        socka2a(&fsin, ip, sizeof(ip));
+    } else {
         (void)strlcpy(ip, "<unknown>", sizeof(ip));
     }
     return ip;

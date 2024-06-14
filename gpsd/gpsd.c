@@ -47,7 +47,6 @@
 
 #include "../include/gpsd.h"
 #include "../include/gps_json.h"         // needs gpsd.h
-#include "../include/sockaddr.h"
 #include "../include/strfuncs.h"
 
 #ifdef SYSTEMD_ENABLE
