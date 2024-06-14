@@ -75,7 +75,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
                              char *addrbuf, size_t addrbuf_sz)
 {
     struct protoent *ppe;
-    struct addrinfo hints;
+    struct addrinfo hints = {0};
     struct addrinfo *result = NULL;
     struct addrinfo *rp;
     int ret, flags, type, proto, one;
@@ -97,7 +97,6 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
         return NL_NOPROTO;
     }
 
-    memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = af;
     hints.ai_socktype = type;
     hints.ai_protocol = proto;
@@ -145,8 +144,8 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
     for (rp = result; NULL != rp; rp = rp->ai_next) {
         ret = NL_NOCONNECT;
         // flags might be zero or SOCK_NONBLOCK
-        if (0 > (s = socket(rp->ai_family, rp->ai_socktype | flags,
-                            rp->ai_protocol))) {
+        s = socket(rp->ai_family, rp->ai_socktype | flags, rp->ai_protocol);
+        if (0 > s) {
             // can't get a socket.  Maybe should give up right away?
             ret = NL_NOSOCK;
             continue;
@@ -265,8 +264,9 @@ const char *netlib_errstr(const int err)
     case NL_NOCONNECT:
         return "can't connect to host/port pair";
     default:
-        return "unknown error";
+        break;
     }
+    return "unknown error";
 }
 
 // acquire a connection to an existing Unix-domain socket
@@ -278,9 +278,8 @@ socket_t netlib_localsocket(const char *sockfile, int socktype)
     if (0 > (sock = socket(AF_UNIX, socktype, 0))) {
         return -1;
     } else {
-        struct sockaddr_un saddr;
+        struct sockaddr_un saddr = {0};
 
-        memset(&saddr, 0, sizeof(struct sockaddr_un));
         saddr.sun_family = AF_UNIX;
         (void)strlcpy(saddr.sun_path, sockfile, sizeof(saddr.sun_path));
 
@@ -323,10 +322,10 @@ char *socka2a(sockaddr_t *fsin, char *buf, size_t buflen)
 // retrieve the IP address corresponding to a socket
 char *netlib_sock2ip(socket_t fd)
 {
-static char ip[INET6_ADDRSTRLEN];
-int r = 0;
-sockaddr_t fsin;
-socklen_t alen = (socklen_t) sizeof(fsin);
+    static char ip[INET6_ADDRSTRLEN];
+    int r = 0;
+    sockaddr_t fsin;
+    socklen_t alen = (socklen_t) sizeof(fsin);
 
     r = getpeername(fd, &(fsin.sa), &alen);
     if (0 == r) {
