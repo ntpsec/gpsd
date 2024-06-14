@@ -302,7 +302,6 @@ char *netlib_sock2ip(socket_t fd)
 {
     static char ip[INET6_ADDRSTRLEN];
     int r = 0;
-#ifdef HAVE_INET_NTOP
     sockaddr_t fsin;
     socklen_t alen = (socklen_t) sizeof(fsin);
 
@@ -322,7 +321,6 @@ char *netlib_sock2ip(socket_t fd)
             return ip;
         }
     }
-#endif  // HAVE_INET_NTOP
 
     if (0 != r) {
         (void)strlcpy(ip, "<unknown>", sizeof(ip));

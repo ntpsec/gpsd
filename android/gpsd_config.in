@@ -29,7 +29,6 @@
 #define HAVE_CLOCK_GETTIME 1
 #define HAVE_STRPTIME 1
 #define HAVE_GMTIME_R 1
-#define HAVE_INET_NTOP 1
 #define HAVE_FCNTL 1
 #define HAVE_FORK 1
 #define CONTROL_SOCKET_ENABLE 1

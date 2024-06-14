@@ -1336,10 +1336,14 @@ if not cleaning and not helping:
 
     # check function after libraries, because some function require libraries
     # for example clock_gettime() require librt on Linux glibc < 2.17
-    for f in ("cfmakeraw", "clock_gettime", "daemon", "fcntl", "fork",
-              "getopt_long",
-              "gmtime_r", "inet_ntop", "strlcat", "strlcpy", "strnlen",
-              "strptime"):
+    # These are  are POSIX 2001, so no need to check for them.
+    #  "fork", gmtime_r", "inet_ntop", strptime"
+    # These are  are POSIX 2008, so no need to check for them.
+    #  "strnlen"
+    for f in ("cfmakeraw", "clock_gettime", "daemon", "fcntl", "getopt_long",
+              "strlcat", "strlcpy",
+              "fork", "gmtime_r", "strptime" "strnlen"
+              ):
         if config.CheckFunc(f):
             confdefs.append("#define HAVE_%s 1\n" % f.upper())
         else:
