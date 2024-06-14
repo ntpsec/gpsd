@@ -592,6 +592,7 @@ static struct subscriber_t *allocate_client(void)
 static void detach_client(struct subscriber_t *sub)
 {
     char *c_ip;
+    int r;
 
     lock_subscriber(sub);
     if (UNALLOCATED_FD == sub->fd) {
@@ -599,13 +600,23 @@ static void detach_client(struct subscriber_t *sub)
         return;
     }
     c_ip = netlib_sock2ip(sub->fd);
-    (void)shutdown(sub->fd, SHUT_RDWR);
+    r = shutdown(sub->fd, SHUT_RDWR);
+    if (0 > r) {
+        GPSD_LOG(LOG_WARN, &context.errout,
+                 "detach_client(%d/%s), shutdown() %s(%d)\n",
+                 sub->fd, c_ip, strerror(errno), errno);
+    }
     GPSD_LOG(LOG_SPIN, &context.errout, "close(%d) in detach_client()\n",
              sub->fd);
-    (void)close(sub->fd);
+    r = close(sub->fd);
+    if (0 > r) {
+        GPSD_LOG(LOG_WARN, &context.errout,
+                 "detach_cliennt(%d/%s), close() %s(%d)\n",
+                 sub->fd, c_ip, strerror(errno), errno);
+    }
     GPSD_LOG(LOG_INF, &context.errout,
-             "detaching %s (sub %d, fd %d) in detach_client\n",
-             c_ip, sub_index(sub), sub->fd);
+             "detach_client(%d/%s) detached (sub %dd)\n",
+             sub->fd, c_ip, sub_index(sub));
     FD_CLR(sub->fd, &all_fds);
     adjust_max_fd(sub->fd, false);
     sub->active = 0;
