@@ -274,22 +274,21 @@ socket_t netlib_localsocket(const char *sockfile, int socktype)
 {
 #ifdef HAVE_SYS_UN_H
     int sock;
+    struct sockaddr_un saddr = {0};
 
     if (0 > (sock = socket(AF_UNIX, socktype, 0))) {
         return -1;
-    } else {
-        struct sockaddr_un saddr = {0};
+    }  // else
 
-        saddr.sun_family = AF_UNIX;
-        (void)strlcpy(saddr.sun_path, sockfile, sizeof(saddr.sun_path));
+    saddr.sun_family = AF_UNIX;
+    (void)strlcpy(saddr.sun_path, sockfile, sizeof(saddr.sun_path));
 
-        if (0 < connect(sock, (struct sockaddr *)&saddr, SUN_LEN(&saddr))) {
-            (void)close(sock);
-            return -2;
-        }
+    if (0 < connect(sock, (struct sockaddr *)&saddr, SUN_LEN(&saddr))) {
+        (void)close(sock);
+        return -2;
+    }  // else
 
-        return sock;
-    }
+    return sock;
 #else
     return -1;
 #endif  // HAVE_SYS_UN_H
@@ -302,12 +301,10 @@ char *socka2a(sockaddr_t *fsin, char *buf, size_t buflen)
 
     switch (fsin->sa.sa_family) {
     case AF_INET:
-        r = inet_ntop(fsin->sa_in.sin_family, &(fsin->sa_in.sin_addr),
-                      buf, buflen);
-        break;
+        FALLTHROUGH
     case AF_INET6:
-        r = inet_ntop((int)fsin->sa_in6.sin6_family,
-                      &(fsin->sa_in6.sin6_addr), buf, buflen);
+        r = inet_ntop(fsin->sa.sa_family, &(fsin->sa_in.sin_addr),
+                      buf, buflen);
         break;
     default:
         (void)strlcpy(buf, "<unknown AF>", buflen);
