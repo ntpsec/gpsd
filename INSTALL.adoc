@@ -145,6 +145,15 @@ However, many distributions break up GPSD into separate installable
 packages for the core daemon and clients; you should search your
 repository index for anything with gpsd as a prefix.
 
+== Installing using *pypi*
+
+There is a *gpsd* client on *pypi*.  It is not from us, we have no
+control over it, we can not contact the maintainer, it is very old, and
+it does not work with any version of gpsd released in the last decade.
+
+Don't use it.  Install *gpsd* from your distribution repository, or
+install from source.
+
 == How to test the software
 
 1. You should start gpsd while running as root.  Starting as a normal
