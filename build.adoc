@@ -1,5 +1,5 @@
 = Building GPSD from source
-:date: 13 May 2024
+:date: 21June May 2024
 :description: Steps for Building GPSD from source
 :docinfodir: www
 :keywords: GPSD, GPS, installation
@@ -92,7 +92,7 @@ Necessary components for any build:
 On Gentoo, a basic build only requires this package:
 
 |============================================================================
-|dev-util/scons                | for executing the build recipe
+|dev-build/scons               | for executing the build recipe
 |============================================================================
 
 === C compiler
@@ -422,7 +422,7 @@ are already installed.
 
 ----
 # install the required build tools
-emerge --noreplace dev-util/scons dev-vcs/git
+emerge --noreplace dev-build/scons dev-vcs/git
 
 # optional, to support the KPPS API, for improved timing
 emerge --noreplace net-misc/pps-tools
