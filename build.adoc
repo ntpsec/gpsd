@@ -1,5 +1,5 @@
 = Building GPSD from source
-:date: 21June May 2024
+:date: 23 June2024
 :description: Steps for Building GPSD from source
 :docinfodir: www
 :keywords: GPSD, GPS, installation
