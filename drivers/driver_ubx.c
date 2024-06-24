@@ -4214,39 +4214,26 @@ static gps_mask_t ubx_msg_rxm_sfrb(struct gps_device_t *session,
 /*
  * Raw Subframes - UBX-RXM-SFRBX
  * in u-blox 8, protver 17 and up, time sync firmware only
- * in u-blox F9P abd HPG only
+ * in u-blox F9P and HPG only
+ * in u-blox F10N, protVer 27 and up
  * not present  before u-blox8
  */
 static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
                                     unsigned char *buf, size_t data_len)
 {
     unsigned i;
-    uint8_t gnssId, svId, freqId, numWords, chn, version;
     uint32_t words[17];
     char *chn_s;
 
-    if (8 > data_len) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: RXM-SFRBX: runt payload len %zd", data_len);
-        return 0;
-    }
+    unsigned gnssId = getub(buf, 0);
+    unsigned svId = getub(buf, 1);
+    // reserved in Version 1, and some Version2.  Valid in protVer 40.
+    unsigned sigId = getub(buf, 2);
+    unsigned freqId = getub(buf, 3);
+    unsigned numWords = getub(buf, 4);
+    unsigned chn = getub(buf, 5);
+    unsigned version = getub(buf, 6);
 
-    numWords = getub(buf, 4);
-    if (data_len != (size_t)(8 + (4 * numWords)) ||
-        16 < numWords) {
-        // test numwords directly to shut up Coverity
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: RXM-SFRBX: wrong payload len %zd, numwords %u "
-                 "s/b %u",
-                 data_len, 8 + (4 * numWords), numWords);
-        return 0;
-    }
-
-    gnssId = getub(buf, 0);
-    svId = getub(buf, 1);
-    freqId = getub(buf, 2);
-    version = getub(buf, 6);
-    chn = getub(buf, 5);
     if (1 < version) {
         // receiver channel in version 2 and up.
         // valid range 0 to 13?
@@ -4257,11 +4244,20 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX: RXM-SFRBX: version %u gnssId %u %s %u svId %u "
-             "freqId %u words %u\n",
-             version, gnssId, chn_s, chn, svId, freqId, numWords);
+             "sigId %u freqId %u words %u\n",
+             version, gnssId, chn_s, chn, svId, sigId, freqId, numWords);
 
-    if (0 == version) {
+    if (!IN(1, version, 2)) {
         // unknown ersion
+        return 0;
+    }
+    if (data_len != (size_t)(8 + (4 * numWords)) ||
+        16 < numWords) {
+        // test numwords directly to shut up Coverity
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: RXM-SFRBX: wrong payload len %zd, numwords %u "
+                 "s/b %u",
+                 data_len, 8 + (4 * numWords), numWords);
         return 0;
     }
 
@@ -4826,6 +4822,11 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_RXM_SFRBX:
         min_protver = 17;
+        if (8 > data_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "UBX: RXM-SFRBX: runt payload len %zd", data_len);
+            break;
+        }
         mask = ubx_msg_rxm_sfrbx(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_SVSI:
