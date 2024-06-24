@@ -7169,12 +7169,18 @@ u-blox stripts preamble
 
     def rxm_sfrbx(self, buf):
         """UBX-RXM-SFRBX decode, Broadcast Navigation Data Subframe"""
+        # in u-blox 8, protver 17 and up, time sync firmware only
+        # in u-blox F9P and HPG only
+        # in u-blox F10N, protVer 27 and up
+        # not present  before u-blox8
 
         # The way u-blox packs the subfram data is perverse, and
         # barely undocumnted.  Even more perverse than native subframes.
 
+        # from protVer 40, buf[2] is sigId, no longer reserved.
+
         u = struct.unpack_from('<BBBBBBBB', buf, 0)
-        s = (' gnssId %u svId %3u reserved1 %u freqId %u numWords %u\n'
+        s = (' gnssId %u svId %3u sigId %u freqId %u numWords %u\n'
              '  chn %u version %u reserved2 %u' % u)
         words = ()
         for i in range(0, u[4]):
