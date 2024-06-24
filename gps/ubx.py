@@ -2867,7 +2867,6 @@ Deprecated in protVer 32.00
         0x40: "beidou",
         }
 
-
     def cfg_nav5(self, buf):
         """UBX-CFG-NAV5 nav Engine Settings
 
@@ -6402,11 +6401,16 @@ protVer 34 and up
         Rev = (words[0] >> 15) & 0x0f
         FraID = (words[0] >> 12) & 7
 
+        if len(words) != 10:
+            # We only know the 10 == words case
+            # sometimes it is 9.
+            return "\n    BDS: Number of words error! %u != 10" % len(words)
+
         # unmung u-blox 30 bit words in 32 bits
         page = 0
-        for i in range(0, 10):
+        for word in words:
             page <<= 30
-            page |= words[i] & 0x03fffffff
+            page |= words & 0x03fffffff
 
         # sanity check
         if (((page >> 282) & 7) != FraID):
