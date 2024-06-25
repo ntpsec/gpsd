@@ -6438,6 +6438,27 @@ BeiDou Interface Control Document v1.0
         # gnssId 3 sigId 8 (BDS B2 ad) is 9 words
         #   aka: B-CNAV2 Navigation Message
 
+        if sigId in set([8, 9]):
+            if len(words) != 9:
+                # We only know the 9 == words case
+                return "\n    BDS: Number of words error! %u != 9" % len(words)
+
+            # unmung u-blox 32 bit words in 32 bits
+            page = 0
+            for word in words:
+                page <<= 32
+                page |= word & 0x0ffffffff
+
+            PRN = (page >> 282) & 0x3f
+            mtype = (page >> 276) & 0x3f
+            SOW = (page >> 258) & 0x03ffff
+            s = "\n    PRN %u mtype %u SOW %u" % (PRN, mtype, SOW)
+
+            if 10 == mtype:
+                WN = (page >> 245) & 0x01fff
+                s += " WN %u" % (WN)
+            return s
+
         # unmung u-blox 30 bit words in 32 bits
         page = 0
         for word in words:
