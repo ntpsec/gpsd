@@ -976,6 +976,7 @@ static gps_mask_t almanac_bds(uint32_t words[], struct subframe_t *subp)
  * except words[0] is 4 parity
  */
 static gps_mask_t subframe_bds(struct gps_device_t *session,
+                               unsigned int sigId,
                                unsigned int tSVID,
                                uint32_t words[],
                                unsigned int numwords)
@@ -986,6 +987,12 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
     unsigned SOW;
     struct subframe_t *subp = &session->gpsdata.subframe;
     int64_t tmp;
+
+    if (0 != sigId) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "subframe_bds: Can't handle sigId %u\n", sigId);
+        return mask;
+    }
 
     init_subframe(&session->gpsdata.subframe, GNSSID_BD, (uint8_t)tSVID);
     subp->subframe_num = FraID;
@@ -1827,6 +1834,7 @@ static gps_mask_t subframe_glo(struct gps_device_t *session,
 
 gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
                                        unsigned int gnssId,
+                                       unsigned int sigId,
                                        unsigned int tSVID,
                                        uint32_t words[],
                                        unsigned int numwords)
@@ -1864,9 +1872,21 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         break;
 
     case GNSSID_BD:
-        numwords_expected = 10;
+        switch (sigId) {
+        case 0:
+            numwords_expected = 10;
+            break;
+        case 6:
+            FALLTHROUGH
+        case 7:
+            numwords_expected = 9;
+            break;
+        default:
+            numwords_expected = 99;
+            break;
+        }
         if (numwords_expected == numwords) {
-            return subframe_bds(session, tSVID, words, numwords);
+            return subframe_bds(session, sigId, tSVID, words, numwords);
         }
         break;
     case GNSSID_GLO:

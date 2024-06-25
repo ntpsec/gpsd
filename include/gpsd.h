@@ -1000,6 +1000,7 @@ extern gps_mask_t gpsd_interpret_subframe(struct gps_device_t *,
 extern gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *,
                                               unsigned int,
                                               unsigned int,
+                                              unsigned int,
                                               uint32_t[],
                                               unsigned int);
 extern const char *gpsd_packetdump(char *, size_t, const unsigned char *,

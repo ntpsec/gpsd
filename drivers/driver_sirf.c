@@ -1516,7 +1516,7 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "SiRF: NavData chan %u svid %u\n",chan,svid);
+             "SiRF: NavData chan %u svid %u\n", chan, svid);
 
     // SiRF recommends at least 57600 for SiRF IV nav data
     if (57600 > session->gpsdata.dev.baudrate) {
@@ -1533,7 +1533,7 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
         }
     }
 
-    return gpsd_interpret_subframe_raw(session, GNSSID_GPS, svid, words,
+    return gpsd_interpret_subframe_raw(session, GNSSID_GPS, 0, svid, words,
                                        numwords);
 }
 

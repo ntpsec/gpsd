@@ -78,6 +78,40 @@
 #define UBX_CFG_LEN             20
 #define outProtoMask            14
 
+// UBX Satellite/Dignal Numbering
+static struct vlist_t vgnss_sig_ids[] = {
+    {0x0000, "GPS L1 C/A"},
+    {0x0003, "GPS L2 CL"},
+    {0x0004, "GPS L2 CM"},
+    {0x0006, "GPS L5 I"},
+    {0x0007, "GPS L5 Q"},
+    {0x0100, "SBAS L1 C/A"},
+    {0x0200, "GAL E1 C"},
+    {0x0201, "GAL E1 B"},
+    {0x0203, "GAL E5 aI"},
+    {0x0204, "GAL E5 aQ"},
+    {0x0205, "GAL E5 bI"},
+    {0x0206, "GAL E5 bQ"},
+    {0x0300, "BDS B1I D1"},
+    {0x0301, "BDS B1I D2"},
+    {0x0302, "BDS B2I D1"},
+    {0x0303, "BDS B2I D2"},
+    {0x0305, "BDS B1 Cp"},
+    {0x0306, "BDS B1 Cd"},
+    {0x0307, "BDS B2 ap"},
+    {0x0308, "BDS B2 ad"},
+    {0x0508, "QZSS L1 C/A"},
+    {0x0501, "QZSS L1 S"},
+    {0x0504, "QZSS L2 CM"},
+    {0x0505, "QZSS L2 CL"},
+    {0x0508, "QZSS L5 I"},
+    {0x0509, "QZSS L5 Q"},
+    {0x0600, "GLO L1 OF"},
+    {0x0602, "GLO L2 OF"},
+    {0x0700, "NavIc L5 A"},
+    {0, NULL},
+};
+
 // UBX-ACK-* ids
 static struct vlist_t vack_ids[] = {
     {UBX_ACK_ACK, "ACK-ACK"},
@@ -4246,9 +4280,14 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
              "UBX: RXM-SFRBX: version %u gnssId %u %s %u svId %u "
              "sigId %u freqId %u words %u\n",
              version, gnssId, chn_s, chn, svId, sigId, freqId, numWords);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "UBX: RXM-SFRBX:   %s\n",
+             val2str((gnssId << 8) | sigId, vgnss_sig_ids));
 
     if (!IN(1, version, 2)) {
         // unknown ersion
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: RXM-SFRBX: unknown version %u", version);
         return 0;
     }
     if (data_len != (size_t)(8 + (4 * numWords)) ||
@@ -4268,7 +4307,8 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     }
 
     // do we need freqId or chn?
-    return gpsd_interpret_subframe_raw(session, gnssId, svId, words, numWords);
+    return gpsd_interpret_subframe_raw(session, gnssId, sigId,
+                                       svId, words, numWords);
 }
 
 /**
