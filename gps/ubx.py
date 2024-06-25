@@ -307,6 +307,38 @@ class ubx(object):
                5: 'QZSS',
                6: 'GLONASS'}
 
+    # UBX Satellite/Dignal Numbering
+    gnss_sig_id = {0x0000: 'GPS L1 C/A',
+                   0x0003: 'GPS L2 CL',
+                   0x0004: 'GPS L2 CM',
+                   0x0006: 'GPS L5 I',
+                   0x0007: 'GPS L5 Q',
+                   0x0100: 'SBAS L1 C/A',
+                   0x0200: 'GAL E1 C',
+                   0x0201: 'GAL E1 B',
+                   0x0203: 'GAL E5 aI',
+                   0x0204: 'GAL E5 aQ',
+                   0x0205: 'GAL E5 bI',
+                   0x0206: 'GAL E5 bQ',
+                   0x0300: 'BDS B1I D1',
+                   0x0301: 'BDS B1I D2',
+                   0x0302: 'BDS B2I D1',
+                   0x0303: 'BDS B2I D2',
+                   0x0305: 'BDS B1 Cp',
+                   0x0306: 'BDS B1 Cd',
+                   0x0307: 'BDS B2 ap',
+                   0x0308: 'BDS B2 ad',
+                   0x0508: 'QZSS L1 C/A',
+                   0x0501: 'QZSS L1 S',
+                   0x0504: 'QZSS L2 CM',
+                   0x0505: 'QZSS L2 CL',
+                   0x0508: 'QZSS L5 I',
+                   0x0509: 'QZSS L5 Q',
+                   0x0600: 'GLO L1 OF',
+                   0x0602: 'GLO L2 OF',
+                   0x0700: 'NavIc L5 A',
+                   }
+
     # Names for portID values in UBX-CFG-PRT, UBX-MON-IO, etc.
     port_ids = {0: 'DDC',  # The license free name for i2c used in the spec
                 1: 'UART1',
@@ -6391,26 +6423,38 @@ protVer 34 and up
                unpack_s11(words[9], 11) * (2 ** -38)))
         return s
 
-    def _decode_sfrbx_bds(self, words):
-        """Decode UBX-RXM-SFRBX BeiDou frames"""
-        # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
-        # Section 10.4 BeiDou
-        # gotta decode the u-blox munging and the BeiDou packing...
-        # http://en.beidou.gov.cn/SYSTEMS/ICD/
-        # BeiDou Interface Control Document v1.0
-        Rev = (words[0] >> 15) & 0x0f
-        FraID = (words[0] >> 12) & 7
+    def _decode_sfrbx_bds(self, words, sigId):
+        """Decode UBX-RXM-SFRBX BeiDou frames
 
-        if len(words) != 10:
-            # We only know the 10 == words case
-            # sometimes it is 9.
-            return "\n    BDS: Number of words error! %u != 10" % len(words)
+See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+Section 10.4 BeiDou
+gotta decode the u-blox munging and the BeiDou packing...
+http://en.beidou.gov.cn/SYSTEMS/ICD/
+BeiDou Interface Control Document v1.0
+"""
+
+        # gnssId 3 sigId 0/1 (BDS B1I D1 and D2) is 10, words
+        # gnssId 3 sigId 6 (BDS B1 Cd) is 3, 9, or 19, words
+        # gnssId 3 sigId 8 (BDS B2 ad) is 9 words
+        #   aka: B-CNAV2 Navigation Message
 
         # unmung u-blox 30 bit words in 32 bits
         page = 0
         for word in words:
             page <<= 30
-            page |= words & 0x03fffffff
+            page |= word & 0x03fffffff
+
+        if sigId not in set([0, 1]):
+            return ("\n    BDS: Can't handle sigId %u wwrds %u page %x" %
+                    (sigId, len(words), page))
+
+        if len(words) != 10:
+            # We only know the 10 == words case
+            return "\n    BDS: Number of words error! %u != 10" % len(words)
+
+        # the following only for B1I D1
+        Rev = (words[0] >> 15) & 0x0f
+        FraID = (words[0] >> 12) & 7
 
         # sanity check
         if (((page >> 282) & 7) != FraID):
@@ -7172,20 +7216,36 @@ u-blox stripts preamble
         }
 
     def rxm_sfrbx(self, buf):
-        """UBX-RXM-SFRBX decode, Broadcast Navigation Data Subframe"""
-        # in u-blox 8, protver 17 and up, time sync firmware only
-        # in u-blox F9P and HPG only
-        # in u-blox F10N, protVer 27 and up
-        # not present  before u-blox8
+        """UBX-RXM-SFRBX decode, Broadcast Navigation Data Subframe
 
-        # The way u-blox packs the subfram data is perverse, and
-        # barely undocumnted.  Even more perverse than native subframes.
+in u-blox 8, protver 17 and up, time sync firmware only
+in u-blox F9P and HPG only
+in u-blox F10N, protVer 27 and up
+not present  before u-blox8
 
-        # from protVer 40, buf[2] is sigId, no longer reserved.
+The way u-blox packs the subfram data is perverse, and
+barely undocumnted.  Even more perverse than native subframes.
+
+from protVer 27.31 and up, buf[2] is sigId, no longer reserved.
+"""
 
         u = struct.unpack_from('<BBBBBBBB', buf, 0)
         s = (' gnssId %u svId %3u sigId %u freqId %u numWords %u\n'
              '  chn %u version %u reserved2 %u' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += '\n  (%s)' % self.gnss_sig_id.get((u[0] << 8) | u[2], '?')
+
+        sigId = u[2]
+        if buf[6] not in set([1, 2]):
+            s += "\n    WARNING: unknown version %u" % buf[6]
+            return s
+
+        elen = 8 + (4 * buf[4])
+        if len(buf) != elen:
+            s += ("\n    WARNING: expected %u bytes, got %u" %
+                  elan, len(buf))
+            return s
+
         words = ()
         for i in range(0, u[4]):
             u1 = struct.unpack_from('<L', buf, 8 + (i * 4))
@@ -7546,7 +7606,7 @@ u-blox stripts preamble
 
         elif 3 == u[0]:
             # BeiDou
-            s += self._decode_sfrbx_bds(words)
+            s += self._decode_sfrbx_bds(words, sigId)
 
         elif 6 == u[0]:
             # GLONASS

@@ -4227,7 +4227,7 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
 
     unsigned gnssId = getub(buf, 0);
     unsigned svId = getub(buf, 1);
-    // reserved in Version 1, and some Version2.  Valid in protVer 40.
+    // reserved in Version 1, and some Version2.  Valid in protVer 27.31 and up
     unsigned sigId = getub(buf, 2);
     unsigned freqId = getub(buf, 3);
     unsigned numWords = getub(buf, 4);
