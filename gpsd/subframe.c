@@ -135,7 +135,7 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
     almp->af0      = (short)UINT2INT(almp->af0, 11);
     almp->d_af0    = pow(2.0, -20) * almp->af0;
     GPSD_LOG(LOG_PROG, errout,
-             "50B,GPS: SF:%d SV:%2u TSV:%2u data_id %d e:%g toa:%lu "
+             "SUB,GPS: SF:%d SV:%2u TSV:%2u data_id %d e:%g toa:%lu "
              "deltai:%.10e Omegad:%.5e svh:%u sqrtA:%.10g Omega0:%.10e "
              "omega:%.10e M0:%.11e af0:%.5e af1:%.5e\n",
              subframe, almp->sv, tSVID, data_id,
@@ -174,7 +174,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     init_subframe(&session->gpsdata.subframe, gnssId, (uint8_t)tSVID);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B,GPS: gpsd_interpret_subframe: (%u, %u) "
+             "SUB,GPS: gpsd_interpret_subframe: (%u, %u) "
              "%06x %06x %06x %06x %06x %06x %06x %06x %06x %06x\n",
              gnssId, tSVID, words[0], words[1], words[2], words[3], words[4],
              words[5], words[6], words[7], words[8], words[9]);
@@ -187,7 +187,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     }
     if (preamble != 0x74) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "50B,GPS: gpsd_interpret_subframe bad preamble: "
+                 "SUB,GPS: gpsd_interpret_subframe bad preamble: "
                  "0x%x header 0x%x\n",
                  preamble, words[0]);
         return 0;
@@ -200,7 +200,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     subp->alert = (bool)((words[1] >> 6) & 1);
     subp->TOW17 = (long)((words[1] >> 7) & BITMASK(17)) * 6;
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "50B,GPS: SF:%d SV:%2u TOW17:%7d Alert:%u AS:%u IF:%d\n",
+             "SUB,GPS: SF:%d SV:%2u TOW17:%7d Alert:%u AS:%u IF:%d\n",
              subp->subframe_num, subp->tSVID, subp->TOW17,
              (unsigned)subp->alert, (unsigned)subp->antispoof,
              (unsigned)subp->integrity);
@@ -246,7 +246,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         subp->sub1.IODC <<= 8;
         subp->sub1.IODC |= ((words[7] >> 16) & BITMASK(8));
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "50B,GPS: SF:1 SV:%2u WN:%4u IODC:%4u"
+                 "SUB,GPS: SF:1 SV:%2u WN:%4u IODC:%4u"
                  " L2:%u ura:%u hlth:%u L2P:%u Tgd:%g toc:%lu af2:%.4g"
                  " af1:%.6e af0:%.7e\n",
                  subp->tSVID,
@@ -293,7 +293,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         subp->sub2.AODO   = ((words[9] >>  2) & BITMASK(5));
         subp->sub2.u_AODO   = subp->sub2.AODO * 900;
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "50B,GPS: SF:2 SV:%2u IODE:%3u Crs:%.6e deltan:%.6e "
+                 "SUB,GPS: SF:2 SV:%2u IODE:%3u Crs:%.6e deltan:%.6e "
                  "M0:%.11e Cuc:%.6e e:%f Cus:%.6e sqrtA:%.11g "
                  "toe:%lu FIT:%u AODO:%5u\n",
                  subp->tSVID,
@@ -339,7 +339,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         subp->sub3.IDOT     = UINT2INT(subp->sub3.IDOT, 14);
         subp->sub3.d_IDOT   = pow(2.0, -43) * subp->sub3.IDOT;
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "50B,GPS: SF:3 SV:%2u IODE:%3u I IDOT:%.6g Cic:%.6e "
+                 "SUB,GPS: SF:3 SV:%2u IODE:%3u I IDOT:%.6g Cic:%.6e "
                  "Omega0:%.11e Cis:%.7g i0:%.11e Crc:%.7g omega:%.11e "
                  "Omegad:%.6e\n",
                  subp->tSVID, subp->sub3.IODE, subp->sub3.d_IDOT,
@@ -464,7 +464,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 }
 
                 GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "50B,GPS: SF:4-13 data_id %d ai:%u "
+                         "SUB,GPS: SF:4-13 data_id %d ai:%u "
                          "ERD1:%d ERD2:%d ERD3:%d ERD4:%d "
                          "ERD5:%d ERD6:%d ERD7:%d ERD8:%d "
                          "ERD9:%d ERD10:%d ERD11:%d ERD12:%d "
@@ -549,7 +549,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 subp->sub4_17.str[i++] = (words[9] >> 8) & BITMASK(8);
                 subp->sub4_17.str[i] = '\0';
                 GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "50B,GPS: SF:4-17 system message: %.24s\n",
+                         "SUB,GPS: SF:4-17 system message: %.24s\n",
                          subp->sub4_17.str);
                 break;
 
@@ -606,7 +606,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 subp->sub4_18.lsf = (int8_t)((words[9] >> 16) & BITMASK(8));
 
                 GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "50B,GPS: SF:4-18 a0:%.5g a1:%.5g a2:%.5g a3:%.5g "
+                         "SUB,GPS: SF:4-18 a0:%.5g a1:%.5g a2:%.5g a3:%.5g "
                          "b0:%.5g b1:%.5g b2:%.5g b3:%.5g "
                          "A1:%.11e A0:%.11e tot:%lld WNt:%u "
                          "ls: %d WNlsf:%u DN:%u, lsf:%d\n",
@@ -759,7 +759,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 subp->sub4_25.svhx[7] = ((words[9] >>  6) & BITMASK(6));
 
                 GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "50B,GPS: SF:4-25 data_id %d "
+                         "SUB,GPS: SF:4-25 data_id %d "
                          "SV1:%u SV2:%u SV3:%u SV4:%u "
                          "SV5:%u SV6:%u SV7:%u SV8:%u "
                          "SV9:%u SV10:%u SV11:%u SV12:%u "
@@ -805,7 +805,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
             } else if ( -2 == sv ) {
                 // unknown or secret page
                 GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "50B,GPS: SF:4-%d data_id %d\n",
+                         "SUB,GPS: SF:4-%d data_id %d\n",
                          subp->pageid, subp->data_id);
                 return 0;
             }
@@ -855,7 +855,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
             subp->sub5_25.sv[23] = ((words[8] >>  6) & BITMASK(6));
             subp->sub5_25.sv[24] = ((words[8] >>  0) & BITMASK(6));
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "50B,GPS: SF:5-25 SV:%2u ID:%u toa:%lu WNa:%u "
+                     "SUB,GPS: SF:5-25 SV:%2u ID:%u toa:%lu WNa:%u "
                      "SV1:%u SV2:%u SV3:%u SV4:%u "
                      "SV5:%u SV6:%u SV7:%u SV8:%u "
                      "SV9:%u SV10:%u SV11:%u SV12:%u "
@@ -879,7 +879,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         } else {
             // unknown page
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "50B,GPS: SF:5-%d data_id %d unknown page\n",
+                     "SUB,GPS: SF:5-%d data_id %d unknown page\n",
                      subp->pageid, subp->data_id);
             return 0;
         }
@@ -957,9 +957,82 @@ static gps_mask_t almanac_bds(uint32_t words[], struct subframe_t *subp)
     return mask;
 }
 
+// Code to decode BeiDou Subframes
+
+/* Code to decode BeiDou Subframes sigId 6
+ */
+static gps_mask_t subframe_bds6(struct gps_device_t *session,
+                               unsigned int sigId,
+                               unsigned int tSVID UNUSED,
+                               uint32_t words[] UNUSED,
+                               unsigned int numwords UNUSED)
+{
+    gps_mask_t mask = 0;
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "SUB subframe_bds6: Can't handle sigId %u\n", sigId);
+
+
+    return mask;
+}
+
+/* Code to decode BeiDou Subframes sigId 8
+ *
+ * BDS B2 ad, B-CNAV2
+ */
+static gps_mask_t subframe_bds8(struct gps_device_t *session,
+                               unsigned int sigId UNUSED,
+                               unsigned int tSVID UNUSED,
+                               uint32_t words[],
+                               unsigned int numwords UNUSED)
+{
+    gps_mask_t mask = 0;
+    unsigned PRN = (words[0] >> 26) & BITMASK(6);
+    unsigned mtype = (words[0] >> 20) & BITMASK(6);
+    long unsigned SOW = (words[0] >> 2) & BITMASK(18);
+    unsigned HS = words[0] & BITMASK(2);
+
+    // common parts
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "SUB subframe_bds8: PRN %u mtype %u SOW %lu\n",
+              PRN, mtype, SOW);
+
+    switch (mtype) {
+    case 10:    // Ephemeris 1
+        {
+            unsigned WN = (((words[0] & BITMASK(2)) << 11) |
+                          ((words[1] >> 21) & BITMASK(11)));
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "SUB WN %u\n", WN);
+        }
+        break;
+    case 11:
+        FALLTHROUGH
+    case 39:
+        FALLTHROUGH
+    case 31:
+        FALLTHROUGH
+    case 12:
+        FALLTHROUGH
+    case 13:
+        FALLTHROUGH
+    case 14:
+        FALLTHROUGH
+    case 40:
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "SUB HS %u\n", HS);
+        break;
+    default:
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "SUB unhandled mtype %u\n", mtype);
+        break;
+    }
+
+    return mask;
+}
+
 /* Code to decode BeiDou Subframes
  *
- * for now only handles the 10 word subframe.
+ * Needs work.
  *
  * http://en.beidou.gov.cn/SYSTEMS/ICD/
  * BeiDou Interface Control Document v1.0
@@ -976,10 +1049,10 @@ static gps_mask_t almanac_bds(uint32_t words[], struct subframe_t *subp)
  * except words[0] is 4 parity
  */
 static gps_mask_t subframe_bds(struct gps_device_t *session,
-                               unsigned int sigId,
-                               unsigned int tSVID,
+                               unsigned int sigId UNUSED,
+                               unsigned int tSVID UNUSED,
                                uint32_t words[],
-                               unsigned int numwords)
+                               unsigned int numwords UNUSED)
 {
     gps_mask_t mask = 0;
     char *word_desc = "";
@@ -988,12 +1061,25 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
     struct subframe_t *subp = &session->gpsdata.subframe;
     int64_t tmp;
 
-    if (0 != sigId) {
+    switch (sigId) {
+    case 0:
+        // 10 == numwords. We know this one.
+        break;
+    case 6:
+        // BDS B1 Cd , 3, 9, 19 == numwords. ????
+        return subframe_bds6(session, sigId, tSVID, words, numwords);
+
+    case 8:
+        // BDS B2 ad , 9 == numwords. We know this one.
+        return subframe_bds8(session, sigId, tSVID, words, numwords);
+
+    default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "subframe_bds: Can't handle sigId %u\n", sigId);
+                 "SUB subframe_bds: Can't handle sigId %u\n", sigId);
         return mask;
     }
 
+    // The plain sigId == 0 case.
     init_subframe(&session->gpsdata.subframe, GNSSID_BD, (uint8_t)tSVID);
     subp->subframe_num = FraID;
 
@@ -1002,7 +1088,7 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
     subp->TOW17 = SOW;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B,BDS: len %u: "
+             "SUB,BDS: len %u: "
              "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
              numwords,
              words[0], words[1], words[2], words[3], words[4],
@@ -1259,7 +1345,7 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "50B,BDS: FraID %u (%s) SOW %u\n",
+             "SUB,BDS: FraID %u (%s) SOW %u\n",
              FraID, word_desc, SOW);
 
     return mask;
@@ -1299,7 +1385,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     if (8 > numwords) {
         // Later on there will be different lengths than 8.
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "50B,GAL: expected 8 words, got %u\n",
+                 "SUB,GAL: expected 8 words, got %u\n",
                  numwords);
         return 0;
     }
@@ -1307,7 +1393,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     word_type = (words[0] >> 24) & BITMASK(6);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B,GAL: tSVID %u len %u: "
+             "SUB,GAL: tSVID %u len %u: "
              "%08x %08x %08x %08x %08x %08x %08x %08x\n", tSVID, numwords,
              words[0], words[1], words[2], words[3], words[4],
              words[5], words[6], words[7]);
@@ -1315,12 +1401,12 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     if (1 == page_type) {
         // Alerts pages are all "Reserved"
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "50B,GAL: ignoring Alert Page \n");
+                 "SUB,GAL: ignoring Alert Page \n");
         return 0;
     }
     if (1 == even) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "50B,GAL: page flipped?\n");
+                 "SUB,GAL: page flipped?\n");
         return 0;
     }
     subp = &session->gpsdata.subframe;
@@ -1739,7 +1825,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     session->last_word_gal = word_type;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "50B,GAL: len %u even %u page_type %u word_type %u (%s)\n",
+             "SUB,GAL: len %u even %u page_type %u word_type %u (%s)\n",
              numwords, even, page_type, word_type, word_desc);
 
     return mask;
@@ -1771,7 +1857,7 @@ static gps_mask_t subframe_glo(struct gps_device_t *session,
     init_subframe(subp, GNSSID_GLO, (uint8_t)tSVID);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B,GLO: tSVID %u len %u: "
+             "SUB,GLO: tSVID %u len %u: "
              "%08x %08x %08x %08x\n", tSVID, numwords,
              words[0], words[1], words[2], words[3]);
 
@@ -1826,7 +1912,7 @@ static gps_mask_t subframe_glo(struct gps_device_t *session,
         break;
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "50B,GLO: len %u supernum %u framenum %u stringnum %u (%s)\n",
+             "SUB,GLO: len %u supernum %u framenum %u stringnum %u (%s)\n",
              numwords, supernum, framenum, stringnum, word_desc);
     return 0;
 }
@@ -1843,12 +1929,13 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
     uint8_t preamble;
     unsigned int numwords_expected = 0;
 
-    if (session->subframe_count++ == 0) {
+    if (0 == session->subframe_count++ &&
+        0 < gpsd_serial_isatty(session)) {
         speed_t speed = gpsd_get_speed(session);
 
         if (speed < 38400) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "50B: speed less than 38,400 may cause data lag and "
+                     "SUB: speed less than 38,400 may cause data lag and "
                      "loss of functionality\n");
         }
     }
@@ -1862,7 +1949,7 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         break;
     case GNSSID_SBAS:
         GPSD_LOG(LOG_INFO, &session->context->errout,
-                 "50B,SBAS: subframe protocol is not publicly documented");
+                 "SUB,SBAS: subframe protocol is not publicly documented");
         return 0;
     case GNSSID_GAL:
         numwords_expected = 8;
@@ -1876,9 +1963,9 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         case 0:
             numwords_expected = 10;
             break;
-        case 6:
+        case 8:
             FALLTHROUGH
-        case 7:
+        case 9:
             numwords_expected = 9;
             break;
         default:
@@ -1901,13 +1988,13 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         FALLTHROUGH
     default:
         GPSD_LOG(LOG_INFO, &session->context->errout,
-                 "50B: Unsupportd gnssId %u\n", gnssId);
+                 "SUB: Unsupportd gnssId %u\n", gnssId);
         return 0;
     }
 
     if (numwords_expected > numwords) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "50B: gnssId %u  Expected numwords %u, got %u\n",
+                 "SUB: gnssId %u  Expected numwords %u, got %u\n",
                  gnssId, numwords_expected, numwords);
         return 0;
     }
@@ -1931,7 +2018,7 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
      *
      */
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B,GPS: gpsd_interpret_subframe_raw: "
+             "SUB,GPS: gpsd_interpret_subframe_raw: "
              "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
              words[0], words[1], words[2], words[3], words[4],
              words[5], words[6], words[7], words[8], words[9]);
@@ -1942,7 +2029,7 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
     } else if (preamble != 0x74) {
         // strangely this is very common, so don't log it
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "50B,GPS: gpsd_interpret_subframe_raw: bad preamble 0x%x\n",
+                 "SUB,GPS: gpsd_interpret_subframe_raw: bad preamble 0x%x\n",
                  preamble);
         return 0;
     }
@@ -1960,7 +2047,7 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         parity = (uint32_t)isgps_parity((isgps30bits_t)words[i]);
         if (parity != (words[i] & BITMASK(6))) {
             GPSD_LOG(LOG_DATA, &session->context->errout,
-                     "50B,GPS: gpsd_interpret_subframe_raw parity fail "
+                     "SUB,GPS: gpsd_interpret_subframe_raw parity fail "
                      "words[%d] 0x%x != 0x%x\n",
                      i, parity, (words[i] & 1));
             return 0;
