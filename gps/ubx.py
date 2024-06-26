@@ -339,6 +339,11 @@ class ubx(object):
                    0x0700: 'NavIc L5 A',
                    }
 
+    # B-CNAV2 HS (Health Status)
+    hs_vals = {0: 'Healthy',
+               1: 'Unealthy',
+               }
+
     # Names for portID values in UBX-CFG-PRT, UBX-MON-IO, etc.
     port_ids = {0: 'DDC',  # The license free name for i2c used in the spec
                 1: 'UART1',
@@ -6451,12 +6456,20 @@ BeiDou Interface Control Document v1.0
 
             PRN = (page >> 282) & 0x3f
             mtype = (page >> 276) & 0x3f
-            SOW = (page >> 258) & 0x03ffff
+            SOW = ((page >> 258) & 0x03ffff)
             s = "\n    PRN %u mtype %u SOW %u" % (PRN, mtype, SOW)
 
             if 10 == mtype:
                 WN = (page >> 245) & 0x01fff
                 s += " WN %u" % (WN)
+            elif mtype in set([11, 30, 31, 32, 33, 34, 40]):
+                HS = (page >> 256) & 3
+                if gps.VERB_DECODE <= self.verbosity:
+                    s += ' HS %u(%s)' % (HS, self.hs_vals.get(HS, '?'))
+                else:
+                    s += " HS %u " % (HS)
+            else:
+                s += " Unknown mtype"
             return s
 
         # unmung u-blox 30 bit words in 32 bits
