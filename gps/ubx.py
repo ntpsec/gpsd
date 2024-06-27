@@ -6439,14 +6439,76 @@ BeiDou Interface Control Document v1.0
 """
 
         # gnssId 3 sigId 0/1 (BDS B1I D1 and D2) is 10, words
-        # gnssId 3 sigId 6 (BDS B1 Cd) is 3, 9, or 19, words
+        # gnssId 3 sigId 6 (BDS B1 Cd), B-CNAV1, is 3, 9, or 19, words
         # gnssId 3 sigId 8 (BDS B2 ad) is 9 words
         #   aka: B-CNAV2 Navigation Message
 
-        if sigId in set([8, 9]):
+        if 6 == sigId:
+            # unmung u-blox 32 bit words in 32 bits
+            page = 0
+            for word in words:
+                page <<= 32
+                page |= word & 0x0ffffffff
+
+            # BDS B1 Cd, B-CNAV1
+            if len(words) == 3:
+                # subframe 1, 72 bits raw, 14 bits encoded
+                # unclear what u-blox did to get 3 32-bit words.
+                PRN = (words[0] >> 26) & 0x03f
+                SOH = (words[0] & 0x0ff) * 18          # WAG????
+                return "\n    Subframe 1: PRN %u SOH %u" % (PRN, SOH)
+
+            elif len(words) == 19:
+                # Subframe 2, 600 bits + 8 bits padding == 19 32-bit words
+                WN = (page >> 595) & 0x01fff
+                HOW = (page >> 587) & 0x0ff
+                IODC = (page >> 577) & 0x03ff
+                Rev = (page >> 32) & 0x07f
+                s = ("\n    Subframe 2: WN %u HOW %u IODC %u Rev %u" %
+                     (WN, HOW, IODC, Rev))
+                return s
+
+            elif len(words) == 9:
+                # Subframe 3, 264 bits + 24 bits padding == 9 32-bit words
+                # 1,2,4,5, and 60
+                PageID = (page >> 282) & 0x03f
+                DIF = (page >> 281) & 1
+                SIF = (page >> 280) & 1
+                AIF = (page >> 279) & 1
+                SISMAI = (page >> 275) & 0x0f   # undecumented
+                s = ("\n    Subframe 3: PageID %u DIF %u "
+                     "SIF %u AIF %u SISMAI %u " %
+                      (PageID, DIF, SIF, AIF, SISMAI))
+                if 1 == PageID:
+                    SISAIoe = (page >> 270) & 0x1f
+                    s += ("SISAIoe %u " %
+                          (SISAIoe))
+                elif 2 == PageID:
+                    SISAIoc = (page >> 253) & 0x03fffff
+                    s += ("SISAIoe %u " %
+                          (SISAIoc))
+                elif 3 == PageID:
+                    SISAIoe = (page >> 270) & 0x1f
+                    s += ("SISAIoe %u " %
+                          (SISAIoe))
+                elif 4 == PageID:
+                    SISAIoc = (page >> 253) & 0x03fffff
+                    s += ("SISAIoe %u " %
+                          (SISAIoc))
+                # else: page 60 is a mistery.
+                Rev = (page >> 32) & 0x03ff
+                s += "Rev %u" % Rev
+                return s
+
+
+            # We only know the 9 == words case
+            return "\n    Unknown words number %u" % len(words)
+
+        if 8 == sigId:
+            # BDS B2 ad, B-CNAV2
             if len(words) != 9:
                 # We only know the 9 == words case
-                return "\n    BDS: Number of words error! %u != 9" % len(words)
+                return "\n    Number of words error! %u != 9" % len(words)
 
             # unmung u-blox 32 bit words in 32 bits
             page = 0
@@ -6457,7 +6519,13 @@ BeiDou Interface Control Document v1.0
             PRN = (page >> 282) & 0x3f
             mtype = (page >> 276) & 0x3f
             SOW = ((page >> 258) & 0x03ffff)
-            s = "\n    PRN %u mtype %u SOW %u" % (PRN, mtype, SOW)
+            HS = (page >> 256) & 3
+            DIF = (page >> 255) & 1
+            SIF = (page >> 254) & 1
+            AIF = (page >> 253) & 1
+            SISMAI = (page >> 249) & 0x0f   # undecumented
+            s = ("\n    PRN %u mtype %u SOW %u HS %u DIF %u SIF %u AIF %u "
+                 "SUSMAI %u" % (PRN, mtype, SOW, HS, DIF, SIF, AIF, SISMAI))
 
             if 10 == mtype:
                 WN = (page >> 245) & 0x01fff
@@ -6479,12 +6547,12 @@ BeiDou Interface Control Document v1.0
             page |= word & 0x03fffffff
 
         if sigId not in set([0, 1]):
-            return ("\n    BDS: Can't handle sigId %u wwrds %u page %x" %
+            return ("\n    Can't handle sigId %u wwrds %u page %x" %
                     (sigId, len(words), page))
 
         if len(words) != 10:
             # We only know the 10 == words case
-            return "\n    BDS: Number of words error! %u != 10" % len(words)
+            return "\n    Number of words error! %u != 10" % len(words)
 
         # the following only for B1I D1
         Rev = (words[0] >> 15) & 0x0f
@@ -6500,7 +6568,7 @@ BeiDou Interface Control Document v1.0
         # common to all pages
         SOW = ((page >> 274) & 0x0f) << 12
         SOW |= (page >> 258) & 0x0fff
-        s = ("\n    BDS: Rev %u FraID %i SOW %u" %
+        s = ("\n    Rev %u FraID %i SOW %u" %
              (Rev, FraID, SOW))
         if 1 == FraID:
             SatH1 = (page >> 257) & 1
