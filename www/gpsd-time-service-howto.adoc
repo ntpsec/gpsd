@@ -999,6 +999,12 @@ to read the precision from the SHM structure.  Without knowing the high
 precision of the PPS on SHM 1 it may not place enough importance on its
 data.
 
+The number "0.9999" is a placeholder as explained in the previous
+section about configuring *ntpd*. It is *not a number to be used in
+production* - it's too large. If you can't replace it with a real value,
+it would be best to not use the SHM 0 source at all, keeping only the
+SHM 1 source.
+
 If you are outside of the USA replace the pool servers with one in your
 local area. See <<USE-POOL>> for further information.
 
