@@ -968,8 +968,41 @@ static gps_mask_t subframe_bds6(struct gps_device_t *session,
                                unsigned int numwords UNUSED)
 {
     gps_mask_t mask = 0;
-    GPSD_LOG(LOG_WARN, &session->context->errout,
-             "SUB subframe_bds6: Can't handle sigId %u\n", sigId);
+
+    switch (sigId) {
+    case 3:
+        // Subframe 1, 72 bits raw, 14 bits encoded
+        // unclear what u-blox did to get 3 32-bit words.
+        {
+            unsigned PRN = (words[0] >> 26) & BITMASK(6);
+            unsigned SOH = (words[0] & 0x0ff) * 18;          // WAG????
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "SUB B-CNAV1  1: PRN %u SOH %u\n", PRN, SOH);
+        }
+        break;
+    case 19:
+        // Subframe 2, 600 bits + 8 bits padding == 19 32-bit words
+        {
+            unsigned WN = (words[0] >> 19) & BITMASK(13);
+            unsigned HOW = (words[0] & 0x0ff) * 18;          // WAG????
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "SUB B-CNAV1  2: WN %u HOW %u\n", WN, HOW);
+        }
+        break;
+    case 9:
+        // Subframe 3, 264 bits + 24 bits padding == 9 32-bit words
+        {
+            // PageID   1,2,4,5, and 60
+            unsigned PageID = (words[0] >> 26) & BITMASK(6);
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "SUB B-CNAV1  3: PageId %u\n", PageID);
+        }
+        break;
+    default:
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "SUB subframe_bds6: numwords %u ??\n", numwords);
+        break;
+    }
 
 
     return mask;
@@ -1066,7 +1099,7 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         // 10 == numwords. We know this one.
         break;
     case 6:
-        // BDS B1 Cd , 3, 9, 19 == numwords. ????
+        // BDS B1 Cd, 3, 9, 19 == numwords. B-CNAV1
         return subframe_bds6(session, sigId, tSVID, words, numwords);
 
     case 8:
@@ -1963,12 +1996,17 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         case 0:
             numwords_expected = 10;
             break;
+        case 6:
+            // BDS B1 Cd, 3, 9 or  19, test later
+            numwords_expected = numwords;
+            break;
         case 8:
-            FALLTHROUGH
-        case 9:
+            // BDS B2 ad
             numwords_expected = 9;
             break;
         default:
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "SUB: BDS, unknown sigId %u\n", sigId);
             numwords_expected = 99;
             break;
         }
