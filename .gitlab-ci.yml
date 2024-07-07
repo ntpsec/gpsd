@@ -119,23 +119,6 @@ fedora-latest:
     - eatmydata .ci-build/build.sh
   extends: .when_push
 
-centos-7-latest:
-  allow_failure: true
-  interruptible: true
-  when: on_success
-  image: centos:centos7
-  variables:
-    SCONSOPTS: 'qt=yes xgps=yes'
-  script:
-    - yum -y update
-    - yum -y install epel-release
-    - yum -y install -y eatmydata  # Should be early but after EPEL
-    - eatmydata -- yum -y install diffutils python2-scons bc gcc gcc-c++
-      bluez-libs-devel dbus-devel ncurses-devel python-devel pps-tools-devel
-      libusbx-devel qt-devel gtk3-devel pyserial pycairo rubygem-ccache
-    - eatmydata -- .ci-build/build.sh
-  extends: .when_push
-
 alma-8-minimal:
   allow_failure: true
   interruptible: true
