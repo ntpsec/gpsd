@@ -2387,7 +2387,7 @@ Field Number:
 4. M = Magnetic
 5. Speed of vessel relative to the water, knots
 6. N = Knots
-7. Speed of vessel relative to the water, km/hr
+7. Speed of vessel relative to the water, km/h
 8. K = Kilometers
 9. Checksum
 
@@ -2451,7 +2451,7 @@ Field Number:
 4. M = Magnetic
 5. Speed over ground, knots
 6. N = Knots
-7. Speed over ground, km/hr
+7. Speed over ground, km/h
 8. K = Kilometers Per Hour
 9. FAA mode indicator (NMEA 2.3 and later)
 10. Checksum
