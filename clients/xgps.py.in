@@ -1954,19 +1954,6 @@ if __name__ == "__main__":
     if options.circlefont < 10:
         options.circlefont = 10
 
-    screen = Gtk.Window().get_screen()
-    monitor = screen.get_monitor_at_window(screen.get_active_window())
-    monitor_geometry = screen.get_monitor_geometry(monitor)
-
-    if options.greatcircle > monitor_geometry.width - monitor_geometry.width / 10:
-        options.greatcircle = monitor_geometry.width - monitor_geometry.width / 10
-    if options.greatcircle > monitor_geometry.height - 15 * options.infofont * 5:
-        options.greatcircle = monitor_geometry.height - 15 * options.infofont * 5
-
-    if options.debug:
-        sys.stderr.write("width: " + str(monitor_geometry.width) + ", height: " + str(monitor_geometry.height) + "\n")
-        sys.stderr.write("great circle diameter: " + str(options.greatcircle) + "\n")
-
     base = Base(deg_type=options.degreefmt, rotation=options.rotate,
                 title=target)
     # If we're debuuging, stop here so we can set breakpoints
