@@ -951,7 +951,7 @@ class Base(object):
 
     """Base class for all the output"""
     ROWS = 9
-    gpsfields = (
+    gps_in_fields = (
         # First column
         ("Time", lambda s, r: s.update_time(r)),
         ("Latitude", lambda s, r: s.update_latitude(r)),
@@ -1300,11 +1300,11 @@ frame * {
         gpswidgets = []
         # min col widths
         widths = [0, 25, 0, 20, 0, 23, 0, 0, 0, 8]
-        for i in range(len(Base.gpsfields)):
+        for i, gpsfield in enumerate(Base.gps_in_fields):
             colbase = (i // Base.ROWS) * 2
             label = Gtk.Label()
             label.set_markup("<span font_desc='sans %2d'> %s:</span>" %
-                             (options.infofont, Base.gpsfields[i][0]))
+                             (options.infofont, gpsfield[0]))
             # force right alignment
             label.set_halign(Gtk.Align.END)
             datatable.attach(label, colbase, i % Base.ROWS, 1, 1)
@@ -1396,7 +1396,7 @@ frame * {
         # Discard field labels and associate data hooks with their widgets
         Base.gpsfields = [(label_hook_widget[0][1], label_hook_widget[1])
                           for label_hook_widget
-                          in zip(Base.gpsfields, gpswidgets)]
+                          in zip(Base.gps_in_fields, gpswidgets)]
 
     def view_toggle(self, action, name):
         """Toggle widget view"""
