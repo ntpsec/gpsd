@@ -1802,11 +1802,11 @@ frame * {
         """Set up monitoring of a daemon instance."""
         self.daemon = daem
         self.device = dev
-        GLib.io_add_watch(daemon.sock, GLib.PRIORITY_DEFAULT,
+        GLib.io_add_watch(daem.sock, GLib.PRIORITY_DEFAULT,
                           GLib.IO_IN, self.handle_response)
-        GLib.io_add_watch(daemon.sock, GLib.PRIORITY_DEFAULT,
+        GLib.io_add_watch(daem.sock, GLib.PRIORITY_DEFAULT,
                           GLib.IO_ERR, self.handle_hangup)
-        GLib.io_add_watch(daemon.sock, GLib.PRIORITY_DEFAULT,
+        GLib.io_add_watch(daem.sock, GLib.PRIORITY_DEFAULT,
                           GLib.IO_HUP, self.handle_hangup)
 
     def get_devices(self, _):
