@@ -85,41 +85,58 @@ circlefont = 10
 # Size GPS info fonts
 infofont = 10
 
+# The sky view marker size
+marker = 5
+
 # Default Constellation text option
 constellation = 0
+
 
 # Each GNSS constellation reuses the same PRNs.  To differentiate they are
 # all mushed into the PRN.  Different GPS mush differently.  gpsd should
 # have untangled and put in gnssid:svid
+class gnss_text:
+    def __init__(self, gnss, abbvr, full, flag, marker_type, marker_subtype):
+        self.gnss = gnss
+        self.abbvr = abbvr
+        self.full = full
+        self.flag = flag
+        self.marker_type = marker_type
+        self.marker_subtype = marker_subtype
 
 
-def gnssid_str(sat):
-    """Convert gnssid:svid to short and long strings."""
-    # gnssid:svid appeared in gpsd 3.18
-    # allow for old servers
-    if 'gnssid' not in sat or 'svid' not in sat:
-        return '  '
+# Marker types
+MARKER_NULL = 0
+MARKER_CIRCLE = 0
+MARKER_SQUARE = 1
+MARKER_SQUARE_REGULAR = 0
+MARKER_SQUARE_DIAMOND = 1
+MARKER_TRIANGLE = 2
+MARKER_TRIANGLE_NORTH = 0
+MARKER_TRIANGLE_EAST = 1
+MARKER_TRIANGLE_SOUTH = 2
+MARKER_TRIANGLE_WEST = 3
+MARKER_EMPTY = 0
+MARKER_FILLED = 1
+MARKER_MAX = 10
+MARKER_MIN = 5
 
-    if 0 >= sat.svid:
-        return ['  ', '', '']
-    if 0 == sat.gnssid:
-        return ['GP', 'GPS', '\U0001F1FA\U0001F1F8 GPS']
-    if 1 == sat.gnssid:
-        return ['SB', 'SBAS', 'SBAS']
-    if 2 == sat.gnssid:
-        return ['GA', 'Galileo', '\U0001F1EA\U0001F1FA Galileo']
-    if 3 == sat.gnssid:
-        return ['BD', 'BeiDou', '\U0001F1E8\U0001F1F3 BeiDou']
-    if 4 == sat.gnssid:
-        return ['IM', 'IMES', 'IMES']
-    if 5 == sat.gnssid:
-        return ['QZ', 'QZSS', '\U0001F1EF\U0001F1F5 QZSS']
-    if 6 == sat.gnssid:
-        return ['GL', 'GLONASS', '\U0001F1F7\U0001F1FA GLONASS']
-    if 7 == sat.gnssid:
-        return ['IR', 'IRNSS', '\U0001F1EE\U0001F1F3 IRNSS']
-
-    return '  '
+gnss_details = (gnss_text(0, 'GP', 'GPS', '\U0001F1FA\U0001F1F8',
+                          MARKER_CIRCLE, MARKER_NULL),  # US
+                gnss_text(1, 'SB', 'SBAS', '\U0001F30E',  # Earth
+                          MARKER_SQUARE, MARKER_SQUARE_REGULAR),
+                gnss_text(2, 'GA', 'Galileo', '\U0001F1EA\U0001F1FA',  # EU
+                          MARKER_TRIANGLE, MARKER_TRIANGLE_SOUTH),
+                gnss_text(3, 'BD', 'BeiDou', '\U0001F1E8\U0001F1F3',  # China
+                          MARKER_TRIANGLE, MARKER_TRIANGLE_NORTH),
+                gnss_text(4, 'IM', 'IMES', '\U0001F30E',  # Earth
+                          MARKER_TRIANGLE, MARKER_TRIANGLE_WEST),
+                gnss_text(5, 'QZ', 'QZSS', '\U0001F1EF\U0001F1F5',  # Japan
+                          MARKER_TRIANGLE, MARKER_TRIANGLE_EAST),
+                gnss_text(6, 'GL', 'GLONASS', '\U0001F1F7\U0001F1FA',  # Russia
+                          MARKER_SQUARE, MARKER_SQUARE_DIAMOND),
+                gnss_text(7, 'IR', 'IRNSS', '\U0001F1EE\U0001F1F3',  # India
+                          MARKER_TRIANGLE, MARKER_TRIANGLE_WEST))
 
 
 def fit_to_grid(x, y, line_width):
@@ -153,8 +170,7 @@ class SkyView(Gtk.DrawingArea):
 
     """Satellite skyview, encapsulates pygtk's draw-on-expose behavior."""
     # See <http://faq.pygtk.org/index.py?req=show&file=faq18.008.htp>
-    HORIZON_PAD = 50    # How much whitespace to leave around horizon
-    SAT_RADIUS = 5      # Diameter of satellite circle
+    HORIZON_PAD = 65   # How much whitespace to leave around horizon
 
     def __init__(self, rotation=None):
         """Initialize class SkyView."""
@@ -185,8 +201,8 @@ class SkyView(Gtk.DrawingArea):
     def popup(self, skyview, event):
         """See if need to popup the sat details."""
         for (x, y, sat) in self.sat_xy:
-            if ((SkyView.SAT_RADIUS >= abs(x - event.x) and
-                 SkyView.SAT_RADIUS >= abs(y - event.y))):
+            if ((options.marker >= abs(x - event.x) and
+                 options.marker >= abs(y - event.y))):
                 # got a sat match under the mouse
                 # print((x, y))
                 if ((self.pop_xy[0] and self.pop_xy[1] and
@@ -205,7 +221,7 @@ class SkyView(Gtk.DrawingArea):
                 self.popover = Gtk.Popover()
                 if "gnssid" in sat and "svid" in sat:
                     # gnssid:svid in gpsd 3.18 and up
-                    constellation = gnssid_str(sat)[1]
+                    constellation = gnss_details[sat.gnssid].full
                     gnss_str = "%-8s     %4d\n" % (constellation, sat.svid)
                 else:
                     gnss_str = ''
@@ -273,7 +289,7 @@ class SkyView(Gtk.DrawingArea):
                     health = "Unk"
 
                 label = Gtk.Label()
-                s = ("<span font_desc='monospace " + str(options.circlefont) + "'>PRN %13d\n"
+                s = ("<span font_desc='monospace %2d'>PRN %13d\n"
                      "%s"
                      "Elevation    %4.1f\n"
                      "Azimuth     %5.1f\n"
@@ -283,8 +299,8 @@ class SkyView(Gtk.DrawingArea):
                      "Quality  %7s\n"
                      "Health  %9s\n"
                      "Used  %11s</span>" %
-                     (sat.PRN, gnss_str, sat.el, sat.az, sig_str, snr_str,
-                      prres_str, qual_str, health, use_str))
+                     (options.circlefont, sat.PRN, gnss_str, sat.el, sat.az,
+                      sig_str, snr_str, prres_str, qual_str, health, use_str))
                 label.set_markup(s)
                 rectangle = Gdk.Rectangle()
                 rectangle.x = x - 25
@@ -357,18 +373,19 @@ class SkyView(Gtk.DrawingArea):
     def draw_square(self, x, y, radius, filled, flip):
         """Draw a square centered on the specified midpoint."""
         lw = self.cr.get_line_width()
-        if 0 == flip:
-            # square
+        if MARKER_SQUARE_REGULAR == flip:
             x1, y1 = fit_to_grid(x - radius, y - radius, lw)
             x2, y2 = fit_to_grid(x + radius, y + radius, lw)
             self.cr.rectangle(x1, y1, x2 - x1, y2 - y1)
-        else:
+        elif MARKER_SQUARE_DIAMOND == flip:
             # diamond
             self.cr.move_to(x, y + radius + 1)   # top
             self.cr.line_to(x + radius - 1, y)  # right
             self.cr.line_to(x, y - radius - 1)   # bottom
             self.cr.line_to(x - radius + 1, y)   # left
             self.cr.close_path()
+        else:
+            raise RuntimeError('Unable to determine correct square type')
 
         if filled:
             self.cr.fill()
@@ -378,7 +395,7 @@ class SkyView(Gtk.DrawingArea):
     def draw_string(self, x, y, text, centered=True):
         """Draw a text on the skyview."""
         self.cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
-                                 cairo.FONT_WEIGHT_BOLD)
+                                 cairo.FONT_WEIGHT_NORMAL)
         self.cr.set_font_size(options.circlefont)
 
         if centered:
@@ -395,12 +412,12 @@ class SkyView(Gtk.DrawingArea):
     def draw_triangle(self, x, y, radius, filled, flip):
         """Draw a triangle centered on the specified midpoint."""
         lw = self.cr.get_line_width()
-        if flip in (0, 1):
-            if 0 == flip:
+        if flip in (MARKER_TRIANGLE_NORTH, MARKER_TRIANGLE_SOUTH):
+            if MARKER_TRIANGLE_SOUTH == flip:
                 # down
                 ytop = y + radius
                 ybot = y - radius
-            elif 1 == flip:
+            elif MARKER_TRIANGLE_NORTH == flip:
                 # up
                 ytop = y - radius
                 ybot = y + radius
@@ -408,11 +425,11 @@ class SkyView(Gtk.DrawingArea):
             x1, y1 = fit_to_grid(x, ytop, lw)
             x2, y2 = fit_to_grid(x + radius, ybot, lw)
             x3, y3 = fit_to_grid(x - radius, ybot, lw)
-        else:
+        elif flip in (MARKER_TRIANGLE_EAST, MARKER_TRIANGLE_WEST):
             ytop = y + radius
             ybot = y - radius
 
-            if 2 == flip:
+            if MARKER_TRIANGLE_EAST == flip:
                 # right
                 x1, y1 = fit_to_grid(x - radius, ytop, lw)
                 x2, y2 = fit_to_grid(x - radius, ybot, lw)
@@ -422,6 +439,8 @@ class SkyView(Gtk.DrawingArea):
                 x1, y1 = fit_to_grid(x + radius, ytop, lw)
                 x2, y2 = fit_to_grid(x + radius, ybot, lw)
                 x3, y3 = fit_to_grid(x - radius, y, lw)
+        else:
+            raise RuntimeError('Unable to determine correct triangle type')
 
         self.cr.move_to(x1, y1)
         self.cr.line_to(x2, y2)
@@ -486,13 +505,13 @@ class SkyView(Gtk.DrawingArea):
         self.draw_line(x1, y1, x2, y2)
 
         # The compass-point letters
-        (x, y) = self.pol2cart(0, -5)
+        (x, y) = self.pol2cart(0, -3)
         self.draw_string(x, y, "N")
-        (x, y) = self.pol2cart(90, -5)
+        (x, y) = self.pol2cart(90, -3)
         self.draw_string(x, y, "E")
-        (x, y) = self.pol2cart(180, -5)
+        (x, y) = self.pol2cart(180, -3)
         self.draw_string(x, y, "S")
-        (x, y) = self.pol2cart(270, -5)
+        (x, y) = self.pol2cart(270, -3)
         self.draw_string(x, y, "W")
         # place an invisible space above to allow sats below horizon
         (x, y) = self.pol2cart(0, -10)
@@ -539,30 +558,26 @@ class SkyView(Gtk.DrawingArea):
             else:
                 self.set_color(0, 255, 180)        # green and some blue
 
-            # shape by constellation
-            constellation = gnssid_str(sat)[0]
-            if constellation in ('GP', '  '):
-                self.draw_circle(x, y, SkyView.SAT_RADIUS, sat.used)
-            elif 'SB' == constellation:
-                self.draw_square(x, y, SkyView.SAT_RADIUS, sat.used, 0)
-            elif 'GA' == constellation:
-                self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 0)
-            elif 'BD' == constellation:
-                self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 1)
-            elif 'GL' == constellation:
-                self.draw_square(x, y, SkyView.SAT_RADIUS, sat.used, 1)
-            elif 'QZ' == constellation:
-                self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 2)
+            if MARKER_CIRCLE == gnss_details[sat.gnssid].marker_type:
+                self.draw_circle(x, y, options.marker, sat.used)
+
+            elif MARKER_SQUARE == gnss_details[sat.gnssid].marker_type:
+                self.draw_square(x, y, options.marker, sat.used,
+                                 gnss_details[sat.gnssid].marker_subtype)
+
+            elif MARKER_TRIANGLE == gnss_details[sat.gnssid].marker_type:
+                self.draw_triangle(x, y, options.marker, sat.used,
+                                   gnss_details[sat.gnssid].marker_subtype)
             else:
-                # IRNSS, IMES, unknown or other
-                self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 3)
+                raise RuntimeError('Unable to determine correct marker type')
 
             self.sat_xy.append((x, y, sat))
             self.cr.set_source_rgb(1, 1, 1)
-            self.draw_string(x + SkyView.SAT_RADIUS,
-                             y + (SkyView.SAT_RADIUS * 2), str(sat.PRN),
+            self.draw_string(x + options.marker,
+                             y + (options.marker * 2), str(sat.PRN),
                              centered=False)
 
+        self.legend(self.satellites)
         self.cr = None
         window.end_draw_frame(context)
 
@@ -570,6 +585,68 @@ class SkyView(Gtk.DrawingArea):
         """Redraw the skyview."""
         self.satellites = satellites
         self.queue_draw()
+
+    def legend(self, satellites):
+        Legend_Done = []
+        self.set_color(200, 200, 255)
+        self.cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
+                                 cairo.FONT_WEIGHT_NORMAL)
+        self.cr.set_font_size(options.circlefont)
+        max_width = int(max(self.cr.text_extents(gnss_details[2].full).width,
+                            self.cr.text_extents(gnss_details[3].full).width,
+                            self.cr.text_extents(gnss_details[6].full).width))
+        max_height = max(int(self.cr.text_extents(gnss_details[2].full)
+                             .height),
+                         options.marker) * 2.5
+        x1 = max_width + 30
+        x2 = max_width + 30 + options.marker * 3
+        y1 = 0
+        y2 = - int(self.cr.text_extents(gnss_details[2].full).height / 2)
+
+        for sat_type in satellites:
+            if sat_type.gnssid in Legend_Done:
+                continue
+            if not 1 <= sat_type.PRN <= 437:
+                # Bad PRN, skip.  NMEA uses up to 437
+                continue
+            if not 0 <= sat_type.az <= 359:
+                # Bad azimuth, skip.
+                continue
+            if not -10 <= sat_type.el <= 90:
+                # Bad elevation, skip.  Allow just below horizon
+                continue
+            # See note on Navika-100 above
+            if ((0 == sat_type.az and
+                 0 == sat_type.el)):
+                continue
+
+            Legend_Done.append(sat_type.gnssid)
+            y1 = y1 + max_height
+            y2 = y2 + max_height
+
+            if 0 == options.constellation:
+                legend_str = gnss_details[sat_type.gnssid].abbvr
+            else:
+                legend_str = gnss_details[sat_type.gnssid].full
+
+            if MARKER_CIRCLE == gnss_details[sat_type.gnssid].marker_type:
+                self.draw_string(5, y1, legend_str + ':', False)
+                self.draw_circle(x1, y2, options.marker, MARKER_EMPTY)
+                self.draw_circle(x2, y2, options.marker, MARKER_FILLED)
+            elif MARKER_SQUARE == gnss_details[sat_type.gnssid].marker_type:
+                self.draw_string(5, y1, legend_str + ':', False)
+                self.draw_square(x1, y2, options.marker, MARKER_EMPTY,
+                                 gnss_details[sat_type.gnssid].marker_subtype)
+                self.draw_square(x2, y2, options.marker, MARKER_FILLED,
+                                 gnss_details[sat_type.gnssid].marker_subtype)
+            elif MARKER_TRIANGLE == gnss_details[sat_type.gnssid].marker_type:
+                self.draw_string(5, y1, legend_str + ':', False)
+                self.draw_triangle(x1, y2, options.marker, MARKER_EMPTY,
+                                   gnss_details[sat_type.gnssid]
+                                   .marker_subtype)
+                self.draw_triangle(x2, y2, options.marker, MARKER_FILLED,
+                                   gnss_details[sat_type.gnssid]
+                                   .marker_subtype)
 
 
 class AISView(object):
@@ -729,8 +806,8 @@ class IMUView(object):
             colbase = (i // IMUView.ROWS) * 2
             # attribute / label
             label = Gtk.Label()
-            label.set_markup("<span font_desc='sans " + str(options.infofont) + "'> %s:</span>" %
-                             IMUView.imufields[i][0])
+            label.set_markup("<span font_desc='sans %2d'> %s:</span>" %
+                             (options.infofont, IMUView.imufields[i][0]))
             # force right alignment
             label.set_halign(Gtk.Align.END)
             self.widget.attach(label, colbase, i % IMUView.ROWS, 1, 1)
@@ -738,8 +815,8 @@ class IMUView(object):
             entry = Gtk.Label()
             entry.set_xalign(1)            # right align data
             # span gets lost later
-            entry.set_markup("<span font_desc='monospace " + str(options.infofont) +
-                             "'> n/a </span>")
+            entry.set_markup("<span font_desc='monospace %2d'> n/a </span>" %
+                             (options.infofont))
             entry.set_width_chars(10)
             self.widget.attach_next_to(entry, label,
                                        Gtk.PositionType.RIGHT, 1, 1)
@@ -747,7 +824,8 @@ class IMUView(object):
 
     def update(self, msg):
         """Update the IMU data fields."""
-        markup = "<span font_desc='monospace " + str(options.infofont) + "'>%s </span>"
+        markup = ("<span font_desc='monospace %2d'>%s </span>" %
+                  options.infofont)
         for (attrname, widget) in self.imuwidgets:
             if hasattr(msg, attrname):
                 s = str(getattr(msg, attrname))
@@ -783,22 +861,23 @@ class NoiseView(object):
         for i in range(len(NoiseView.noisefields)):
             colbase = (i // NoiseView.ROWS) * 2
             label = Gtk.Label()
-            label.set_markup("<span font_desc='sans " + str(options.infofont) + "'> %s:</span>" %
-                             NoiseView.noisefields[i][0])
+            label.set_markup("<span font_desc='sans %2d'> %s:</span>" %
+                             (options.infofont, NoiseView.noisefields[i][0]))
             # force right alignment
             label.set_halign(Gtk.Align.END)
             self.widget.attach(label, colbase, i % NoiseView.ROWS, 1, 1)
             entry = Gtk.Label()
             # span gets lost later
-            entry.set_markup("<span font_desc='monospace " + str(options.infofont) +
-                             "'> n/a </span>")
+            entry.set_markup("<span font_desc='monospace %2d'> n/a </span>" %
+                             options.infofont)
             self.widget.attach_next_to(entry, label,
                                        Gtk.PositionType.RIGHT, 1, 1)
             self.noisewidgets.append((NoiseView.noisefields[i][1], entry))
 
     def update(self, noise):
         """Update the GPGST data fields."""
-        markup = "<span font_desc='monospace " + str(options.infofont) + "'>%s </span>"
+        markup = ("<span font_desc='monospace %2d'>%s </span>" %
+                  options.infofont)
         for (attrname, widget) in self.noisewidgets:
             if hasattr(noise, attrname):
                 s = str(getattr(noise, attrname))
@@ -838,8 +917,8 @@ class RTKView(object):
             colbase = (i // RTKView.ROWS) * 2
             # attribute / label
             label = Gtk.Label()
-            label.set_markup("<span font_desc='sans " + str(options.infofont) + "'> %s:</span>" %
-                             RTKView.rtkfields[i][0])
+            label.set_markup("<span font_desc='sans %2d'> %s:</span>" %
+                             (options.infofont, RTKView.rtkfields[i][0]))
             # force right alignment
             label.set_halign(Gtk.Align.END)
             self.widget.attach(label, colbase, i % RTKView.ROWS, 1, 1)
@@ -847,8 +926,8 @@ class RTKView(object):
             entry = Gtk.Label()
             entry.set_xalign(1)            # right align data
             # span gets lost later
-            entry.set_markup("<span font_desc='monospace " + str(options.infofont) +
-                             "'> n/a </span>")
+            entry.set_markup("<span font_desc='monospace %2d'> n/a </span>" %
+                             options.infofont)
             entry.set_width_chars(10)
             self.widget.attach_next_to(entry, label,
                                        Gtk.PositionType.RIGHT, 1, 1)
@@ -856,7 +935,8 @@ class RTKView(object):
 
     def update(self, msg):
         """Update the RTK data fields."""
-        markup = "<span font_desc='monospace " + str(options.infofont) + "'>%s </span>"
+        markup = ("<span font_desc='monospace %2d'>%s </span>" %
+                  options.infofont)
         for (attrname, widget) in self.rtkwidgets:
             if hasattr(msg, attrname):
                 s = str(getattr(msg, attrname))
@@ -1215,8 +1295,8 @@ frame * {
         for i in range(len(Base.gpsfields)):
             colbase = (i // Base.ROWS) * 2
             label = Gtk.Label()
-            label.set_markup("<span font_desc='sans " + str(options.infofont) + "'> %s:</span>" %
-                             Base.gpsfields[i][0])
+            label.set_markup("<span font_desc='sans %2d'> %s:</span>" %
+                             (options.infofont, Base.gpsfields[i][0]))
             # force right alignment
             label.set_halign(Gtk.Align.END)
             datatable.attach(label, colbase, i % Base.ROWS, 1, 1)
@@ -1225,8 +1305,8 @@ frame * {
                 entry.set_width_chars(widths[colbase + 1])
             entry.set_selectable(True)
             # span gets lost later
-            entry.set_markup("<span font_desc='monospace " + str(options.infofont) +
-                             "'> n/a </span>")
+            entry.set_markup("<span font_desc='monospace %2d'> n/a </span>" %
+                             options.infofont)
             datatable.attach_next_to(entry, label,
                                      Gtk.PositionType.RIGHT, 1, 1)
             gpswidgets.append(entry)
@@ -1537,7 +1617,8 @@ frame * {
         # the first 28 fields are updated using TPV data
         # the next 9 fields are updated using SKY data
 
-        markup = "<span font_desc='monospace " + str(options.infofont) + "'>%s </span>"
+        markup = ("<span font_desc='monospace %2d'>%%s </span>" %
+                  options.infofont)
         for (hook, widget) in Base.gpsfields[:27]:
             if hook:  # Remove this guard when we have all hooks
                 widget.set_markup(markup % hook(self, tpv))
@@ -1613,8 +1694,19 @@ frame * {
                     # more than can be displaced
                     continue
 
-                (self.set_satlist_field(i, 0,
-                 gnssid_str(satellite)[options.constellation]))
+                if 0 == options.constellation:
+                    (self.set_satlist_field(i, 0,
+                                            gnss_details[satellite.gnssid]
+                                            .abbvr))
+                elif 1 == options.constellation:
+                    (self.set_satlist_field(i, 0, gnss_details[satellite
+                                                               .gnssid].full))
+                else:
+                    (self.set_satlist_field(i, 0, gnss_details[satellite
+                                                               .gnssid].flag
+                                            + " " + gnss_details[satellite
+                                                                 .gnssid]
+                                            .full))
                 if 'svid' in satellite:
                     # SBAS is in the 100's...
                     self.set_satlist_field(i, 1,
@@ -1658,7 +1750,8 @@ frame * {
             self.sky_view.redraw(satellites)
         # else:   #  a SKY with just DOPs
 
-        markup = "<span font_desc='monospace " + str(options.infofont) + "'>%s </span>"
+        markup = ("<span font_desc='monospace %2d'>%%s </span>" %
+                  options.infofont)
         # the first 27 fields are updated using TPV data
         # the next 9 fields are updated using SKY data
         for (hook, widget) in Base.gpsfields[27:36]:
@@ -1857,12 +1950,25 @@ if __name__ == "__main__":
         help='The unit of speed. [Default %(default)s]',
     )
     parser.add_argument(
+        '-m',
+        '--marker',
+        dest='marker',
+        default=marker,
+        type=int,
+        choices=range(5, 16),
+        metavar='[5 - 15]',
+        help='Size of the marker in sky view. [Default %(default)s]',
+    )
+    parser.add_argument(
         '-i',
         '--infofont',
         dest='infofont',
         default=infofont,
         type=int,
-        help='Size of the fonts in the info area. [Default %(default)s]',
+        choices=range(10, 31),
+        metavar='[10 - 30]',
+        help='Size of the fonts in the info area. ' +
+        '[Default %(default)s]',
     )
     parser.add_argument(
         '-o',
@@ -1870,7 +1976,10 @@ if __name__ == "__main__":
         dest='circlefont',
         default=circlefont,
         type=int,
-        help='Size of the fonts in the great circle. [Default %(default)s]',
+        choices=range(10, 31),
+        metavar='[10 - 30]',
+        help='Size of the fonts in the great circle. ' +
+        ' [Default %(default)s]',
     )
     parser.add_argument(
         '-g',
@@ -1944,15 +2053,9 @@ if __name__ == "__main__":
         sys.stderr.write("xgps: ERROR: DISPLAY not set\n")
         sys.exit(1)
 
-    if options.infofont > 30:
-        options.infofont = 30
-    if options.infofont < 10:
-        options.infofont = 10
-
-    if options.circlefont > 30:
-        options.circlefont = 30
-    if options.circlefont < 10:
-        options.circlefont = 10
+    options.marker = min(MARKER_MAX, max(MARKER_MIN, options.marker))
+    options.infofont = min(30, max(10, options.infofont))
+    options.circlefont = min(30, max(10, options.circlefont))
 
     base = Base(deg_type=options.degreefmt, rotation=options.rotate,
                 title=target)
