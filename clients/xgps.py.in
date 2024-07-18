@@ -1776,8 +1776,6 @@ frame * {
         """Change the degree format."""
         # print("set_deg:", _unused, handle)
         self.deg_type = handle
-        if hasattr(self, 'mv_view') and self.mv_view is not None:
-            self.mv_view.deg_type = handle
 
     def set_units(self, _unused, handle):
         """Change the display units."""
