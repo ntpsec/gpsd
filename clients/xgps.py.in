@@ -1067,7 +1067,8 @@ frame * {
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
-        vbox = Gtk.VBox(homogeneous=False, spacing=0)
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
+                       homogeneous=False, spacing=0)
         self.window.add(vbox)
 
         self.window.connect("destroy", lambda _unused: Gtk.main_quit())
@@ -1230,8 +1231,8 @@ frame * {
 
         vbox.pack_start(menubar, expand=False, fill=True, padding=0)
 
-        # Gtk.HBox() is deprecated, use Gtk.Box() or Gtk.Grid().
-        self.satbox = Gtk.HBox(homogeneous=False, spacing=0)
+        self.satbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,
+                              homogeneous=True, spacing=0)
         vbox.add(self.satbox)
 
         skyframe = Gtk.Frame(label="Satellite List")
@@ -1354,7 +1355,6 @@ frame * {
         imuraw_frame.add(self.imuraw_view.widget)
 
         # Add noise box
-        # FIXME: GtkBox() is deprecated, use Gtk.Grid()
         self.noisebox = Gtk.Box(homogeneous=False, spacing=0)
         vbox.add(self.noisebox)
         noiseframe = Gtk.Frame(label="Noise Statistics")
