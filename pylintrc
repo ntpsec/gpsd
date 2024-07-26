@@ -18,7 +18,9 @@
 # bad-continuation removed from pylint May 2020
 # misplaced-comparison-constant, breaks Yoda style
 # no-self-use, removed from pylint 3.1.0
-disable = invalid-name,
+disable = bad-option-value,
+    invalid-name,
+    misplaced-comparison-constant,
     too-many-branches,
     too-many-lines,
     too-many-locals,
