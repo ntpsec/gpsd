@@ -876,7 +876,7 @@ class NoiseView(object):
 
     def update(self, noise):
         """Update the GPGST data fields."""
-        markup = ("<span font_desc='monospace %2d'>%s </span>" %
+        markup = ("<span font_desc='monospace %2d'>%%s </span>" %
                   options.infofont)
         for (attrname, widget) in self.noisewidgets:
             if hasattr(noise, attrname):
