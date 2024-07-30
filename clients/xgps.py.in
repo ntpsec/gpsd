@@ -1037,6 +1037,7 @@ class Base(object):
         self.last_transition = 0.0
         self.daemon = None
         self.device = None
+        self.devices = []
 
         self.window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
         if not self.window.get_display():
@@ -1093,6 +1094,13 @@ frame * {
         # menui.add_accelerator("activate", agr, key, mod,
         #                      Gtk.AccelFlags.VISIBLE)
         # menui.connect("activate", Gtk.main_quit)
+        submenu.append(menui)
+
+        menui = Gtk.MenuItem(label="Devices")
+        key, mod = Gtk.accelerator_parse("<Control>D")
+        menui.add_accelerator("activate", agr, key, mod,
+                              Gtk.AccelFlags.VISIBLE)
+        menui.connect("activate", self.get_devices)
         submenu.append(menui)
 
         menui = Gtk.MenuItem(label="Quit")
@@ -1795,6 +1803,32 @@ frame * {
         GLib.io_add_watch(daemon.sock, GLib.PRIORITY_DEFAULT,
                           GLib.IO_HUP, self.handle_hangup)
 
+    def get_devices(self, _):
+        """Switch between devices picking all or a particular one."""
+        win = Gtk.Window(type=Gtk.WindowType.TOPLEVEL,
+                         title="Attached Devices")
+        win.set_border_width(20)
+        box = Gtk.VBox(spacing=6)
+        win.add(box)
+
+        def on_toggle(button, name):
+            if not button.get_active():
+                return
+            base.device = '' if 'all' == name else name
+
+        old = None
+        for thing in ['all'] + [x['path'] for x in self.devices]:
+            this = Gtk.RadioButton(group=old, label=thing)
+            this.connect("toggled", on_toggle, thing)
+            box.add(this)
+            if old is None:
+                old = this
+
+        button = Gtk.Button.new_with_mnemonic("_Ok")
+        button.connect("clicked", lambda _a: win.destroy())
+        box.add(button)
+        win.show_all()
+
     def handle_response(self, source, condition):
         """Handle ordinary I/O ready condition from the daemon."""
         if -1 == self.daemon.read():
@@ -1847,6 +1881,8 @@ frame * {
                 self.update_gpsdata(self.daemon.data)
             elif "VERSION" == self.daemon.data["class"]:
                 self.update_version(self.daemon.version)
+            elif "DEVICES" == self.daemon.data["class"]:
+                self.devices = self.daemon.data.devices
 
         return True
 
