@@ -1817,8 +1817,17 @@ frame * {
             base.device = '' if 'all' == name else name
 
         old = None
-        for thing in ['all'] + [x['path'] for x in self.devices]:
+        tag = 'invalid'
+        if '' == self.device:
+            tag = 'all'
+        elif self.device in [x['path'] for x in self.devices]:
+            tag = self.device
+        for thing in sorted(set(
+            ['all', tag] + [x['path'] for x in self.devices]
+        )):
             this = Gtk.RadioButton(group=old, label=thing)
+            if thing == tag:
+                this.set_active(True)
             this.connect("toggled", on_toggle, thing)
             box.add(this)
             if old is None:
