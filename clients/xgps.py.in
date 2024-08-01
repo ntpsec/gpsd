@@ -1089,17 +1089,17 @@ frame * {
         topmenu.set_submenu(submenu)
 
         menui = Gtk.MenuItem(label="Connect")
-        # key, mod = Gtk.accelerator_parse("<Control>Q")
-        # menui.add_accelerator("activate", agr, key, mod,
-        #                      Gtk.AccelFlags.VISIBLE)
-        # menui.connect("activate", Gtk.main_quit)
+        key, mod = Gtk.accelerator_parse("<Control>N")
+        menui.add_accelerator("activate", agr, key, mod,
+                              Gtk.AccelFlags.VISIBLE)
+        menui.connect("activate", self.new_connect)
         submenu.append(menui)
 
         menui = Gtk.MenuItem(label="Disconnect")
-        # key, mod = Gtk.accelerator_parse("<Control>Q")
-        # menui.add_accelerator("activate", agr, key, mod,
-        #                      Gtk.AccelFlags.VISIBLE)
-        # menui.connect("activate", Gtk.main_quit)
+        key, mod = Gtk.accelerator_parse("<Control>W")
+        menui.add_accelerator("activate", agr, key, mod,
+                              Gtk.AccelFlags.VISIBLE)
+        menui.connect("activate", self.disconnect)
         submenu.append(menui)
 
         menui = Gtk.MenuItem(label="Devices")
@@ -1844,6 +1844,60 @@ frame * {
         box.add(button)
         win.show_all()
 
+    def disconnect(self, _):
+        """Disconnect from the remote gpsd instance."""
+        if self.daemon.sock:
+            self.daemon.sock.close()
+            self.daemon.sock = None
+        self.handle_hangup(None, None)
+
+    def new_connect(self, _):
+        """Connect to a new remote gpsd instance."""
+        if self.daemon.sock:
+            self.daemon.sock.close()
+            self.daemon.sock = None
+        win = Gtk.Window(type=Gtk.WindowType.TOPLEVEL, title="Connect?")
+
+        box = Gtk.Grid()
+        win.add(box)
+
+        lbl = Gtk.Label(label="host, port and optional device")
+        box.attach(lbl, 0, 0, 2, 1)
+
+        lbl = Gtk.Label(label="host")
+        box.attach(lbl, 0, 1, 1, 1)
+        host = Gtk.Entry()
+        host.set_text(self.daemon.host)
+        box.attach(host, 1, 1, 1, 1)
+
+        lbl = Gtk.Label(label="port")
+        box.attach(lbl, 0, 2, 1, 1)
+        port = Gtk.SpinButton.new_with_range(1, 65535, 1)
+        port.set_numeric(True)
+        port.set_value(int(self.daemon.port))
+        box.attach(port, 1, 2, 1, 1)
+
+        lbl = Gtk.Label(label="device")
+        box.attach(lbl, 0, 3, 1, 1)
+        device = Gtk.Entry()
+        device.set_text(self.device)
+        box.attach(device, 1, 3, 1, 1)
+
+        def do_connect(_):
+            lister = [host.get_text(), port.get_value_as_int(), device.get_text()]
+            daemon = gps.gps(host=lister[0],
+                             port=lister[1],
+                             mode=(gps.WATCH_ENABLE | gps.WATCH_JSON |
+                                   gps.WATCH_SCALED),
+                             verbose=options.debug)
+            self.watch(daemon, lister[2])
+            win.destroy()
+
+        button = Gtk.Button.new_with_mnemonic("_Open")
+        button.connect("clicked", do_connect)
+        box.attach(button, 0, 4, 2, 1)
+        win.show_all()
+
     def handle_response(self, source, condition):
         """Handle ordinary I/O ready condition from the daemon."""
         if -1 == self.daemon.read():
@@ -1906,11 +1960,11 @@ frame * {
         win = Gtk.MessageDialog(parent=self.window,
                                 message_type=Gtk.MessageType.ERROR,
                                 destroy_with_parent=True,
-                                buttons=Gtk.ButtonsType.CANCEL)
-        win.connect("destroy", lambda _unused: Gtk.main_quit())
+                                buttons=Gtk.ButtonsType.OK)
+        win.connect("destroy", lambda _unused: win.destroy())
         win.set_markup("gpsd has stopped sending data.")
         win.run()
-        Gtk.main_quit()
+        win.destroy()
         return True
 
     def main(self):
