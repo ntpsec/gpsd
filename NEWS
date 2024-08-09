@@ -8,7 +8,8 @@
   Always build u-blox, RTCM104V2, RTCM104V3 drivers.
   Add partial support for badly documented ALLYSTAR GNSS messages.
   Add minimal support for Unicore GNSS messages.
-  
+  Try to work better as non-root using non-standard "capabilities".
+
   Note: The new "chunk" code led to a short lived bug that led to
         CVE-2023-43628, a buffer overrun.  That bug never appeared in
         any gpsd release.

@@ -32,6 +32,7 @@
 #include <string.h>                  // for strlcat(), strcpy(), etc.
 #include <syslog.h>
 #ifdef HAVE_LIBCAP
+    // defunct, draft POSIX.1e Standard: 25.2 Capabilities
     #include <sys/capability.h>      // for cap_get_flag()
 #endif
 #include <sys/param.h>               // for setgroups()
@@ -2240,17 +2241,6 @@ int main(int argc, char *argv[])
     unsigned long l;
     pid_t my_pid = getpid();
 
-#ifdef HAVE_LIBCAP
-    // capabilities we prolly need
-    const char *cap_names[] = {
-        "cap_setgid",
-        "cap_setuid",
-        "cap_net_bind_service",
-        "cap_sys_nice",
-        "cap_sys_tty_config",            // ??
-        "cap_syslog",                    // ??
-    };
-#endif  // HAVE_LIBCAP
 
     gps_context_init(&context, "gpsd");
 
@@ -2406,8 +2396,18 @@ int main(int argc, char *argv[])
 #ifdef HAVE_LIBCAP
     // check that we have needed capabilities
     do {
+        // capabilities we prolly need
+        const char *cap_names[] = {
+            "cap_setgid",
+            "cap_setuid",
+            "cap_net_bind_service",
+            "cap_sys_nice",
+            "cap_sys_tty_config",            // ??
+            "cap_syslog",                    // ??
+        };
         // get current caps, remember to free it.
         cap_t cap = cap_get_pid(0);
+
         if (NULL == cap) {
             GPSD_LOG(LOG_ERR, &context.errout,
                      "cap_get_pid(0) failed: %s(%d)\n",
@@ -2689,8 +2689,8 @@ int main(int argc, char *argv[])
     }
 
 
-    // drop privileges
-    if (0 == getuid()) {
+    // try to drop privileges
+    {
         struct passwd *pw;
         struct stat stb;
 
@@ -2701,11 +2701,19 @@ int main(int argc, char *argv[])
                // pacify coverity
                GPSD_LOG(LOG_ERROR, &context.errout,
                         "Over long device path %s\n", argv[i]);
+               continue;
             }
-            if (0 == stat(argv[i], &stb)) {
-                /* This fails if not running as root, or have group
-                 * access to the file. */
-                (void)chmod(argv[i], stb.st_mode | S_IRGRP | S_IWGRP);
+            /* This fails if not running as root, or have group
+             * access to the file. */
+            if (0 != stat(argv[i], &stb)) {
+                GPSD_LOG(LOG_ERROR, &context.errout,
+                         "stat(%s) failed, errno %s(%d)\n",
+                         argv[i], strerror(errno), errno);
+
+            } else if (0 != chmod(argv[i], stb.st_mode | S_IRGRP | S_IWGRP)) {
+                GPSD_LOG(LOG_ERROR, &context.errout,
+                         "chmod(%s, +S_IRGRP +S_IWGRP) failed, errno %s(%d)\n",
+                         argv[i], strerror(errno), errno);
             }
         }
         /*
@@ -2718,7 +2726,7 @@ int main(int argc, char *argv[])
          */
         if (0 != setgroups(0, NULL)) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "setgroups() failed, errno %s(%d)\n",
+                     "setgroups(0,  NULL) failed, errno %s(%d)\n",
                      strerror(errno), errno);
         }
 #ifdef GPSD_GROUP
