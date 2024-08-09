@@ -5517,8 +5517,8 @@ const struct gps_type_t driver_ubx = {
     .flags             = DRIVER_STICKY,  // remember this
     .trigger           = NULL,
     // Number of satellite channels supported by the device
-    // ZED-F0P supports 60
-    .channels          = 60,
+    // ZED-F0T supports 60, ZED-F0P supports 184
+    .channels          = 184,
     .probe_detect      = NULL,           // Startup-time device detector
     // Packet getter (using default routine)
     .get_packet        = packet_get1,

@@ -110,11 +110,12 @@ extern "C" {
  *       Add ve_err_deviation, vn_err_deviationv, vu_err_deviation to gst_t
  *       Move gst_t out of gps_data_t union.
  *       Add ROWS(), IN() macrosa
+ *       MAXCHANNELS bumped from 140 to 185, for ZED-F9T
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
 
-#define MAXCHANNELS     140     // u-blox 9 tracks 140 signals
+#define MAXCHANNELS     184     // u-blox 9 tracks 140 signals
 #define MAXUSERDEVS     4       // max devices per user
 #define GPS_PATH_MAX    128     // for names like /dev/serial/by-id/...
 
