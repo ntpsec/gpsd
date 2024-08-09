@@ -907,6 +907,7 @@ print("This system is: %s" % sys.platform)
 libgps_flags = []
 rtlibs = []
 bluezflags = []
+capflags = []
 confdefs = []
 dbusflags = []
 adoc_prog = False
@@ -1090,6 +1091,15 @@ if not cleaning and not helping:
         if not shared:
             libs += ' --static'
         return ['!%s --cflags %s %s' % (env['PKG_CONFIG'], libs, pkg)]
+
+    if config.CheckPKG('libcap'):
+        confdefs.append("#define HAVE_LIBCAP 1\n")
+        try:
+            capflags = pkg_config('libcap')
+        except OSError:
+            announce("pkg_config is confused about the state "
+                     "of libcap.")
+            capflags = []
 
     # The actual distinction here is whether the platform has ncurses in the
     # base system or not. If it does, pkg-config is not likely to tell us
@@ -1875,13 +1885,13 @@ libgps_shared = GPSLibrary(env=env,
 libgps_static = env.StaticLibrary(
     target="gps_static",
     source=[env.StaticObject(s) for s in libgps_sources],
-    parse_flags=rtlibs)
+    parse_flags=rtlibs + capflags)
 
 libgpsd_static = env.StaticLibrary(
     target="gpsd",
     source=[env.StaticObject(s, parse_flags=usbflags + bluezflags)
             for s in libgpsd_sources],
-    parse_flags=usbflags + bluezflags)
+    parse_flags=usbflags + bluezflags + capflags)
 
 # FFI library must always be shared, even with shared=no.
 packet_ffi_objects = [env.SharedObject(s) for s in packet_ffi_extension]
@@ -2033,7 +2043,7 @@ gpsctl = env.Program('gpsctl', ['gpsctl.c'],
                      parse_flags=gpsdflags + gpsflags)
 gpsd = env.Program('gpsd/gpsd', gpsd_sources,
                    LIBS=[libgpsd_static, libgps_static],
-                   parse_flags=gpsdflags + gpsflags)
+                   parse_flags=gpsdflags + gpsflags + capflags)
 gpsdctl = env.Program('clients/gpsdctl', ['clients/gpsdctl.c'],
                       LIBS=[libgps_static],
                       parse_flags=gpsflags)

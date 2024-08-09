@@ -31,6 +31,9 @@
 #include <stdlib.h>
 #include <string.h>                  // for strlcat(), strcpy(), etc.
 #include <syslog.h>
+#ifdef HAVE_LIBCAP
+    #include <sys/capability.h>      // for cap_get_flag()
+#endif
 #include <sys/param.h>               // for setgroups()
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -2234,6 +2237,20 @@ int main(int argc, char *argv[])
     struct timespec now, delta;
     const char *sudo = getenv("SUDO_COMMAND");
     int uid;
+    unsigned long l;
+    pid_t my_pid = getpid();
+
+#ifdef HAVE_LIBCAP
+    // capabilities we prolly need
+    const char *cap_names[] = {
+        "cap_setgid",
+        "cap_setuid",
+        "cap_net_bind_service",
+        "cap_sys_nice",
+        "cap_sys_tty_config",            // ??
+        "cap_syslog",                    // ??
+    };
+#endif  // HAVE_LIBCAP
 
     gps_context_init(&context, "gpsd");
 
@@ -2386,6 +2403,46 @@ int main(int argc, char *argv[])
                  "This gpsd will fail at 2038-01-19T03:14:07Z.\n");
     }
 
+#ifdef HAVE_LIBCAP
+    // check that we have needed capabilities
+    do {
+        // get current caps, remember to free it.
+        cap_t cap = cap_get_pid(0);
+        if (NULL == cap) {
+            GPSD_LOG(LOG_ERR, &context.errout,
+                     "cap_get_pid(0) failed: %s(%d)\n",
+                     strerror(errno), errno);
+            break;;
+        }
+
+        for (l = 0; l < ROWS(cap_names); l++) {
+            cap_value_t cap_value;
+            cap_flag_value_t cap_flag_value;
+
+            if (0 != cap_from_name(cap_names[l], &cap_value)) {
+                GPSD_LOG(LOG_ERR, &context.errout,
+                         "cap_from_name(%s) failed: %s(%d)\n",
+                         cap_names[l], strerror(errno), errno);
+                continue;
+            }
+
+            if (0 != cap_get_flag(cap, cap_value, CAP_EFFECTIVE,
+                                  &cap_flag_value)) {
+                GPSD_LOG(LOG_ERR, &context.errout,
+                         "cap_get_flag(%s) failed: %s(%d)\n",
+                         cap_names[l], strerror(errno), errno);
+                continue;
+            }
+            if (CAP_SET != cap_flag_value) {
+                GPSD_LOG(LOG_WARN, &context.errout,
+                         "%s not set, but it should be\n", cap_names[l]);
+            }
+        }
+        cap_free(cap);
+    } while(0);
+#endif  // HAVE_LIBCAP
+
+
 #ifdef FLT_EVAL_METHOD
     if (0 != FLT_EVAL_METHOD) {
         GPSD_LOG(LOG_WARN, &context.errout,
@@ -2508,7 +2565,7 @@ int main(int argc, char *argv[])
                      "Cannot create PID file: %s. %s(%d)\n",
                      pid_file, strerror(errno), errno);
         } else {
-            (void)fprintf(fp, "%u\n", (unsigned int)getpid());
+            (void)fprintf(fp, "%u\n", (unsigned int)my_pid);
             (void)fclose(fp);
         }
     }
