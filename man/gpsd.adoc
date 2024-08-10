@@ -1,5 +1,5 @@
 = gpsd(8)
-:date: 4 March 2024
+:date: 9 August 2024
 :keywords: gps, gpsd, gnss
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -40,7 +40,8 @@ For the lowest-numbered serial port:
 ----
 
 *gpsd* may be started as a normal user, or by using sudo, but some
-functionality will be lost.
+functionality will be lost.  Besst to start as root.  See
+*SECURITY AND PERMISSIONS ISSUES* below.
 
 Change the device number as appropriate if you need to use a different
 port. Command-line flags enable verbose logging, a control port, and
@@ -565,6 +566,36 @@ clients if they fail to read data long enough for the outbound socket
 write buffer to fill. Clients with an assigned device in polling mode
 are subject to a longer timeout (15 minutes).
 
+=== CAPABILITIES
+
+If your *gpsd* was compiled to support *capabilities*(7), then it may
+be able to start as a normal user and retain some educed functionality,
+The following capabilities will be helpful:
+
+.caps object
+[cols=",",options="header",]
+|===
+|Name |Description
+|CAP_FOWNER| for chmod()
+|CAP_SETGID| for setgid(), setgroups()
+|CAP_SETUID| for setuid()
+|===
+
+You can set the capabilities by running these commands a root:
+
+----
+export CAPS='cap_fowner=ep cap_setgid=ep cap_setuid=ep'
+setcap "${CAPS}" [path-to-gpsd]
+----
+
+And check the capabilities where set by running this command as a normal
+user:
+
+[subs="-quotes"]
+----
+getcap [path-to-gpsd]
+----
+
 == LIMITATIONS
 
 If multiple NMEA talkers are feeding RMC, GLL, and GGA sentences to the
@@ -655,7 +686,6 @@ the key value used to create the shared-memory segment used for
 communication with the client library. This will be useful mainly when
 isolating test instances of *gpsd* from production ones.
 
-
 == RETURN VALUES
 
 *0*:: on success.
@@ -712,6 +742,9 @@ Data Interchange Format.
 The API for PPS time service is specified by RFC 2783, Pulse-Per-Second
 API for UNIX-like Operating Systems, Version 1.0
 
+The *gpsd* capabilities follow the proposed, but rescinded POSIX 1e
+Section 25.2 Capabilities. See *capabilities*(7).
+
 == AUTHORS
 
 Authors: Eric S. Raymond, Chris Kuethe, Gary Miller. Former authors
@@ -727,6 +760,8 @@ This manual page by Eric S. Raymond <esr@thyrsus.com>.
 *libgps*(3), *libgpsmm*(3)
 
 *gpsd_json*(5)
+
+*capabilities*(7)
 
 *chronyd*(8), *gpsd*(8), *gpsdctl*(8), *ntpd*(8)
 

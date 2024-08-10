@@ -2393,17 +2393,56 @@ int main(int argc, char *argv[])
                  "This gpsd will fail at 2038-01-19T03:14:07Z.\n");
     }
 
+
+
+#ifdef FLT_EVAL_METHOD
+    if (0 != FLT_EVAL_METHOD) {
+        GPSD_LOG(LOG_WARN, &context.errout,
+                 "FLT_EVAL_METHOD is %d, s/b 0\n", FLT_EVAL_METHOD);
+    }
+#else
+    GPSD_LOG(LOG_WARN, &context.errout,
+             "FLT_EVAL_METHOD is missing\n");
+#endif
+
+/* C99: 6.10.8 Predefined macro names
+ *   __STDC_IEC_559__ The integer constant 1, intended to indicate
+ *    conformance to the specifications in annex F (IEC 60559
+ *    floating-point arithmetic).
+ */
+#ifdef __STDC_IEC_559__
+    if (1 != __STDC_IEC_559__) {
+        GPSD_LOG(LOG_WARN, &context.errout,
+                 "__STDC_IEC_559__ is %d, s/b 1\n", __STDC_IEC_559__);
+    }
+#else
+    GPSD_LOG(LOG_WARN, &context.errout,
+             "__STDC_IEC_559__ is missing\n");
+#endif
+
+    uid = getuid();
+    if (0 != uid) {
+       GPSD_LOG(LOG_WARN, &context.errout,
+                "gpsd not started as root. Some functions may be impaired.\n");
+    } else if (NULL != sudo &&
+               0 == strcmp(argv[0], sudo)) {
+       GPSD_LOG(LOG_WARN, &context.errout,
+                "gpsd running under sudo. Some functions may be impaired.\n");
+    }
+
 #ifdef HAVE_LIBCAP
-    // check that we have needed capabilities
+    // check that we have needed capabilities, root should allow all.
     do {
         // capabilities we prolly need
         const char *cap_names[] = {
-            "cap_setgid",
-            "cap_setuid",
-            "cap_net_bind_service",
-            "cap_sys_nice",
-            "cap_sys_tty_config",            // ??
-            "cap_syslog",                    // ??
+            "cap_setgid",                    // for setgid()
+            "cap_setuid",                    // for setuid(), setgroups()
+            "cap_fowner",                    // for chmod()
+            // not needed for unpriviledged port 2947
+            // "cap_net_bind_service",
+
+            // "cap_sys_tty_config",            // ??
+            // "cap_syslog",                    // ??
         };
         // get current caps, remember to free it.
         cap_t cap = cap_get_pid(0);
@@ -2438,45 +2477,15 @@ int main(int argc, char *argv[])
                          "%s not set, but it should be\n", cap_names[l]);
             }
         }
-        cap_free(cap);
+        if (0 != cap_free(cap)) {
+            GPSD_LOG(LOG_ERR, &context.errout,
+                     "cap_free() failed: %s(%d)\n",
+                     strerror(errno), errno);
+            break;
+        }
     } while(0);
 #endif  // HAVE_LIBCAP
 
-
-#ifdef FLT_EVAL_METHOD
-    if (0 != FLT_EVAL_METHOD) {
-        GPSD_LOG(LOG_WARN, &context.errout,
-                 "FLT_EVAL_METHOD is %d, s/b 0\n", FLT_EVAL_METHOD);
-    }
-#else
-    GPSD_LOG(LOG_WARN, &context.errout,
-             "FLT_EVAL_METHOD is missing\n");
-#endif
-
-/* C99: 6.10.8 Predefined macro names
- *   __STDC_IEC_559__ The integer constant 1, intended to indicate
- *    conformance to the specifications in annex F (IEC 60559
- *    floating-point arithmetic).
- */
-#ifdef __STDC_IEC_559__
-    if (1 != __STDC_IEC_559__) {
-        GPSD_LOG(LOG_WARN, &context.errout,
-                 "__STDC_IEC_559__ is %d, s/b 1\n", __STDC_IEC_559__);
-    }
-#else
-    GPSD_LOG(LOG_WARN, &context.errout,
-             "__STDC_IEC_559__ is missing\n");
-#endif
-
-    uid = getuid();
-    if (0 != uid) {
-       GPSD_LOG(LOG_WARN, &context.errout,
-                "gpsd not started as root, can not drop privileges.\n");
-    } else if (NULL != sudo &&
-               0 == strcmp(argv[0], sudo)) {
-       GPSD_LOG(LOG_WARN, &context.errout,
-                "gpsd running under sudo. Some functions impaired.\n");
-    }
 #if defined(SYSTEMD_ENABLE) && defined(CONTROL_SOCKET_ENABLE)
     sd_socket_count = sd_get_socket_count();
     if (0 < sd_socket_count &&
@@ -2703,8 +2712,10 @@ int main(int argc, char *argv[])
                         "Over long device path %s\n", argv[i]);
                continue;
             }
-            /* This fails if not running as root, or have group
-             * access to the file. */
+            /* stat() and chmod() fail if:
+             *    not running as root,
+             *    does have group access to the file,
+             *    and does not have CAP_FOWNER . */
             if (0 != stat(argv[i], &stb)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
                          "stat(%s) failed, errno %s(%d)\n",
@@ -2712,28 +2723,32 @@ int main(int argc, char *argv[])
 
             } else if (0 != chmod(argv[i], stb.st_mode | S_IRGRP | S_IWGRP)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "chmod(%s, +S_IRGRP +S_IWGRP) failed, errno %s(%d)\n",
+                         "chmod(%s, g+sw) failed, errno %s(%d)\n",
                          argv[i], strerror(errno), errno);
             }
         }
         /*
-         * Drop privileges.  Up to now we've been running as root.
-         * Instead, set the user ID to 'nobody' (or whatever the gpsd
+         * Drop privileges.  Up to now we've may have running as root.
+         * or had capabilities.  Dangerous!  Maybe.
+         * Now, set the user ID to 'nobody' (or whatever the gpsd
          * user set by the build is) and the group ID to the owning
          * group of a prototypical TTY device. This limits the scope
          * of any compromises in the code.  It requires that all GPS
          * devices have their group read/write permissions set.
          */
         if (0 != setgroups(0, NULL)) {
+            // Needs CAP_SETGID?
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "setgroups(0,  NULL) failed, errno %s(%d)\n",
                      strerror(errno), errno);
         }
 #ifdef GPSD_GROUP
         {
+            // Allow selecting group from command line??
             struct group *grp = getgrnam(GPSD_GROUP);
             if (grp) {
                 if (0 != setgid(grp->gr_gid)) {
+                    // Needs CAP_SETGID?
                     GPSD_LOG(LOG_ERROR, &context.errout,
                              "setgid() failed, %s(%d)\n",
                              strerror(errno), errno);
@@ -2752,9 +2767,11 @@ int main(int argc, char *argv[])
             }
         }
 #endif
+        // Se user to GPSD_USER, needs CAP_SETUID
         pw = getpwnam(GPSD_USER);
         if (pw) {
             if (0 != setuid(pw->pw_uid)) {
+                // Needs CAP_SETUID?
                 GPSD_LOG(LOG_ERROR, &context.errout,
                             "setuid() failed, %s(%d)\n",
                             strerror(errno), errno);
@@ -2766,6 +2783,33 @@ int main(int argc, char *argv[])
              "running with effective group ID %ld\n", (long)getegid());
     GPSD_LOG(LOG_INF, &context.errout,
              "running with effective user ID %ld\n", (long)geteuid());
+
+#ifdef HAVE_LIBCAP
+    do {
+        // drop all capabilities
+
+        // get current caps, remember to free it.
+        cap_t cap = cap_init();
+        if (NULL == cap) {
+            GPSD_LOG(LOG_ERR, &context.errout,
+                     "cap_init() failed: %s(%d)\n", strerror(errno), errno);
+            break;;
+        }
+        if (0 != cap_set_proc(cap)) {
+            GPSD_LOG(LOG_ERR, &context.errout,
+                     "cap_set_proc() failed: %s(%d)\n",
+                     strerror(errno), errno);
+            break;
+        }
+        if (0 != cap_free(cap)) {
+            GPSD_LOG(LOG_ERR, &context.errout,
+                     "cap_free() failed: %s(%d)\n",
+                     strerror(errno), errno);
+            break;
+        }
+    } while (0);
+#endif  // HAVE_LIBCAP
+
 
 #ifdef SOCKET_EXPORT_ENABLE
     for (i = 0; i < NITEMS(subscribers); i++) {
