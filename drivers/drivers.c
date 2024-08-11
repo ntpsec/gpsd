@@ -248,6 +248,13 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
             // query version MON-VER
             (void)ally_write(session, 0x0a, 0x04, NULL, 0);
             break;
+        case 11:
+            // probe for CASIC
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "=> Probing for CASIC\n");
+            // query version MON-VER
+            (void)casic_write(session, 0x0a, 0x04, NULL, 0);
+            break;
         default:
             break;
         }
@@ -1631,8 +1638,8 @@ const struct gps_type_t driver_pps = {
 };
 // *INDENT-ON*
 
-
 extern const struct gps_type_t driver_allystar;
+extern const struct gps_type_t driver_casic;
 extern const struct gps_type_t driver_evermore;
 extern const struct gps_type_t driver_garmin_ser_binary;
 extern const struct gps_type_t driver_garmin_usb_binary;
@@ -1655,6 +1662,7 @@ static const struct gps_type_t *gpsd_driver_array[] = {
     &driver_nmea0183,
     &driver_allystar,
     &driver_ashtech,
+    &driver_casic,
 #ifdef TRIPMATE_ENABLE
     &driver_tripmate,
 #endif  // TRIPMATE_ENABLE

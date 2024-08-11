@@ -149,6 +149,19 @@ static char *state_table[] = {
 #define TSIP_MAX_PACKET 255
 #endif
 
+unsigned casic_checksum(unsigned char *buf, size_t len)
+{
+    // CASIC uses a 32 bit little-endian checksum
+    // All payloads sizes are 4-byte aligned
+    size_t idx;
+    unsigned crc_computed = 0;
+
+    for (idx = 0; idx < len; idx += 4) {
+        crc_computed += getleu32(buf, idx);
+    }
+    return crc_computed;
+}
+
 #ifdef ONCORE_ENABLE
 static size_t oncore_payload_cksum_length(unsigned char id1, unsigned char id2)
 {
@@ -546,6 +559,10 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #endif  // SIRF_ENABLE || SKYTRAQ_ENABLE
         case MICRO:      // latin1 micro, 0xb5
             lexer->state = UBX_LEADER_1;
+            break;
+        case 0xba:      // latin1 MASCULINE ORDINAL INDICATOR
+            // got 1st, of 2, bytes of leader
+            lexer->state = CASIC_LEADER_1;
             break;
         case 0xD3:      // latin1 capital O acute
             lexer->state = RTCM3_LEADER_1;
@@ -1619,6 +1636,80 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     // send ALLYSTAR
+
+    // start CASIC
+    case CASIC_LEADER_1:
+      if (0xce == c) { // LATIN CAPITAL LETTER I WITH CIRCUMFLEX
+            // got 2nd, of 2, bytes of leader
+            lexer->state = CASIC_LEADER_2;
+        } else {
+            return character_pushback(lexer, GROUND_STATE);
+        }
+        break;
+    case CASIC_LEADER_2:
+        // got 1st, of 2, bytes of length
+        lexer->length = (size_t)c;
+        lexer->state = CASIC_LENGTH_1;
+        break;
+    case CASIC_LENGTH_1:
+        // got 2nd, of 2, bytes of length
+        // Validate the length field, the driver and code at
+        // CASIC_RECOGNIZED require this.
+        lexer->length += (c << 8);
+        if (2048 < lexer->length ||
+            0 != (lexer->length % 4)) {
+            // bad length
+            return character_pushback(lexer, GROUND_STATE);
+        }  // else
+
+        /* no payload or normal size payload. */
+        lexer->state = CASIC_LENGTH_2;
+        break;
+    case CASIC_LENGTH_2:
+        lexer->state = CASIC_CLASS_ID;
+        break;
+    case CASIC_CLASS_ID:
+        lexer->state = CASIC_MESSAGE_ID;
+        break;
+    case CASIC_MESSAGE_ID:
+        // We're at the first byte of payload, or the first byte of
+        // checksum.  Go directly to CASIC_PAYLOAD.
+        lexer->state = CASIC_PAYLOAD;
+        FALLTHROUGH
+    case CASIC_PAYLOAD:
+        if (0 == lexer->length) {
+            // got 1st, of 4, bytes of checksum
+            lexer->state = CASIC_CHECKSUM_A;
+        }
+        lexer->length--;
+        // else stay in payload state
+        break;
+    case CASIC_CHECKSUM_A:
+        // got 2nd, of 4, bytes of checksum
+        lexer->state = CASIC_CHECKSUM_B;
+        break;
+    case CASIC_CHECKSUM_B:
+        // got 3rd, of 4, bytes of checksum
+        lexer->state = CASIC_CHECKSUM_C;
+        break;
+    case CASIC_CHECKSUM_C:
+        // got 4th, of 4, bytes of checksum
+        lexer->state = CASIC_RECOGNIZED;
+        break;
+    case CASIC_RECOGNIZED:
+        if (0xba == c) {   // latin1 MASCULINE ORDINAL INDICATOR
+            lexer->state = CASIC_LEADER_1;
+        } else if ('$' == c) {
+            // CASIC can/will output NMEA/CASIC back to back
+            lexer->state = NMEA_DOLLAR;
+        } else if ('{' == c) {
+            // JSON
+            return character_pushback(lexer, JSON_LEADER);
+        }
+        // Unknown..
+        return character_pushback(lexer, GROUND_STATE);
+        break;
+    // end CASIC
 #ifdef EVERMORE_ENABLE
     case EVERMORE_LEADER_1:
         if (STX == c) {        // DLE, STX
@@ -2225,6 +2316,73 @@ void packet_parse(struct gps_lexer_t *lexer)
                 break;
             }
             packet_type = AIVDM_PACKET;
+            break;
+
+        case ALLY_RECOGNIZED:
+            // ALLYSTAR use a TCP like checksum, 8-bit Fletcher Algorithm
+            ck_a = (unsigned char)0;
+            ck_b = (unsigned char)0;
+            // payload length
+            data_len = getleu16(lexer->inbuffer, 4);
+
+            GPSD_LOG(LOG_IO, &lexer->errout, "ALLY: buflen %d. paylen %u\n",
+                     inbuflen, data_len);
+            if (inbuflen < data_len) {
+                GPSD_LOG(LOG_INFO, &lexer->errout,
+                         "ALLY: bad length %d/%u\n",
+                         inbuflen, data_len);
+                packet_type = BAD_PACKET;
+                lexer->state = GROUND_STATE;
+                acc_dis = ACCEPT;
+                break;
+            }
+            // from class ID (byte 2), msg ID, length,  to end of payload
+            for (idx = 0; idx < (data_len + 4); idx++) {
+                ck_a += lexer->inbuffer[idx + 2];
+                ck_b += ck_a;
+            }
+            if (ck_a == lexer->inbuffer[data_len + 6] &&
+                ck_b == lexer->inbuffer[data_len + 7]) {
+                packet_type = ALLYSTAR_PACKET;
+            } else {
+                char scratchbuf[200];
+
+                GPSD_LOG(LOG_WARN, &lexer->errout,
+                         "ALLY: bad checksum 0x%02hhx%02hhx length %d/%u"
+                         ", %s\n",
+                         ck_a,
+                         ck_b,
+                         inbuflen, data_len,
+                         gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                                     lexer->inbuffer, lexer->inbuflen));
+                packet_type = BAD_PACKET;
+                lexer->state = GROUND_STATE;
+            }
+            acc_dis = ACCEPT;
+            break;
+
+        case CASIC_RECOGNIZED:
+            // Payload length.  This field has already been validated
+            // in nextstate().
+            data_len = getleu16(lexer->inbuffer, 2);
+            GPSD_LOG(LOG_IO, &lexer->errout, "CASIC: buflen %d, paylen %d\n",
+                     inbuflen, data_len);
+            crc_computed = casic_checksum(lexer->inbuffer + 2, data_len + 4);
+            crc_expected = getleu32(lexer->inbuffer, data_len + 6);
+            if (crc_computed == crc_expected) {
+                packet_type = CASIC_PACKET;
+            } else {
+                GPSD_LOG(LOG_PROG, &lexer->errout,
+                         "CASIC checksum 0x%04x over length %d,"
+                         " expecting 0x%04x (type 0x%02hhx%02hhx)\n",
+                         crc_computed,
+                         data_len + 4,
+                         crc_expected,
+                         lexer->inbuffer[4], lexer->inbuffer[5]);
+                packet_type = BAD_PACKET;
+                lexer->state = GROUND_STATE;
+            }
+            acc_dis = ACCEPT;
             break;
 
         case COMMENT_RECOGNIZED:
@@ -2936,48 +3094,6 @@ void packet_parse(struct gps_lexer_t *lexer)
             break;
 #endif  // TSIP_ENABLE || GARMIN_ENABLE
 
-        case ALLY_RECOGNIZED:
-            // ALLYSTAR use a TCP like checksum, 8-bit Fletcher Algorithm
-            ck_a = (unsigned char)0;
-            ck_b = (unsigned char)0;
-            // payload length
-            data_len = getleu16(lexer->inbuffer, 4);
-
-            GPSD_LOG(LOG_IO, &lexer->errout, "ALLY: buflen %d. paylen %u\n",
-                     inbuflen, data_len);
-            if (inbuflen < data_len) {
-                GPSD_LOG(LOG_INFO, &lexer->errout,
-                         "ALLY: bad length %d/%u\n",
-                         inbuflen, data_len);
-                packet_type = BAD_PACKET;
-                lexer->state = GROUND_STATE;
-                acc_dis = ACCEPT;
-                break;
-            }
-            // from class ID (byte 2), msg ID, length,  to end of payload
-            for (idx = 0; idx < (data_len + 4); idx++) {
-                ck_a += lexer->inbuffer[idx + 2];
-                ck_b += ck_a;
-            }
-            if (ck_a == lexer->inbuffer[data_len + 6] &&
-                ck_b == lexer->inbuffer[data_len + 7]) {
-                packet_type = ALLYSTAR_PACKET;
-            } else {
-                char scratchbuf[200];
-
-                GPSD_LOG(LOG_WARN, &lexer->errout,
-                         "ALLY: bad checksum 0x%02hhx%02hhx length %d/%u"
-                         ", %s\n",
-                         ck_a,
-                         ck_b,
-                         inbuflen, data_len,
-                         gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                                     lexer->inbuffer, lexer->inbuflen));
-                packet_type = BAD_PACKET;
-                lexer->state = GROUND_STATE;
-            }
-            acc_dis = ACCEPT;
-            break;
         case UBX_RECOGNIZED:
             // UBX use a TCP like checksum
             ck_a = (unsigned char)0;

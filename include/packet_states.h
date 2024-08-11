@@ -32,6 +32,19 @@
    ALLY_CHECKSUM_A,        // checksum A byte (tcp checksum)
    ALLY_RECOGNIZED,        // this is also ALLY_CHECKSUM_B
 
+   // CASIC, also a copy of UBX.  Not UBX compatible
+   CASIC_LEADER_1,          // first constant leader byte found
+   CASIC_LEADER_2,          // second constant leader byte found
+   CASIC_LENGTH_1,          // first length byte read (le)
+   CASIC_LENGTH_2,          // second length byte read (le)
+   CASIC_CLASS_ID,          // classid read
+   CASIC_MESSAGE_ID,        // message id read
+   CASIC_PAYLOAD,           // payload eating
+   CASIC_CHECKSUM_A,        // checksum A byte (32-bit checksum)
+   CASIC_CHECKSUM_B,        // checksum B byte
+   CASIC_CHECKSUM_C,        // checksum C byte
+   CASIC_RECOGNIZED,        // this is also CASIC_CHECKSUM_D
+
    DLE_LEADER,            // we've seen the TSIP/EverMore leader (DLE)
 
    NMEA_DOLLAR,           // we've seen first character of NMEA leader

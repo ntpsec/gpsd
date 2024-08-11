@@ -1,6 +1,6 @@
 = gpsctl(1)
 :author: Eric S. Raymond
-:date: 13 May 2022
+:date: 10 August 2022
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, gpsctl
 :manmanual: GPSD Documentation
@@ -106,17 +106,23 @@ cases) physically disconnecting the NVRAM backup battery.
   In low-level, (direct) mode *gpsctl* will provide packet headers and
   trailers and checksum as appropriate for binary packet types, and
   whatever checksum and trailer is required for text packet types.
-  (You must include the leading $ for NMEA packets.) When sending to a
-  UBX device, the first two bytes of the string supplied will become
-  the message class and type, and the remainder the payload. When
-  sending to a Navcom NCT or Trimble TSIP device, the first byte is
-  interpreted as the command ID and the rest as payload. When sending
-  to a Zodiac device, the first two bytes are used as a message ID of
-  type little-endian short, and the remainder as payload in byte pairs
-  interpreted as little-endian short. For all other supported binary
-  GPSes (notably including SiRF) the string is taken as the entire
-  message payload and wrapped with appropriate header, trailer and
-  checksum bytes.
+
+  You must include the leading $ for NMEA packets.
+
+  When sending to a UBX, Allystar or CASIC device, the first two bytes
+  of the string supplied will become the message class and type, and the
+  remainder the payload.
+
+  When sending to a Navcom NCT or Trimble TSIP device, the first byte is
+  interpreted as the command ID and the rest as payload.
+
+  When sending to a Zodiac device, the first two bytes are used as a
+  message ID of type little-endian short, and the remainder as payload
+  in byte pairs interpreted as little-endian short.
+
+  For all other supported binary GPSes (notably including SiRF) the
+  string is taken as the entire message payload and wrapped with
+  appropriate header, trailer and checksum bytes.
 
 The argument of the forcing option, *-t*, should be a string which is
 contained in exactly one of the known driver names; for a list, do
@@ -190,5 +196,5 @@ client mode. This will be fixed in a future release.
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project +
+This file is Copyright by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause

@@ -236,14 +236,15 @@ struct gps_lexer_t {
 #define GREIS_PACKET            16
 #define SKY_PACKET              17
 #define ALLYSTAR_PACKET         18
-#define MAX_GPSPACKET_TYPE      18      // increment this as necessary
+#define CASIC_PACKET            19
+#define MAX_GPSPACKET_TYPE      19      // increment this as necessary
 // end of GPS type packets
 
-#define RTCM2_PACKET            19
-#define RTCM3_PACKET            20
-#define JSON_PACKET             21
+#define RTCM2_PACKET            20
+#define RTCM3_PACKET            21
+#define JSON_PACKET             22
 // end of non GPS type packets, AIVDM is GPS type??
-#define PACKET_TYPES            22      // increment this as necessary
+#define PACKET_TYPES            23      // increment this as necessary
 
 #define TEXTUAL_PACKET_TYPE(n)  ((((n)>=NMEA_PACKET) && ((n)<=MAX_TEXTUAL_TYPE)) || (n)==JSON_PACKET)
 #define GPS_PACKET_TYPE(n)      (((n)>=NMEA_PACKET) && ((n)<=MAX_GPSPACKET_TYPE))
@@ -1132,6 +1133,9 @@ extern const char *gpsd_maskdump(gps_mask_t);
 // exceptional driver methods
 extern bool ally_write(struct gps_device_t *, unsigned int, unsigned int,
                        const unsigned char *, size_t);
+extern bool casic_write(struct gps_device_t *, unsigned int, unsigned int,
+                        const unsigned char *, size_t);
+extern unsigned casic_checksum(unsigned char * buf, size_t len);
 extern bool ubx_write(struct gps_device_t *, unsigned int, unsigned int,
                       const unsigned char *, size_t);
 extern bool ais_binary_decode(const struct gpsd_errout_t *errout,
