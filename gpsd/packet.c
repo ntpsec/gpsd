@@ -1652,9 +1652,12 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = CASIC_LENGTH_1;
         break;
     case CASIC_LENGTH_1:
-        // got 2nd, of 2, bytes of length
-        // Validate the length field, the driver and code at
-        // CASIC_RECOGNIZED require this.
+        /* got 2nd, of 2, bytes of length
+         * Validate the length field, the driver and code at
+         * CASIC_RECOGNIZED require this.
+         * Max length seems to be RXM-SVPOS 1544 (packet total 1554)
+         * Their doc says payload "<2k bytes"
+         */
         lexer->length += (c << 8);
         if (2048 < lexer->length ||
             0 != (lexer->length % 4)) {
@@ -2327,7 +2330,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 
             GPSD_LOG(LOG_IO, &lexer->errout, "ALLY: buflen %d. paylen %u\n",
                      inbuflen, data_len);
-            if (inbuflen < data_len) {
+            if (inbuflen < (data_len + 8)) {
                 GPSD_LOG(LOG_INFO, &lexer->errout,
                          "ALLY: bad length %d/%u\n",
                          inbuflen, data_len);
@@ -2362,11 +2365,18 @@ void packet_parse(struct gps_lexer_t *lexer)
             break;
 
         case CASIC_RECOGNIZED:
-            // Payload length.  This field has already been validated
-            // in nextstate().
+            /* Payload length.  This field has already been partially
+             * validated in nextstate().  */
             data_len = getleu16(lexer->inbuffer, 2);
-            GPSD_LOG(LOG_IO, &lexer->errout, "CASIC: buflen %d, paylen %d\n",
-                     inbuflen, data_len);
+            if (inbuflen < (data_len + 10)) {
+                GPSD_LOG(LOG_INFO, &lexer->errout,
+                         "CASIC: bad length %d/%u\n",
+                         inbuflen, data_len);
+                packet_type = BAD_PACKET;
+                lexer->state = GROUND_STATE;
+                acc_dis = ACCEPT;
+                break;
+            }
             crc_computed = casic_checksum(lexer->inbuffer + 2, data_len + 4);
             crc_expected = getleu32(lexer->inbuffer, data_len + 6);
             if (crc_computed == crc_expected) {
