@@ -1,6 +1,6 @@
 = gpsctl(1)
 :author: Eric S. Raymond
-:date: 10 August 2022
+:date: 11 August 2024
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, gpsctl
 :manmanual: GPSD Documentation
