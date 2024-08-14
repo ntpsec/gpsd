@@ -385,9 +385,10 @@ static void event_hook(struct gps_device_t *session, event_t event)
     if (session->context->readonly) {
         return;
     }
-    if (EVENT_IDENTIFIED == event) {
+    if (EVENT_IDENTIFIED != event) {
         return;
     }
+    GPSD_LOG(LOG_PROG, &session->context->errout, "CASIC: identified\n");
     // We would like MON-VER but it at least sometimes doesn't work.
     (void)casic_write(session, CASIC_MON, 0x04, NULL, 0);
     // Port configuration seems to work.
