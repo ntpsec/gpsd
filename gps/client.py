@@ -12,6 +12,7 @@
 from __future__ import absolute_import, print_function, division
 
 import json
+import os
 import select
 import socket
 import sys
@@ -371,9 +372,45 @@ class dictwrapper(object):
         """length of dictwrapper."""
         return len(self.__dict__)
 
-#
-# Someday a cleaner Python interface using this machinery will live here
-#
+
+class baton(object):
+    """Ship progress indication to stderr."""
+
+    def __init__(self, prompt, endmsg=None):
+        """Init class baton."""
+        self.stream = sys.stderr
+        self.tty = os.isatty(self.stream.fileno())
+        self.stream.flush()
+        self.count = 0
+        self.endmsg = endmsg
+        self.time = time.time()
+        self.tick = int(self.time)
+        self.stream.write(prompt + "...")
+        if self.tty:
+            self.stream.write(" \b")
+        self.stream.flush()
+
+    def twirl(self, ch=None):
+        """Twirl the baton."""
+        if self.stream is None or not self.tty:
+            return
+        now = int(time.time())
+        if ch:
+            self.stream.write(ch)
+            self.stream.flush()
+        elif now != self.tick:
+            self.stream.write("-/|\\"[self.count % 4] + "\b")
+            self.stream.flush()
+            self.count = self.count + 1
+            self.tick = now
+
+    def end(self, msg=None):
+        """Write the end message."""
+        if msg is None:
+            msg = self.endmsg
+        if self.stream:
+            self.stream.write("...(%2.2f sec) %s.\n"
+                              % (time.time() - self.time, msg))
 
 # End
 # vim: set expandtab shiftwidth=4

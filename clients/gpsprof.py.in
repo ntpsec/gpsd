@@ -34,6 +34,7 @@ import time
 # pylint wants local modules last
 try:
     import gps
+    import gps.client
     import gps.clienthelpers
 except ImportError as e:
     sys.stderr.write(
@@ -87,42 +88,6 @@ def wgs84_to_ecef(wgs84):
     z = (rad * S + alt) * sinLat
 
     return (x, y, z)
-
-
-class Baton(object):
-    """Ship progress indication to stderr."""
-
-    def __init__(self, prompt, endmsg=None):
-        """Init class baton."""
-        self.stream = sys.stderr
-        self.stream.write(prompt + "...")
-        if os.isatty(self.stream.fileno()):
-            self.stream.write(" \b")
-        self.stream.flush()
-        self.count = 0
-        self.endmsg = endmsg
-        self.time = time.time()
-
-    def twirl(self, ch=None):
-        """Twirl the baton."""
-        if self.stream is None:
-            return
-        if ch:
-            self.stream.write(ch)
-        elif os.isatty(self.stream.fileno()):
-            self.stream.write("-/|\\"[self.count % 4])
-            self.stream.write("\b")
-        self.count = self.count + 1
-        self.stream.flush()
-        return
-
-    def end(self, msg=None):
-        """Write the end message."""
-        if msg is None:
-            msg = self.endmsg
-        if self.stream:
-            self.stream.write("...(%2.2f sec) %s.\n"
-                              % (time.time() - self.time, msg))
 
 
 class stats(object):
@@ -263,7 +228,7 @@ class plotter(object):
                                   options.wait))))
             signal.siginterrupt(signal.SIGUSR1, False)
             self.session.stream(flags, options.device)
-            baton = Baton("gpsprof: %d looking for fix" % os.getpid(), "done")
+            baton = gps.client.baton("gpsprof: %d looking for fix" % os.getpid(), "done")
             countdown = options.wait
             basetime = time.time()
             while 0 < countdown:
@@ -322,7 +287,7 @@ class plotter(object):
     def replot(self, infp):
         """Replot from a JSON log file."""
         self.in_replot = True
-        baton = Baton("gpsprof: replotting", "done")
+        baton = gps.client.baton("gpsprof: replotting", "done")
         self.session = gps.gps(host=None)
         for line in infp:
             baton.twirl()
