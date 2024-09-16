@@ -34,6 +34,11 @@ import time
 # On gentoo these are from the dev-python/pygobject package.
 # "Python bindings for GObject Introspection"
 # It looks like PyGTK, but it is not.  PyGTK is unmaintained.
+#
+# Gtk.VBox & Gtk.HBox are deprecated in 3.2 GTK.Box was deprecated.
+# Box is still deprected when styling first, last or nth? children.
+# VBox and HBox are gone in 4.0; it doesn't matter much though.
+# Gtk4 breaks at least a few other things.
 
 try:
     import gi
