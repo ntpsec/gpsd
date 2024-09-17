@@ -1,6 +1,6 @@
 = xgps(1)
 Remco Treffcorn; Derrick Brashear; Russ Nelson; Eric S. Raymond
-:date: 13 April 2024
+:date: 2 October 2024
 :keywords: gps, gpsd, xgps
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -64,11 +64,11 @@ under *sudo* will cause some loss of functionality.
 *-p PORT*, *--port PORT*::
   The port to connect to. The default is 2947.
 *-r DEG*, *--rotate DEG*::
-  Accepts an argument in degrees, to rotate the skyview
+  Accepts an argument in degrees to rotate the skyview
   counterclockwise.
 *-c FORMAT*, *--const FORMAT*::
   Display format of constellation.
-  Can display abbreviated, full name or full name & flag where possible.
+  Can display abbreviated, full name, or full name & flag where possible.
   NOTE: flags require a UTF-8 font with emoji flags
 *-V*, *--version*::
   This option causes each client to dump the package version and exit.
@@ -79,17 +79,17 @@ By default, clients collect data from the local *gpsd* daemon running
 on localhost, using the default GPSD port 2947. The optional argument
 to any client may override this behavior: *[server[:port[:device]]]*
 
-For further explanation, and examples, see the *ARGUMENTS* section in
+For further explanation and examples, see the *ARGUMENTS* section in
 the *gps*(1) man page
 
 == ENVIRONMENT
 
 The *XGPSOPTS>* environment variable may be set to pass commonly used
 command line options to *xgps*. This is often used to set the *-u*
-option for locale specific units. *XGPSOPTS* is processed before the CLI
+option for locale-specific units. *XGPSOPTS* is processed before the CLI
 options.
 
-*xgps* also looks at other variables in the environment to figure out
+*xgps* also looks at other envitonment variables to figure out
 the units for display -- imperial, nautical, or metric. Here are the
 variables and values checked:
 
@@ -113,14 +113,14 @@ variables and values checked:
               [other]    = km/meters
 ----
 
-These preferences may be overridden by the *-u*, or *--units* option.
+The *-u* or *--units* option overrides these preferences.
 
 The *-u* option can be used to set the system units for display;
 follow the keyword with 'i' for 'imperial' for American units
 (International Feet in altitude and error estimates, miles per hour in
 speeds), 'n' for 'nautical' (feet in altitude and error estimates, knots
 in speed) or 'm' for 'metric' (meters in altitude and error estimates,
-kilometers per hour in speeds).
+kilometers per hour in speed).
 
 Note: The USA Survey Foot is not supported.
 
@@ -130,9 +130,59 @@ specified on the command line or in *XPGSOPTS* it may be set to 'i'.
 
 *LC_MEASUREMENT* and then *LANG* are checked if no unit system has
 been specified on the command line, in *XPGSOPTS* or in
-*GPSD_UNITS*. If the value is 'C', 'POSIX', or begins with 'en_US' the
+*GPSD_UNITS*. If the value is 'C', 'POSIX', or begins with 'en_US', the
 unit system is set to imperial. The default if no system has been
 selected defaults to metric.
+
+== MENU OPTIONS
+
+File > Connect::
+  Try to open a new server connection, defaulting to the
+  previous server.
+
+File > Disconnect::
+  Use the 'disconnect' feature to sever the current server
+  connection without exiting the software.
+
+File > Devices::
+  This allows you to change which device XGPS reports data from,
+  defaulting to all devices.
+
+File > Quit::
+  Quit xgps.
+
+View::
+  Toggle the visibility of panels in the display; the panels are
+  (from top to bottom) a satellite sky view, and data from
+  Global Positioning Satellites, the (nautical) Automatic
+  Identification System, attitude sensor, Inertal Mesaurement
+  Units, noise statistics, and Real-Time Kinematic positioning.
+  Xgps shows the satellite Skyview and GPS panels by default,
+  the AIS panel hides until selected, and the attitude, IMU,
+  noise, and RTK panels don't automatically reveal themselves
+  until appropriate data is received.
+
+Units > Imperial, Metric, Nautical::
+  Select the unit set used for speed and altitude. This setting
+  defaults to metric unless xgps detects an American, "C", or
+  "POSIX" setting for either the LANG or LC_MEASUREMENT
+  environment variables (see above).
+
+Units > DD.dd, DD MM.mm, DD MM SS.ss::
+  Set the angle format in degrees, degrees-minutes, or
+  degrees-minutes seconds. The last unit is a floating point
+  number and previous integers.
+
+Units > 30, 45, Off::
+  Change the satellite scatter graphs banding defaults to 30
+  degrees.
+
+Units > Mag North Up, Track Up, True North Up::
+  Change the orientation in the satellite scatter graph to your
+  liking, defaulting to true north.
+
+Help > About::
+  Show information about xgps.
 
 == RETURN VALUES
 
