@@ -234,6 +234,7 @@ section.
 The \*-separated suffix (\*5C) is the NMEA 0183 data-integrity checksum
 for the sentence, preceded by "*".  It is computed on the entire
 sentence including the AIVDM tag but excluding the leading "!".
+This checksum is the XOR of all bytes in the payload.
 
 For comparison, here is an example of a multi fragment sentence with a
 nonempty message ID field:
