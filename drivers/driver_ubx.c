@@ -1461,9 +1461,9 @@ static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
          session->gpsdata.satellites_used);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "UBX: HNR-PVT: gpsFix:%s flags:%s valid:%s\n",
-	     val2str(gpsFix, vpvt_fixType),
-	     flags2str(flags, fhnr_pvt_flags, buf2, sizeof(buf2)),
-	     flags2str(valid, fpvt_valid, buf3, sizeof(buf3)));
+             val2str(gpsFix, vpvt_fixType),
+             flags2str(flags, fhnr_pvt_flags, buf2, sizeof(buf2)),
+             flags2str(valid, fpvt_valid, buf3, sizeof(buf3)));
 
     return mask;
 }
@@ -1935,7 +1935,7 @@ static gps_mask_t ubx_msg_mon_comms(struct gps_device_t *session,
              protIds[3]);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "UBX: MON-COMMS: txErrors:%s protIds %s %s %s %s\n",
-	     flags2str(txErrors, vmon_comms_txerrors, buf2, sizeof(buf2)),
+             flags2str(txErrors, vmon_comms_txerrors, buf2, sizeof(buf2)),
              val2str(protIds[0], vprotIds),
              val2str(protIds[1], vprotIds),
              val2str(protIds[2], vprotIds),
@@ -2027,14 +2027,14 @@ static gps_mask_t ubx_msg_mon_hw(struct gps_device_t *session,
 
     switch (aStatus) {
     case 2:
-	session->newdata.ant_stat = ANT_OK;
+        session->newdata.ant_stat = ANT_OK;
         break;
     case 3:
-	session->newdata.ant_stat = ANT_SHORT;
-	break;
+        session->newdata.ant_stat = ANT_SHORT;
+        break;
     case 4:
-	session->newdata.ant_stat = ANT_OPEN;
-	break;
+        session->newdata.ant_stat = ANT_OPEN;
+        break;
     case 0:
         // Init
         FALLTHROUGH
@@ -2043,7 +2043,7 @@ static gps_mask_t ubx_msg_mon_hw(struct gps_device_t *session,
         FALLTHROUGH
     default:
         // Dunno...
-	break;
+        break;
     }
     if (0 < jamInd ||
         ANT_OK <= session->newdata.ant_stat) {
@@ -2056,9 +2056,9 @@ static gps_mask_t ubx_msg_mon_hw(struct gps_device_t *session,
              noisePerMs, agcCnt, aStatus, aPower, flags, jamInd);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "UBX: MON-HW:aStatus:%s aPower:%s flags:%s\n",
-	     val2str(aStatus, vaStatus),
-	     val2str(aPower, vaPower),
-	     flags2str(flags, vmon_hw_flags, buf2, sizeof(buf2)));
+             val2str(aStatus, vaStatus),
+             val2str(aPower, vaPower),
+             flags2str(flags, vmon_hw_flags, buf2, sizeof(buf2)));
     return mask;
 }
 
@@ -2212,7 +2212,7 @@ static gps_mask_t ubx_msg_mon_txbuf(struct gps_device_t *session,
 
     GPSD_LOG(LOG_IO, &session->context->errout,
              "UBX: MON-TXBUF: errors:%s\n",
-	     flags2str(errors, vmon_txbuf_errors, buf2, sizeof(buf2)));
+             flags2str(errors, vmon_txbuf_errors, buf2, sizeof(buf2)));
     return 0;
 }
 
@@ -2840,11 +2840,11 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
     GPSD_LOG(LOG_IO, &session->context->errout,
              "UBX: NAV-PVT: fixType:%s flags:%s flags2:%s flags3:%s "
              "valid:%s\n",
-	     val2str(fixType, vpvt_fixType),
-	     flags2str(flags, fnav_pvt_flags, buf2, sizeof(buf2)),
-	     flags2str(flags2, fpvt_flags2, buf3, sizeof(buf3)),
-	     flags2str(flags3, fpvt_flags3, buf4, sizeof(buf4)),
-	     flags2str(valid, fpvt_valid, buf5, sizeof(buf5)));
+             val2str(fixType, vpvt_fixType),
+             flags2str(flags, fnav_pvt_flags, buf2, sizeof(buf2)),
+             flags2str(flags2, fpvt_flags2, buf3, sizeof(buf3)),
+             flags2str(flags3, fpvt_flags3, buf4, sizeof(buf4)),
+             flags2str(valid, fpvt_valid, buf5, sizeof(buf5)));
     if (92 <= data_len) {
         // u-blox 8 and 9 extended
         double magDec = NAN;
@@ -3404,8 +3404,8 @@ static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
              session->gpsdata.satellites_used);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "UBX: NAV-SOL-PVT: gpsFix:%s flags:%s\n",
-	     val2str(gpsFix, vpvt_fixType),
-	     flags2str(flags, fhnr_pvt_flags, buf2, sizeof(buf2)));
+             val2str(gpsFix, vpvt_fixType),
+             flags2str(flags, fhnr_pvt_flags, buf2, sizeof(buf2)));
     return mask;
 }
 
@@ -3751,7 +3751,7 @@ static gps_mask_t ubx_msg_nav_timegps(struct gps_device_t *session,
              valid);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "UBX: NAV-TIMEGPS: valid %s\n",
-	     flags2str(valid, vtimegps_valid, buf2, sizeof(buf2)));
+             flags2str(valid, vtimegps_valid, buf2, sizeof(buf2)));
     return mask;
 }
 
@@ -3798,7 +3798,7 @@ static gps_mask_t ubx_msg_nav_timels(struct gps_device_t *session,
              "UBX: NAV-TIMELS: valid x%x version %d\n", valid, version);
     GPSD_LOG(LOG_INF, &session->context->errout,
              "UBX: NAV-TIMELS: valid %s\n",
-	     flags2str(valid, vtimels_valid, buf2, sizeof(buf2)));
+             flags2str(valid, vtimels_valid, buf2, sizeof(buf2)));
 
     valid_curr_ls = valid & UBX_TIMELS_VALID_CURR_LS;
     valid_time_to_ls_event = valid & UBX_TIMELS_VALID_TIME_LS_EVT;
