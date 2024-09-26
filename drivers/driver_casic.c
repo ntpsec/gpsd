@@ -278,23 +278,22 @@ static gps_mask_t msg_nav_dop(struct gps_device_t *session,
                               unsigned char *buf,
                               size_t payload_len)
 {
-    unsigned long u;
-
     if (28 > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
         "CASIC: NAV-DOP: runt payload len %zd", payload_len);
         return 0;
     }
 
-    session->gpsdata.dop.pdop = getlef32((char *)buf, 4);	// Location DOP
-    session->gpsdata.dop.hdop = getlef32((char *)buf, 8);	// Horizontal DOP
-    session->gpsdata.dop.vdop = getlef32((char *)buf, 12);	// Vertical DOP
-    session->gpsdata.dop.ydop = getlef32((char *)buf, 16);	// Northbound DOP
-    session->gpsdata.dop.xdop = getlef32((char *)buf, 20);	// Eastbound DOP
-    session->gpsdata.dop.tdop = getlef32((char *)buf, 24);	// Time DOP
+    session->gpsdata.dop.pdop = getlef32((char *)buf, 4);    // Location DOP
+    session->gpsdata.dop.hdop = getlef32((char *)buf, 8);    // Horizontal DOP
+    session->gpsdata.dop.vdop = getlef32((char *)buf, 12);   // Vertical DOP
+    session->gpsdata.dop.ydop = getlef32((char *)buf, 16);   // Northbound DOP
+    session->gpsdata.dop.xdop = getlef32((char *)buf, 20);   // Eastbound DOP
+    session->gpsdata.dop.tdop = getlef32((char *)buf, 24);   // Time DOP
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "CASIC: NAV-DOP: pdop=%.2f hdop=%.2f vdop=%.2f tdop=%.2f ydop=%.2f xdop=%.2f\n",
+             "CASIC: NAV-DOP: pdop=%.2f hdop=%.2f vdop=%.2f tdop=%.2f "
+             "ydop=%.2f xdop=%.2f\n",
              session->gpsdata.dop.pdop,
              session->gpsdata.dop.hdop,
              session->gpsdata.dop.vdop,
@@ -304,7 +303,6 @@ static gps_mask_t msg_nav_dop(struct gps_device_t *session,
 
     return DOP_SET;
 }
-
 
 /* msg_decode() -- dispatch all message types to proper decoder
  */
@@ -339,7 +337,7 @@ static gps_mask_t msg_decode(struct gps_device_t *session,
         p_decode = msg_mon_ver;
         break;
     case NAV_DOP:
-       msg_name ="NAV-DOP";
+        msg_name ="NAV-DOP";
         needed_len = 28;
         p_decode = msg_nav_dop;
         break;
