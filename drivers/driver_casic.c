@@ -133,6 +133,12 @@ static struct vlist_t vclass[] = {
     {0, NULL},
 };
 
+/* Conversion utilities.
+ * A CASIC "R4" field is a single precision IEEE 754 float
+ */
+#define CONVERT_R4(val) (((union { unsigned long ul; float f; } )val).f)
+
+
 /* send a CASIC message.
  * calculate checksums, etc.
  */
@@ -266,6 +272,57 @@ static gps_mask_t msg_mon_ver(struct gps_device_t *session,
     return 0;
 }
 
+/**
+ * Positioning precision factor
+ * NAV-DOP
+ *
+ * buf points to payload.
+ * payload_len is length of payload.
+ *
+ */
+static gps_mask_t msg_nav_dop(struct gps_device_t *session,
+                              unsigned char *buf,
+                              size_t payload_len)
+{
+    unsigned long u;
+
+    if (28 > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+        "CASIC: NAV-DOP: runt payload len %zd", payload_len);
+        return 0;
+    }
+
+    u = getleu32(buf, 4);
+    session->gpsdata.dop.pdop = CONVERT_R4(u);
+
+    u = getleu32(buf, 8);
+    session->gpsdata.dop.hdop = CONVERT_R4(u);
+
+    u = getleu32(buf, 12);
+    session->gpsdata.dop.vdop = CONVERT_R4(u);
+
+    u = getleu32(buf, 16);
+    session->gpsdata.dop.ydop = CONVERT_R4(u);
+
+    u = getleu32(buf, 20);
+    session->gpsdata.dop.xdop = CONVERT_R4(u);
+
+    u = getleu32(buf, 24);
+    session->gpsdata.dop.tdop = CONVERT_R4(u);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "CASIC: NAV-DOP: pdop=%.2f hdop=%.2f vdop=%.2f tdop=%.2f ydop=%.2f xdop=%.2f\n",
+             session->gpsdata.dop.pdop,
+             session->gpsdata.dop.hdop,
+             session->gpsdata.dop.vdop,
+             session->gpsdata.dop.tdop,
+             session->gpsdata.dop.ydop,
+             session->gpsdata.dop.xdop);
+
+    return DOP_SET;
+}
+
+
 /* msg_decode() -- dispatch all message types to proper decoder
  */
 static gps_mask_t msg_decode(struct gps_device_t *session,
@@ -297,6 +354,11 @@ static gps_mask_t msg_decode(struct gps_device_t *session,
         msg_name ="MON-VER";
         needed_len = 64;
         p_decode = msg_mon_ver;
+        break;
+    case NAV_DOP:
+       msg_name ="NAV-DOP";
+        needed_len = 28;
+        p_decode = msg_nav_dop;
         break;
     default:
         msg_name ="UNK-UNK";
