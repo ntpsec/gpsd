@@ -2429,10 +2429,12 @@ static gps_mask_t ubx_msg_nav_dop(struct gps_device_t *session,
              "UBX: NAV-DOP: gdop=%.2f pdop=%.2f "
              "hdop=%.2f vdop=%.2f tdop=%.2f ydop=%.2f xdop=%.2f\n",
              session->gpsdata.dop.gdop,
+             session->gpsdata.dop.pdop,
              session->gpsdata.dop.hdop,
              session->gpsdata.dop.vdop,
-             session->gpsdata.dop.pdop, session->gpsdata.dop.tdop,
-             session->gpsdata.dop.ydop, session->gpsdata.dop.xdop);
+             session->gpsdata.dop.tdop,
+             session->gpsdata.dop.ydop,
+             session->gpsdata.dop.xdop);
     return mask;
 }
 
