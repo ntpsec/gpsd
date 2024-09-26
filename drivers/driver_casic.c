@@ -133,12 +133,6 @@ static struct vlist_t vclass[] = {
     {0, NULL},
 };
 
-/* Conversion utilities.
- * A CASIC "R4" field is a single precision IEEE 754 float
- */
-#define CONVERT_R4(val) (((union { unsigned long ul; float f; } )val).f)
-
-
 /* send a CASIC message.
  * calculate checksums, etc.
  */
@@ -292,23 +286,12 @@ static gps_mask_t msg_nav_dop(struct gps_device_t *session,
         return 0;
     }
 
-    u = getleu32(buf, 4);
-    session->gpsdata.dop.pdop = CONVERT_R4(u);
-
-    u = getleu32(buf, 8);
-    session->gpsdata.dop.hdop = CONVERT_R4(u);
-
-    u = getleu32(buf, 12);
-    session->gpsdata.dop.vdop = CONVERT_R4(u);
-
-    u = getleu32(buf, 16);
-    session->gpsdata.dop.ydop = CONVERT_R4(u);
-
-    u = getleu32(buf, 20);
-    session->gpsdata.dop.xdop = CONVERT_R4(u);
-
-    u = getleu32(buf, 24);
-    session->gpsdata.dop.tdop = CONVERT_R4(u);
+    session->gpsdata.dop.pdop = getlef32((char *)buf, 4);	// Location DOP
+    session->gpsdata.dop.hdop = getlef32((char *)buf, 8);	// Horizontal DOP
+    session->gpsdata.dop.vdop = getlef32((char *)buf, 12);	// Vertical DOP
+    session->gpsdata.dop.ydop = getlef32((char *)buf, 16);	// Northbound DOP
+    session->gpsdata.dop.xdop = getlef32((char *)buf, 20);	// Eastbound DOP
+    session->gpsdata.dop.tdop = getlef32((char *)buf, 24);	// Time DOP
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "CASIC: NAV-DOP: pdop=%.2f hdop=%.2f vdop=%.2f tdop=%.2f ydop=%.2f xdop=%.2f\n",
