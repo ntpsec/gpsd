@@ -921,7 +921,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
             /* no GPS uses PRN 0, NMEA 4.0 here, NMEA 4.0 uses 1-437 */
             (void)mvwaddstr(satellites, sat_no + 2, column,
                             int_to_str(gpsdata->skyview[sat_no].PRN,
-                                       1, 438));
+                                       1, 462));
             column += 4;
             (void)mvwaddstr(satellites, sat_no + 2, column,
                             tenth_to_str(gpsdata->skyview[sat_no].elevation,
