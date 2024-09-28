@@ -918,7 +918,9 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
              * Geostar GPS receivers compute USI this way:
              * GPS is USI 1 to 32, SBAS is 33 to 64, GLONASS is 65 to 96 */
 
-            /* no GPS uses PRN 0, NMEA 4.0 here, NMEA 4.0 uses 1-437 */
+            /* No GPS uses PRN 0, NMEA 4.0 here, NMEA 4.0 uses 1-437; as
+             * of 2024, BeiDou's range is now to PRN C62 (i.e., 462)
+             */
             (void)mvwaddstr(satellites, sat_no + 2, column,
                             int_to_str(gpsdata->skyview[sat_no].PRN,
                                        1, 462));
