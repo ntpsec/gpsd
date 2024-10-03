@@ -370,6 +370,9 @@ sentences and decoding them.</dd>
 <dt><a href="ubxtool.html">ubxtool.1</a></dt>
 <dd>Configure and ommunicate with u-blox GPS from the command line.</dd>
 
+<dt><a href="xgps.html">xgps.1</a></dt>
+<dd>An X11 client for <code>gpsd</code>.</dd>
+
 <dt><a href="zerk.html">zerk.1</a></dt>
 <dd>An all purpose GREIS fitting. A command line tool for JAVAD GPS.</dd>
 
