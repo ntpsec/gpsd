@@ -101,7 +101,10 @@ constellation = 0
 # all mushed into the PRN.  Different GPS mush differently.  gpsd should
 # have untangled and put in gnssid:svid
 class gnss_text:
+    """Hold GNSS constellation data for later."""
+
     def __init__(self, gnss, abbvr, full, flag, marker_type, marker_subtype):
+        """Stash the GNSS constellation data."""
         self.gnss = gnss
         self.abbvr = abbvr
         self.full = full
@@ -172,8 +175,8 @@ and vertical tangents.
 
 
 class SkyView(Gtk.DrawingArea):
-
     """Satellite skyview, encapsulates pygtk's draw-on-expose behavior."""
+
     # See <http://faq.pygtk.org/index.py?req=show&file=faq18.008.htp>
     HORIZON_PAD = 65   # How much whitespace to leave around horizon
 
@@ -656,6 +659,7 @@ class SkyView(Gtk.DrawingArea):
 
 class AISView(object):
     """Encapsulate store and view objects for watching AIS data."""
+
     AIS_ENTRIES = 10
     DWELLTIME = 360
 
@@ -776,8 +780,8 @@ class AISView(object):
 
 
 class IMUView(object):
-
     """Encapsulate view object for watching ATT/IMU data."""
+
     COLUMNS = 4
     ROWS = 4
     imufields = (
@@ -842,8 +846,8 @@ class IMUView(object):
 
 
 class NoiseView(object):
-
     """Encapsulate view object for watching noise statistics."""
+
     COLUMNS = 2
     ROWS = 4
     noisefields = (
@@ -892,8 +896,8 @@ class NoiseView(object):
 
 
 class RTKView(object):
-
     """Encapsulate view object for watching ATT/RTK data."""
+
     COLUMNS = 3
     ROWS = 4
     rtkfields = (
@@ -953,8 +957,8 @@ class RTKView(object):
 
 
 class Base(object):
+    """The base class for all the output."""
 
-    """Base class for all the output"""
     ROWS = 9
     gps_in_fields = (
         # First column
@@ -1406,8 +1410,7 @@ frame * {
                           in zip(Base.gps_in_fields, gpswidgets)]
 
     def view_toggle(self, action, name):
-        """Toggle widget view"""
-
+        """Toggle widget view."""
         # print("View toggle:", action.get_active(), name)
         if hasattr(self, 'view_name_to_widget'):
             is_vis = self.view_name_to_widget[name].is_visible()
@@ -1677,7 +1680,7 @@ frame * {
             data.satellites_used = 0
 
             def key_sats(s):
-                """sat sort function.  Used, gnssid, svid, sigid."""
+                """Sort satellites.  Used, gnssid, svid, sigid."""
                 val = 1
                 if s.used:
                     val = 0
@@ -1814,7 +1817,7 @@ frame * {
         win = Gtk.Window(type=Gtk.WindowType.TOPLEVEL,
                          title="Attached Devices")
         win.set_border_width(20)
-        box = Gtk.VBox(spacing=6)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         win.add(box)
 
         def on_toggle(button, name):
@@ -1858,44 +1861,88 @@ frame * {
             self.daemon.sock = None
         win = Gtk.Window(type=Gtk.WindowType.TOPLEVEL, title="Connect?")
 
-        box = Gtk.Grid()
-        win.add(box)
+        grid_layout = Gtk.Grid()
+        win.add(grid_layout)
 
-        lbl = Gtk.Label(label="host, port and optional device")
-        box.attach(lbl, 0, 0, 2, 1)
+        label = Gtk.Label(label="host, port and optional device")
+        grid_layout.attach(label, 0, 0, 2, 1)
 
-        lbl = Gtk.Label(label="host")
-        box.attach(lbl, 0, 1, 1, 1)
+        label = Gtk.Label(label="host")
+        grid_layout.attach(label, 0, 1, 1, 1)
         host = Gtk.Entry()
         host.set_text(self.daemon.host)
-        box.attach(host, 1, 1, 1, 1)
+        grid_layout.attach(host, 1, 1, 1, 1)
 
-        lbl = Gtk.Label(label="port")
-        box.attach(lbl, 0, 2, 1, 1)
+        label = Gtk.Label(label="port")
+        grid_layout.attach(label, 0, 2, 1, 1)
         port = Gtk.SpinButton.new_with_range(1, 65535, 1)
         port.set_numeric(True)
         port.set_value(int(self.daemon.port))
-        box.attach(port, 1, 2, 1, 1)
+        grid_layout.attach(port, 1, 2, 1, 1)
 
-        lbl = Gtk.Label(label="device")
-        box.attach(lbl, 0, 3, 1, 1)
+        label = Gtk.Label(label="device")
+        grid_layout.attach(label, 0, 3, 1, 1)
         device = Gtk.Entry()
         device.set_text(self.device)
-        box.attach(device, 1, 3, 1, 1)
+        grid_layout.attach(device, 1, 3, 1, 1)
 
         def do_connect(_):
-            lister = [host.get_text(), port.get_value_as_int(), device.get_text()]
-            daemon = gps.gps(host=lister[0],
-                             port=lister[1],
-                             mode=(gps.WATCH_ENABLE | gps.WATCH_JSON |
-                                   gps.WATCH_SCALED),
-                             verbose=options.debug)
-            self.watch(daemon, lister[2])
-            win.destroy()
+            lister = [
+                host.get_text(),
+                port.get_value_as_int(),
+                device.get_text()
+            ]
+            try:
+                dsock = gps.gps(host=lister[0],
+                                port=lister[1],
+                                mode=(gps.WATCH_ENABLE |
+                                      gps.WATCH_JSON |
+                                      gps.WATCH_SCALED),
+                                verbose=options.debug)
+                self.watch(dsock, lister[2])
+                win.destroy()
+            except BaseException as my_error:
+                # schuck (error to wrapped string) then schuck last arg
+                print(repr(my_error))
+                error_class = str(my_error.__class__).split("'")[1]
+                error_description = my_error.args[-1]
+                error_map = {
+                    "socket.gaierror": [
+                        "Host/Port Lookup error",
+                        "Please ensure host and port values are correct."
+                    ],
+                    "OSError": [
+                        "OS Error",
+                        "The OS has encountered an error"
+                    ],
+                    "ConnectionRefusedError": [
+                        "Connection Refused",
+                        "Please ask the remote admin to open the server."
+                    ],
+                    "TimeoutError": [
+                        "Timed out",
+                        "The server did not respond in time."
+                    ],
+                }
+                error_title, error_text = error_map.get(
+                    error_class,
+                    [error_class + "!", "Something has gone wrong"]
+                )
+                error_dialog = Gtk.MessageDialog(
+                    transient_for=win,
+                    modal=True,
+                    message_type=Gtk.MessageType.ERROR,
+                    buttons=Gtk.ButtonsType.CANCEL,
+                    title=error_title)
+                error_dialog.format_secondary_text(
+                    "%s\n%s" % (error_text, error_description)
+                )
+                error_dialog.run()
+                error_dialog.destroy()
 
         button = Gtk.Button.new_with_mnemonic("_Open")
         button.connect("clicked", do_connect)
-        box.attach(button, 0, 4, 2, 1)
+        grid_layout.attach(button, 0, 4, 2, 1)
         win.show_all()
 
     def handle_response(self, source, condition):
@@ -1962,7 +2009,7 @@ frame * {
                                 destroy_with_parent=True,
                                 buttons=Gtk.ButtonsType.OK)
         win.connect("destroy", lambda _unused: win.destroy())
-        win.set_markup("gpsd has stopped sending data.")
+        win.set_markup("xgps disconnected.")
         win.run()
         win.destroy()
         return True
@@ -2182,7 +2229,7 @@ if __name__ == "__main__":
                               message_type=Gtk.MessageType.ERROR,
                               destroy_with_parent=True,
                               buttons=Gtk.ButtonsType.CANCEL)
-        w.set_markup("gpsd is not running on host %s port %s" %
+        w.set_markup("Failed connecting to gpsd on host %s port %s" %
                      (options.host, options.port))
         w.run()
         w.destroy()
