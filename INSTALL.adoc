@@ -1,6 +1,6 @@
 = GPSD Installation Instructions
 :author: Eric S. Raymond
-:date: 1 Apr 2024
+:date: 9 October Apr 2024
 :description: Steps for installing GPSD and verifying its performance.
 :docinfodir: www
 :email: <esr@thyrsus.com>
@@ -58,15 +58,10 @@ to GPS devices even after it drops root privileges.  If you are
 running Fedora Core, Ubuntu, or stock Debian you can skip this step,
 as the stock configuration has the right properties.
 
-gpsd requires two things: (1) that GPS devices have group read and
-write enabled, and (2) all of them have the same group ID as a
-prototypical device, typically /dev/ttyS0 under Linux or /dev/tty00
-under *BSD. It does not actually matter what the owning group is, as
-gpsd will look this up on startup.  Alternatively, (3), you can set a
-fallback group with the gpsd-group option in case the prototype is not
-found: this should be the group that has write access to serial
-devices.  On Debian and derivatives including Ubuntu this is "dialout";
-on Gentoo/Fedora/openSuse it is "uucp".
+gpsd requires two things: (1) that GPS devices have group read and write
+enabled, and (2) that group name is compiled into the gpsd binary.
+On Debian and derivatives including Ubuntu this is "dialout"; on
+Gentoo/Fedora/openSuse it is "uucp".
 
 Before dropping privileges, gpsd will ensure that it has access to
 devices given to it on the command line by forcing their group read

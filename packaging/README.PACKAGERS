@@ -21,11 +21,10 @@ Linux, this means at least /dev/ttyS*, /dev/ttyUSB*, and
 /dev/ttyACM*).
 
 The gpsd daemon needs to be started as root for best performance (it
-wants to nice itself, and needs root access to kernel PPS devices).
-But very soon after startup it drops privileges.  gpsd normally
-figures out which group it should move to by looking at the ownership
-of a prototypical tty (look in gpsd.c for this code) but the owning
-user and group can be compiled in with build-system options.
+wants to nice itself, and needs root access to kernel PPS devices).  But
+very soon after startup it drops privileges.  The default user and group
+set after dropping root are set at build time.  Look in gpsd.c for this
+priviledge dropping code.
 
 Make *sure* whatever group gpsd lands in after privilege-dropping has
 dialout access - otherwise your users will see mysterious failures

@@ -2732,9 +2732,10 @@ int main(int argc, char *argv[])
          * or had capabilities.  Dangerous!  Maybe.
          * Now, set the user ID to 'nobody' (or whatever the gpsd
          * user set by the build is) and the group ID to the owning
-         * group of a prototypical TTY device. This limits the scope
-         * of any compromises in the code.  It requires that all GPS
-         * devices have their group read/write permissions set.
+         * group of a typical TTY device (also set at build time).
+         * This limits the scope of any compromises in the code.  It
+         * requires that all GPS devices have their group read/write
+         * permissions set.
          */
         if (0 != setgroups(0, NULL)) {
             // Needs CAP_SETGID?
