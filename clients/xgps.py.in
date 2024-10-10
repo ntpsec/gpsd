@@ -1903,7 +1903,7 @@ frame * {
                 win.destroy()
             except BaseException as my_error:
                 # schuck (error to wrapped string) then schuck last arg
-                print(repr(my_error))
+                sys.stderr.write("xgps: new_connect caught %r\n" % my_error)
                 error_class = str(my_error.__class__).split("'")[1]
                 error_description = my_error.args[-1]
                 error_map = {
