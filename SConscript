@@ -594,6 +594,13 @@ env['SC_PYTHON'] = sys.executable  # Path to SCons Python
 #
 # This means all uses of LDFLAG in this file ae simply dead code.  Except
 # for the import from the environment passed to scons.
+#
+# OepnEmbedded (OE) has been hit because OE build environment adds
+# -fvisibility-inlines-hidden to CXXFLAGS (correctly), but SCons as it
+# is now, October 2024, (without the dictionary being passed to MergeFlags)
+# propagates this option to CCFLAGS. This makes GCC output a warning about a
+# C++/ObjC++-only option used for C, which makes tests (e.g. strerror_r)
+# fail as the warning turns into an error, masking test result.
 
 env['STRIP'] = "strip"
 env['PKG_CONFIG'] = "pkg-config"
@@ -633,7 +640,8 @@ for i in ["ARFLAGS",
 # They may be referenced by a linker script specified in LDFLAGS
 # (e.g. RPM_PACKAGE_NAME).  The build would fail without them.
 for key, value in os.environ.items():
-    if key.startswith('CCC_') or key.startswith('RPM_'):
+    if ((key.startswith('CCC_') or
+         key.startswith('RPM_'))):
         env.Append(ENV={key: value})
 
 # Placeholder so we can kluge together something like VPATH builds.
