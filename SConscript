@@ -1444,13 +1444,22 @@ if not cleaning and not helping:
 
     # handle manbuild = no/auto/yes
     # do we have asciidoctor, perhaps versioned?
-    adoc_prog = env.WhereIs('asciidoctor')
-    if (not adoc_prog):
-        adoc_prog = env.WhereIs('asciidoctor31')
-    if (not adoc_prog):
-        adoc_prog = env.WhereIs('asciidoctor30')
-    if (not adoc_prog):
-        adoc_prog = env.WhereIs('asciidoctor27')
+    # some distros fake a slot of asciidoctor by ruby version
+    for adoc_try in (
+        'asciidoctor',
+        'asciidoctor34',
+        'asciidoctor33',
+        'asciidoctor32',
+        'asciidoctor31',
+        'asciidoctor30',
+        'asciidoctor29',
+        'asciidoctor38',
+        'asciidoctor27'
+        ):
+        adoc_prog = env.WhereIs(adoc_try)
+        if (adoc_prog):
+            # found one
+            break;
 
     config.env['manbuild'] = config.env['manbuild'].lower()
     if ((not config.env['manbuild'] or
