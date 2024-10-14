@@ -1712,10 +1712,15 @@ if not cleaning and not helping and config.env['python']:
 
 
 # get a list of the files from git, so they can go in distribution zip/tar
-distfiles = config.TryAction("git ls-files > $TARGET")[1]
-distfiles = polystr(distfiles).split()
-# add in the built man pages, zip and tar files must contain man pages.
-distfiles += all_manpages.keys()
+result = config.TryAction("git ls-files > $TARGET")
+if 1 == result[0]:
+    distfiles = polystr(result[1]).split()
+    # add in the built man pages, zip and tar files must contain man pages.
+    distfiles += all_manpages.keys()
+else:
+    # Not in a git tree, can't make a tar file.
+    distfiles = []
+    announce("INFO: not building from git")
 
 env = config.Finish()
 # All configuration should be finished.  env can now be modified.
