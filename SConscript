@@ -1444,7 +1444,8 @@ if not cleaning and not helping:
 
     # handle manbuild = no/auto/yes
     # do we have asciidoctor, perhaps versioned?
-    # some distros fake a slot of asciidoctor by ruby version
+    # Debian, Fedora, Gentoo, and related distributions use "asciidoctor".
+    # NetBSD and some other distributions use Ruby versioned asciidoctor.
     for adoc_try in (
         'asciidoctor',
         'asciidoctor34',
