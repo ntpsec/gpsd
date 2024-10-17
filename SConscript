@@ -1453,8 +1453,6 @@ if not cleaning and not helping:
         'asciidoctor32',
         'asciidoctor31',
         'asciidoctor30',
-        'asciidoctor29',
-        'asciidoctor38',
         'asciidoctor27'
         ):
         adoc_prog = env.WhereIs(adoc_try)
