@@ -228,7 +228,8 @@ class plotter(object):
                                   options.wait))))
             signal.siginterrupt(signal.SIGUSR1, False)
             self.session.stream(flags, options.device)
-            baton = gps.client.baton("gpsprof: %d looking for fix" % os.getpid(), "done")
+            baton = gps.client.baton("gpsprof: %d looking for fix" %
+                                     os.getpid(), "done")
             countdown = options.wait
             basetime = time.time()
             while 0 < countdown:
@@ -320,7 +321,8 @@ class spaceplot(plotter):
     def sample(self):
         """Grab samples."""
         # Watch out for the NaN value from gps.py.
-        if (((self.in_replot or self.session.valid) and
+        if (((self.in_replot or
+              self.session.valid) and
              "TPV" == self.session.data["class"] and
              # Skip TPV without an actual fix.
              gps.MODE_2D <= self.session.data["mode"])):
@@ -774,7 +776,8 @@ class polarplot(plotter):
                     used += 1
                     if 'polarunused' == self.name:
                         continue
-                if (('polarused' == self.name) and (sat['used'] is False)):
+                if (('polarused' == self.name and
+                     sat['used'] is False)):
                     continue
                 self.fixes.append((sat['PRN'], sat['ss'], sat['az'],
                                   sat['el'], sat['used']))

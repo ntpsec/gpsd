@@ -61,7 +61,8 @@ class gpscommon(object):
             # file input, binary mode, for binary data.
             self.input_fd = open(input_file_name, "rb")
 
-        elif host is not None and port is not None:
+        elif ((host is not None and
+               port is not None)):
             self.host = host
             self.port = port
             self.connect(self.host, self.port)
@@ -74,7 +75,8 @@ class gpscommon(object):
         there is no port specified, that suffix will be stripped off and the
         number interpreted as the port number to use.
         """
-        if not port and (host.find(':') == host.rfind(':')):
+        if ((not port and
+             (host.find(':') == host.rfind(':')))):
             i = host.rfind(':')
             if 0 <= i:
                 host, port = host[:i], host[i + 1:]
@@ -118,7 +120,8 @@ class gpscommon(object):
 
     def waiting(self, timeout=0):
         """Return True if data is ready for the client."""
-        if self.linebuffer or self.input_fd:
+        if ((self.linebuffer or
+             self.input_fd)):
             # check for input_fd EOF?
             return True
         if self.sock is None:
@@ -130,7 +133,8 @@ class gpscommon(object):
 
     def read(self):
         """Wait for and read data being streamed from the daemon."""
-        if not self.input_fd and None is self.sock:
+        if ((not self.input_fd and
+             None is self.sock)):
             # input_fd.open() was earlier, and read_only, so no stream()
             self.connect(self.host, self.port)
             if None is self.sock:
@@ -392,7 +396,8 @@ class baton(object):
 
     def twirl(self, ch=None):
         """Twirl the baton."""
-        if self.stream is None or not self.tty:
+        if ((self.stream is None or
+             not self.tty)):
             return
         now = int(time.time())
         if ch:

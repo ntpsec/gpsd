@@ -79,7 +79,8 @@ def fakehook(linenumber, fakegps):
         sys.stderr.write("fakegps: no sentences in test load.\n")
         raise SystemExit(1)
     if linenumber % len(fakegps.testload.sentences) == 0:
-        if options.singleshot and linenumber > 0:
+        if ((options.singleshot and
+             0 < linenumber)):
             return False
         if options.progress:
             baton.twirl('*\b')
@@ -88,7 +89,8 @@ def fakehook(linenumber, fakegps):
                 sys.stderr.write("gpsfake: log cycle of %s begins.\n"
                                  % fakegps.testload.name)
     time.sleep(options.cycle)
-    if options.linedump and fakegps.testload.legend:
+    if ((options.linedump and
+         fakegps.testload.legend)):
         ml = fakegps.testload.sentences[
             linenumber % len(fakegps.testload.sentences)].strip()
         if not fakegps.testload.textual:
@@ -373,7 +375,8 @@ if __name__ == '__main__':
     if options.timeout:
         timeout = options.timeout
 
-    if not options.tcp and not options.udp:
+    if ((not options.tcp and
+         not options.udp)):
         try:
             pty.openpty()
         except (AttributeError, OSError):
@@ -382,12 +385,14 @@ if __name__ == '__main__':
             options.udp = True
 
     if options.progress:
-        baton = gps.client.baton("Processing %s" % ",".join(options.arguments), "done")
+        baton = gps.client.baton("Processing %s" %
+                                 ",".join(options.arguments), "done")
     elif not options.quiet:
         sys.stderr.write("Processing %s\n" % ",".join(options.arguments))
 
     # Don't allocate a private port when cycling logs for client testing.
-    if options.port is None and not options.pipe:
+    if ((options.port is None and
+         not options.pipe)):
         options.port = int(gps.GPSD_PORT)
 
     test = gpsfake.TestSession(options=doptions,

@@ -213,7 +213,8 @@ class SkyView(Gtk.DrawingArea):
                  options.marker >= abs(y - event.y))):
                 # got a sat match under the mouse
                 # print((x, y))
-                if ((self.pop_xy[0] and self.pop_xy[1] and
+                if ((self.pop_xy[0] and
+                     self.pop_xy[1] and
                      (int(x), int(y)) == self.pop_xy)):
                     # popup already up here, ignore event
                     # print("(%d, %d)" % (x, y))
@@ -227,7 +228,8 @@ class SkyView(Gtk.DrawingArea):
                 # mouse is over a satellite, do popup
                 self.pop_xy = (int(x), int(y))
                 self.popover = Gtk.Popover()
-                if "gnssid" in sat and "svid" in sat:
+                if (("gnssid" in sat and
+                     "svid" in sat)):
                     # gnssid:svid in gpsd 3.18 and up
                     constellation = gnss_details[sat.gnssid].full
                     gnss_str = "%-8s     %4d\n" % (constellation, sat.svid)
@@ -1450,7 +1452,8 @@ frame * {
 
     def update_latitude(self, data):
         """Update latitude."""
-        if gps.MODE_2D <= data.mode and hasattr(data, "lat"):
+        if ((gps.MODE_2D <= data.mode and
+             hasattr(data, "lat"))):
             lat = gps.clienthelpers.deg_to_str(self.deg_type, data.lat)
             if 0 > data.lat:
                 ns = 'S'
@@ -1462,7 +1465,8 @@ frame * {
 
     def update_longitude(self, data):
         """Update longitude."""
-        if gps.MODE_2D <= data.mode and hasattr(data, "lon"):
+        if ((gps.MODE_2D <= data.mode and
+             hasattr(data, "lon"))):
             lon = gps.clienthelpers.deg_to_str(self.deg_type, data.lon)
             if 0 > data.lon:
                 ew = 'W'
@@ -1476,12 +1480,14 @@ frame * {
         """Update altitude."""
         ret = "n/a"
         if gps.MODE_3D <= data.mode:
-            if 0 == item and hasattr(data, "altHAE"):
+            if ((0 == item and
+                 hasattr(data, "altHAE"))):
                 ret = ("%10.3f %s" %
                        ((data.altHAE * self.conversions.altfactor),
                         self.conversions.altunits))
 
-            if 1 == item and hasattr(data, "altMSL"):
+            if ((1 == item and
+                 hasattr(data, "altMSL"))):
                 ret = ("%10.3f %s" %
                        ((data.altMSL * self.conversions.altfactor),
                         self.conversions.altunits))
@@ -1508,23 +1514,27 @@ frame * {
 
     def update_track(self, data, item):
         """Update track."""
-        if 0 == item and hasattr(data, "track"):
+        if ((0 == item and
+             hasattr(data, "track"))):
             return "%14s " % (
                 gps.clienthelpers.deg_to_str(self.deg_type, data.track))
 
-        if 1 == item and hasattr(data, "magtrack"):
-            return "%14s " % (
-                gps.clienthelpers.deg_to_str(self.deg_type, data.magtrack))
+        if ((1 == item and
+             hasattr(data, "magtrack"))):
+            return ("%14s " %
+                    gps.clienthelpers.deg_to_str(self.deg_type, data.magtrack))
 
         return "n/a"
 
     def update_seen(self, data, item):
         """Update sats seen."""
         # update sats seen/used in the GPS Data window
-        if 0 == item and hasattr(data, 'satellites_seen'):
+        if ((0 == item and
+             hasattr(data, 'satellites_seen'))):
             return getattr(data, 'satellites_seen')
 
-        if 1 == item and hasattr(data, 'satellites_used'):
+        if ((1 == item and
+             hasattr(data, 'satellites_used'))):
             return getattr(data, 'satellites_used')
 
         return self.old_sats[item]
@@ -1617,7 +1627,8 @@ frame * {
         if gps.MODE_2D == data.mode:
             status = "2D%s FIX" % sub_status
         elif gps.MODE_3D == data.mode:
-            if hasattr(data, 'status') and gps.STATUS_TIME == data.status:
+            if ((hasattr(data, 'status') and
+                 gps.STATUS_TIME == data.status)):
                 status = "FIXED SURVEYED"
             else:
                 status = "3D%s FIX" % sub_status
@@ -1641,10 +1652,12 @@ frame * {
                 widget.set_markup(markup % hook(self, tpv))
         if self.sky_view:
             if ((self.rotate is None and
-                 hasattr(tpv, 'lat') and hasattr(tpv, 'lon'))):
+                 hasattr(tpv, 'lat') and
+                 hasattr(tpv, 'lon'))):
                 self.sky_view.rotate = gps.clienthelpers.mag_var(tpv.lat,
                                                                  tpv.lon)
-            elif self.rotate is True and 'track' in tpv:
+            elif ((self.rotate is True and
+                   'track' in tpv)):
                 self.sky_view.rotate = tpv.track
 
     def update_version(self, ver):
@@ -1786,7 +1799,8 @@ frame * {
     def set_step_of_grid(self, system, handle):
         """Change the step of grid."""
         # print("set_step_of_grid:", system, handle)
-        if hasattr(self, 'sky_view') and self.sky_view is not None:
+        if ((hasattr(self, 'sky_view') and
+             self.sky_view is not None)):
             self.sky_view.step_of_grid = handle
 
     def set_deg(self, _unused, handle):
@@ -2199,7 +2213,8 @@ if __name__ == "__main__":
     ltarget = [options.host, options.port, options.device]
     target = ':'.join(ltarget)
 
-    if 'DISPLAY' not in os.environ or not os.environ['DISPLAY']:
+    if (('DISPLAY' not in os.environ or
+         not os.environ['DISPLAY'])):
         sys.stderr.write("xgps: ERROR: DISPLAY not set\n")
         sys.exit(1)
 
