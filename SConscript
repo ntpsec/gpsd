@@ -23,7 +23,7 @@ try:
     # sysconfig since 2.7, still in 3.13
     import sysconfig
     PYTHON_SYSCONFIG_IMPORT = 'import sysconfig'
-except:
+except ModuleNotFoundError:
     # distutils gone in 3.13, but needed for 2.6
     from distutils import sysconfig
     PYTHON_SYSCONFIG_IMPORT = 'from distutils import sysconfig'
@@ -93,7 +93,7 @@ def polystr(o):
     raise ValueError
 
 
-def strtobool (val):
+def strtobool(val):
     val = val.lower()
     if val in ('y', 'yes', 't', 'true', 'on', '1'):
         return True
@@ -267,7 +267,6 @@ usermail = "gpsd-users@lists.nongnu.org"
 webform = "http://www.thyrsus.com/cgi-bin/gps_report.cgi"
 website = "https://gpsd.io/"
 # Hosting information ends here
-
 
 
 # Utility productions
@@ -522,7 +521,7 @@ if 'dev' in gpsd_version:
             files = FileList(['../*.c', '../*/*.c', '../*.cpp', '../*/*.cpp',
                               '../include/*.h', '../*.in', '../*/*.in',
                               '../SConstruct', '../SConscript'],
-                              '../%s' % variantdir)
+                             '../%s' % variantdir)
             timestamps = map(GetMtime, files)
             if timestamps:
                 from datetime import datetime
@@ -1323,10 +1322,8 @@ if not cleaning and not helping:
             confdefs.append("/* #undef HAVE_%s_H */\n"
                             % hdr.replace("/", "_").upper())
 
-
     if not config.CheckFlt_Eval_Method():
         announce("WARNING: FLT_EVAL_METHOD is not 0")
-
 
     if config.CheckStrerror_r():
         # POSIX behavior
@@ -1373,7 +1370,8 @@ if not cleaning and not helping:
         else:
             confdefs.append("/* #undef HAVE_%s */\n" % f.upper())
 
-    # used to check for sincos(), but making that work with -Werror did not work.
+    # used to check for sincos(), but making that work with
+    # -Werror did not work.
 
     if config.CheckHeader(["sys/types.h", "sys/time.h", "sys/timepps.h"]):
         confdefs.append("#define HAVE_SYS_TIMEPPS_H 1\n")
@@ -1446,19 +1444,17 @@ if not cleaning and not helping:
     # do we have asciidoctor, perhaps versioned?
     # Debian, Fedora, Gentoo, and related distributions use "asciidoctor".
     # NetBSD and some other distributions use Ruby versioned asciidoctor.
-    for adoc_try in (
-        'asciidoctor',
-        'asciidoctor34',
-        'asciidoctor33',
-        'asciidoctor32',
-        'asciidoctor31',
-        'asciidoctor30',
-        'asciidoctor27'
-        ):
+    for adoc_try in ('asciidoctor',
+                     'asciidoctor34',
+                     'asciidoctor33',
+                     'asciidoctor32',
+                     'asciidoctor31',
+                     'asciidoctor30',
+                     'asciidoctor27'):
         adoc_prog = env.WhereIs(adoc_try)
         if (adoc_prog):
             # found one
-            break;
+            break
 
     config.env['manbuild'] = config.env['manbuild'].lower()
     if ((not config.env['manbuild'] or
@@ -1507,31 +1503,30 @@ if not cleaning and not helping:
     #
     # Do this after the other config checks, to keep warnings out of them.
     for option in (
-        # -Wall and Wextra first as they modify later options
-        '-Wall',
-        '-Wextra',
-        # clang: ask for C Annex F standard floating point
-        '--disable-excess-fp-precision',
-        # gcc: ask for C Annex F standard floating point
-        '-fexcess-precision=standard',
+                   # -Wall and Wextra first as they modify later options
+                   '-Wall',
+                   '-Wextra',
+                   # clang: ask for C Annex F standard floating point
+                   '--disable-excess-fp-precision',
+                   # gcc: ask for C Annex F standard floating point
+                   '-fexcess-precision=standard',
 
-        '-Wcast-align',
-        '-Wcast-qual',
-        # -Wimplicit-fallthrough same as
-        # -Wimplicit-fallthrough=3, except osX hates the
-        # second flavor
-        '-Wimplicit-fallthrough',
-        # '-Wimplicit-function-declaration',     # someday, annoys C++
-        '-Wmissing-declarations',
-        '-Wmissing-prototypes',
-        '-Wno-missing-field-initializers',
-        '-Wno-uninitialized',
-        '-Wpointer-arith',
-        '-Wreturn-type',
-        '-Wstrict-prototypes',
-        '-Wundef',
-        '-Wvla',
-        ):
+                   '-Wcast-align',
+                   '-Wcast-qual',
+                   # -Wimplicit-fallthrough same as
+                   # -Wimplicit-fallthrough=3, except osX hates the
+                   # second flavor
+                   '-Wimplicit-fallthrough',
+                   # '-Wimplicit-function-declaration',  # someday, annoys C++
+                   '-Wmissing-declarations',
+                   '-Wmissing-prototypes',
+                   '-Wno-missing-field-initializers',
+                   '-Wno-uninitialized',
+                   '-Wpointer-arith',
+                   '-Wreturn-type',
+                   '-Wstrict-prototypes',
+                   '-Wundef',
+                   '-Wvla'):
         if option not in config.env['CFLAGS']:
             config.CheckCompilerOption(option)
 
@@ -1626,7 +1621,6 @@ if not cleaning and not helping and config.env['python']:
             announce("Use the target_python=XX configuration option if you "
                      "have a working python target.")
             config.env['python'] = False
-
 
     if config.env['python']:
         if not target_python_path:
@@ -1937,13 +1931,11 @@ libraries = [libgps_shared, packet_ffi_shared]
 if qt_env:
     qtobjects = []
     qt_flags = qt_env['CFLAGS']
-    for c_only in (
-        '--disable-excess-fp-precision',
-        '-fexcess-precision=standard',
-        '-Wmissing-prototypes',
-        '-Wstrict-prototypes',
-        '-Wmissing-declarations'
-        ):
+    for c_only in ('--disable-excess-fp-precision',
+                   '-fexcess-precision=standard',
+                   '-Wmissing-prototypes',
+                   '-Wstrict-prototypes',
+                   '-Wmissing-declarations'):
         if c_only in qt_flags:
             qt_flags.remove(c_only)
     # Qt binding object files have to be renamed as they're built to avoid
@@ -2152,14 +2144,16 @@ test_gpsdclient = env.Program('tests/test_gpsdclient',
                               [libgps_static, 'tests/test_gpsdclient.c'],
                               LIBS=[libgps_static, 'm'])
 test_matrix = env.Program('tests/test_matrix',
-                          [libgpsd_static, libgps_static, 'tests/test_matrix.c'],
+                          [libgpsd_static, libgps_static,
+                           'tests/test_matrix.c'],
                           LIBS=[libgpsd_static, libgps_static],
                           parse_flags=gpsdflags)
 test_mktime = env.Program('tests/test_mktime',
                           [libgps_static, 'tests/test_mktime.c'],
                           LIBS=[libgps_static], parse_flags=mathlibs + rtlibs)
 test_packet = env.Program('tests/test_packet',
-                          [libgpsd_static, libgps_static,'tests/test_packet.c'],
+                          [libgpsd_static, libgps_static,
+                           'tests/test_packet.c'],
                           LIBS=[libgpsd_static, libgps_static],
                           parse_flags=gpsdflags)
 test_timespec = env.Program('tests/test_timespec', ['tests/test_timespec.c'],
@@ -2461,8 +2455,8 @@ if adoc_prog:
         target = 'www/%s.html' % os.path.basename(man[:-2])
         env.Depends(src, ['www/docinfo.html', 'www/inc-menu.adoc'])
         tgt = env.Command(target, src,
-            '%s -b html5 %s -a docinfodir=../www/ -o $TARGET $SOURCE' %
-            (adoc_prog, adoc_args))
+                          '%s -b html5 %s -a docinfodir=../www/ '
+                          '-o $TARGET $SOURCE' % (adoc_prog, adoc_args))
         asciidocs.append(tgt)
 else:
     # can't build man pages, maybe we have pre-built ones?
@@ -2517,8 +2511,8 @@ if adoc_prog:
                           'www/example2.py.txt',
                           'www/inc-menu.adoc'])
         tgt = env.Command(target, '%s.adoc' % src,
-            '%s -b html5 %s -o $TARGET $SOURCE' %
-            (adoc_prog, adoc_args))
+                          '%s -b html5 %s -o $TARGET $SOURCE' %
+                          (adoc_prog, adoc_args))
         asciidocs.append(tgt)
 
 # Non-asciidoc, plain html webpages only
