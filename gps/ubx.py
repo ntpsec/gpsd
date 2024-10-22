@@ -9293,7 +9293,7 @@ present in 9-series and higher
         """UBX-LOG-STRING, send string to log"""
 
         if 0 < len(args):
-            s = args[0:256]
+            s = args[0][0:256]
         else:
             s = "Hi"
 
