@@ -1,5 +1,5 @@
 /*
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -47,6 +47,24 @@
 #  endif  // CNEW_RTSCTS
 #endif    // !CRTSCTS
 
+// soupcetypes
+static struct vlist_t sourcetypes[] = {
+    {SOURCE_UNKNOWN, "Unknown"},
+    {SOURCE_BLOCKDEV, "Blockdev"},
+    {SOURCE_RS232, "Serial"},
+    {SOURCE_USB, "USB"},
+    {SOURCE_BLUETOOTH, "Bluetooth"},
+    {SOURCE_CAN, "Canbus"},
+    {SOURCE_PTY, "PTY"},
+    {SOURCE_TCP, "TCP"},
+    {SOURCE_UDP, "UDP"},
+    {SOURCE_GPSD, "GPSD JSON"},
+    {SOURCE_PPS, "PPS"},
+    {SOURCE_PIPE, "PIPE"},
+    {SOURCE_ACM, "ACM"},
+    {0, NULL},
+};
+
 // figure out what kind of device we're looking at
 static sourcetype_t gpsd_classify(struct gps_device_t *session)
 {
@@ -59,13 +77,33 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
                  session->gpsdata.dev.path, strerror(errno), errno);
         return SOURCE_UNKNOWN;
     }
-    if (S_ISREG(sb.st_mode)) {
+    switch (sb.st_mode & S_IFMT) {
+    case S_IFBLK:
+        // block device
         return SOURCE_BLOCKDEV;
-    }
-
-    // this assumes we won't get UDP from a filesystem socket
-    if (S_ISSOCK(sb.st_mode)) {
+    case S_IFCHR:
+        // some char device
+        break;
+    case S_IFDIR:
+        // directory??
+        return SOURCE_UNKNOWN;
+    case S_IFIFO:
+        return SOURCE_PIPE;
+    case S_IFLNK:
+        // symlink ?!, assume char??
+        break;
+    case S_IFREG:
+        // regular file
+        return SOURCE_BLOCKDEV;
+    case S_IFSOCK:
+        // this assumes we won't get UDP from a filesystem socket
         return SOURCE_TCP;
+    default:
+        // huh??
+        GPSD_LOG(LOG_WARNING, &session->context->errout,
+                 "SER: gpsd_classify(%s) Unkown st_mode %d\n",
+                 path, sb.st_mode & S_IFMT);
+        break;
     }
 
     // OS-independent check for ptys using Unix98 naming convention
@@ -78,11 +116,7 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
         return SOURCE_PPS;
     }
 
-    if (S_ISFIFO(sb.st_mode)) {
-        return SOURCE_PIPE;
-    }
-
-     if (S_ISCHR(sb.st_mode)) {
+    if (S_ISCHR(sb.st_mode)) {
         sourcetype_t devtype = SOURCE_RS232;
 #ifdef __linux__
         /* Linux major device numbers live here
@@ -119,9 +153,49 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
 
         case 4:      // TTY Devices
             FALLTHROUGH
+        case 22:     // Digiboard serial card
+            FALLTHROUGH
+        case 23:     // Digiboard serial card
+            FALLTHROUGH
+        case 24:     // Stallion serial card
+            FALLTHROUGH
+        case 32:     // Specialx serial card
+            FALLTHROUGH
+        case 46:     // Rocketport serial card
+            FALLTHROUGH
+        case 48:     // SDL RISCom serial card
+            FALLTHROUGH
+        case 57:     // Hayes ESP serial card
+            FALLTHROUGH
+        case 71:     // Computone IntelliPort II serial card
+            FALLTHROUGH
+        case 75:     // Specialix IO8+ serial card
+            FALLTHROUGH
+        case 105:    // Comtrol VS-1000+ serial card
+            FALLTHROUGH
+        case 112:    // ISI serial card
+            FALLTHROUGH
+        case 148:    // TCL serial card
+            FALLTHROUGH
+        case 154:    // Specialix RIO serial card
+            FALLTHROUGH
+        case 156:    // Specialix RIO serial card
+            FALLTHROUGH
+        case 164:    // Chase Research serial card
+            FALLTHROUGH
+        case 172:    // Moxa Intellio serial card
+            FALLTHROUGH
+        case 174:    // SmartIO serial card
+            FALLTHROUGH
         case 204:    // Low-density serial ports
             FALLTHROUGH
         case 207:    // 207 FREESCALE I.MX UARTS (TTYMXC*)
+            FALLTHROUGH
+        case 208:    // User space serial ports
+            FALLTHROUGH
+        case 210:    // SBE serial ports
+            FALLTHROUGH
+        case 2224:    // A2232 serial ports
             devtype = SOURCE_RS232;
             break;
 
@@ -145,12 +219,16 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
             devtype = SOURCE_BLUETOOTH;
             break;
 
-        default:     // Give up, default to rs232
-            /* reports that Buildroot may usa major 241 for serial,
+        default:
+            /* 234 to 254 Reserved for dynamic assignment
+             * 240 to 254 Reserved for local/experimental use
+             *
+             * reports that Buildroot may use major 241 for serial,
              *  instead of its documented purpose (usbmon). */
             GPSD_LOG(LOG_WARNING, &session->context->errout,
                      "SER: gpsd_classify(%s) Unkown Major Device # %d\n",
                      path, devmajor);
+            // Give up, default to rs232
             devtype = SOURCE_RS232;
             break;
         }
@@ -752,8 +830,9 @@ int gpsd_serial_open(struct gps_device_t *session)
 
     // cast for 32-bit intptr_t
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SER: gpsd_serial_open(%s) sourcetype %d fd %ld\n",
+             "SER: gpsd_serial_open(%s) sourcetype %s(%d) fd %ld\n",
              session->gpsdata.dev.path,
+             val2str(session->sourcetype, sourcetypes),
              session->sourcetype,
              (long)session->gpsdata.gps_fd);
 
@@ -770,7 +849,7 @@ int gpsd_serial_open(struct gps_device_t *session)
     }
 
     if (session->context->readonly ||
-        (SOURCE_BLOCKDEV >= session->sourcetype)) {
+        SOURCE_BLOCKDEV >= session->sourcetype) {
         mode = (mode_t) O_RDONLY;
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "SER: opening read-only GPS data source type %d at '%s'\n",
@@ -800,7 +879,8 @@ int gpsd_serial_open(struct gps_device_t *session)
         if (-1 == connect(session->gpsdata.gps_fd,
                           (struct sockaddr *) &addr,
                           sizeof (addr))) {
-            if (EINPROGRESS != errno && EAGAIN != errno) {
+            if (EINPROGRESS != errno &&
+                EAGAIN != errno) {
                 (void)close(session->gpsdata.gps_fd);
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
                          "SER: bluetooth socket connect failed: %s(%d)\n",
@@ -914,7 +994,7 @@ int gpsd_serial_open(struct gps_device_t *session)
     }
 
     // Save original terminal parameters, why?
-    //  At least it tests we can read port parameters.
+    // At least it tests we can read port parameters.
     if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
         // Maybe still useable somehow?  cast for 32-bit intptr_t
         GPSD_LOG(LOG_ERROR, &session->context->errout,
