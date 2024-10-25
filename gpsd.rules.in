@@ -25,7 +25,7 @@
 
 SUBSYSTEM!="gnss", GOTO="gpsd_tty_rules"
 
-ACTION=="add", SUBSYSTEM=="gnss", GROUP="dialout", @UDEVCOMMAND@
+ACTION=="add", SUBSYSTEM=="gnss", GROUP="@GROUP@", @UDEVCOMMAND@
 ACTION=="remove", SUBSYSTEM=="gnss", @UDEVCOMMAND@
 
 # SUBSYSTEM "tty"

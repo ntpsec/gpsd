@@ -390,11 +390,9 @@ for (name, default, helpd) in boolopts:
 def_target_python = "python"
 def_python_shebang = "/usr/bin/env %s" % def_target_python
 
-# Gentoo, Fedora, openSUSE systems use uucp for ttyS* and ttyUSB*
-if os.path.exists("/etc/gentoo-release"):
-    def_group = "uucp"
-else:
-    def_group = "dialout"
+# Gentoo, Fedora, openSUSE systems use dialout for ttyS*, ttyUSB*, and similar
+# As of October 2024, we only know distros that use "dialout"
+def_group = "dialout"
 
 # darwin and BSDs do not have /run, maybe others.
 if os.path.exists("/run"):
@@ -2325,6 +2323,7 @@ substmap = (
     ('@GPSAPIVERMAJ@', api_version_major),
     ('@GPSAPIVERMIN@', api_version_minor),
     ('@GPSPACKET@',  packet_ffi_shared[0].get_path()),
+    ('@GROUP@',  def_group),
     ('@ICONPATH@',   installdir('icondir', add_destdir=False)),
     ('@INCLUDEDIR@', installdir('includedir', add_destdir=False)),
     ('@IRCCHAN@',    ircchan),
