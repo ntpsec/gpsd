@@ -1,10 +1,41 @@
 # udev rules for gpsd
 # @GENERATED@
 #
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
-# Most GNSS receivers do not have their own USB device class. They are
+# The rules in this file handle devices in subsystems "tty" and
+# "gnss".
+
+# Subsystem "gnss" includes devices handled by the "gnss" kernel
+# modules.  The "gnss" devices are primarly configured using device
+# tree options.  They may use I2C, DDC, gpio connections in place of,
+# or in addition to, plain serial connections.  They may also allow the
+# kernel to control the power state, sleep state and other properties of
+# embedded devices.
+
+# Traditional GNSS and GPS receivers, using traditional serial ports or
+# USB ports use the "tty" subsystem, not the "gnss subsystem.  Unless
+# you have a phone, or other embedded device using device tree, these
+# rules are what you are looking for.
+
+
+# SUBSYSTEM "gnss"
+# The rules in this section only apply to sybsystem "gnss".
+
+SUBSYSTEM!="gnss", GOTO="gpsd_tty_rules"
+
+ACTION=="add", SUBSYSTEM=="gnss", GROUP="dialout", @UDEVCOMMAND@
+ACTION=="remove", SUBSYSTEM=="gnss", @UDEVCOMMAND@
+
+# SUBSYSTEM "tty"
+# The rules in this section only apply to sybsystem "tty".
+# Subsystem "tty" includes most of the traditional /dev/ttyXX devices.
+LABEL="gpsd_tty_rules"
+
+SUBSYSTEM!="tty", GOTO="gpsd_rules_end"
+
+# Older GNSS receivers do not have their own USB device class. They are
 # serial only devices, and use serial-over-USB devices, so what you see
 # is actually the ID of the serial-over-USB chip. Fortunately, just
 # two of these account for over 80% of consumer-grade GPS sensors. The
@@ -12,9 +43,13 @@
 # look at the device that just went active, because it might be a GNSS
 # device.
 #
-# Distributions, and users, should not activate this file by default. It
-# will generate a lot of false positives. Only activate when you know a
-# GNSS receiver is used.
+# Newer GNSS receivers may have a USB ID that uniquely identifies them
+# as GNSS receivers.
+#
+# The generic serial-over-USB devices are commented out in the file to
+# prevent gpsd from taking over non GNSS serial devices.  If you
+# have one of these devices, and wish auto detection to work, uncomment
+# them.
 #
 # The following setup works on Debian and Ubuntu - something similar
 # will apply on other distributions:
@@ -22,13 +57,8 @@
 #   /lib/udev/rules.d/25-gpsd.rules
 #   /lib/udev/gpsd.hotplug
 #
-# Setting the link in /lib/udev/rules.d activates the rule and
-# determines when to run it on boot (similar to init.d processing).
-#
 # These rules are sorted by idVenbdor and idProduct to make it easier
 # to find specific rules, and prevent duplicates.
-
-SUBSYSTEM!="tty", GOTO="gpsd_rules_end"
 
 # FTDI 8U232AM / FT232 [linux module: ftdi_sio]
 # rule disabled because it matches way too many generic serial converters
