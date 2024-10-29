@@ -116,7 +116,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
     // FIXME: need a way to bypass these DNS calls if host is an IP.
     if ((ret = getaddrinfo(host, service, &hints, &result))) {
         if (NULL != result) {
-            /* Rree the space getaddrinfo() allocated, if any.
+            /* Free the space getaddrinfo() allocated, if any.
              * glibc can handle freeaddrinfo(NULL),
              * but musl 1.2.5 (2024), and earlier, can not. */
             freeaddrinfo(result);
@@ -125,7 +125,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
         // quick check to see if the problem was host or service
         ret = getaddrinfo(NULL, service, &hints, &result);
         if (NULL != result) {
-            // Rree the space getaddrinfo() allocated, if any.
+            // Free the space getaddrinfo() allocated, if any.
             freeaddrinfo(result);
         }
         if (ret) {
@@ -196,7 +196,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
         }
     }
     if (NULL != result) {
-        // Rree the space getaddrinfo() allocated, if any.
+        // Free the space getaddrinfo() allocated, if any.
         freeaddrinfo(result);
     }
     if (0 != ret ||
