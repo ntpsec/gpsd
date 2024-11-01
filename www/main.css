@@ -71,12 +71,14 @@ a:hover {
   padding: 10px;
 }
 
+
 #Menu {
-  position: absolute;
+  float:left;
   top: 80px;
   left: 20px;
   width: 160px;
   padding: 0.5em;
+  margin: 0.5em;
   background-color: #eee;
   border: 1px dashed #999;
 }
