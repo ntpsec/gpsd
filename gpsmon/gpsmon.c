@@ -1383,10 +1383,16 @@ int main(int argc, char **argv)
                        "%s:%s", source.server, source.port);
     }
 
+    (void)fputs("gpsmon:INFO: gpsmon is deprecated.\n"
+                "gpsmon:INFO: gpsmon is not a full gpsd client.\n"
+                "gpsmon:INFO: gpsmon is a poorly maintained developt tool\n"
+                "gpsmon:INFO: Only developers should use gpsmon.\n",
+                stderr);
+
     activated = gpsd_activate(&session, O_PROBEONLY);
     if (0 > activated) {
         if (PLACEHOLDING_FD == activated) {
-                (void)fputs("gpsmon:ERROR: PPS device unsupported\n", stderr);
+            (void)fputs("gpsmon:ERROR: PPS device unsupported\n", stderr);
         }
         exit(EXIT_FAILURE);
     }
