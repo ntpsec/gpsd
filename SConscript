@@ -1134,7 +1134,10 @@ if not cleaning and not helping:
             if config.CheckPKG('tinfo'):
                 ncurseslibs += pkg_config('tinfo', rpath_hack=True)
         # It's not yet known whether rpath_hack is appropriate for
-        # ncurses5-config.
+        # ncurses?-config
+        elif WhereIs('ncursesw6-config'):
+            # Ubuntu 24 uses ncursesw6-config
+            ncurseslibs = ['!ncursesw6-config --libs --cflags']
         elif WhereIs('ncurses5-config'):
             ncurseslibs = ['!ncurses5-config --libs --cflags']
         elif WhereIs('ncursesw5-config'):

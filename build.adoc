@@ -235,6 +235,11 @@ The development Debian/Ubuntu/Raspbian pacakages are:
 |libdbus-1-dev        | D-Bus Development package
 |==============================================================================
 
+Newer Ubuntu (24 and up?) changed the ncurses version:
+|==============================================================================
+|libncurses6-dev      | curses screen-painting library, used by cgps and gpsmon
+|==============================================================================
+
 The development Fedora/RHEL packages are:
 
 |==============================================================================
