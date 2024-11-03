@@ -135,6 +135,9 @@ static struct vlist_t vclass[] = {
 
 /* send a CASIC message.
  * calculate checksums, etc.
+ *
+ * Return: True -- read-only, or sent OK
+ *         False -- send failed
  */
 bool casic_write(struct gps_device_t * session,
                 unsigned int msg_class, unsigned int msg_id,
@@ -155,16 +158,17 @@ bool casic_write(struct gps_device_t * session,
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "=> GPS: CASIC class: %02x, id: %02x, len: %zd TOO LONG!\n",
                  msg_class, msg_id, payload_len);
+        return false;
     }
     if (0 != (payload_len % 4)) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "=> GPS: CASIC class: %02x, id: %02x, len: %zd UN ALIGNED!\n",
                  msg_class, msg_id, payload_len);
+        return false;
     }
 
     session->msgbuf[0] = 0xba;
     session->msgbuf[1] = 0xce;
-
     session->msgbuf[2] = payload_len & 0xff;
     session->msgbuf[3] = (payload_len >> 8) & 0xff;
     session->msgbuf[4] = msg_class;
