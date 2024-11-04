@@ -3281,7 +3281,7 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
         return 1;  // pretend we got something, to keep connection open
     } // else
 
-    if (-1 == recvd) {
+    if (0 > recvd) {
         if (EAGAIN == errno ||
             EINTR == errno) {
             GPSD_LOG(LOG_RAW2, &lexer->errout, "PACKET: no bytes ready\n");
