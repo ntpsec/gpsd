@@ -152,6 +152,11 @@ int main(int argc, char *argv[])
         gpsd_options = optenv;
     }
 
+    // chcek length to pacify Coverity
+    if (GPS_PATH_MAX <= strnlen(argv[2], GPS_PATH_MAX)) {
+        (void)syslog(LOG_ERR, "path argument too long\n");
+        usage();
+    }
     if (0 > gpsd_control(argv[1], argv[2])) {
         exit(EXIT_FAILURE);
     }
