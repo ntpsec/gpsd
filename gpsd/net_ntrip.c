@@ -273,16 +273,22 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
 
     for (;;) {
         ssize_t rlen;
+        long long buf_avail;
 
-        memset(&buf[len], 0, sizeof(buf) - (size_t)len);
+        buf_avail = sizeof(buf) - len;
+        if (0 > buf_avail) {
+            // Pacify Coverity 498046
+            buf_avail = 0;
+        }
+        memset(&buf[len], 0, buf_avail);
         errno = 0;         // paranoia
         // read, leave room for trailing NUL
-        rlen = read(fd, &buf[len], sizeof(buf) - (size_t)(1 + len));
+        rlen = read(fd, &buf[len], buf_avail - 1);
         // cast for 32-bit ints
         GPSD_LOG(LOG_RAW, &device->context->errout,
                  "NTRIP: on fd %ld len %zd  tried %zd, got %zd\n",
                  (long)fd, len, sizeof(buf) - (size_t)(1 + len), rlen);
-        if (-1 == rlen) {
+        if (0 > rlen) {
             if (EINTR == errno) {
                 continue;
             }
