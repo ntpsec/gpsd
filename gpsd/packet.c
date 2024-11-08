@@ -1615,9 +1615,12 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         if (0 == lexer->length) {
             // got 1st, of 2, bytes of checksum
             lexer->state = ALLY_CHECKSUM_A;
-        }
-        lexer->length--;
-        // else stay in payload state
+        } // else stay in payload state
+
+        if (0 < lexer->length) {
+            // Pacify Coverity about underflow
+            lexer->length--;
+        }  // else something bad happened...
         break;
     case ALLY_CHECKSUM_A:
         // got 2nd, of 2, bytes of checksum
