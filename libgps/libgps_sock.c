@@ -210,10 +210,35 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
                  PRIVATE(gpsdata)->waiting,
                  sizeof(PRIVATE(gpsdata)->buffer) - PRIVATE(gpsdata)->waiting);
 #else   // USE_QT
-        // read data: return -1 if no data waiting or buffered, 0 otherwise
-        status = (int)recv(gpsdata->gps_fd,
-               PRIVATE(gpsdata)->buffer + PRIVATE(gpsdata)->waiting,
-               sizeof(PRIVATE(gpsdata)->buffer) - PRIVATE(gpsdata)->waiting, 0);
+        {
+            /* this is contorted to placate Coverity. The problem is
+             * that you can request more data from recv() than recv() can
+             * tell you it received. This is: sssize_t_max < size_t max.
+             * To avoid "integer overflow" and :sign mismatch" warnings we
+             * do things in long long. */
+
+            long long sstatus;
+            long long buf_avail;
+
+            buf_avail = sizeof(PRIVATE(gpsdata)->buffer) -
+                        PRIVATE(gpsdata)->waiting;
+
+            if (0 >=  buf_avail) {
+                // no space for new data
+                status = 0;
+            } else {
+                sstatus = recv(gpsdata->gps_fd,
+                   PRIVATE(gpsdata)->buffer + PRIVATE(gpsdata)->waiting,
+                   buf_avail, 0);
+                if (0 > sstatus ||
+                    buf_avail < sstatus) {
+                    // Pacify Coverity about overflow
+                    status = -1;
+                } else {
+                    status = sstatus;
+                }
+            }
+        }
 #endif  // USE_QT
 
 #ifdef HAVE_WINSOCK2_H
