@@ -29,7 +29,7 @@
 
 static int test_single(void) {
     static float f;
-    int i;
+    long long i;   // Pacify Coverity 4980336, overflow
     int e = 0;
 
     // addition test
