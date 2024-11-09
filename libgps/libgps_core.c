@@ -2,7 +2,7 @@
  *
  * Core portion of client library.  Cals helpers to handle different eports.
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -235,12 +235,13 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
         eptr = eol + PRIVATE(gpsdata)->waiting;
 
         // fill the buffer
-#ifdef USE_QT
-        read_ret = -1;  // TBD
-#else
+#if !defined(USE_QT)
+        // Coverity takes the first branch, we want this checked.
         read_ret = read(gpsdata->gps_fd, eptr,
                         sizeof(PRIVATE(gpsdata)->buffer) -
                         PRIVATE(gpsdata)->waiting - 1);
+#else
+        read_ret = -1;  // TBD
 #endif
         if (0 >= read_ret) {
             int ret;
