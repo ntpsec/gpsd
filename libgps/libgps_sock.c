@@ -111,13 +111,14 @@ int gps_sock_open(const char *host, const char *port,
             errno = sock;
             libgps_debug_trace((DEBUG_CALLS,
                                "netlib_connectsock() returns error %s(%d)\n",
-                               netlib_errstr(sock), sock));
+                               netlib_errstr(errno), errno));
             return -1;
         }
         gpsdata->gps_fd = sock;
+        // (long long) to pacify Coverity 477166, printf_args
         libgps_debug_trace((DEBUG_CALLS,
-            "netlib_connectsock() returns socket on fd %d\n",
-            gpsdata->gps_fd));
+            "netlib_connectsock() returns socket on fd %lld\n",
+            (long long)(gpsdata->gps_fd)));
     }
 #endif  // USE_QT
 
