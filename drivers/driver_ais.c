@@ -54,7 +54,9 @@ static void from_sixbit_untrimmed(const unsigned char *bitvec,
 // trim spaces on right end
 static void trim_spaces_on_right_end(char* to, size_t max)
 {
-    int i;
+    long long i;
+
+    // pacify Coverity 498043, overflow
     for (i = strnlen(to, max) - 1; i >= 0; i--) {
         if (' ' == to[i] ||
             '@' == to[i]) {
