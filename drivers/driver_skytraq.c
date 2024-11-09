@@ -138,6 +138,8 @@ static void sky_mode(struct gps_device_t *session, int mode)
 
 /*
  * Convert PRN to gnssid and svid
+ *
+ * svId is always 0 to 99.
  */
 static void PRN2_gnssId_svId(short PRN, uint8_t *gnssId, uint8_t *svId)
 {
@@ -1089,6 +1091,7 @@ static gps_mask_t sky_msg_DD(struct gps_device_t *session,
          */
         uint8_t trkStat = getub(buf, off + 22);
         uint8_t gnssId = 0;
+        // svId should always be from 0 to 99, except SBAS.
         uint8_t svId = 0;
         PRN2_gnssId_svId(PRN, &gnssId, &svId);
 
@@ -1102,7 +1105,10 @@ static gps_mask_t sky_msg_DD(struct gps_device_t *session,
             obs_code = "L1C";       // u-blox calls this L1C/A ?
             break;
         case 1:       // SBAS
-            svId -= 100;            // adjust for RINEX 3 svid
+            if (100 < svId) {
+                // Should be always true, but pacify Coverity 498045
+                svId -= 100;            // adjust for RINEX 3 svid
+            }
             obs_code = "L1C";       // u-blox calls this L1C/A
             break;
         case 2:       // GALILEO
