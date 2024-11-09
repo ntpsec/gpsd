@@ -1618,7 +1618,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         } // else stay in payload state
 
         if (0 < lexer->length) {
-            // Pacify Coverity about underflow
+            // Pacify Coverity 498037 about underflow
             lexer->length--;
         }  // else something bad happened...
         break;
@@ -3562,7 +3562,10 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
  */
 ssize_t packet_get1(struct gps_device_t *session)
 {
-    ssize_t recvd;
+    /* recvd, and watned  big enough to hold size_t and ssize_t
+     * to Pacify Coveruty 498038, and avoid signed/unsigned math */
+    long long recvd;
+    long long wanted;
     char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
     int fd = session->gpsdata.gps_fd;
     struct gps_lexer_t *lexer = &session->lexer;
@@ -3573,12 +3576,16 @@ ssize_t packet_get1(struct gps_device_t *session)
     }
 
     errno = 0;
+    wanted = sizeof(lexer->inbuffer) - lexer->inbuflen;
+    if (0 >= wanted) {
+        // should never happen, pacify Coverity 498039
+        return -1;
+    }
     /* O_NONBLOCK set, so this should not block.
      * Best not to block on an unresponsive GNSS receiver */
-    recvd = read(fd, lexer->inbuffer + lexer->inbuflen,
-                 sizeof(lexer->inbuffer) - lexer->inbuflen);
+    recvd = read(fd, lexer->inbuffer + lexer->inbuflen, wanted);
 
-    if (-1 == recvd) {
+    if (-1 >= recvd) {
         if (EAGAIN == errno ||
             EINTR == errno) {
             GPSD_LOG(LOG_RAW2, &lexer->errout, "PACKET: no bytes ready\n");
@@ -3592,14 +3599,14 @@ ssize_t packet_get1(struct gps_device_t *session)
         }
     } else {
         GPSD_LOG(LOG_RAW1, &lexer->errout,
-                 "PACKET: Read %zd chars to buffer[%zd] (total %zd): %s\n",
+                 "PACKET: Read %lld chars to buffer[%zd] (total %lld): %s\n",
                  recvd, lexer->inbuflen, lexer->inbuflen + recvd,
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
                                  lexer->inbufptr, (size_t) recvd));
         lexer->inbuflen += recvd;
     }
     GPSD_LOG(LOG_SPIN, &lexer->errout,
-             "PACKET: packet_get1(fd %d) recvd %zd %s(%d)\n",
+             "PACKET: packet_get1(fd %d) recvd %lld %s(%d)\n",
              fd, recvd, strerror(errno), errno);
     /*
      * Bail out, indicating no more input, only if we just received
@@ -3609,7 +3616,7 @@ ssize_t packet_get1(struct gps_device_t *session)
     if (0 >= recvd &&
         0 >= packet_buffered_input(lexer)) {
         GPSD_LOG(LOG_IO, &lexer->errout,
-                 "PACKET: packet_get1(fd %d) recvd %zd\n",
+                 "PACKET: packet_get1(fd %d) recvd %lld\n",
                  fd, recvd);
         return recvd;
     }
@@ -3657,7 +3664,7 @@ ssize_t packet_get1(struct gps_device_t *session)
      * was consumed.
      */
     GPSD_LOG(LOG_IO, &lexer->errout,
-             "PACKET: packet_get1(fd %d) recvd %zd\n",
+             "PACKET: packet_get1(fd %d) recvd %lld\n",
              fd, recvd);
     return recvd;
 }
