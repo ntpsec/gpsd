@@ -805,7 +805,7 @@ static int sat_cmp(const void *p1, const void *p2)
 
 // This gets called once for each new GPS sentence.
 static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
-                             size_t message_max)
+                             long long message_max)
 {
     int newstate;
     char scr[80];
@@ -1248,9 +1248,14 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
             // have a message to show
 
             // codacy does not like strlen()
-            size_t message_len = strnlen(message, message_max);
+            // Pacify Coverity 498042, does not like size_t math
+            long long message_len = strnlen(message, message_max);
 
-            if (message_len >= message_max) {
+            if (0 >=  message_len ||
+                0 >=  message_max) {
+                // Pacify Coverity 498042, an't happen
+                message[0] = '\0';
+            } else if (message_len >= message_max) {
                 // huh?  Ensure NUL termianted
                 message[message_max - 1] = '\0';
             } else if ( '\r' == message[message_len - 1]) {
