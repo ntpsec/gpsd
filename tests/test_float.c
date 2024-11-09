@@ -1,9 +1,10 @@
 /*
  * Copyright 2006 Chris Kuethe <chris.kuethe@gmail.com>
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
+
 #include <fenv.h>         // for fegetround()
 #include <stdio.h>        // for puts(), printf()
 #include <string.h>       // for strncmp()
@@ -21,227 +22,231 @@
  *
  * compile with: gcc -O -o test_float test_float.c
  *     (use whatever -O level you like)
+ *
+ * This uses "static" variables to force the type.  Otherwise some
+ * CC may use 80 bit floats.
  */
 
 static int test_single(void) {
-	static float f;
-	static int i;
-	static int e = 0;
+    static float f;
+    int i;
+    int e = 0;
 
-	// addition test
-	f = 1.0;
-	for(i = 0; i < 10; i++) {
-		f += (1 << i);
-        }
-	if (1024.0 != f) {
-		puts("s1 ");
-		e++;
-	}
+    // addition test
+    f = 1.0;
+    for(i = 0; i < 10; i++) {
+        f += 1 << i;
+    }
+    if (1024.0 != f) {
+        puts("s1 ");
+        e++;
+    }
 
-	// subtraction test
-	f = 1024.0;
-	for(i = 0; i < 10; i++) {
-		f -= (1 << i);
-        }
-	if (1.0 != f) {
-		puts("s2 ");
-		e++;
-	}
+    // subtraction test
+    f = 1024.0;
+    for(i = 0; i < 10; i++) {
+        f -= 1 << i;
+    }
+    if (1.0 != f) {
+        puts("s2 ");
+        e++;
+    }
 
-	// multiplication test
-	f = 1.0;
-	for(i = 1; i < 10; i++) {
-		f *= i;
-        }
-	if (362880.0 != f) {
-		puts("s3 ");
-		e++;
-	}
+    // multiplication test
+    f = 1.0;
+    for(i = 1; i < 10; i++) {
+        f *= i;
+    }
+    if (362880.0 != f) {
+        puts("s3 ");
+        e++;
+    }
 
-	// division test
-	f = 362880.0;
-	for(i = 1; i < 10; i++) {
-		f /= i;
-        }
-	if (1.0 != f) {
-		puts("s4 ");
-		e++;
-	}
+    // division test
+    f = 362880.0;
+    for(i = 1; i < 10; i++) {
+        f /= i;
+    }
+    if (1.0 != f) {
+        puts("s4 ");
+        e++;
+    }
 
-	// multiply-accumulate test
-	f = 0.5;
-	for(i = 1; i < 1000000; i++) {
-		f += 2.0;
-		f *= 0.5;
-	}
-	if (f != 2.0) {
-		puts("s5 ");
-		e++;
-	}
+    // multiply-accumulate test
+    f = 0.5;
+    for(i = 1; i < 1000000; i++) {
+        f += 2.0;
+        f *= 0.5;
+    }
+    if (f != 2.0) {
+        puts("s5 ");
+        e++;
+    }
 
-	// divide-subtract test
-	f = 2.0;
-	for(i = 1; i < 1000000; i++) {
-		f /= 0.5;
-		f -= 2.0;
-	}
-	if (2.0 != f) {
-		puts("s6 ");
-		e++;
-	}
+    // divide-subtract test
+    f = 2.0;
+    for(i = 1; i < 1000000; i++) {
+        f /= 0.5;
+        f -= 2.0;
+    }
+    if (2.0 != f) {
+        puts("s6 ");
+        e++;
+    }
 
-	// add-multiply-subtract-divide test
-	f = 1000000.0;
-	for(i = 1; i < 1000000; i++) {
-		f = ((((f + 1.5) * 0.5) - 1.25) / 0.5);
-        }
-	if (1.0 != f) {
-		puts("s7 ");
-		e++;
-	}
+    // add-multiply-subtract-divide test
+    f = 1000000.0;
+    for(i = 1; i < 1000000; i++) {
+        f = (((f + 1.5) * 0.5) - 1.25) / 0.5;
+    }
+    if (1.0 != f) {
+        puts("s7 ");
+        e++;
+    }
 
-	// multiply-add-divide-subtract test
-	f = 1.0;
-	for(i = 1; i < 1000000; i++) {
-		f = ((((f * 5.0) + 3.0) / 2.0) - 3.0);
-        }
-	if (1.0 != f) {
-		puts("s8 ");
-        }
+    // multiply-add-divide-subtract test
+    f = 1.0;
+    for(i = 1; i < 1000000; i++) {
+        f = (((f * 5.0) + 3.0) / 2.0) - 3.0;
+    }
+    if (1.0 != f) {
+        puts("s8 ");
+    }
 
-	// subtract-divide-add-multiply test
-	f = 8.0;
-	for(i = 1; i < 1000000; i++) {
-		f = ((((f - 5.0) / 2.0) + 2.5) * 2.0);
-        }
-	if (8.0 != f) {
-		puts("s9 ");
-		e++;
-	}
+    // subtract-divide-add-multiply test
+    f = 8.0;
+    for(i = 1; i < 1000000; i++) {
+        f = (((f - 5.0) / 2.0) + 2.5) * 2.0;
+    }
+    if (8.0 != f) {
+        puts("s9 ");
+        e++;
+    }
 
-	// divide-subtract-multiply-add test
-	f = 42.0;
-	for(i = 1; i < 1000000; i++) {
-		f = ((((f / 6.0) - 5.0) * 19.75 ) + 2.5);
-        }
-	if (42.0 != f) {
-		puts("s10 ");
-		e++;
-	}
-	if (e) {
-		puts("\n");
-	}
-	return e;
+    // divide-subtract-multiply-add test
+    f = 42.0;
+    for(i = 1; i < 1000000; i++) {
+        f = (((f / 6.0) - 5.0) * 19.75 ) + 2.5;
+    }
+    if (42.0 != f) {
+        puts("s10 ");
+        e++;
+    }
+    if (e) {
+        puts("\n");
+    }
+    return e;
 }
 
 static int test_double(void) {
-	static double f;
-	static int i;
-	static int e = 0;
+    static double f;
+    int i;
+    int e = 0;
 
-	// addition test
-	f = 1.0;
-	for(i = 0; i < 10; i++)
-		f += (1<<i);
-	if (f != 1024.0) {
-		puts("d1 ");
-		e++;
-	}
+    // addition test
+    f = 1.0;
+    for(i = 0; i < 10; i++) {
+        f += 1 << i;
+    }
+    if (f != 1024.0) {
+        puts("d1 ");
+        e++;
+    }
 
-	// subtraction test
-	f = 1024.0;
-	for(i = 0; i < 10; i++) {
-		f -= (1<<i);
-        }
-	if (1.0 != f) {
-		puts("d2 ");
-		e++;
-	}
+    // subtraction test
+    f = 1024.0;
+    for(i = 0; i < 10; i++) {
+        f -= 1 << i;
+    }
+    if (1.0 != f) {
+        puts("d2 ");
+        e++;
+    }
 
-	// multiplication test
-	f = 1.0;
-	for(i = 1; i < 10; i++) {
-		f *= i;
-        }
-	if (362880.0 != f) {
-		puts("d3 ");
-		e++;
-	}
+    // multiplication test
+    f = 1.0;
+    for(i = 1; i < 10; i++) {
+        f *= i;
+    }
+    if (362880.0 != f) {
+        puts("d3 ");
+        e++;
+    }
 
-	// division test
-	f = 362880.0;
-	for(i = 1; i < 10; i++) {
-		f /= i;
-        }
-	if (1.0 != f) {
-		puts("d4 ");
-		e++;
-	}
+    // division test
+    f = 362880.0;
+    for(i = 1; i < 10; i++) {
+        f /= i;
+    }
+    if (1.0 != f) {
+        puts("d4 ");
+        e++;
+    }
 
-	// multiply-accumulate test
-	f = 0.5;
-	for(i = 1; i < 1000000; i++) {
-		f += 2.0;
-		f *= 0.5;
-	}
-	if (2.0 != f) {
-		puts("d5 ");
-		e++;
-	}
+    // multiply-accumulate test
+    f = 0.5;
+    for(i = 1; i < 1000000; i++) {
+        f += 2.0;
+        f *= 0.5;
+    }
+    if (2.0 != f) {
+        puts("d5 ");
+        e++;
+    }
 
-	// divide-subtract test
-	f = 2.0;
-	for(i = 1; i < 1000000; i++) {
-		f /= 0.5;
-		f -= 2.0;
-	}
-	if (2.0 != f) {
-		puts("d6 ");
-		e++;
-	}
+    // divide-subtract test
+    f = 2.0;
+    for(i = 1; i < 1000000; i++) {
+        f /= 0.5;
+        f -= 2.0;
+    }
+    if (2.0 != f) {
+        puts("d6 ");
+        e++;
+    }
 
-	// add-multiply-subtract-divide test
-	f = 1000000.0;
-	for(i = 1; i < 1000000; i++) {
-		f = ((((f + 1.5) * 0.5) - 1.25) / 0.5);
-        }
-	if (1.0 != f) {
-		puts("d7 ");
-		e++;
-	}
+    // add-multiply-subtract-divide test
+    f = 1000000.0;
+    for(i = 1; i < 1000000; i++) {
+        f = (((f + 1.5) * 0.5) - 1.25) / 0.5;
+    }
+    if (1.0 != f) {
+        puts("d7 ");
+        e++;
+    }
 
-	// multiply-add-divide-subtract test
-	f = 1.0;
-	for(i = 1; i < 1000000; i++) {
-		f = ((((f * 5.0) + 3.0) / 2.0) - 3.0);
-        }
-	if (1.0 != f) {
-		puts("d8 ");
-        }
+    // multiply-add-divide-subtract test
+    f = 1.0;
+    for(i = 1; i < 1000000; i++) {
+        f = (((f * 5.0) + 3.0) / 2.0) - 3.0;
+    }
+    if (1.0 != f) {
+        puts("d8 ");
+    }
 
-	// subtract-divide-add-multiply test
-	f = 8.0;
-	for(i = 1; i < 1000000; i++) {
-		f = ((((f - 5.0) / 2.0) + 2.5) * 2.0);
-        }
-	if (8.0 != f) {
-		puts("d9 ");
-		e++;
-	}
+    // subtract-divide-add-multiply test
+    f = 8.0;
+    for(i = 1; i < 1000000; i++) {
+        f = (((f - 5.0) / 2.0) + 2.5) * 2.0;
+    }
+    if (8.0 != f) {
+        puts("d9 ");
+        e++;
+    }
 
-	// divide-subtract-multiply-add test
-	f = 42.0;
-	for(i = 1; i < 1000000; i++) {
-		f = ((((f / 6.0) - 5.0) * 19.75 ) + 2.5);
-        }
-	if (42.0 != f) {
-		puts("d10 ");
-		e++;
-	}
-	if (e) {
-		puts("\n");
-	}
-	return e;
+    // divide-subtract-multiply-add test
+    f = 42.0;
+    for(i = 1; i < 1000000; i++) {
+        f = (((f / 6.0) - 5.0) * 19.75 ) + 2.5;
+    }
+    if (42.0 != f) {
+        puts("d10 ");
+        e++;
+    }
+    if (e) {
+        puts("\n");
+    }
+    return e;
 }
 
 static int test_modulo(void) {
@@ -255,29 +260,29 @@ static int test_modulo(void) {
     b = 2;
     // cppcheck-suppress knownConditionTrueFalse
     if (-1 != (a % b)) {
-	puts("m1 ");
-	e++;
+        puts("m1 ");
+        e++;
     }
 
     a = -5;
     b = -2;
     // cppcheck-suppress knownConditionTrueFalse
     if (-1 != (a % b)) {
-	puts("m2 ");
-	e++;
+        puts("m2 ");
+        e++;
     }
 
     a = 5;
     b = -2;
     // cppcheck-suppress knownConditionTrueFalse
     if (1 != (a % b)) {
-	puts("m3 ");
-	e++;
+        puts("m3 ");
+        e++;
     }
 
     // cppcheck-suppress knownConditionTrueFalse
     if (e) {
-	puts("\n");
+        puts("\n");
     }
     return e;
 }
@@ -287,6 +292,7 @@ struct printf_test
     double d;
     const char *expected;
 };
+
 struct printf_test printf_test_tests[] = {
     {-0.0015 - 1e-10, "-0.002"},
     {-0.0015, "-0.002"},
@@ -334,6 +340,19 @@ static int test_printf(void)
 int main(void) {
     int errcnt = 0;
     int val;
+
+    /* C99: 6.10.8 Predefined macro names
+     *   __STDC_IEC_559__ The integer constant 1, intended to indicate
+     *    conformance to the specifications in annex F (IEC 60559
+     *    floating-point arithmetic).
+     */
+#ifdef __STDC_IEC_559__
+    if (1 != __STDC_IEC_559__) {
+        printf("WARNING: __STDC_IEC_559__ is %d, s/b 1\n", __STDC_IEC_559__);
+    }
+#else
+    printf("WARNING: __STDC_IEC_559__ is missing\n\n");
+#endif
 
     // test for C99 default rounding mode
     val = fegetround();
