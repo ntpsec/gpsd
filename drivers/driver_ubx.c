@@ -1485,9 +1485,6 @@ static gps_mask_t ubx_msg_inf(struct gps_device_t *session,
     if (data_len > MAX_PACKET_LENGTH - 1) {
         data_len = MAX_PACKET_LENGTH - 1;
     }
-    if (INT_MAX < data_len) {
-        data_len = INT_MAX;
-    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: %s: %.*s\n",
              val2str(msgid, vinf_ids),
