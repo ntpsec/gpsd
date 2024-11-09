@@ -7,7 +7,7 @@
  * Author: Fulup Ar Foll (directly inspired from gpspipe.c)
  * Date:   2013-03-01
  *
- * This file is Copyright 2013 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #ifdef HAVE_GETOPT_LONG
-       #include <getopt.h>   // for getopt_long()
+   #include <getopt.h>   // for getopt_long()
 #endif
 #include <netinet/in.h>
 #include <stdbool.h>
@@ -116,7 +116,7 @@ static int send_udp(char *nmeastring, size_t ind)
         return 0;
     }
     if (tpvonly &&
-        (0 != strncmp(mstr, buffer, sizeof(mstr) - 1))) {
+        0 != strncmp(mstr, buffer, sizeof(mstr) - 1)) {
         // only TPV requests, but not TPV, skip it
         if (1 < debug) {
             (void)fprintf(stdout, "...t [%s] '%s'\n", time2string(), buffer);
@@ -247,7 +247,6 @@ static void connect2gpsd(bool restart)
     }
     // select the right set of gps data
     (void)gps_stream(&gpsdata, flags, gpsd_source.device);
-
 }
 
 // get data from gpsd
@@ -490,7 +489,9 @@ int main(int argc, char **argv)
             }
             break;
         case '?':
+            FALLTHROUGH
         case 'h':
+            FALLTHROUGH
         default:
             usage();
             exit(1);
@@ -611,6 +612,7 @@ int main(int argc, char **argv)
     } // end for (;;)
 
     // This is an infinite loop, should never be here
+    // coverity[unreachable]
     (void)fprintf (stderr, "gpsd2udp ERROR abnormal exit\n");
     exit (-1);
 }
