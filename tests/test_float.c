@@ -140,7 +140,7 @@ static int test_single(void) {
 
 static int test_double(void) {
     static double f;
-    int i;
+    long long i;     // Pacify Coverity 498041 that i is big enough
     int e = 0;
 
     // addition test
