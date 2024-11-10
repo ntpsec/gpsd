@@ -218,7 +218,6 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
              * To avoid "integer overflow" and :sign mismatch" warnings we
              * do things in long long. */
 
-            long long sstatus;
             long long buf_avail;
 
             buf_avail = sizeof(PRIVATE(gpsdata)->buffer) -
@@ -228,6 +227,8 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
                 // no space for new data
                 status = 0;
             } else {
+                long long sstatus;
+
                 sstatus = recv(gpsdata->gps_fd,
                    PRIVATE(gpsdata)->buffer + PRIVATE(gpsdata)->waiting,
                    buf_avail, 0);
