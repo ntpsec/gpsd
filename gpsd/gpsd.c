@@ -2238,7 +2238,6 @@ int main(int argc, char *argv[])
     struct timespec now, delta;
     const char *sudo = getenv("SUDO_COMMAND");
     int uid;
-    unsigned long l;
     pid_t my_pid = getpid();
 
 
@@ -2433,6 +2432,8 @@ int main(int argc, char *argv[])
 #ifdef HAVE_LIBCAP
     // check that we have needed capabilities, root should allow all.
     do {
+        unsigned long l;
+
         // capabilities we prolly need
         const char *cap_names[] = {
             "cap_setgid",                    // for setgid()
