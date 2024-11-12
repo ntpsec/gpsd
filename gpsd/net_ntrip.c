@@ -275,6 +275,10 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
         ssize_t rlen;
         long long buf_avail;
 
+        if (0 > len) {
+            // Pacify Coverity 498046
+            len = 0;
+        }
         buf_avail = sizeof(buf) - len;
         if (0 > buf_avail) {
             // Pacify Coverity 498046
