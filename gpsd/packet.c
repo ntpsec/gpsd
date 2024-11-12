@@ -1658,11 +1658,11 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         /* got 2nd, of 2, bytes of length
          * Validate the length field, the driver and code at
          * CASIC_RECOGNIZED require this.
-         * Max length seems to be RXM-SVPOS 1544 (packet total 1554)
+         * Max length seems to be RXM-SVPOS 1536 (packet total 1554)
          * Their doc says payload "<2k bytes"
          */
         lexer->length += (c << 8);
-        if (2048 < lexer->length ||
+        if (2048 <= lexer->length ||
             0 != (lexer->length % 4)) {
             // bad length
             return character_pushback(lexer, GROUND_STATE);
@@ -1686,9 +1686,16 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         if (0 == lexer->length) {
             // got 1st, of 4, bytes of checksum
             lexer->state = CASIC_CHECKSUM_A;
+        } else if (2048 <= lexer->length) {
+            /* RXM-SVPOS seems to have the longest length: 1552, use 2048
+             * Their doc says payload "<2k bytes"
+             * how could this happen?
+             * stay in payload state */
+            lexer->length = 0;
+        } else {
+            // more to go, stay in payload state, Coverity 498037
+            lexer->length--;
         }
-        lexer->length--;
-        // else stay in payload state
         break;
     case CASIC_CHECKSUM_A:
         // got 2nd, of 4, bytes of checksum
