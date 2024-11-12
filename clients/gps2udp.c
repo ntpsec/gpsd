@@ -102,8 +102,8 @@ static int send_udp(char *nmeastring, size_t ind)
         ind--;
     }
     // Add termination to NMEA feed for AISHUB
-    buffer[ind] = '\r'; ind++;
-    buffer[ind] = '\n'; ind++;
+    buffer[ind++] = '\r';
+    buffer[ind++] = '\n';
     buffer[ind] = '\0';
 
     if (0 == (flags & WATCH_JSON) &&
@@ -138,7 +138,6 @@ static int send_udp(char *nmeastring, size_t ind)
     }
     return 0;
 }
-
 
 // Open and bind udp socket to host
 static int open_udp(char **hostport)
@@ -228,8 +227,11 @@ static void connect2gpsd(bool restart)
         }
     }
 
-    // loop until we reach GPSd
-    for (delay = 10; ; delay = delay * 2) {
+    /* loop until we reach GPSd
+     * start at 10 seconds delay, no more than 1 hour (3600 seconds)
+     */
+    delay = 10;
+    while (1) {
         int status = gps_open(gpsd_source.server, gpsd_source.port, &gpsdata);
         if (0 != status) {
             (void)fprintf(stderr,
@@ -243,6 +245,11 @@ static void connect2gpsd(bool restart)
                               gpsd_source.port);
             }
             break;
+        }
+        delay *= 2;
+        if (3600 >= delay) {
+            // one hour wait max. Fix Coverity 498038, delay went infinite.
+            delay = 3600;
         }
     }
     // select the right set of gps data
