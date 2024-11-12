@@ -447,7 +447,10 @@ static unsigned ally_svid_to_ids(struct gps_device_t *session,
         *ubx_sigid = 2;      // wrong....
         ubx_svid = svid - 800;
     } else if (IN(843, svid, 849)) {
-        // QZSS, L5, overlaps BDS B3I, 801-863
+        /* QZSS, L5, overlaps BDS B3I, 801-863
+         * We know it is not possible, but it is what the doc says.
+         * Coverity 493913
+         * coverity[DEADCODE}  */
         *ubx_gnssid = 5;
         *ubx_sigid = 9;      // ??
         ubx_svid = svid - 842;
