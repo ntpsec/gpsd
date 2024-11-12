@@ -29,13 +29,14 @@
 
 static int test_single(void) {
     static float f;
-    long long i;   // Pacify Coverity 4980336, overflow
+    int i;
     int e = 0;
 
     // addition test
     f = 1.0;
     for(i = 0; i < 10; i++) {
-        f += 1 << i;
+        // Pacify Coverity 4980336, overflow
+        f += 1L << i;
     }
     if (1024.0 != f) {
         puts("s1 ");
@@ -140,13 +141,14 @@ static int test_single(void) {
 
 static int test_double(void) {
     static double f;
-    long long i;     // Pacify Coverity 498041 that i is big enough
+    int i;
     int e = 0;
 
     // addition test
     f = 1.0;
     for(i = 0; i < 10; i++) {
-        f += 1 << i;
+        // Pacify Coverity 498041 that 1 is big enough
+        f += 1L << i;
     }
     if (f != 1024.0) {
         puts("d1 ");
