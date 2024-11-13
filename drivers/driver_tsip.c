@@ -2766,9 +2766,11 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf,
     memset(session->driver.tsip.sats_used, 0,
            sizeof(session->driver.tsip.sats_used));
     buf3[0] = '\0';
-    if (MAXCHANNELS >= numSV) {
-        // should not happen, pacify Coverity 498012
-       numSV = MAXCHANNELS;
+    if (MAXCHANNELS < numSV) {
+        // should not happen, pacify Coverity 493012
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIP x8f-20: MAXCHANNELS < numSV (%d)\n", numSV);
+        return 0;
     }
     for (i = 0; i < numSV; i++) {
         if (length < (33 + (i * 2))) {
@@ -2800,7 +2802,7 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf,
              session->newdata.altHAE,
              session->newdata.mode, session->newdata.status);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "TSIP: ff;ags:%s\n",
+             "TSIP: flags:%s\n",
              flags2str(fflags, vx8f_20_fflags, buf2, sizeof(buf2)));
     return mask;
 }
