@@ -1,6 +1,6 @@
 = GPSD Time Service HOWTO
 Gary E. Miller <gem@rellim.com>, Eric S. Raymond <esr@thyrsus.com>
-:date: 17 November 2021
+:date: 13 November 2024
 :description: How to set up an NTP Stratum 1 server using GPSD.
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
 :robots: index,follow
@@ -341,14 +341,6 @@ $ scons timeservice=yes
 
 You may add GNSS reciver protocol (e.g. "ublox=yes" or "sirf=yes").
 Besides the daemon, this also builds cgps and ntpshmmon.
-
-If you do not use timeservice=yes, then make sure the build is with
-pps=yes and ntpshm=yes (the defaults).  Like this:
-
------------------------------------------------------------------------------
-$ scons -c
-$ scons pps=yes ntpshm=yes
------------------------------------------------------------------------------
 
 More complete, and distro specific, build instructions can be found in
 the files INSTALL.adoc and build.adoc in the source distribution.

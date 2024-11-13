@@ -40,9 +40,6 @@ non_gps = [
   "aivdm=no",
   ]
 
-# Time service
-time_service = ["ntpshm=no", "pps=no"]
-
 # Debugging and profiling
 debugging = [
   "clientdebug=no",
@@ -78,7 +75,7 @@ sizeit("Minimalist build, stripped to NMEA only with shm interface",
         "passthrough=no",
         "fixed_port_speed=9600",
         "max_devices=1",
-        ] + nmea_variants + binary_gps + non_gps + time_service + debugging)
+        ] + nmea_variants + binary_gps + non_gps + debugging)
 sizeit("Normal build, configure options defaulted", "normal", [])
 os.system("size gpsd-*-build")
 # os.system("rm gpsd-*-build gpsd.h-*")
