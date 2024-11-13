@@ -898,8 +898,8 @@ static void print_raw(struct gps_data_t *gpsdata)
             continue;
         }
         // prevent separate sigid from double counting gnssid:svid
-        if ((last_gnssid == gpsdata->raw.meas[i].gnssid) &&
-            (last_svid == gpsdata->raw.meas[i].svid)) {
+        if (last_gnssid == gpsdata->raw.meas[i].gnssid &&
+            last_svid == gpsdata->raw.meas[i].svid) {
             // duplicate sat
             continue;
         }
@@ -937,13 +937,9 @@ static void print_raw(struct gps_data_t *gpsdata)
      * then later they can be ouput it arbitrary orders  */
     memset(obs_items, 0, sizeof(obs_items));
     for (i = 0; i < nrec; i++) {
-        unsigned char gnssid;
-        unsigned char svid;
-        unsigned char sigid;
-
-        gnssid = gpsdata->raw.meas[i].gnssid;
-        svid = gpsdata->raw.meas[i].svid;
-        sigid = gpsdata->raw.meas[i].sigid;
+        const unsigned char gnssid = gpsdata->raw.meas[i].gnssid;
+        const unsigned char svid = gpsdata->raw.meas[i].svid;
+        const unsigned char sigid = gpsdata->raw.meas[i].sigid;
 
         if (DEBUG_RAW <= debug) {
             (void)fprintf(stderr,"record: %u:%u:%u %s\n",
@@ -951,14 +947,14 @@ static void print_raw(struct gps_data_t *gpsdata)
                           gpsdata->raw.meas[i].obs_code);
         }
 
-        if (0 == gpsdata->raw.meas[i].svid) {
+        if (0 == svid) {
             // should not happen...
             continue;
         }
 
         // line can be longer than 80 chars in RINEX 3
-        if ((last_gnssid != gpsdata->raw.meas[i].gnssid) ||
-            (last_svid != gpsdata->raw.meas[i].svid)) {
+        if (last_gnssid != gnssid ||
+            last_svid != svid) {
             char rinex_gnssid;
 
             rinex_gnssid = gnssid2rinex(last_gnssid);
@@ -977,17 +973,39 @@ static void print_raw(struct gps_data_t *gpsdata)
                 }
                 (void)fputs("\n", tmp_file);
             }
-
-            // ready for new sat
-            memset(obs_items, 0, sizeof(obs_items));
         }
 
-        last_gnssid = gpsdata->raw.meas[i].gnssid;
-        last_svid = gpsdata->raw.meas[i].svid;
+        last_gnssid = gnssid;
+        last_svid = svid;
 
         one_sig(&gpsdata->raw.meas[i]);
 
     }
+
+    // Process the last onem why can't this go in the for loop above?
+    {
+        char rinex_gnssid;
+
+        rinex_gnssid = gnssid2rinex(last_gnssid);
+
+        if (0 != last_svid) {
+            int j;
+
+            (void)fprintf(tmp_file, "%c%02d", rinex_gnssid, last_svid);
+            for (j = 0; j < MAX_TYPES; j++) {
+                int obs = obs_set[last_gnssid][j];
+
+                if (CODEMAX == obs) {
+                    break;
+                }
+                (void)fprintf(tmp_file, "%16s", obs_items[obs]);
+            }
+            (void)fputs("\n", tmp_file);
+        }
+    }
+    // ready for new sat
+    memset(obs_items, 0, sizeof(obs_items));
+
     sample_count--;
 }
 
