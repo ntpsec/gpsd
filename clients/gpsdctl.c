@@ -29,7 +29,7 @@ static char *control_socket = DEFAULT_GPSD_SOCKET;
 static char *gpsd_options = "";
 
 // pass a command to gpsd; start the daemon if not already running
-static int gpsd_control(const char *action, const char *argument)
+static int gpsd_control(const char *action, const char *device)
 {
     int connect = -1;
     char buf[512];
@@ -37,8 +37,8 @@ static int gpsd_control(const char *action, const char *argument)
     int len;
 
     // limit string to pacify coverity
-    (void)syslog(LOG_ERR, "gpsd_control(action=%.7s, device=%.*s)",
-                 action, GPS_PATH_MAX, argument);
+    (void)syslog(LOG_NOTICE, "gpsd_control(action=%.7s, device=%.*s)",
+                 action, GPS_PATH_MAX, device);
     if (0 == access(control_socket, F_OK) &&
         0 <= (connect = netlib_localsocket(control_socket, SOCK_STREAM))) {
         syslog(LOG_INFO, "reached a running gpsd");
@@ -76,10 +76,10 @@ static int gpsd_control(const char *action, const char *argument)
         struct stat sb;
 
         // coverity[toctou]
-        if (1 != stat(argument, &sb)) {
-            (void)chmod(argument, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+        if (1 != stat(device, &sb)) {
+            (void)chmod(device, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
         }
-        len = snprintf(buf, sizeof(buf), "+%s\r\n", argument);
+        len = snprintf(buf, sizeof(buf), "+%s\r\n", device);
         if (3 < len) {
             status = (int)write(connect, buf, len);
             // FIXME: return never checked
@@ -89,7 +89,7 @@ static int gpsd_control(const char *action, const char *argument)
             status = -1;
         }
     } else if (0 == strcmp(action, "remove")) {
-        len = snprintf(buf, sizeof(buf), "-%s\r\n", argument);
+        len = snprintf(buf, sizeof(buf), "-%s\r\n", device);
         if (3 < len) {
             status = (int)write(connect, buf, len);
             // FIXME: return never checked
