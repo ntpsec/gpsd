@@ -1,6 +1,6 @@
 /* gpsdctl.c -- communicate with the control socket of a gpsd instance
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -9,6 +9,9 @@
 
 #include <assert.h>
 #include <fcntl.h>
+#ifdef HAVE_GETOPT_LONG
+   #include <getopt.h>
+#endif
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +19,7 @@
 #include <syslog.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <unistd.h>                   // for getopt()
 
 #include "../include/gpsd.h"          // for netlib_localsocket()
 
@@ -34,7 +37,7 @@ static int gpsd_control(const char *action, const char *argument)
     int len;
 
     // limit string to pacify coverity
-    (void)syslog(LOG_ERR, "gpsd_control(action=%.7s, arg=%.*s)",
+    (void)syslog(LOG_ERR, "gpsd_control(action=%.7s, device=%.*s)",
                  action, GPS_PATH_MAX, argument);
     if (0 == access(control_socket, F_OK) &&
         0 <= (connect = netlib_localsocket(control_socket, SOCK_STREAM))) {
@@ -107,39 +110,98 @@ static int gpsd_control(const char *action, const char *argument)
 // print usage, exit with EXIT_FAILURE
 static void usage(void)
 {
-    (void)printf("usage: gpsdctl action argument\n\n"
-                 "  Actions:\n"
-                 "    add    - add device\n"
-                 "    remove - remove device\n");
-    exit(EXIT_FAILURE);
+    (void)printf("usage: gpsdctl [OPTIONS] action device\n\n"
+#ifdef HAVE_GETOPT_LONG
+         "  --help              Show this help, then exit\n"
+         "  --version           Show version, then exit\n"
+#endif   // HAVE_GETOPT_LONG
+         "  -?                  Show this help, then exit\n"
+         "  -h                  Show this help, then exit\n"
+         "  -V                  Show version, then exit\n"
+         "\n"
+         "  Actions:\n"
+         "    add    - add device\n"
+         "    remove - remove device\n");
 }
 
 int main(int argc, char *argv[])
 {
     char *sockenv = getenv("GPSD_SOCKET");
     char *optenv = getenv("GPSD_OPTIONS");
+    const char *action = NULL;       // Action to perform
+    const char *device = NULL;       // Device to perform action on
     size_t len;
+    const char *optstring = "?hV";
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"help", no_argument, NULL, 'h'},
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
-    // FIXME: add usage()
+    while (1) {
+        int ch;
+
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (-1 == ch) {
+            break;
+        }
+
+        switch (ch) {
+        case 'V':
+            (void)fprintf(stderr, "%s: version %s (revision %s)\n",
+                          argv[0], VERSION, REVISION);
+            exit(EXIT_SUCCESS);
+        case '?':
+            FALLTHROUGH
+        case 'h':
+            usage();
+            exit(EXIT_SUCCESS);
+        default:
+            usage();
+            exit(EXIT_FAILURE);
+        }
+    }
+
     openlog("gpsdctl", 0, LOG_DAEMON);
-    if (3 != argc) {
-        (void)syslog(LOG_ERR, "requires action and argument (%d)", argc);
+
+    if (optind >= argc ||
+        NULL == argv[optind]) {
+        (void)syslog(LOG_ERR, "requires action and device)");
         usage();
-    }
-    // pacify coverity, codacy hates strlen()
-    len = strnlen(argv[1], 8);
-    if (3 > len ||
-        7 < len) {
-        (void)syslog(LOG_ERR, "invalid action '%s'", argv[1]);
-        usage();
+        exit(EXIT_FAILURE);
     }
 
-    // pacify coverity, codacy hates strlen()
-    len = strnlen(argv[2], GPS_PATH_MAX);
-    if (GPS_PATH_MAX <= len) {
-        // limit string to pacify Coverity
-        (void)syslog(LOG_ERR, "invalid path '%.*s'", GPS_PATH_MAX, argv[2]);
+    action = argv[optind++];
+    if (0 != strcmp(action, "add") &&
+        0 != strcmp(action, "remove")) {
+        (void)syslog(LOG_ERR, "Invalid action.  Must be 'add' or 'remove'");
         usage();
+        exit(EXIT_FAILURE);
+    }
+    if (optind >= argc ||
+        NULL == argv[optind]) {
+        (void)syslog(LOG_ERR, "requires device for action)");
+        usage();
+        exit(EXIT_FAILURE);
+    }
+
+    device = argv[optind];
+
+    // pacify codacy hates strlen()
+    len = strnlen(device, GPS_PATH_MAX);
+    if (GPS_PATH_MAX <= len) {
+        // limit string to pacify Coverity 281704
+        (void)syslog(LOG_ERR, "path to long: '%.*s'", GPS_PATH_MAX, device);
+        usage();
+        exit(EXIT_FAILURE);
     }
 
     if (NULL != sockenv) {
@@ -152,12 +214,7 @@ int main(int argc, char *argv[])
         gpsd_options = optenv;
     }
 
-    // chcek length to pacify Coverity
-    if (GPS_PATH_MAX <= strnlen(argv[2], GPS_PATH_MAX)) {
-        (void)syslog(LOG_ERR, "path argument too long\n");
-        usage();
-    }
-    if (0 > gpsd_control(argv[1], argv[2])) {
+    if (0 > gpsd_control(action, device)) {
         exit(EXIT_FAILURE);
     }
 

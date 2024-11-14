@@ -23,7 +23,7 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <time.h>
-#include <unistd.h>       // for _exit()
+#include <unistd.h>       // for _exit() and getopt()
 
 #include "include/gpsd.h"
 
