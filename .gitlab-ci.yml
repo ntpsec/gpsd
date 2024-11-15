@@ -246,7 +246,9 @@ coverity:
   artifacts:
     paths:
       - cov-int
-  extends: .when_sched
+  # extends: .when_sched
+  # temporarily run every push
+  extends: .when_push
 
 
 # as long as sconstruct has so many options, this does not make sense
