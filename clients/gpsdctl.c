@@ -75,8 +75,10 @@ static int gpsd_control(const char *action, const char *device)
          */
         struct stat sb;
 
+        // Coverity 281679
         // coverity[toctou]
         if (1 != stat(device, &sb)) {
+            // coverity[tOCTOU]
             (void)chmod(device, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
         }
         len = snprintf(buf, sizeof(buf), "+%s\r\n", device);
