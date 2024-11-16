@@ -2,7 +2,6 @@
 Eric S. Raymond <esr@thysus.com
 2.4, 27 January 2020
 :date: 25 January 2021
-:docinfodir: ../
 :keywords: gps, gpsd, performance
 :manmanual: GPSD Documentation
 :mansource: The GPSD Project
@@ -12,35 +11,7 @@ Eric S. Raymond <esr@thysus.com
 :type: manpage
 :webfonts!:
 
-[#Menu]
-****
-
-image:../gpsd-logo-small.png[Small gpsd Logo,width=105,height=126] +
-link:../index.html[Home] +
-link:../faq.html[FAQ] +
-link:../xgps-sample.html[Screenshots] +
-link:../hardware.html[Hardware] +
-link:../for-vendors.html[For GPS Vendors] +
-link:../wishlist.html[Wish List] +
-link:../hall-of-shame.html[Hall of Shame] +
-link:../troubleshooting.html[Troubleshooting Guide] +
-link:../hacking.html[Hacker's Guide] +
-link:../references.html[References] +
-link:../protocol-transition.html[Application Compatibility] +
-link:../history.html[History] +
-link:../future.html[Future] +
-
-'''
-
-toc::[]
-
-'''
-
-http://www.catb.org/hacker-emblem/[image:../glider.png[hacker emblem,width=55,height=55]] +
- +
-https://validator.w3.org/check/referer[image:html5.png[Valid HTML 5,width=88,height=31]]
-
-****
+include::inc-menu.adoc[]
 
 == Abstract
 
@@ -244,7 +215,7 @@ This was generated with `+gpsprof  -t "Haicom 204s" -T png -f
 uninstrumented -s 4800+`. We'll compare it to later plots to see the
 effect of profiling overhead.
 
-image::graph1.png[Total latency]
+image::performance/graph1.png[Total latency]
 
 Uninstrumented total latency is simply the delta from the GPS timestamp
 associated with the packet to the arrival time of the end of the packet
@@ -253,12 +224,12 @@ packets in a reporting cycle have the same timestamp; thus, the impulses
 cumulate time in the reporting cycle so far.
 
 The first thing to notice here is that the fix latency can be just over
-a second; you can see the exact figures in the link:profile1.txt[raw
+a second; you can see the exact figures in the link:performance/profile1.txt[raw
 data]. Where is the time going? Our next graph was generated with
 `+gpsprof -T png -t
 "Haicom 204s" -f raw -s 4800+`
 
-image::graph2.png[Instrumented latency report]
+image::performance/graph2.png[Instrumented latency report]
 
 As in the previous graph, each group of three lines is a single GPS
 reporting cycle. By comparing this graph to the previous one, it is
@@ -267,7 +238,7 @@ measurable latency. But what is more interesting is to notice that D1 +
 W + E2 + T2 + D2 vanishes -- at this timescale, all we can see is E1
 and T1.
 
-The link:profile2.txt[raw data] bears this out. All times besides E1 and
+The link:performance/profile2.txt[raw data] bears this out. All times besides E1 and
 T1 are so small that they are comparable to the noise level of the
 measurements. This may be a bit surprising unless one knows that a W
 near 0 is expected in this setup; gpsprof sets watcher mode. Also, a
@@ -279,11 +250,11 @@ Our third graph (`+gpsprof  -t "Haicom 204s" -T png -f split -s 4800+`
 changes the presentation so we can see how latency varies with sentence
 type.
 
-image::graph3.png[Split latency report]
+image::performance/graph3.png[Split latency report]
 
 The reason for the comb pattern in the previous graphs is now apparent;
 latency is constant for any given sentence type. The obvious correlate
-would be sentence length -- but looking at the link:profile3.txt[raw
+would be sentence length -- but looking at the link:performance/profile3.txt[raw
 data], we see that that is not the only factor. Consider this table:
 
 [cols=",,",options="header",]
@@ -314,7 +285,7 @@ perhaps the speed/track computation is expensive.
 Now let's look at how the picture changes when we double the baud rate.
 `+gpsprof -t "Haicom 204s" -T png -s 9600+` gives us this:
 
-image::graph4.png[Split latency report -- 9600bps]
+image::performance/graph4.png[Split latency report -- 9600bps]
 
 This graph looks almost identical to the previous one, except for
 vertical scale -- latency has been cut neatly in half. Transmission
@@ -322,14 +293,14 @@ times for GPRMC go from about 0.15sec to 0.075sec. Oddly, average E1 is
 also cut almost in half. I don't know how to explain this, unless a lot
 of what looks like E1 is actually RS232 transmission time spent before
 the first character appears in the daemon's receive buffers. You can
-also view the link:profile4.txt[raw data].
+also view the link:performance/profile4.txt[raw data].
 
 For comparison, here's the same plot made with a BU303b, a different USB
 GPS mouse using the same SiRF-II/PL2303 combination:
 
-image::graph5.png[Split latency report -- 9600bps]
+image::performance/graph5.png[Split latency report -- 9600bps]
 
-This, and the link:profile5.txt[raw data], look very similar to the
+This, and the link:performance/profile5.txt[raw data], look very similar to the
 Haicom numbers. The main difference seems to be that the BU303b firmware
 doesn't ship GPGLL by default.
 
@@ -401,9 +372,9 @@ interesting.
 With the new profiling tools, one graph (made with
 *gpsprof -f instrumented -n 100 -T png*) tells the story. This is from
 the same Haicom 204s used in the 2005 tests. You can see the exact
-figures in the link:profile6.txt[raw data].
+figures in the link:performance/profile6.txt[raw data].
 
-image::graph6.png[Per-cycle latency report -- 19200bps]
+image::performance/graph6.png[Per-cycle latency report -- 19200bps]
 
 Fix latency (S - T, the purple time segment in each sample) is
 consistently about 120msec. Some of this represents on-chip processing.
@@ -424,9 +395,9 @@ data reveals that it is on the close order of 1ms.
 Total fix latency is steady at about 310ms. Transmission time dominates.
 
 It is instructive to compare this with the graph (and the
-link:profile7.txt[raw data]) from the same device at 9600bps.
+link:performance/profile7.txt[raw data]) from the same device at 9600bps.
 
-image::graph7.png[Per-cycle latency report -- 9600bps]
+image::performance/graph7.png[Per-cycle latency report -- 9600bps]
 
 As we might expect, RS232 time changes drastically and the other
 components barely change at all. This gives us reason to be confident
@@ -438,13 +409,13 @@ It is equally instructive to compare these graphs with graphs taken from
 the same GPS, at the same speed, running in NMEA rather than vendor
 binary mode. Consider, for example, these:
 
-image::graph8.png[Per-cycle latency report NMEA mode -- 9600bps]
+image::performance/graph8.png[Per-cycle latency report NMEA mode -- 9600bps]
 
-(Raw data is link:profile8.txt[here].)
+(Raw data is link:performance/profile8.txt[here].)
 
-image::graph9.png[Per-cycle latency report NMEA mode -- 19200bps]
+image::performance/graph9.png[Per-cycle latency report NMEA mode -- 19200bps]
 
-(Raw data is link:profile8.txt[here].)
+(Raw data is link:performance/profile8.txt[here].)
 
 The comb-shaped pattern in these graphs reflect the additional
 transmission time for $GPGSV every 5 cycles. We can see clearly that the

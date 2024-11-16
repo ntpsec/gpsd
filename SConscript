@@ -2503,8 +2503,7 @@ if adoc_prog:
                  ('www/time-service-intro', 'www/time-service-intro'),
                  ('www/ubxtool-examples', 'www/ubxtool-examples'),
                  ('www/writing-a-driver', 'www/writing-a-driver'),
-                 ('www/performance/performance',
-                  'www/performance/performance'),
+                 ('www/performance', 'www/performance'),
                  )
     for src, tgt in adocfiles:
         target = '%s.html' % tgt
@@ -2557,7 +2556,6 @@ webpages_x_list = ('../www/*.css',
                    '../www/*.js',
                    '../www/*.png',
                    '../www/*.svg',
-                   '../www/performance/*css',
                    '../www/performance/*png',
                    '../www/performance/*txt',
                    )
