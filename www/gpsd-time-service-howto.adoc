@@ -1008,7 +1008,7 @@ correct known and constant latency.
 The 'allow' option allows anyone on the internet to query your server's
 time.
 
-See the chrony man page for more detail on the configuration options
+See the chrony.conf man page for more detail on the configuration options
 <<CHRONY-MAN>>.
 
 Finally note that chronyd needs to be started before gpsd so the
@@ -1834,9 +1834,9 @@ by Jaap Winius <jwinius@rjsystems.nl>.
 
 - [[[MACX-1]]] https://www.etsy.com/listing/280336400/navisys-gr-601w-u-blox-6-macx-1-usb-gnss[Navisys GR-601W u-blox-6 "Macx-1" USB GPS receiver]
 
-- [[[CHRONY-COMPARE]]] https://chrony.tuxfamily.org/manual.html#Comparison-with-ntpd[ntpd (comparison with chrony)]
+- [[[CHRONY-COMPARE]]] https://chrony-project.org/comparison.html[ntpd (comparison with chrony)]
 
-- [[[CHRONYDEFAULT]]] https://lists.fedoraproject.org/pipermail/devel/2010-May/135679.html
+- [[[CHRONYDEFAULT]]] https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/JXFOZ2BQW2IBRWZVYCIQ45OR4MXZ2B7H/
 
 - [[[HARDWARE]]] https://gpsd.gitlab.io/gpsd/hardware.html[Compatible Hardware]
 
@@ -1854,7 +1854,7 @@ by Jaap Winius <jwinius@rjsystems.nl>.
 
 - [[[CHRONY]]] https://chrony.tuxfamily.org/[Chrony Home]
 
-- [[[CHRONY-MAN]]] https://chrony.tuxfamily.org/manual.html
+- [[[CHRONY-MAN]]] https://chrony-project.org/documentation.html
 
 - [[[ADEV-PLOT]]] http://www.leapsecond.com/pages/adev-avg/[Allan deviation and Averaging]
 
