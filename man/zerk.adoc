@@ -9,7 +9,6 @@ Gary E. Miller <gem@rellim.com.>
 :robots: index,follow
 :sectlinks:
 :type: manpage
-:webfonts!:
 :toc: macro
 
 include::../www/inc-menu.adoc[]

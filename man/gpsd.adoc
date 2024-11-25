@@ -7,7 +7,6 @@
 :sectlinks:
 :toc: macro
 :type: manpage
-:webfonts!:
 
 include::../www/inc-menu.adoc[]
 

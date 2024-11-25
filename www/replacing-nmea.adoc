@@ -9,7 +9,6 @@ Eric S. Raymond <esr@thyrsus.com.>
 :sectlinks:
 :toc: macro
 :type: article
-:webfonts!:
 
 include::inc-menu.adoc[]
 

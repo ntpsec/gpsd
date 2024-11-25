@@ -8,7 +8,6 @@ Remco Treffcorn; Derrick Brashear; Russ Nelson; Eric S. Raymond
 :sectlinks:
 :toc: macro
 :type: manpage
-:webfonts!:
 
 include::../www/inc-menu.adoc[]
 

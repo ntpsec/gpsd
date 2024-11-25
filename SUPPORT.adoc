@@ -6,7 +6,6 @@
 :sectlinks:
 :toc: macro
 :type: article
-:webfonts!:
 
 include::www/inc-menu.adoc[]
 

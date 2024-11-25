@@ -9,7 +9,6 @@ Mick Durkin <mick.durkin@saunalahti.fi>
 :sectlinks:
 :toc: macro
 :type: article
-:webfonts!:
 
 include::inc-menu.adoc[]
 
