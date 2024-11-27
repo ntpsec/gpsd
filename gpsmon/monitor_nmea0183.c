@@ -37,10 +37,10 @@ static char sentences[132];
  *
  *****************************************************************************/
 
-#define SENTENCELINE    1       /* index of sentences line in the NMEA window */
+#define SENTENCELINE    1       // index of sentences line in the NMEA window
 
-/* define all window width constants at one location */
-/* WIDTH shall be >= 80 */
+// define all window width constants at one location
+// WIDTH shall be >= 80
 #define WIDTH_L 25
 #define WIDTH_M 27
 #define WIDTH_R 30
@@ -49,10 +49,10 @@ static char sentences[132];
 #define HEIGHT_1 3
 #define HEIGHT_2 3
 #define HEIGHT_3 9
-/* set to 6 for 80x24 screen, set to 7 for 80x25 screen */
+// set to 6 for 80x24 screen, set to 7 for 80x25 screen
 #define HEIGHT_4 6
 #define HEIGHT (HEIGHT_1 + HEIGHT_2 + HEIGHT_3 + HEIGHT_4)
-/* max satellites we can display */
+// max satellites we can display
 #define MAXSATS (HEIGHT_3 + HEIGHT_4 - 3)
 
 static bool nmea_initialize(void)
@@ -114,11 +114,11 @@ static bool nmea_initialize(void)
     (void)mvwprintw(gpgsawin, MODE_LINE, 1, "Mode: ");
 
 #if HEIGHT_4 > 6
-/* show SATS in own line to gain more space */
+// show SATS in own line to gain more space
 #define SATS_LINE       2
 #define SATS_COL        1
 #else
-/* show SATS together with MODE in one line (show less SATS)*/
+// show SATS together with MODE in one line (show less SATS)*/
 #define SATS_LINE       1
 #define SATS_COL        10
 #endif
@@ -182,28 +182,31 @@ static void cooked_pvt(void)
 
     if (0 < session.gpsdata.fix.time.tv_sec) {
         (void)timespec_to_iso8601(session.gpsdata.fix.time, scr, sizeof(scr));
-    } else
+    } else {
         (void)snprintf(scr, sizeof(scr), "n/a");
+    }
     (void)mvwprintw(cookedwin, 1, 7, "%-24s", scr);
 
 
     if (session.gpsdata.fix.mode >= MODE_2D) {
         deg_to_str2(deg_ddmm, session.gpsdata.fix.latitude,
                     scr, sizeof(scr), " N", " S");
-    } else
+    } else {
         (void)strlcpy(scr, "n/a", sizeof(scr));
+    }
     (void)mvwprintw(cookedwin, 1, 38, "%-17s", scr);
 
     if (session.gpsdata.fix.mode >= MODE_2D) {
         deg_to_str2(deg_ddmm, session.gpsdata.fix.longitude,
                     scr, sizeof(scr), " E", " W");
-    } else
+    } else {
         (void)strlcpy(scr, "n/a", sizeof(scr));
+    }
     (void)mvwprintw(cookedwin, 1, 62, "%-17s", scr);
 }
 
+// display as much as we can of a satlist in a specified window
 static void monitor_satlist(WINDOW *win, int y, int x)
-/* display as much as we can of a satlist in a specified window */
 {
     int ymax, xmax;
     char scr[128], tmp[128];
@@ -215,7 +218,7 @@ static void monitor_satlist(WINDOW *win, int y, int x)
     scr[0] = '\0';
     tmp[0] = '\0';
     getmaxyx(win, ymax, xmax);
-    assert(ymax != 0);  /* suppress compiler warning */
+    assert(ymax != 0);  // suppress compiler warning
 
     for (i = 0; i < MAXCHANNELS; i++) {
         if (session.gpsdata.skyview[i].used) {
@@ -268,7 +271,7 @@ static void nmea_update(void)
     assert(gprmcwin != NULL);
     assert(gpgstwin != NULL);
 
-    /* can be NULL if packet was overlong */
+    // can be NULL if packet was overlong
     fields = session.nmea.field;
 
     if ((unsigned char)'$' == session.lexer.outbuffer[0] &&
@@ -331,30 +334,31 @@ static void nmea_update(void)
                 // FIXME: gnssid and svid to string s/b common to all monitors.
                 char *gnssid = "  ";
                 char sigid = ' ';
+
                 switch (session.gpsdata.skyview[i].gnssid) {
                 default:
                     gnssid = "  ";
                     break;
                 case GNSSID_GPS:
-                    gnssid = "GP";  /* GPS */
+                    gnssid = "GP";  // GPS
                     break;
                 case GNSSID_SBAS:
-                    gnssid = "SB";  /* SBAS */
+                    gnssid = "SB";  // SBAS
                     break;
                 case GNSSID_GAL:
-                    gnssid = "GA";  /* GALILEO */
+                    gnssid = "GA";  // GALILEO
                     break;
                 case GNSSID_BD:
-                    gnssid = "BD";  /* BeiDou */
+                    gnssid = "BD";  // BeiDou
                     break;
                 case GNSSID_IMES:
-                    gnssid = "IM";  /* IMES */
+                    gnssid = "IM";  // IMES
                     break;
                 case GNSSID_QZSS:
-                    gnssid = "QZ";  /* QZSS */
+                    gnssid = "QZ";  // QZSS
                     break;
                 case GNSSID_GLO:
-                    gnssid = "GL";  /* GLONASS */
+                    gnssid = "GL";  // GLONASS
                     break;
                 case GNSSID_IRNSS:
                     gnssid = "IR";  // IRNSS
@@ -362,8 +366,8 @@ static void nmea_update(void)
                 }
                 if (1 < session.gpsdata.skyview[i].sigid &&
                     8 > session.gpsdata.skyview[i].sigid) {
-                    /* Do not display L1, or missing */
-                    /* max is 8 */
+                    // Do not display L1, or missing
+                    // max is 8
                     sigid = '0' + session.gpsdata.skyview[i].sigid;
                 }
                 (void)wmove(satwin, i + 2, 1);
@@ -387,29 +391,33 @@ static void nmea_update(void)
             }
             // clear the rest of the sat lines
             // use i from above loop
-            for (; i < MAXSATS; i++)
+            for (; i < MAXSATS; i++) {
                 (void)mvwprintw(satwin, i+2, 1, "                       ");
-            /* add overflow mark to the display */
-            if (session.gpsdata.satellites_visible <= MAXSATS)
+            }
+            // add overflow mark to the display
+            if (session.gpsdata.satellites_visible <= MAXSATS) {
                 (void)mvwaddch(satwin, MAXSATS + 2, 4, ACS_HLINE);
-            else
+            } else {
                 (void)mvwaddch(satwin, MAXSATS + 2, 4, ACS_DARROW);
+            }
         }
-        if (4 < strlen(fields[0]) && 0 == strcmp(fields[0] + 2, "RMC")) {
-            /* time, lat, lon, course, speed */
+        if (4 < strlen(fields[0]) &&
+            0 == strcmp(fields[0] + 2, "RMC")) {
+            // time, lat, lon, course, speed
             (void)mvwaddstr(gprmcwin, 1, 11, fields[1]);
             (void)mvwprintw(gprmcwin, 2, 11, "%12s %s", fields[3], fields[4]);
             (void)mvwprintw(gprmcwin, 3, 11, "%12s %s", fields[5], fields[6]);
             (void)mvwaddstr(gprmcwin, 4, 11, fields[7]);
             (void)mvwaddstr(gprmcwin, 5, 11, fields[8]);
-            /* the status field, FAA code, and magnetic variation */
+            // the status field, FAA code, and magnetic variation
             (void)mvwaddstr(gprmcwin, 6, 11, fields[2]);
             (void)mvwaddstr(gprmcwin, 6, 24, fields[12]);
             (void)mvwprintw(gprmcwin, 7, 11, "%-5s%s", fields[10], fields[11]);
-            cooked_pvt();       /* cooked version of TPV */
+            cooked_pvt();       // cooked version of TPV
         }
 
-        if (4 < strlen(fields[0]) && 0 == strcmp(fields[0] + 2, "GSA")) {
+        if (4 < strlen(fields[0]) &&
+            0 == strcmp(fields[0] + 2, "GSA")) {
             (void)mvwprintw(gpgsawin, MODE_LINE, 7, "%1s%s",
                             fields[1], fields[2]);
             monitor_satlist(gpgsawin, SATS_LINE, SATS_COL+6);
@@ -512,7 +520,7 @@ extern const struct gps_type_t driver_ashtech;
 static int ashtech_command(char line[])
 {
     switch (line[0]) {
-    case 'N':                   /* normal = 9600, GGA+GSA+GSV+RMC+ZDA */
+    case 'N':                   // normal = 9600, GGA+GSA+GSV+RMC+ZDA
         monitor_nmea_send("$PASHS,NME,ALL,A,OFF");  // silence outbound chatter
         monitor_nmea_send("$PASHS,NME,ALL,B,OFF");
         monitor_nmea_send("$PASHS,NME,GGA,A,ON");
@@ -524,10 +532,10 @@ static int ashtech_command(char line[])
         monitor_nmea_send("$PASHS,INI,%d,%d,,,0,",
                           ASHTECH_SPEED_9600, ASHTECH_SPEED_9600);
         (void)sleep(6);         // it takes 4-6 sec for the receiver to reboot
-        monitor_nmea_send("$PASHS,WAS,ON");     /* enable WAAS */
+        monitor_nmea_send("$PASHS,WAS,ON");     // enable WAAS
         break;
 
-    case 'R':                 /* raw = 57600, normal+XPG+POS+SAT+MCA+PBN+SNV */
+    case 'R':                 // raw = 57600, normal+XPG+POS+SAT+MCA+PBN+SNV
         monitor_nmea_send("$PASHS,NME,ALL,A,OFF");  // silence outbound chatter
         monitor_nmea_send("$PASHS,NME,ALL,B,OFF");
         monitor_nmea_send("$PASHS,NME,GGA,A,ON");
@@ -539,15 +547,15 @@ static int ashtech_command(char line[])
         monitor_nmea_send("$PASHS,INI,%d,%d,,,0,",
                           ASHTECH_SPEED_57600, ASHTECH_SPEED_9600);
         (void)sleep(6);         // it takes 4-6 sec for the receiver to reboot
-        monitor_nmea_send("$PASHS,WAS,ON");     /* enable WAAS */
+        monitor_nmea_send("$PASHS,WAS,ON");     // enable WAAS
 
-        monitor_nmea_send("$PASHS,NME,POS,A,ON");     /* Ashtech TPV solution */
+        monitor_nmea_send("$PASHS,NME,POS,A,ON");     // Ashtech TPV solution
         monitor_nmea_send("$PASHS,NME,SAT,A,ON");   // Ashtech Satellite status
-        monitor_nmea_send("$PASHS,NME,MCA,A,ON");     /* MCA measurements */
-        monitor_nmea_send("$PASHS,NME,PBN,A,ON");     /* ECEF TPV solution */
-        monitor_nmea_send("$PASHS,NME,SNV,A,ON,10");  /* Almanac data */
+        monitor_nmea_send("$PASHS,NME,MCA,A,ON");     // MCA measurements
+        monitor_nmea_send("$PASHS,NME,PBN,A,ON");     // ECEF TPV solution
+        monitor_nmea_send("$PASHS,NME,SNV,A,ON,10");  // Almanac data
 
-        monitor_nmea_send("$PASHS,NME,XMG,A,ON");     /* exception messages */
+        monitor_nmea_send("$PASHS,NME,XMG,A,ON");     // exception messages
         break;
 
     default:
@@ -577,7 +585,7 @@ const struct monitor_object_t fv18_mmt = {
     .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_fv18,
 };
-#endif /* FV18_ENABLE */
+#endif // FV18_ENABLE
 
 #ifdef GPSCLOCK_ENABLE
 extern const struct gps_type_t driver_gpsclock;
@@ -590,7 +598,7 @@ const struct monitor_object_t gpsclock_mmt = {
     .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_gpsclock,
 };
-#endif /* GPSCLOCK_ENABLE */
+#endif // GPSCLOCK_ENABLE
 
 extern const struct gps_type_t driver_mtk3301;
 
@@ -616,4 +624,4 @@ const struct monitor_object_t aivdm_mmt = {
 };
 #endif  // AIVDM_ENABLE
 
-/* vim: set expandtab shiftwidth=4: */
+// vim: set expandtab shiftwidth=4:
