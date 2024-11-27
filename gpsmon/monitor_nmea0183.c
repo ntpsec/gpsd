@@ -84,7 +84,7 @@ static bool nmea_initialize(void)
         OK != mvwprintw(satwin, 1, 1, " SVID  PRN  Az El SN HU") ||
         OK != mvwprintw(satwin, MAXSATS+2, WIDTH_L/2 - 3, " GSV ") ||
         OK != wattrset(satwin, A_NORMAL)) {
-        (void)fputs("gpsmon:ERROR: creating satwin filed\n", stderr);
+        (void)fputs("gpsmon:ERROR: creating satwin foiled\n", stderr);
         exit(EXIT_FAILURE);
     }
 
@@ -284,8 +284,9 @@ static void nmea_update(void)
 
         getmaxyx(nmeawin, ymax, xmax);
         assert(ymax > 0);
-        if (strstr(sentences, fields[0]) == NULL) {
+        if (NULL == strstr(sentences, fields[0])) {
             char *s_end = sentences + strnlen(sentences, sizeof(sentences));
+
             if ((int)(strnlen(sentences, sizeof(sentences)) +
                       strlen(fields[0])) < xmax - 2) {
                 *s_end++ = ' ';
@@ -327,6 +328,7 @@ static void nmea_update(void)
             int nsats =
                 (session.gpsdata.satellites_visible <
                  MAXSATS) ? session.gpsdata.satellites_visible : MAXSATS;
+
             // sort, so at least we see used.
             qsort(session.gpsdata.skyview, session.gpsdata.satellites_visible,
                   sizeof( struct satellite_t), sat_cmp);
@@ -370,8 +372,8 @@ static void nmea_update(void)
                     // max is 8
                     sigid = '0' + session.gpsdata.skyview[i].sigid;
                 }
-                (void)wmove(satwin, i + 2, 1);
-                (void)wprintw(satwin, "%.2s%3d%c %3d %3d %2d %2.0f %c%c",
+                if (OK != wmove(satwin, i + 2, 1) ||
+                    OK != wprintw(satwin, "%.2s%3d%c %3d %3d %2d %2.0f %c%c",
                               gnssid,
                               // svid can be 3 digits
                               session.gpsdata.skyview[i].svid,
@@ -387,36 +389,51 @@ static void nmea_update(void)
                               SAT_HEALTH_BAD ==
                                   session.gpsdata.skyview[i].health ? 'u' : ' ',
                               session.gpsdata.skyview[i].used ? 'Y' : 'N'
-                             );
+                             )) {
+                    (void)fputs("gpsmon:ERROR: filling satwin failed\n",
+                                stderr);
+                    exit(EXIT_FAILURE);
+                }
             }
             // clear the rest of the sat lines
             // use i from above loop
             for (; i < MAXSATS; i++) {
-                (void)mvwprintw(satwin, i+2, 1, "                       ");
+                if (OK != mvwprintw(satwin, i + 2, 1,
+                                    "                       ")) {
+                    (void)fputs("gpsmon:ERROR: filling satwin failed\n",
+                                stderr);
+                    exit(EXIT_FAILURE);
+                }
             }
             // add overflow mark to the display
-            if (session.gpsdata.satellites_visible <= MAXSATS) {
-                (void)mvwaddch(satwin, MAXSATS + 2, 4, ACS_HLINE);
-            } else {
-                (void)mvwaddch(satwin, MAXSATS + 2, 4, ACS_DARROW);
+            if (OK != mvwaddch(satwin, MAXSATS + 2, 4,
+                        session.gpsdata.satellites_visible <= MAXSATS ?
+                            ACS_HLINE : ACS_DARROW)) {
+                (void)fputs("gpsmon:ERROR: overflow satwin failed\n",
+                            stderr);
+                exit(EXIT_FAILURE);
             }
-        }
-        if (4 < strlen(fields[0]) &&
+        } else if (4 < strlen(fields[0]) &&
             0 == strcmp(fields[0] + 2, "RMC")) {
             // time, lat, lon, course, speed
-            (void)mvwaddstr(gprmcwin, 1, 11, fields[1]);
-            (void)mvwprintw(gprmcwin, 2, 11, "%12s %s", fields[3], fields[4]);
-            (void)mvwprintw(gprmcwin, 3, 11, "%12s %s", fields[5], fields[6]);
-            (void)mvwaddstr(gprmcwin, 4, 11, fields[7]);
-            (void)mvwaddstr(gprmcwin, 5, 11, fields[8]);
-            // the status field, FAA code, and magnetic variation
-            (void)mvwaddstr(gprmcwin, 6, 11, fields[2]);
-            (void)mvwaddstr(gprmcwin, 6, 24, fields[12]);
-            (void)mvwprintw(gprmcwin, 7, 11, "%-5s%s", fields[10], fields[11]);
+            if (OK != mvwaddstr(gprmcwin, 1, 11, fields[1]) ||
+                OK != mvwprintw(gprmcwin, 2, 11, "%12s %s",
+                               fields[3], fields[4]) ||
+                OK != mvwprintw(gprmcwin, 3, 11, "%12s %s",
+                               fields[5], fields[6]) ||
+                OK != mvwaddstr(gprmcwin, 4, 11, fields[7]) ||
+                OK != mvwaddstr(gprmcwin, 5, 11, fields[8]) ||
+                // the status field, FAA code, and magnetic variation
+                OK != mvwaddstr(gprmcwin, 6, 11, fields[2]) ||
+                OK != mvwaddstr(gprmcwin, 6, 24, fields[12]) ||
+                OK != mvwprintw(gprmcwin, 7, 11, "%-5s%s",
+                               fields[10], fields[11])) {
+                (void)fputs("gpsmon:ERROR: overflow gprmcwin failed\n",
+                            stderr);
+                exit(EXIT_FAILURE);
+            }
             cooked_pvt();       // cooked version of TPV
-        }
-
-        if (4 < strlen(fields[0]) &&
+        } else if (4 < strlen(fields[0]) &&
             0 == strcmp(fields[0] + 2, "GSA")) {
             (void)mvwprintw(gpgsawin, MODE_LINE, 7, "%1s%s",
                             fields[1], fields[2]);
@@ -425,11 +442,8 @@ static void nmea_update(void)
             (void)mvwprintw(gpgsawin, DOP_LINE, 14, "%-5s", fields[17]);
             (void)mvwprintw(gpgsawin, DOP_LINE, 21, "%-5s", fields[15]);
             monitor_fixframe(gpgsawin);
-        }
-
-        toff_update(gpgsawin, TOFF_LINE, 7);
-
-        if (4 < strlen(fields[0]) && 0 == strcmp(fields[0] + 2, "GGA")) {
+        } else if (4 < strlen(fields[0]) &&
+            0 == strcmp(fields[0] + 2, "GGA")) {
             (void)mvwprintw(gpggawin, 1, 12, "%-17s", fields[1]);
             (void)mvwprintw(gpggawin, 2, 12, "%-17s", fields[2]);
             (void)mvwprintw(gpggawin, 3, 12, "%-17s", fields[4]);
@@ -438,8 +452,8 @@ static void nmea_update(void)
             (void)mvwprintw(gpggawin, 5, 22, "%2.2s", fields[7]);
             (void)mvwprintw(gpggawin, 6, 12, "%-5.5s", fields[8]);
             (void)mvwprintw(gpggawin, 7, 12, "%-5.5s", fields[11]);
-        }
-        if (4 < strlen(fields[0]) && 0 == strcmp(fields[0] + 2, "GST")) {
+        } else if (4 < strlen(fields[0]) &&
+            0 == strcmp(fields[0] + 2, "GST")) {
             (void)mvwprintw(gpgstwin, 1,  6, "%-10s", fields[1]);
             (void)mvwprintw(gpgstwin, 1, 21,  "%-8s", fields[2]);
             (void)mvwprintw(gpgstwin, 2,  6, "%-10s", fields[3]);
@@ -449,6 +463,7 @@ static void nmea_update(void)
             (void)mvwprintw(gpgstwin, 4,  6, "%-10s", fields[7]);
             (void)mvwprintw(gpgstwin, 4, 21,  "%-8s", fields[8]);
         }
+        toff_update(gpgsawin, TOFF_LINE, 7);
     }
 
     pps_update(gpgsawin, PPS_LINE, 6);
