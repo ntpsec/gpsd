@@ -228,8 +228,8 @@ static void monitor_satlist(WINDOW *win, int y, int x)
                 str_appendf(scr, sizeof(scr),
                             "%d ", session.gpsdata.skyview[i].PRN);
             } else {
-                str_appendf(scr, sizeof(scr),
-                            "%s", "+");
+                // no more roome.
+                str_appendf(scr, sizeof(scr), "+");
                 break;
             }
         }
