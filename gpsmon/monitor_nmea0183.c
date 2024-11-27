@@ -413,7 +413,7 @@ static void nmea_update(void)
                 exit(EXIT_FAILURE);
             }
         } else if (4 < strlen(fields[0]) &&
-            0 == strcmp(fields[0] + 2, "RMC")) {
+                   0 == strcmp(fields[0] + 2, "RMC")) {
             // time, lat, lon, course, speed
             if (OK != mvwaddstr(gprmcwin, 1, 11, fields[1]) ||
                 OK != mvwprintw(gprmcwin, 2, 11, "%12s %s",
@@ -432,7 +432,7 @@ static void nmea_update(void)
             }
             cooked_pvt();       // cooked version of TPV
         } else if (4 < strlen(fields[0]) &&
-            0 == strcmp(fields[0] + 2, "GSA")) {
+                   0 == strcmp(fields[0] + 2, "GSA")) {
             if (OK != mvwprintw(gpgsawin, MODE_LINE, 7, "%1s%s",
                                 fields[1], fields[2]) ||
                 OK != mvwprintw(gpgsawin, DOP_LINE, 7, "%-5s", fields[16]) ||
@@ -444,7 +444,7 @@ static void nmea_update(void)
             monitor_satlist(gpgsawin, SATS_LINE, SATS_COL + 6);
             monitor_fixframe(gpgsawin);
         } else if (4 < strlen(fields[0]) &&
-            0 == strcmp(fields[0] + 2, "GGA")) {
+                   0 == strcmp(fields[0] + 2, "GGA")) {
             if (OK != mvwprintw(gpggawin, 1, 12, "%-17s", fields[1]) ||
                 OK != mvwprintw(gpggawin, 2, 12, "%-17s", fields[2]) ||
                 OK != mvwprintw(gpggawin, 3, 12, "%-17s", fields[4]) ||
@@ -457,7 +457,7 @@ static void nmea_update(void)
                 exit(EXIT_FAILURE);
             }
         } else if (4 < strlen(fields[0]) &&
-            0 == strcmp(fields[0] + 2, "GST")) {
+                   0 == strcmp(fields[0] + 2, "GST")) {
             if (OK != mvwprintw(gpgstwin, 1,  6, "%-10s", fields[1]) ||
                 OK != mvwprintw(gpgstwin, 1, 21,  "%-8s", fields[2]) ||
                 OK != mvwprintw(gpgstwin, 2,  6, "%-10s", fields[3]) ||
@@ -466,8 +466,7 @@ static void nmea_update(void)
                 OK != mvwprintw(gpgstwin, 3, 21,  "%-8s", fields[6]) ||
                 OK != mvwprintw(gpgstwin, 4,  6, "%-10s", fields[7]) ||
                 OK != mvwprintw(gpgstwin, 4, 21,  "%-8s", fields[8])) {
-                (void)fputs("gpsmon:ERROR: gpgstwin,failed\n",
-                            stderr);
+                (void)fputs("gpsmon:ERROR: gpgstwin failed\n", stderr);
                 exit(EXIT_FAILURE);
             }
         }
@@ -481,10 +480,13 @@ static void nmea_update(void)
 
 static void nmea_wrap(void)
 {
-    (void)delwin(nmeawin);
-    (void)delwin(gpgsawin);
-    (void)delwin(gpggawin);
-    (void)delwin(gprmcwin);
+    if (OK != delwin(nmeawin) ||
+        OK != delwin(gpgsawin) ||
+        OK != delwin(gpggawin) ||
+        OK != delwin(gprmcwin)) {
+        (void)fputs("gpsmon:ERROR: nmea_wrap failed\n", stderr);
+        exit(EXIT_FAILURE);
+    }
 }
 
 const struct monitor_object_t nmea_mmt = {
