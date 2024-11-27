@@ -741,12 +741,12 @@ static void complain(const char *fmt, ...)
 // per-packet hook
 static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
 {
-    char buf[BUFSIZ];
+    char buf[BUFSIZ] = "";;
 
 // FIXME:  If the following condition is false, the display is screwed up.
 #if defined(SOCKET_EXPORT_ENABLE) && defined(PPS_DISPLAY_ENABLE)
-    char ts_buf1[TIMESPEC_LEN];
-    char ts_buf2[TIMESPEC_LEN];
+    char ts_buf1[TIMESPEC_LEN] = "";
+    char ts_buf2[TIMESPEC_LEN] = "";
 
     if (!serial &&
         str_starts_with((char*)device->lexer.outbuffer,
@@ -821,7 +821,7 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
     } else
 #endif // SOCKET_EXPORT_ENABLE && PPS_DISPLAY_ENABLE
     {
-        size_t blen;
+        char buf2[BUFSIZ - 5] = "";
 
 #ifdef __future__
         if (!serial) {
@@ -837,25 +837,31 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
             select_packet_monitor(device);
         }
 
-        (void)snprintf(buf, sizeof(buf), "(%d) ",
-                       (int)device->lexer.outbuflen);
-        blen  = strnlen(buf, sizeof(buf));
-        cond_hexdump(buf + blen, sizeof(buf) - blen,
-                     (char *)device->lexer.outbuffer,
+        // put the raw, maybe hexified, message to "buf"
+        cond_hexdump(buf2, sizeof(buf2), (char *)device->lexer.outbuffer,
                      device->lexer.outbuflen);
-        (void)strlcat(buf, "\n", sizeof(buf));
+        (void)snprintf(buf, sizeof(buf), "(%zd) %s\n",
+                       device->lexer.outbuflen, buf2);
     }
 
     report_lock();
 
     if (!curses_active) {
+        // dump the packet to tstdout
         (void)fputs(buf, stdout);
     } else {
         if (NULL != packetwin) {
-            (void)waddstr(packetwin, buf);
-            (void)wnoutrefresh(packetwin);
+            // dump the packet to packetwin
+            if (OK != waddstr(packetwin, buf) ||
+                OK != wnoutrefresh(packetwin)) {
+                (void)fputs("gpsmon:ERROR: packetwin foiled\n", stderr);
+                exit(EXIT_FAILURE);
+            }
         }
-        (void)doupdate();
+        if (OK != doupdate()) {
+            (void)fputs("gpsmon:ERROR: doupdate foiled\n", stderr);
+            exit(EXIT_FAILURE);
+        }
     }
 
     if (NULL != logfile &&
@@ -876,8 +882,9 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
     } else if (device->newdata.time.tv_sec <=
                device->pps_thread.fix_in.real.tv_sec) {
         // "NTP: Not a new time
-    } else
+    } else {
         ntp_latch(device, &time_offset);
+    }
 }
 
 static bool do_command(const char *line)
@@ -1385,7 +1392,7 @@ int main(int argc, char **argv)
 
     (void)fputs("gpsmon:INFO: gpsmon is deprecated.\n"
                 "gpsmon:INFO: gpsmon is not a full gpsd client.\n"
-                "gpsmon:INFO: gpsmon is a poorly maintained developt tool\n"
+                "gpsmon:INFO: gpsmon is a poorly maintained developer tool\n"
                 "gpsmon:INFO: Only developers should use gpsmon.\n",
                 stderr);
 
