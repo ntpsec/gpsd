@@ -77,12 +77,16 @@ static bool nmea_initialize(void)
     (void)wattrset(nmeawin, A_NORMAL);
 
     satwin = derwin(devicewin, MAXSATS + 3, WIDTH_L, HEIGHT_1 + HEIGHT_2, 0);
-    assert(satwin !=NULL);
-    (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
-    (void)wattrset(satwin, A_BOLD);
-    (void)mvwprintw(satwin, 1, 1, " SVID  PRN  Az El SN HU");
-    (void)mvwprintw(satwin, MAXSATS+2, WIDTH_L/2 - 3, " GSV ");
-    (void)wattrset(satwin, A_NORMAL);
+    if (NULL == satwin ||
+        OK != wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0) ||
+        OK != syncok(satwin, true) ||
+        OK != wattrset(satwin, A_BOLD) ||
+        OK != mvwprintw(satwin, 1, 1, " SVID  PRN  Az El SN HU") ||
+        OK != mvwprintw(satwin, MAXSATS+2, WIDTH_L/2 - 3, " GSV ") ||
+        OK != wattrset(satwin, A_NORMAL)) {
+        (void)fputs("gpsmon:ERROR: creating satwin filed\n", stderr);
+        exit(EXIT_FAILURE);
+    }
 
     gprmcwin = derwin(devicewin, HEIGHT_3, WIDTH_M, HEIGHT_1 + HEIGHT_2,
                       WIDTH_L - 1);
