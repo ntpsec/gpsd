@@ -409,8 +409,7 @@ static void nmea_update(void)
             if (OK != mvwaddch(satwin, MAXSATS + 2, 4,
                         session.gpsdata.satellites_visible <= MAXSATS ?
                             ACS_HLINE : ACS_DARROW)) {
-                (void)fputs("gpsmon:ERROR: overflow satwin failed\n",
-                            stderr);
+                (void)fputs("gpsmon:ERROR: overflow satwin failed\n", stderr);
                 exit(EXIT_FAILURE);
             }
         } else if (4 < strlen(fields[0]) &&
@@ -428,40 +427,49 @@ static void nmea_update(void)
                 OK != mvwaddstr(gprmcwin, 6, 24, fields[12]) ||
                 OK != mvwprintw(gprmcwin, 7, 11, "%-5s%s",
                                fields[10], fields[11])) {
-                (void)fputs("gpsmon:ERROR: overflow gprmcwin failed\n",
-                            stderr);
+                (void)fputs("gpsmon:ERROR: gprmcwin failed\n", stderr);
                 exit(EXIT_FAILURE);
             }
             cooked_pvt();       // cooked version of TPV
         } else if (4 < strlen(fields[0]) &&
             0 == strcmp(fields[0] + 2, "GSA")) {
-            (void)mvwprintw(gpgsawin, MODE_LINE, 7, "%1s%s",
-                            fields[1], fields[2]);
-            monitor_satlist(gpgsawin, SATS_LINE, SATS_COL+6);
-            (void)mvwprintw(gpgsawin, DOP_LINE, 7, "%-5s", fields[16]);
-            (void)mvwprintw(gpgsawin, DOP_LINE, 14, "%-5s", fields[17]);
-            (void)mvwprintw(gpgsawin, DOP_LINE, 21, "%-5s", fields[15]);
+            if (OK != mvwprintw(gpgsawin, MODE_LINE, 7, "%1s%s",
+                                fields[1], fields[2]) ||
+                OK != mvwprintw(gpgsawin, DOP_LINE, 7, "%-5s", fields[16]) ||
+                OK != mvwprintw(gpgsawin, DOP_LINE, 14, "%-5s", fields[17]) ||
+                OK != mvwprintw(gpgsawin, DOP_LINE, 21, "%-5s", fields[15])) {
+                (void)fputs("gpsmon:ERROR: gpgsawin failed\n", stderr);
+                exit(EXIT_FAILURE);
+            }
+            monitor_satlist(gpgsawin, SATS_LINE, SATS_COL + 6);
             monitor_fixframe(gpgsawin);
         } else if (4 < strlen(fields[0]) &&
             0 == strcmp(fields[0] + 2, "GGA")) {
-            (void)mvwprintw(gpggawin, 1, 12, "%-17s", fields[1]);
-            (void)mvwprintw(gpggawin, 2, 12, "%-17s", fields[2]);
-            (void)mvwprintw(gpggawin, 3, 12, "%-17s", fields[4]);
-            (void)mvwprintw(gpggawin, 4, 12, "%-17s", fields[9]);
-            (void)mvwprintw(gpggawin, 5, 12, "%1.1s", fields[6]);
-            (void)mvwprintw(gpggawin, 5, 22, "%2.2s", fields[7]);
-            (void)mvwprintw(gpggawin, 6, 12, "%-5.5s", fields[8]);
-            (void)mvwprintw(gpggawin, 7, 12, "%-5.5s", fields[11]);
+            if (OK != mvwprintw(gpggawin, 1, 12, "%-17s", fields[1]) ||
+                OK != mvwprintw(gpggawin, 2, 12, "%-17s", fields[2]) ||
+                OK != mvwprintw(gpggawin, 3, 12, "%-17s", fields[4]) ||
+                OK != mvwprintw(gpggawin, 4, 12, "%-17s", fields[9]) ||
+                OK != mvwprintw(gpggawin, 5, 12, "%1.1s", fields[6]) ||
+                OK != mvwprintw(gpggawin, 5, 22, "%2.2s", fields[7]) ||
+                OK != mvwprintw(gpggawin, 6, 12, "%-5.5s", fields[8]) ||
+                OK != mvwprintw(gpggawin, 7, 12, "%-5.5s", fields[11])) {
+                (void)fputs("gpsmon:ERROR: gpggawin failed\n", stderr);
+                exit(EXIT_FAILURE);
+            }
         } else if (4 < strlen(fields[0]) &&
             0 == strcmp(fields[0] + 2, "GST")) {
-            (void)mvwprintw(gpgstwin, 1,  6, "%-10s", fields[1]);
-            (void)mvwprintw(gpgstwin, 1, 21,  "%-8s", fields[2]);
-            (void)mvwprintw(gpgstwin, 2,  6, "%-10s", fields[3]);
-            (void)mvwprintw(gpgstwin, 2, 21,  "%-8s", fields[4]);
-            (void)mvwprintw(gpgstwin, 3,  6, "%-10s", fields[5]);
-            (void)mvwprintw(gpgstwin, 3, 21,  "%-8s", fields[6]);
-            (void)mvwprintw(gpgstwin, 4,  6, "%-10s", fields[7]);
-            (void)mvwprintw(gpgstwin, 4, 21,  "%-8s", fields[8]);
+            if (OK != mvwprintw(gpgstwin, 1,  6, "%-10s", fields[1]) ||
+                OK != mvwprintw(gpgstwin, 1, 21,  "%-8s", fields[2]) ||
+                OK != mvwprintw(gpgstwin, 2,  6, "%-10s", fields[3]) ||
+                OK != mvwprintw(gpgstwin, 2, 21,  "%-8s", fields[4]) ||
+                OK != mvwprintw(gpgstwin, 3,  6, "%-10s", fields[5]) ||
+                OK != mvwprintw(gpgstwin, 3, 21,  "%-8s", fields[6]) ||
+                OK != mvwprintw(gpgstwin, 4,  6, "%-10s", fields[7]) ||
+                OK != mvwprintw(gpgstwin, 4, 21,  "%-8s", fields[8])) {
+                (void)fputs("gpsmon:ERROR: gpgstwin,failed\n",
+                            stderr);
+                exit(EXIT_FAILURE);
+            }
         }
         toff_update(gpgsawin, TOFF_LINE, 7);
     }
