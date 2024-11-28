@@ -2440,7 +2440,8 @@ manpage_targets = []
 maninstall = []
 if adoc_prog:
     adoc_args_m = ('-v -a gpsdweb=%s -a gpsdver=%s' % (website, gpsd_version))
-    adoc_args = (adoc_args_m + ' -a docinfo=shared -a linkcss -a webfonts!')
+    adoc_args = (adoc_args_m + ' -a docinfo=shared -a linkcss ' +
+                 '-a webfonts! -a stylesheet!')
     for (man, src) in all_manpages.items():
         # build it
         # make nroff man page

@@ -10,116 +10,160 @@
  * ad, which is 160x600.
  */
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: helvetica, sans-serif;
-  color: #333;
-  background-image: url(paper.gif);
+ body {
+	margin: 0;
+	padding: 0;
+	font-family: helvetica, sans-serif;
+	color: var(--fg);
+	background: var(--bg1);
 }
 
 p {
-  font-family: helvetica, sans-serif;
-  margin: 0 0 1em 0;
-  padding: 0;
+	font-family: helvetica, sans-serif;
+	margin: 0 0 1em 0;
+	padding: 0;
 }
 
-#Content > p {
-  text-indent: 2em;
-  margin: 0;
+#content p,
+#Content>p {
+	text-indent: 2em;
+	margin: 0;
 }
 
-#Content > p + p {
-  text-indent: 2em;
-  margin-top: 1ex;
+#content p+p,
+#Content>p+p {
+	text-indent: 2em;
+	margin-top: 1ex;
 }
 
 h1 {
-  font-size: x-large;
-  margin-bottom: 0.25ex;
+	font-size: x-large;
+	margin-bottom: 0.25ex;
 }
 
 h2 {
-  font-size: large;
-  margin-bottom: 0.25ex;
+	font-size: large;
+	margin-bottom: 0.25ex;
 }
 
 a {
-  text-decoration: none;
-  font-family: verdana, arial, helvetica, sans-serif;
+	text-decoration: none;
+	font-family: verdana, arial, helvetica, sans-serif;
 }
 
 a:hover {
-  background-color: #ccc;
+	background-color: var(--bgh);
 }
 
+#header,
 #Header {
-  font-weight: 600;
-  font-size: x-large;	/* should be same as an h1 header */
-  margin: 20px 0 10px 0;
-  padding: 0 0 2ex 20px;
-  border-style: solid;
-  border-color: black;
-  border-width: 1px 0;
-  background-color: #eee;
-  height: 1ex;
+	font-weight: 600;
+	font-size: x-large;	/* should be same as an h1 header */
+	margin: 1.25em 0.25em 0.875em 0.25em;
+	padding: 0 0 0 1.25em;
+	border-style: solid;
+	border-color: var(--fg);
+	border-width: 1px 0;
+	background-color: var(--bg2);
+	height: max-content;
 }
 
-#Content {
-  /* Left margin is menu width + 40 pixels */
-  margin: 0 50px 50px 200px;
-  padding: 10px;
+#header h1 {
+	margin: 0.25ex 0;
 }
 
+#header br {
+	display: none;
+}
+
+#Content,
+#content {
+	/* Left margin is menu width + 40 pixels */
+	margin: 0 0 3.13em 12.5em;
+	padding: 0.63em;
+}
+
+body[class] #Menu {
+	position: absolute;
+	left: 0;
+	width: 10em;
+}
+
+body:not([class]) #Menu {
+	float: left;
+	top: 5em;
+	left: 1.25em;
+	width: 10em;
+}
 
 #Menu {
-  float:left;
-  top: 80px;
-  left: 20px;
-  width: 160px;
-  padding: 0.5em;
-  margin: 0.5em;
-  background-color: #eee;
-  border: 1px dashed #999;
+	padding: 0.5em;
+	margin: 0.5em;
+	background-color: var(--bg2);
+	border: 1px dashed var(--trim);
 }
 
 /* For internal tables of contents on a page. E.g. hacking.html. */
-ol.ToC {
-  list-style: upper-roman;
+.ToC {
+	list-style: upper-roman;
 }
 
-div.strike {
-  text-decoration: line-through;
+.strike {
+	text-decoration: line-through;
 }
 
 @media print {
-  #Content {
-    /* Left margin is menu width + 3em */
-    margin: 0 50px 50px 0;
-    padding: 10px;
-  }
+	#content {
+		/* Left margin is menu width + 3em */
+		margin: 0 3.13em 3.13em 0;
+		padding: 0.63em;
+	}
 
-  #Menu {
-    display: none;
-  }
+	#Menu {
+		display: none;
+	}
 }
 
 /* For convenience */
 .centered {
-  text-align: center;
-  margin-left: auto;
-  margin-right: auto;
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .right {
-  float: right;
-  margin: 0;
+	float: right;
+	margin: 0;
 }
 
 .notebox {
-  background-color: #eee;
-  border: 1px dashed #999;
-  margin: 15px;
-  font-size: small;
-  text-indent: 0;
+	background-color: var(--bg2);
+	border: 1px dashed var(--trim);
+	margin: 0.94em;
+	font-size: small;
+	text-indent: 0;
+}
+
+:root {
+	--lite-bg1: url('paper.gif') #fff;
+	--lite-bg2: #eee;
+	--lite-bgh: #ccc;
+	--lite-fg: #000;
+	--lite-trim: #999;
+
+	color-scheme: light;
+	--bg1: var(--lite-bg1);
+	--bg2: var(--lite-bg2);
+	--bgh: var(--lite-bgh);
+	--fg: var(--lite-fg);
+	--trim: var(--lite-trim);
+}
+
+html[lite="lite"] {
+	color-scheme: light;
+	--bg1: var(--lite-bg1);
+	--bg2: var(--lite-bg2);
+	--bgh: var(--lite-bgh);
+	--fg: var(--lite-fg);
+	--trim: var(--lite-trim);
 }
