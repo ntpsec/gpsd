@@ -213,7 +213,7 @@ static void monitor_satlist(WINDOW *win, int y, int x)
     int i;
 
     assert(win != NULL);
-    if (OK != wmove(win, y, x);
+    if (OK != wmove(win, y, x) ||
         OK != wclrtoeol(win)) {
         (void)fputs("gpsmon:ERROR: monitor_satlist foiled\n", stderr);
         exit(EXIT_FAILURE);
