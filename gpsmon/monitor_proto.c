@@ -1,11 +1,11 @@
 /*
  * Prototype file for a gpsmon monitor object.
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
 #include <ctype.h>
@@ -55,7 +55,7 @@ static bool PROTO_initialize(void)
      * telling you firmware rev levels or whatever.
      */
 
-    /* return false if the window allocation failed; gpsmon will abort */
+    // return false if the window allocation failed; gpsmon will abort
     return true;
 }
 
@@ -95,7 +95,7 @@ static int PROTO_command(char line[])
      * driver-specific commands and leave lowercase ones for the
      * generic gpsmon ones.
      */
-    assert(strlen(line));
+    assert(strnlen(line, 3));
 
     /*
      * Return COMMAND_UNKNOWN to tell gpsmon you can't interpret the line, and
@@ -126,7 +126,7 @@ const struct monitor_object_t PROTO_mmt = {
     .update = PROTO_update,
     .command = PROTO_command,
     .wrap = PROTO_wrap,
-    .min_y = 23, .min_x = 80,   /* size of the device window */
+    .min_y = 23, .min_x = 80,   // size of the device window
     /*
      * The gpsd driver type for your device.  gpsmon will use the mode_switcher
      * method for 'n', the speed_switcher for 's', and the control_send method
