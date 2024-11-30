@@ -293,7 +293,7 @@ static void nmea_update(void)
             char *s_end = sentences + strnlen(sentences, sizeof(sentences));
 
             if ((int)(strnlen(sentences, sizeof(sentences)) +
-                      strlen(fields[0])) < xmax - 2) {
+                      strnlen(fields[0], sizeof(sentences))) < xmax - 2) {
                 *s_end++ = ' ';
                 (void)strlcpy(s_end, fields[0], sizeof(sentences) - 1);
             } else {
@@ -319,14 +319,15 @@ static void nmea_update(void)
                 (void)mvwchgat(nmeawin, SENTENCELINE, 1, xmax - 13, A_NORMAL,
                                0, NULL);
                 (void)mvwchgat(nmeawin, SENTENCELINE, 1 + (findme - sentences),
-                               (int)strlen(fields[0]), A_BOLD, 0, NULL);
+                               (int)strnlen(fields[0], NMEA_MAX_FLD),
+                               A_BOLD, 0, NULL);
             }
         }
         last_tick = now;
 
         // this is a fake, GSV not decoded here, using sats from JSON
         // fields[1] is current GSV sentence, fields[2] is total sentences
-        if (4 < strlen(fields[0]) &&
+        if (4 < strnlen(fields[0], 5) &&
             0 == strcmp(fields[0] + 2, "GSV") &&
             0 == strcmp(fields[1], fields[2])) {
             int i;
@@ -417,7 +418,7 @@ static void nmea_update(void)
                 (void)fputs("gpsmon:ERROR: overflow satwin failed\n", stderr);
                 exit(EXIT_FAILURE);
             }
-        } else if (4 < strlen(fields[0]) &&
+        } else if (4 < strnlen(fields[0], 5) &&
                    0 == strcmp(fields[0] + 2, "RMC")) {
             // time, lat, lon, course, speed
             if (OK != mvwaddstr(gprmcwin, 1, 11, fields[1]) ||
@@ -436,7 +437,7 @@ static void nmea_update(void)
                 exit(EXIT_FAILURE);
             }
             cooked_pvt();       // cooked version of TPV
-        } else if (4 < strlen(fields[0]) &&
+        } else if (4 < strnlen(fields[0], 5) &&
                    0 == strcmp(fields[0] + 2, "GSA")) {
             if (OK != mvwprintw(gpgsawin, MODE_LINE, 7, "%1s%s",
                                 fields[1], fields[2]) ||
@@ -448,7 +449,7 @@ static void nmea_update(void)
             }
             monitor_satlist(gpgsawin, SATS_LINE, SATS_COL + 6);
             monitor_fixframe(gpgsawin);
-        } else if (4 < strlen(fields[0]) &&
+        } else if (4 < strnlen(fields[0], 6) &&
                    0 == strcmp(fields[0] + 2, "GGA")) {
             if (OK != mvwprintw(gpggawin, 1, 12, "%-17s", fields[1]) ||
                 OK != mvwprintw(gpggawin, 2, 12, "%-17s", fields[2]) ||
@@ -461,7 +462,7 @@ static void nmea_update(void)
                 (void)fputs("gpsmon:ERROR: gpggawin failed\n", stderr);
                 exit(EXIT_FAILURE);
             }
-        } else if (4 < strlen(fields[0]) &&
+        } else if (4 < strnlen(fields[0], 6) &&
                    0 == strcmp(fields[0] + 2, "GST")) {
             if (OK != mvwprintw(gpgstwin, 1,  6, "%-10s", fields[1]) ||
                 OK != mvwprintw(gpgstwin, 1, 21,  "%-8s", fields[2]) ||
