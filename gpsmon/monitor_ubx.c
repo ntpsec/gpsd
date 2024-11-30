@@ -1,5 +1,5 @@
 /*
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -95,18 +95,22 @@ static bool ubx_initialize(void)
 #define MAXSKYCHANS 16
 static void display_nav_svinfo(unsigned char *buf, size_t data_len)
 {
-    int az, el, i, nchan;
-    unsigned fl, off, prn, ss;
+    int el, i, nchan;
+    unsigned off, prn, ss;
 
     // very coarse sanity check (minimal length for valid message reached?)
-    if (data_len < 8)
+    if (8 > data_len) {
         return;
+    }
 
     nchan = getub(buf, 4);
-    if (nchan > MAXSKYCHANS)
+    if (MAXSKYCHANS < nchan) {
         nchan = MAXSKYCHANS;
+    }
 
     for (i = 0; i < nchan; i++) {
+        unsigned az, fl;
+
         off = 8 + 12 * i;
 
         prn = getub(buf, off + 1);
@@ -134,20 +138,22 @@ static void display_nav_svinfo(unsigned char *buf, size_t data_len)
 static void display_nav_sat(unsigned char *buf, size_t data_len)
 {
     int az, el, i, nchan;
-    unsigned fl, gnss, off, prn, ss;
+    unsigned gnss, off, prn, ss;
 
     // very coarse sanity check (minimal length for valid message reached?)
-    if (data_len < 8) {
+    if (8 > data_len) {
         return;
     }
 
     nchan = getub(buf, 5);
-    if (nchan > MAXSKYCHANS) {
+    if (MAXSKYCHANS < nchan) {
         nchan = MAXSKYCHANS;
     }
 
 #define SV session.gpsdata.skyview[i]
     for (i = 0; i < nchan; i++) {
+        unsigned fl;
+
         off = 8 + 12 * i;
         gnss = getub(buf, off);
         prn = getub(buf, off + 1);
@@ -157,17 +163,20 @@ static void display_nav_sat(unsigned char *buf, size_t data_len)
         az = getles16(buf, off + 4);
 
         // Translate sat numbering to the one used in UBX-NAV-SVINFO
-        if (gnss == 2) {
+        if (2 == gnss) {
             prn += 210;  // Galileo
-        } else if (gnss == 3 && prn <= 5) {
+        } else if (3 == gnss &&
+                   5 >= prn) {
             prn += 158;  // BeiDou
-        } else if (gnss == 3 && prn >= 6) {
+        } else if (3 == gnss &&
+                   6 <= prn) {
             prn += 27;   // BeiDou (continued)
-        } else if (gnss == 4) {
+        } else if (4 == gnss) {
             prn += 172;  // IMES
-        } else if (gnss == 5) {
+        } else if (5 == gnss) {
             prn += 192;  // QZSS
-        } else if (gnss == 6 && prn != 255) {
+        } else if (6 == gnss &&
+                   255 != prn) {
             prn += 64;   // GLONASS
         }
 
@@ -199,7 +208,7 @@ static void display_nav_sat(unsigned char *buf, size_t data_len)
 
 static void display_nav_dop(unsigned char *buf, size_t data_len)
 {
-    if (data_len != 18) {
+    if (18 != data_len) {
         return;
     }
     pastef(dopwin, 1,  9, 3, "%4.1f", getleu16(buf, 12) / 100.0);
