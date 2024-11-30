@@ -213,8 +213,11 @@ static void monitor_satlist(WINDOW *win, int y, int x)
     int i;
 
     assert(win != NULL);
-    (void)wmove(win, y, x);
-    (void)wclrtoeol(win);
+    if (OK != wmove(win, y, x);
+        OK != wclrtoeol(win)) {
+        (void)fputs("gpsmon:ERROR: monitor_satlist foiled\n", stderr);
+        exit(EXIT_FAILURE);
+    }
     scr[0] = '\0';
     tmp[0] = '\0';
     getmaxyx(win, ymax, xmax);
@@ -235,8 +238,10 @@ static void monitor_satlist(WINDOW *win, int y, int x)
         }
     }
 
-    (void)mvwaddnstr(win, y, x, scr, xmax - 1 - x);
-    monitor_fixframe(win);
+    if (OK != mvwaddnstr(win, y, x, scr, xmax - 1 - x)) {
+        (void)fputs("gpsmon:ERROR: monitor_satlist foiled\n", stderr);
+        exit(EXIT_FAILURE);
+    }
 }
 
 /* sort the skyviews
