@@ -2740,7 +2740,7 @@ int main(int argc, char *argv[])
          */
         if (0 != setgroups(0, NULL)) {
             // Needs CAP_SETGID?
-            GPSD_LOG(LOG_ERROR, &context.errout,
+            GPSD_LOG(LOG_WARN, &context.errout,
                      "setgroups(0,  NULL) failed, errno %s(%d)\n",
                      strerror(errno), errno);
         }
@@ -2751,7 +2751,7 @@ int main(int argc, char *argv[])
             if (grp) {
                 if (0 != setgid(grp->gr_gid)) {
                     // Needs CAP_SETGID?
-                    GPSD_LOG(LOG_ERROR, &context.errout,
+                    GPSD_LOG(LOG_WARN, &context.errout,
                              "setgid() failed, %s(%d)\n",
                              strerror(errno), errno);
                 }
