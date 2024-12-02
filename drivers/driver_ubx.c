@@ -2040,6 +2040,7 @@ static gps_mask_t ubx_msg_mon_hw(struct gps_device_t *session,
         FALLTHROUGH
     default:
         // Dunno...
+        session->newdata.ant_stat = ANT_UNK;
         break;
     }
     if (0 < jamInd ||
@@ -2104,10 +2105,33 @@ static gps_mask_t ubx_msg_mon_rf(struct gps_device_t *session,
         unsigned magI = getub(buf, 22 + off);
         int ofsQ = getsb(buf, 23 + off);
         unsigned magQ = getub(buf, 24 + off);
+        unsigned ant_stat;
+
+        switch (antStatus) {
+        case 2:
+            ant_stat = ANT_OK;
+            break;
+        case 3:
+            ant_stat = ANT_SHORT;
+            break;
+        case 4:
+            ant_stat = ANT_OPEN;
+            break;
+        case 0:
+            // Init
+            FALLTHROUGH
+        case 1:
+            // Unknown
+            FALLTHROUGH
+        default:
+            // Dunno...
+            ant_stat = ANT_UNK;
+            break;
+        }
 
         // use the highest ant_stat and jamInd
-        if ((unsigned)session->newdata.ant_stat < antStatus) {
-            session->newdata.ant_stat = antStatus;
+        if ((unsigned)session->newdata.ant_stat < ant_stat) {
+            session->newdata.ant_stat = ant_stat;
         }
         if ((unsigned)session->newdata.jam < jamInd) {
             session->newdata.jam = jamInd;
