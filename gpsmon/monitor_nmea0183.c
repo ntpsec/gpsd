@@ -279,6 +279,7 @@ static void nmea_update(void)
     // can be NULL if packet was overlong
     fields = session.nmea.field;
 
+    // why do we care about outbuffer??
     if ((unsigned char)'$' == session.lexer.outbuffer[0] &&
         NULL != fields &&
         NULL != fields[0]) {
@@ -286,17 +287,24 @@ static void nmea_update(void)
         int ymax, xmax;
         timespec_t now;
         timespec_t ts_diff;
+        size_t field0_len = strnlen(fields[0], NMEA_MAX_FLD);
 
         getmaxyx(nmeawin, ymax, xmax);
         assert(ymax > 0);
-        if (NULL == strstr(sentences, fields[0])) {
-            char *s_end = sentences + strnlen(sentences, sizeof(sentences));
+        assert(xmax > 0);
 
-            if ((int)(strnlen(sentences, sizeof(sentences)) +
-                      strnlen(fields[0], sizeof(sentences))) < xmax - 2) {
+        // Add message type to sentence line??
+        if (NULL == strstr(sentences, fields[0])) {
+            size_t s_len = strnlen(sentences, sizeof(sentences));
+            char *s_end = sentences + s_len;
+
+            if ((int)(s_len + field0_len) < xmax - 2) {
                 *s_end++ = ' ';
-                (void)strlcpy(s_end, fields[0], sizeof(sentences) - 1);
+                *s_end = '\0';
+                (void)strlcpy(s_end, fields[0],
+                              sizeof(sentences) - (s_len + 2));
             } else {
+                // no room for more
                 *--s_end = '.';
                 *--s_end = '.';
                 *--s_end = '.';
@@ -319,17 +327,19 @@ static void nmea_update(void)
                 (void)mvwchgat(nmeawin, SENTENCELINE, 1, xmax - 13, A_NORMAL,
                                0, NULL);
                 (void)mvwchgat(nmeawin, SENTENCELINE, 1 + (findme - sentences),
-                               (int)strnlen(fields[0], NMEA_MAX_FLD),
-                               A_BOLD, 0, NULL);
+                               (int)field0_len, A_BOLD, 0, NULL);
             }
         }
         last_tick = now;
 
-        // this is a fake, GSV not decoded here, using sats from JSON
-        // fields[1] is current GSV sentence, fields[2] is total sentences
-        if (4 < strnlen(fields[0], 5) &&
-            0 == strcmp(fields[0] + 2, "GSV") &&
-            0 == strcmp(fields[1], fields[2])) {
+        if (5 != field0_len) {
+            // we only decode a few sentences
+        } else if (0 == strcmp(fields[0] + 2, "GSV") &&
+                   0 == strcmp(fields[1], fields[2])) {
+            /* this is a fake, GSV not decoded here, using sats from JSON
+             * fields[1] is current GSV sentence, fields[2] is total sentences.
+             * So we only look at the last one.
+             */
             int i;
             int nsats =
                 (session.gpsdata.satellites_visible <
@@ -418,8 +428,7 @@ static void nmea_update(void)
                 (void)fputs("gpsmon:ERROR: overflow satwin failed\n", stderr);
                 exit(EXIT_FAILURE);
             }
-        } else if (4 < strnlen(fields[0], 5) &&
-                   0 == strcmp(fields[0] + 2, "RMC")) {
+        } else if (0 == strcmp(fields[0] + 2, "RMC")) {
             // time, lat, lon, course, speed
             if (OK != mvwaddstr(gprmcwin, 1, 11, fields[1]) ||
                 OK != mvwprintw(gprmcwin, 2, 11, "%12s %s",
@@ -437,8 +446,7 @@ static void nmea_update(void)
                 exit(EXIT_FAILURE);
             }
             cooked_pvt();       // cooked version of TPV
-        } else if (4 < strnlen(fields[0], 5) &&
-                   0 == strcmp(fields[0] + 2, "GSA")) {
+        } else if (0 == strcmp(fields[0] + 2, "GSA")) {
             if (OK != mvwprintw(gpgsawin, MODE_LINE, 7, "%1s%s",
                                 fields[1], fields[2]) ||
                 OK != mvwprintw(gpgsawin, DOP_LINE, 7, "%-5s", fields[16]) ||
@@ -449,8 +457,7 @@ static void nmea_update(void)
             }
             monitor_satlist(gpgsawin, SATS_LINE, SATS_COL + 6);
             monitor_fixframe(gpgsawin);
-        } else if (4 < strnlen(fields[0], 6) &&
-                   0 == strcmp(fields[0] + 2, "GGA")) {
+        } else if (0 == strcmp(fields[0] + 2, "GGA")) {
             if (OK != mvwprintw(gpggawin, 1, 12, "%-17s", fields[1]) ||
                 OK != mvwprintw(gpggawin, 2, 12, "%-17s", fields[2]) ||
                 OK != mvwprintw(gpggawin, 3, 12, "%-17s", fields[4]) ||
@@ -462,8 +469,7 @@ static void nmea_update(void)
                 (void)fputs("gpsmon:ERROR: gpggawin failed\n", stderr);
                 exit(EXIT_FAILURE);
             }
-        } else if (4 < strnlen(fields[0], 6) &&
-                   0 == strcmp(fields[0] + 2, "GST")) {
+        } else if (0 == strcmp(fields[0] + 2, "GST")) {
             if (OK != mvwprintw(gpgstwin, 1,  6, "%-10s", fields[1]) ||
                 OK != mvwprintw(gpgstwin, 1, 21,  "%-8s", fields[2]) ||
                 OK != mvwprintw(gpgstwin, 2,  6, "%-10s", fields[3]) ||
