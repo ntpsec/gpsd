@@ -212,6 +212,8 @@ scan-build:
   extends: .debian_build
 
 # https://www.synopsys.com/blogs/software-security/integrating-coverity-scan-with-gitlab-ci/
+# Check if three variables required for Coverity job are set before running.
+# Otherwise do not even create the job. Also, only run for push events.
 coverity:
   allow_failure: true
   image: debian:latest
@@ -225,9 +227,6 @@ coverity:
         pps-tools python-is-python3 python3-all python3-setuptools
         qtbase5-dev scons'
   script:
-    - \[ -n "$COVERITY_SCAN_PROJECT_NAME" ] || exit 1
-    - \[ -n "$COVERITY_SCAN_TOKEN" ] || exit 1
-    - \[ -n "$COVERITY_USER_EMAIL" ] || exit 1
     - apt update
     - apt -y install --no-install-recommends eatmydata
     - eatmydata -- apt -y install --no-install-recommends ${PACKAGES}
@@ -246,9 +245,16 @@ coverity:
   artifacts:
     paths:
       - cov-int
-  # extends: .when_sched
-  # temporarily run every push
-  extends: .when_push
+  rules:
+    - if: $COVERITY_SCAN_PROJECT_NAME =~ "^$"
+      when: never
+    - if: $COVERITY_SCAN_TOKEN =~ "^$"
+      when: never
+    - if: $COVERITY_USER_EMAIL =~ "^$"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: always
+    - when: never
 
 
 # as long as sconstruct has so many options, this does not make sense
