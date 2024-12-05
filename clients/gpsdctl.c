@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 {
     char *sockenv = getenv("GPSD_SOCKET");
     char *optenv = getenv("GPSD_OPTIONS");
-    const char *action = NULL;       // Action to perform
+    char action[10] = "";            // Action to perform
     const char *device = NULL;       // Device to perform action on
     size_t len;
     const char *optstring = "?hV";
@@ -181,7 +181,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    action = argv[optind++];
+    // Pacify Coverity 281704, remove taint from argv[]
+    strlcpy(action, argv[optind++], sizeof(action));
     if (0 != strcmp(action, "add") &&
         0 != strcmp(action, "remove")) {
         (void)syslog(LOG_ERR, "Invalid action.  Must be 'add' or 'remove'");
