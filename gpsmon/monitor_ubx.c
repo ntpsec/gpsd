@@ -123,7 +123,11 @@ static void display_nav_svinfo(unsigned char *buf, size_t data_len)
     }
     // clear potentially stale sat lines unconditionally
     for (;i < MAXSKYCHANS; i++) {
-        mvwprintw(satwin, (int)(i + 2), 4, "%22s", "");
+        if (ERR == mvwprintw(satwin, (int)(i + 2), 4, "%22s", "")) {
+            (void)fputs("gpsmon:ERROR: display_nav_svinfo() mvwprintw()\n",
+                        stderr);
+            exit(EXIT_FAILURE);
+        }
     }
 
     // update pane label, in case NAV-SAT was previously displayed
