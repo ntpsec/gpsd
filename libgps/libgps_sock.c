@@ -36,7 +36,6 @@
 #include "../include/libgps.h"
 #include "../include/strfuncs.h"
 #include "../include/timespec.h"      // for NS_IN_SEC
-#ifdef SOCKET_EXPORT_ENABLE
 #include "../include/gps_json.h"
 
 #ifdef HAVE_WINSOCK2_H
@@ -587,6 +586,5 @@ int gps_sock_mainloop(struct gps_data_t *gpsdata, int timeout,
     return -2;
 }
 
-#endif  // SOCKET_EXPORT_ENABLE
 
 // vim: set expandtab shiftwidth=4

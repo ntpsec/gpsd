@@ -13,7 +13,7 @@ PERMISSIONS
 
 ***************************************************************************/
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <math.h>
 #include <stddef.h>
@@ -22,10 +22,9 @@ PERMISSIONS
 
 #include "../include/gpsd.h"
 
-#ifdef SOCKET_EXPORT_ENABLE
 #include "../include/gps_json.h"
 
-/* common fields in every RTCM2 message */
+// common fields in every RTCM2 message
 
 int json_rtcm2_read(const char *buf,
                     char *path, size_t pathlen, struct rtcm2_t *rtcm2,
@@ -36,7 +35,7 @@ int json_rtcm2_read(const char *buf,
     static char stringstore[sizeof(rtcm2->words) * 2];
     static int stringcount;
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 #define RTCM2_HEADER \
         {"class",          t_check,    .dflt.check = "RTCM2"}, \
         {"type",           t_uinteger, .addr.uinteger = &rtcm2->type}, \
@@ -265,8 +264,5 @@ int json_rtcm2_read(const char *buf,
     }
     return status;
 }
-#endif /* SOCKET_EXPORT_ENABLE */
-
-/* rtcm2_json.c ends here */
 
 // vim: set expandtab shiftwidth=4

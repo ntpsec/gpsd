@@ -11,7 +11,7 @@ This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 ***************************************************************************/
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <stdio.h>
 #include <string.h>
@@ -22,7 +22,6 @@ SPDX-License-Identifier: BSD-2-clause
 
 #include "../include/gps.h"
 #include "../include/json.h"
-#ifdef SOCKET_EXPORT_ENABLE
 #include "../include/libgps.h"
 
 static void lenhex_unpack(const char *from,
@@ -452,6 +451,5 @@ int json_ais_read(const char *buf,
     }
     return status;
 }
-#endif  // SOCKET_EXPORT_ENABLE
 
 // vim: set expandtab shiftwidth=4

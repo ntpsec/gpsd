@@ -744,7 +744,8 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
     char buf[BUFSIZ] = "";;
 
 // FIXME:  If the following condition is false, the display is screwed up.
-#if defined(SOCKET_EXPORT_ENABLE) && defined(PPS_DISPLAY_ENABLE)
+#ifdef PPS_DISPLAY_ENABLE
+
     char ts_buf1[TIMESPEC_LEN] = "";
     char ts_buf2[TIMESPEC_LEN] = "";
 
@@ -819,7 +820,7 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
         // coverity[missing_lock]
         session.pps_thread.ppsout_count++;
     } else
-#endif // SOCKET_EXPORT_ENABLE && PPS_DISPLAY_ENABLE
+#endif // PPS_DISPLAY_ENABLE
     {
         char buf2[BUFSIZ - 5] = "";
 
@@ -1631,7 +1632,7 @@ int main(int argc, char **argv)
     exit(EXIT_SUCCESS);
 }
 
-/* pastef() - prints n/a or finite float at a point in a window 
+/* pastef() - prints n/a or finite float at a point in a window
  *
  * win: Pointer to the window to print in
  * y: The row in the window

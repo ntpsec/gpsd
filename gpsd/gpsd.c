@@ -113,28 +113,21 @@
  */
 #define NICEVAL -10
 
-#if (defined(TIMESERVICE_ENABLE) || \
-     !defined(SOCKET_EXPORT_ENABLE))
+#if defined(TIMESERVICE_ENABLE)
     /*
-     * Force nowait in two circumstances:
+     * Force nowait:
      *
-     * (1) Socket export has been disabled.  In this case we have no
-     * way to know when client apps are watching the export channels,
-     * so we need to be running all the time.
-     *
-     * (2) timeservice mode where we want the GPS always on for timing.
+     * Timeservice mode where we want the GPS always on for timing.
      */
 #define FORCE_NOWAIT
-#endif  // TIMESERVICE_ENABLE || !SOCKET_EXPORT_ENABLE
+#endif  // TIMESERVICE_ENABLE
 
-#ifdef SOCKET_EXPORT_ENABLE
 /* IP version used by the program:
  *  AF_UNSPEC: all
  *  AF_INET: IPv4 only
  *  AF_INET6: IPv6 only
  */
 static const int af_allowed = AF_UNSPEC;
-#endif  // SOCKET_EXPORT_ENABLE/
 
 #define AFCOUNT 2
 
@@ -225,9 +218,6 @@ static void typelist(void)
                  "# NTRIP enabled.\n");
 #ifdef SHM_EXPORT_ENABLE
     (void)printf("# Shared memory export enabled.\n");
-#endif
-#ifdef SOCKET_EXPORT_ENABLE
-    (void)printf("# Socket export enabled.\n");
 #endif
 #ifdef SYSTEMD_ENABLE
     (void)printf("# systemd socket activation enabled.\n");
@@ -340,10 +330,9 @@ static void adjust_max_fd(int fd, bool on)
     }
 }
 
-#ifdef SOCKET_EXPORT_ENABLE
-#  ifndef IPTOS_LOWDELAY
-#    define IPTOS_LOWDELAY 0x10
-#  endif  // !IPTOS_LOWDELAY
+#ifndef IPTOS_LOWDELAY
+#  define IPTOS_LOWDELAY 0x10
+#endif  // !IPTOS_LOWDELAY
 
 // bind a passive command socket for the daemon
 static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
@@ -739,17 +728,14 @@ static void notify_watchers(struct gps_device_t *device,
         }
     }
 }
-#endif  // SOCKET_EXPORT_ENABLE
 
 // deactivate device, but leave it in the pool (do not free it)
 static void deactivate_device(struct gps_device_t *device)
 {
-#ifdef SOCKET_EXPORT_ENABLE
     notify_watchers(device, true, false,
                     "{\"class\":\"DEVICE\",\"path\":\"%s\","
                     "\"activated\":0}\r\n",
                     device->gpsdata.dev.path);
-#endif  // SOCKET_EXPORT_ENABLE
     if (!BAD_SOCKET(device->gpsdata.gps_fd)) {
         FD_CLR(device->gpsdata.gps_fd, &all_fds);
         adjust_max_fd(device->gpsdata.gps_fd, false);
@@ -769,7 +755,6 @@ static void device_update_fd(int fd, bool open)
     adjust_max_fd(fd, open);
 }
 
-#if defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
 // find the device block for an existing device name
 static struct gps_device_t *find_device(const char *device_name)
 {
@@ -786,7 +771,6 @@ static struct gps_device_t *find_device(const char *device_name)
     }
     return NULL;
 }
-#endif  // SOCKET_EXPORT_ENABLE) || CONTROL_SOCKET_ENABLE)
 
 /* open the input device
  * return: false on failure
@@ -863,9 +847,7 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
 {
     struct gps_device_t *devp;
     bool ret = false;
-#ifdef SOCKET_EXPORT_ENABLE
     char tbuf[JSON_DATE_MAX+1];
-#endif  // SOCKET_EXPORT_ENABLE
 
     // we can't handle paths longer than GPS_PATH_MAX, so don't try
     // codacy hates strlen()
@@ -890,20 +872,17 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
                 devp->gpsdata.gps_fd = UNALLOCATED_FD;
                 ret = true;
             }
-#ifdef SOCKET_EXPORT_ENABLE
             notify_watchers(devp, true, false,
                             "{\"class\":\"DEVICE\",\"path\":\"%s\","
                             "\"activated\":\"%s\"}\r\n",
                             devp->gpsdata.dev.path,
                             now_to_iso8601(tbuf, sizeof(tbuf)));
-#endif  // SOCKET_EXPORT_ENABLE
             break;
         }
     }
     return ret;
 }
 
-#if defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
 /* convert hex, with length len, to binary, write it, unchanged, to GPS
  * Returns: NULL, or pointer to error string
  */
@@ -941,7 +920,6 @@ static const char *write_gps(char *device, char *hex, size_t len) {
     }
     return NULL;
 }
-#endif  // SOCKET_EXPORT_ENABLE || CONTROL_SOCKET_ENABLE
 
 #ifdef CONTROL_SOCKET_ENABLE
 // copy the rest of the command line, before CR-LF
@@ -1086,7 +1064,6 @@ static void handle_control(int sfd, char *buf)
 }
 #endif  // CONTROL_SOCKET_ENABLE
 
-#ifdef SOCKET_EXPORT_ENABLE
 /* awaken a device and notify all watchers
  *
  * Return: true if open
@@ -1244,7 +1221,6 @@ static void set_serial(struct gps_device_t *device,
     }
 }
 
-#ifdef SOCKET_EXPORT_ENABLE
 static void json_devicelist_dump(char *reply, size_t replylen)
 {
     struct gps_device_t *devp;
@@ -1267,7 +1243,6 @@ static void json_devicelist_dump(char *reply, size_t replylen)
     str_rstrip_char(reply, ',');
     (void)strlcat(reply, "]}\r\n", replylen);
 }
-#endif  // SOCKET_EXPORT_ENABLE
 
 // strip trailing \r\n\t\SP from a string
 static void rstrip(char *str, size_t replylen)
@@ -1735,12 +1710,10 @@ static void pseudonmea_report(struct subscriber_t *sub,
 #endif  // AIVDM_ENABLE
     }
 }
-#endif  // SOCKET_EXPORT_ENABLE
 
 // report on the current packet from a specified device
 static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 {
-#ifdef SOCKET_EXPORT_ENABLE
     struct subscriber_t *sub;
 
     GPSD_LOG(LOG_DATA, &context.errout, "all_reports(): changed %s\n",
@@ -1777,7 +1750,6 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
             notify_watchers(device, true, false, id2);
         }
     }
-#endif  // SOCKET_EXPORT_ENABLE
 
     /*
      * If the device provided an RTCM packet, repeat it to all devices.
@@ -1970,7 +1942,6 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
              gps_maskdump(changed),
              gps_maskdump(device->gpsdata.set_pending));
 
-#ifdef SOCKET_EXPORT_ENABLE
     // update all subscribers associated with this device
     for (sub = subscribers; sub < (subscribers + MAX_CLIENTS); sub++) {
         if (0 == sub->active ||
@@ -2032,10 +2003,8 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
             }
         }
     }   // subscribers
-#endif  // SOCKET_EXPORT_ENABLE
 }
 
-#ifdef SOCKET_EXPORT_ENABLE
 /* Execute GPSD requests (?POLL, ?WATCH, etc.) from a buffer.
  * The entire request must be in the buffer.
  */
@@ -2060,9 +2029,8 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf,
     }
     return (int)throttled_write(sub, reply, strnlen(reply, sizeof(reply)));
 }
-#endif  // SOCKET_EXPORT_ENABLE
 
-#if defined(CONTROL_SOCKET_ENABLE) && defined(SOCKET_EXPORT_ENABLE)
+#if defined(CONTROL_SOCKET_ENABLE)
 /* on PPS interrupt, ship a message to all clients
  * use passed in precision
  *
@@ -2215,15 +2183,11 @@ static void gpsd_terminate(struct gps_context_t *context)
 int main(int argc, char *argv[])
 {
     // some of these statics suppress -W warnings due to longjmp()
-#ifdef SOCKET_EXPORT_ENABLE
     static char *gpsd_service = NULL;
     struct subscriber_t *sub;
-#endif  // SOCKET_EXPORT_ENABLE
     fd_set rfds;
 #ifdef CONTROL_SOCKET_ENABLE
     fd_set control_fds;
-#endif  // CONTROL_SOCKET_ENABLE
-#ifdef CONTROL_SOCKET_ENABLE
     static socket_t csock;
     socket_t cfd;
     static char *control_socket = NULL;
@@ -2245,9 +2209,7 @@ int main(int argc, char *argv[])
 
 #ifdef CONTROL_SOCKET_ENABLE
     INVALIDATE_SOCKET(csock);
-#  ifdef SOCKET_EXPORT_ENABLE
     context.pps_hook = ship_pps_message;
-#  endif  // SOCKET_EXPORT_ENABLE
 #endif  // CONTROL_SOCKET_ENABLE
 
     while (1) {
@@ -2337,9 +2299,7 @@ int main(int argc, char *argv[])
             context.batteryRTC = true;
             break;
         case 'S':
-#ifdef SOCKET_EXPORT_ENABLE
             gpsd_service = optarg;
-#endif  // SOCKET_EXPORT_ENABLE
             break;
         case 's':
             {
@@ -2616,7 +2576,6 @@ int main(int argc, char *argv[])
                 "-r (--badtime) is DANGEROUS\n");
     }
 
-#ifdef SOCKET_EXPORT_ENABLE
     if (!gpsd_service) {
         gpsd_service =
             getservbyname("gpsd", "tcp") ? "gpsd" : DEFAULT_GPSD_PORT;
@@ -2633,7 +2592,6 @@ int main(int argc, char *argv[])
     }
     GPSD_LOG(LOG_INF, &context.errout, "listening on port %s\n",
                        gpsd_service);
-#endif  // SOCKET_EXPORT_ENABLE
 
     if (0 == getuid()) {
         errno = 0;
@@ -2813,12 +2771,10 @@ int main(int argc, char *argv[])
 #endif  // HAVE_LIBCAP
 
 
-#ifdef SOCKET_EXPORT_ENABLE
     for (i = 0; i < NITEMS(subscribers); i++) {
         subscribers[i].fd = UNALLOCATED_FD;
         (void)pthread_mutex_init(&subscribers[i].mutex, NULL);
     }
-#endif  // SOCKET_EXPORT_ENABLE
 
     {
         struct sigaction sa;
@@ -2919,7 +2875,6 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
-#ifdef SOCKET_EXPORT_ENABLE
         // always be open to new client connections
         for (i = 0; i < AFCOUNT; i++) {
             if (0 <= msocks[i] &&
@@ -2989,7 +2944,6 @@ int main(int argc, char *argv[])
                 FD_CLR(msocks[i], &rfds);
             }
         }
-#endif  // SOCKET_EXPORT_ENABLE
 
 #ifdef CONTROL_SOCKET_ENABLE
         // also be open to new control-socket connections
@@ -3149,7 +3103,6 @@ int main(int argc, char *argv[])
         }
 #endif  // __UNUSED_AUTOCONNECT_
 
-#ifdef SOCKET_EXPORT_ENABLE
         // accept and execute commands for all clients
         for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
             if (0 == sub->active) {
@@ -3279,7 +3232,6 @@ int main(int argc, char *argv[])
                 }
             }
         }
-#endif  // SOCKET_EXPORT_ENABLE
 
         /*
          * Might be time for graceful shutdown if no command-line
@@ -3295,13 +3247,11 @@ int main(int argc, char *argv[])
         if (argc == optind &&
             0 < highwater) {
             int subcount = 0, devcount = 0;
-#ifdef SOCKET_EXPORT_ENABLE
             for (sub = subscribers; sub < (subscribers + MAX_CLIENTS); sub++) {
                 if (0 != sub->active) {
                     ++subcount;
                 }
             }
-#endif  // SOCKET_EXPORT_ENABLE
             for (device = devices; device < devices + MAX_DEVICES; device++) {
                 if (allocated_device(device)) {
                     ++devcount;
@@ -3329,7 +3279,6 @@ shutdown:
 
     GPSD_LOG(LOG_WARN, &context.errout, "exiting.\n");
 
-#ifdef SOCKET_EXPORT_ENABLE
     /*
      * A linger option was set on each client socket when it was
      * created.  Now, shut them down gracefully, letting I/O drain.
@@ -3341,7 +3290,6 @@ shutdown:
             detach_client(sub);
         }
     }
-#endif  // SOCKET_EXPORT_ENABLE
 
 #ifdef SHM_EXPORT_ENABLE
     shm_release(&context);

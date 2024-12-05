@@ -26,11 +26,9 @@ static void onsig(int sig)
     exit(EXIT_FAILURE);
 }
 
-#ifdef SOCKET_EXPORT_ENABLE
 /* Must start zeroed, otherwise the unit test will try to chase garbage
  * pointer fields. */
 static struct gps_data_t gpsdata;
-#endif
 
 int main(int argc, char *argv[])
 {
@@ -90,7 +88,6 @@ int main(int argc, char *argv[])
 
     gps_enable_debug(debug, stdout);
     if (batchmode) {
-#ifdef SOCKET_EXPORT_ENABLE
 	while (NULL != fgets(buf, sizeof(buf), stdin)) {
 	    if ('{'  == buf[0] ||
                 isalpha( (int) buf[0])) {
@@ -98,7 +95,6 @@ int main(int argc, char *argv[])
 		libgps_dump_state(&gpsdata);
 	    }
 	}
-#endif
     } else if (0 != gps_open(source.server, source.port, &collect)) {
 	(void)fprintf(stderr,
 		      "test_libgps: no gpsd running or network error: %d, %s\n",
@@ -115,9 +111,7 @@ int main(int argc, char *argv[])
 			"test_libgps: gps read error: %d, %s\n",
 			errno, gps_errstr(errno));
 	}
-#ifdef SOCKET_EXPORT_ENABLE
 	libgps_dump_state(&collect);
-#endif
 	(void)gps_close(&collect);
     } else {
 	int tty = isatty(0);
@@ -138,9 +132,7 @@ int main(int argc, char *argv[])
 	    collect.set = 0;
 	    (void)gps_send(&collect, buf);
 	    (void)gps_read(&collect, NULL, 0);
-#ifdef SOCKET_EXPORT_ENABLE
 	    libgps_dump_state(&collect);
-#endif
 	}
 	(void)gps_close(&collect);
     }

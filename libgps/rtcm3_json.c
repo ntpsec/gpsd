@@ -8,12 +8,12 @@ DESCRIPTION
 representations to libgps structures.
 
 PERMISSIONS
-   This file is Copyright 2013 by the GPSD project
+   This file is Copyright by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <math.h>
 #include <stddef.h>
@@ -21,8 +21,6 @@ PERMISSIONS
 #include <string.h>
 
 #include "../include/gpsd.h"
-
-#ifdef SOCKET_EXPORT_ENABLE
 #include "../include/gps_json.h"
 
 int json_rtcm3_read(const char *buf,
@@ -33,7 +31,7 @@ int json_rtcm3_read(const char *buf,
     static char stringstore[sizeof(rtcm3->rtcmtypes.data) * 2];
     static int stringcount;
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 #define RTCM3_HEADER \
         {"class",          t_check,    .dflt.check = "RTCM3"}, \
         {"type",           t_uinteger, .addr.uinteger = &rtcm3->type}, \
@@ -232,7 +230,7 @@ int json_rtcm3_read(const char *buf,
     };
 
 #undef RTCM3_HEADER
-/* *INDENT-ON* */
+// *INDENT-ON*
 
     memset(rtcm3, '\0', sizeof(struct rtcm3_t));
 
@@ -278,7 +276,6 @@ int json_rtcm3_read(const char *buf,
     }
     return status;
 }
-#endif /* SOCKET_EXPORT_ENABLE */
 
-/* rtcm3_json.c ends here */
+// rtcm3_json.c ends here
 // vim: set expandtab shiftwidth=4

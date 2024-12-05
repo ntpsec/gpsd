@@ -17,7 +17,6 @@ PERMISSIONS
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
-#ifdef SOCKET_EXPORT_ENABLE
 #include <math.h>
 #include <stdbool.h>
 
@@ -167,7 +166,5 @@ char *json_policy_to_watch(struct gps_policy_t *ccp,
 
     return outbuf;
 }
-
-#endif  // SOCKET_EXPORT_ENABLE
 
 // vim: set expandtab shiftwidth=4

@@ -2299,9 +2299,10 @@ void packet_parse(struct gps_lexer_t *lexer)
         int packet_type;        // gpsd packet type
         unsigned pkt_id;        // native type or ID the message thinks it is
         unsigned data_len;      // What the message says the data length is.
-        bool unstash;
-        unsigned char *trailer;
         unsigned char ck_a, ck_b;  // for ubx check bytes
+#ifdef STASH_ENABLE
+        bool unstash = false;
+#endif  //  STASH_ENABLE
 
         if (!nextstate(lexer, c)) {
             continue;
@@ -2313,7 +2314,6 @@ void packet_parse(struct gps_lexer_t *lexer)
         lexer->char_counter++;
         inbuflen = lexer->inbufptr - lexer->inbuffer;
         acc_dis = PASS;
-        unstash = false;
 
         /* check if we have a _RECOGNISED state, if so, perform final
          * checks on the packet, before decoding.
@@ -2628,7 +2628,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                                (const char *)lexer->inbuffer,
                                (const char *)lexer->inbufptr)) {
                 packet_type = NMEA_PACKET;
+#ifdef STASH_ENABLE
                 unstash = true;
+#endif  // STASH_ENABLE
             } else {
                 lexer->state = GROUND_STATE;
                 packet_type = BAD_PACKET;
@@ -2717,22 +2719,25 @@ void packet_parse(struct gps_lexer_t *lexer)
 
 #ifdef SIRF_ENABLE
         case SIRF_RECOGNIZED:
-            trailer = lexer->inbufptr - 4;
+            {
+                unsigned char *trailer;
+                trailer = lexer->inbufptr - 4;
 
-            crc_expected = (trailer[0] << 8) | trailer[1];
-            crc_computed = 0;
+                crc_expected = (trailer[0] << 8) | trailer[1];
+                crc_computed = 0;
 
-            for (idx = 4; idx < (inbuflen - 4); idx++) {
-                crc_computed += lexer->inbuffer[idx];
-            }
-            crc_computed &= 0x7fff;
-            if (crc_expected == crc_computed) {
-                packet_type = SIRF_PACKET;
-                acc_dis = ACCEPT;
-            } else {
-                packet_type = BAD_PACKET;
-                acc_dis = ACCEPT;
-                lexer->state = GROUND_STATE;
+                for (idx = 4; idx < (inbuflen - 4); idx++) {
+                    crc_computed += lexer->inbuffer[idx];
+                }
+                crc_computed &= 0x7fff;
+                if (crc_expected == crc_computed) {
+                    packet_type = SIRF_PACKET;
+                    acc_dis = ACCEPT;
+                } else {
+                    packet_type = BAD_PACKET;
+                    acc_dis = ACCEPT;
+                    lexer->state = GROUND_STATE;
+                }
             }
             break;
 #endif  // SIRF_ENABLE

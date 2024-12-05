@@ -584,9 +584,7 @@ static void decode(FILE *fpin, FILE *fpout)
     struct gps_device_t session;
     struct gps_policy_t policy;
     size_t minima[PACKET_TYPES + 1];
-#if defined(SOCKET_EXPORT_ENABLE) || defined(AIVDM_ENABLE)
     char buf[GPS_JSON_RESPONSE_MAX * 4];
-#endif
     int i;
 
     //This looks like a good idea, but it breaks regression tests
@@ -649,7 +647,6 @@ static void decode(FILE *fpin, FILE *fpout)
             if (0 != (changed & PASSTHROUGH_IS)) {
                 (void)fputs((char *)session.lexer.outbuffer, fpout);
                 (void)fputs("\n", fpout);
-#ifdef SOCKET_EXPORT_ENABLE
             } else {
                 if (0 != (changed & AIS_SET)) {
                     if (24 == session.gpsdata.ais.type &&
@@ -661,7 +658,6 @@ static void decode(FILE *fpin, FILE *fpout)
                 json_data_report(changed, &session, &policy,
                                  buf, sizeof(buf));
                 (void)fputs(buf, fpout);
-#endif  // SOCKET_EXPORT_ENABLE
             }
 #ifdef AIVDM_ENABLE
         } else if (AIVDM_PACKET == session.lexer.type) {
@@ -700,7 +696,6 @@ static void decode(FILE *fpin, FILE *fpout)
     }
 }
 
-#ifdef SOCKET_EXPORT_ENABLE
 // JSON format on fpin to JSON on fpout - idempotency test
 static void encode(FILE *fpin, FILE *fpout)
 {
@@ -742,7 +737,6 @@ static void encode(FILE *fpin, FILE *fpout)
         (void)fputs(inbuf, fpout);
     }
 }
-#endif  // SOCKET_EXPORT_ENABLE
 
 /* usage()
  * print usages, and exit
@@ -905,13 +899,7 @@ int main(int argc, char **argv)
         (void)fprintf(stderr, "\n");
     }
     if (mode == doencode) {
-#ifdef SOCKET_EXPORT_ENABLE
         encode(stdin, stdout);
-#else
-        (void)fprintf(stderr,
-                      "gpsdecode:ERROR: encoding support isn't compiled.\n");
-        exit(EXIT_FAILURE);
-#endif  // SOCKET_EXPORT_ENABLE
     } else {
         decode(stdin, stdout);
     }

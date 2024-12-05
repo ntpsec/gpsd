@@ -344,7 +344,6 @@ boolopts = (
     # Export methods
     ("dbus_export",   True,  "enable DBUS export support"),
     ("shm_export",    True,  "export via shared memory"),
-    ("socket_export", True,  "data export over sockets"),
     # Communication
     ("bluez",         True,  "BlueZ support for Bluetooth devices"),
     ('usb',           True,  "libusb support for USB devices"),
@@ -561,7 +560,6 @@ if ARGUMENTS.get('timeservice'):
                    "magic_hat",
                    "ncurses",
                    "oscillator",
-                   "socket_export",
                    )
     for (name, default, helpd) in boolopts:
         if ((default is True and
@@ -2168,15 +2166,11 @@ test_libgps = env.Program('tests/test_libgps',
                           LIBS=[libgps_static],
                           parse_flags=mathlibs + rtlibs + dbusflags)
 
-if env['socket_export']:
-    test_json = env.Program(
-        'tests/test_json',
-        [libgps_static, 'tests/test_json.c'],
-        LIBS=[libgps_static],
-        parse_flags=mathlibs + rtlibs + usbflags + dbusflags)
-else:
-    announce("test_json not building because socket_export is disabled")
-    test_json = None
+test_json = env.Program(
+    'tests/test_json',
+    [libgps_static, 'tests/test_json.c'],
+    LIBS=[libgps_static],
+    parse_flags=mathlibs + rtlibs + usbflags + dbusflags)
 
 # duplicate below?
 test_gpsmm = env.Program('tests/test_gpsmm',
@@ -2187,14 +2181,13 @@ testprogs = [test_bits,
              test_float,
              test_geoid,
              test_gpsdclient,
+             test_json,
              test_libgps,
              test_matrix,
              test_mktime,
              test_packet,
              test_timespec,
              test_trig]
-if env['socket_export'] or cleaning:
-    testprogs.append(test_json)
 if env["libgpsmm"] or cleaning:
     testprogs.append(test_gpsmm)
 
@@ -2924,8 +2917,8 @@ else:
         announce("NMEA2000 regression tests suppressed because nmea200 is off "
                  "or canplayer is missing.")
 
-# using regress-drivers requires socket_export being enabled and Python
-if env['socket_export'] and env['python']:
+# using regress-drivers requires Python
+if env['python']:
     # Regression-test the daemon.
     # But first dump the platform and its delay parameters.
     gps_herald = Utility(
@@ -2978,8 +2971,7 @@ if env['socket_export'] and env['python']:
     else:
         env.Alias('gps-makeregress', gps_rebuilds)
 else:
-    announce("GPS regression tests suppressed because socket_export "
-             "or python is off.")
+    announce("GPS regression tests suppressed due to lack of python.")
     gps_regress = None
     gpsfake_tests = None
 
@@ -3102,12 +3094,8 @@ Utility('unpack-makeregress', [test_libgps], [
 ])
 
 # Unit-test the JSON parsing
-if env['socket_export']:
-    json_regress = Utility('json-regress', [test_json],
-                           ['"${SRCDIR}/tests/test_json"'])
-else:
-    json_regress = None
-
+json_regress = Utility('json-regress', [test_json],
+                       ['"${SRCDIR}/tests/test_json"'])
 # Unit-test timespec math
 timespec_regress = Utility('timespec-regress', [test_timespec], [
     '"${SRCDIR}/tests/test_timespec"'
@@ -3169,9 +3157,8 @@ if env['python']:
     test_nondaemon.append(python_compilation_regress)
     test_nondaemon.append(python_versions)
     test_nondaemon.append(unpack_regress)
-
-if env['socket_export']:
     test_nondaemon.append(test_json)
+
 if env['libgpsmm']:
     test_nondaemon.append(test_gpsmm)
 if qt_env:

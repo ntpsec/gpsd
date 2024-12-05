@@ -25,8 +25,6 @@ SPDX-License-Identifier: BSD-2-clause
 #include "../include/gpsd.h"
 #include "../include/bits.h"
 #include "../include/strfuncs.h"
-
-#ifdef SOCKET_EXPORT_ENABLE
 #include "../include/gps_json.h"
 #include "../include/timespec.h"
 
@@ -4823,6 +4821,5 @@ void json_data_report(const gps_mask_t changed,
 }
 
 #undef JSON_BOOL
-#endif  // SOCKET_EXPORT_ENABLE
 
 // vim: set expandtab shiftwidth=4

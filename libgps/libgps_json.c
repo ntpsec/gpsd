@@ -28,7 +28,6 @@ PERMISSIONS
 
 #include "../include/gpsd.h"
 #include "../include/strfuncs.h"
-#ifdef SOCKET_EXPORT_ENABLE
 #include "../include/gps_json.h"
 #include "../include/timespec.h"
 
@@ -1014,6 +1013,5 @@ int libgps_json_unpack(const char *buf,
 }
 
 
-#endif  // SOCKET_EXPORT_ENABLE
 
 // vim: set expandtab shiftwidth=4

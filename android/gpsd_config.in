@@ -57,7 +57,6 @@
 #define SHM_EXPORT_ENABLE 1
 #define SIRF_ENABLE 1
 #define SKYTRAQ_ENABLE 1
-#define SOCKET_EXPORT_ENABLE 1
 #define SUPERSTAR2_ENABLE 1
 #define SYSCONFDIR "vendor/etc"
 #define TNT_ENABLE 1

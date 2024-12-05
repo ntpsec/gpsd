@@ -25,10 +25,8 @@ static struct exportmethod_t exportmethods[] = {
     {"file", GPSD_LOCAL_FILE, "local file"},
 #ifdef SHM_EXPORT_ENABLE
     {"shm", GPSD_SHARED_MEMORY, "shared memory"},
-#endif  // SOCKET_EXPORT_ENABLE
-#ifdef SOCKET_EXPORT_ENABLE
+#endif  // HM_EXPORT_ENABLE
     {"sockets", NULL, "JSON via sockets"},
-#endif  // SOCKET_EXPORT_ENABLE
 };
 
 /* convert value of double degrees to a buffer.
