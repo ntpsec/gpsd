@@ -1424,12 +1424,18 @@ static void dialfill(WINDOW *w, char *s)
 {
     int row;
 
-    (void)wmove(w, 1, 1);
+    if (ERR == wmove(w, 1, 1)) {
+        die(CGPS_ERROR, "cgps: ERROR dialfill()/wmove()\n");
+    }
     for (row = 1; *s != '\0'; ++s) {
         // FIXME: don't do one char at a time...
-        (void)waddch(w, *((unsigned char*) s));
+        if (ERR == waddch(w, *((unsigned char*) s))) {
+            die(CGPS_ERROR, "cgps: ERROR dialfill()/waddch()\n");
+        }
         if (*s == '\n') {
-            wmove(w, ++row, 1);
+            if (ERR == wmove(w, ++row, 1)) {
+                die(CGPS_ERROR, "cgps: ERROR dialfill()/wmove()\n");
+            }
         }
     }
     box(w, 0, 0);
