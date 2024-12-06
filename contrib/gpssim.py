@@ -26,9 +26,9 @@ except ImportError as e:
 class ksv(object):
     """Kinematic state vector."""
 
-    def __init__(self, time=0, lat=0, lon=0, alt=0, course=0,
+    def __init__(self, times=0, lat=0, lon=0, alt=0, course=0,
                  speed=0, climb=0, h_acc=0, v_acc=0):
-        self.time = time        # Seconds from epoch
+        self.time = times       # Seconds from epoch
         self.lat = lat          # Decimal degrees
         self.lon = lon          # Decimal degrees
         self.alt = alt          # Meters
@@ -64,7 +64,7 @@ class ksv(object):
         else:
             q = (lat - self.lat) / dphi
         dlon = -distance * math.sin(tc) / q
-        self.lon = gps.Rad2Deg(math.mod(lon + dlon + math.pi, 2 * math.pi) -
+        self.lon = gps.Rad2Deg(math.fmod(lon + dlon + math.pi, 2 * math.pi) -
                                math.pi)
         self.lat = gps.Rad2Deg(lat)
 
@@ -81,7 +81,7 @@ class satellite(object):
         """Class satellite init."""
         self.prn = prn
 
-    def position(self, time):
+    def position(self, times):
         """Return right ascension and declination of satellite."""
         return
 
@@ -161,16 +161,16 @@ class gpssim(object):
                 code = fields[1]
                 self.status = {"no_fix": 0, "fix": 1, "dgps_fix": 2}[
                     code.lower()]
-            except KeyError:
+            except KeyError as exc:
                 raise gpssimException("invalid status code '%s'" % code,
-                                      self.filename, self.lineno)
+                                      self.filename, self.lineno) from exc
         elif command == "mode":
             try:
                 code = fields[1]
                 self.status = {"no_fix": 1, "2d": 2, "3d": 3}[code.lower()]
-            except KeyError:
+            except KeyError as exc:
                 raise gpssimException("invalid mode code '%s'" % code,
-                                      self.filename, self.lineno)
+                                      self.filename, self.lineno) from exc
         elif command == "satellites":
             self.satellites_used = int(fields[1])
         elif command == "validity":
@@ -195,8 +195,8 @@ class gpssim(object):
             next(self.ksv)
             if self.have_ephemeris:
                 self.skyview = {}
-                for (prn, satellite) in list(self.ephemeris.items()):
-                    self.skyview[prn] = satellite.position(i)
+                for (prn, sat) in list(self.ephemeris.items()):
+                    self.skyview[prn] = sat.position(i)
             self.output.write(self.gpstype.report(self))
 
 # Reporting classes need to have a report() method returning a string
