@@ -17,13 +17,14 @@
 
 from __future__ import absolute_import, print_function, division
 
-import argparse
-import cairo
+# Codacy wants from's before imports's
 from math import pi
 from math import cos
 from math import sin
 from math import sqrt
 from math import radians
+import argparse
+import cairo
 import os
 from socket import error as SocketError
 import sys
@@ -286,7 +287,7 @@ class LandSpeedometer(Speedometer):
     def get_x_y(self):
         """Get_x_y."""
         rect = self.get_allocation()
-        x = (rect.x + rect.width / 2.0)
+        x = rect.x + rect.width / 2.0
         y = (rect.y + rect.height / 2.0) - 20
         return x, y
 
@@ -1006,9 +1007,10 @@ if __name__ == '__main__':
     if not options.port:
         options.port = gps.GPSD_PORT
 
-    target = ':'.join([options.host, options.port, options.device])
+    targt = ':'.join([options.host, options.port, options.device])
 
-    if 'DISPLAY' not in os.environ or not os.environ['DISPLAY']:
+    if (('DISPLAY' not in os.environ or
+         not os.environ['DISPLAY'])):
         sys.stderr.write("xgpsspeed: ERROR: DISPLAY not set\n")
         sys.exit(1)
 
@@ -1021,7 +1023,7 @@ if __name__ == '__main__':
         nautical=options.nautical,
         debug=options.debug,
         rotate=options.rotate,
-        target=target,
+        target=targt,
     ).run()
 
 # vim: set expandtab shiftwidth=4
