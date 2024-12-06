@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -938,15 +938,15 @@ ais_specs = (
 # You should not need to modify anything below this line.
 
 
-def generate(spec):
+def generate(speci):
     """Generate it."""
     report = ""
     leader = " " * 39
-    initname = spec["initname"]
+    initname = speci["initname"]
     # Utter storage declarations for any fields that are declared to be
     # stringbuffered. These will need to be postprocessed in json_ais_read().
-    attributes = [t[0] for t in spec["fieldmap"]]
-    for attr in spec.get("stringbuffered", []):
+    attributes = [t[0] for t in speci["fieldmap"]]
+    for attr in speci.get("stringbuffered", []):
         if attr not in attributes:
             sys.stderr.write("buffered %s is not in base attributes of %s\n"
                              % (attr, initname))
@@ -956,12 +956,12 @@ def generate(spec):
             report += "    char %s[JSON_VAL_MAX+1];\n" % attr
             outboard.append(attr)
 
-    structname = spec["structname"]
+    structname = speci["structname"]
     # If there are structarrays describing array subobjects, we need
     # to make a separate parse control initializer for each one.  The
     # attribute name is the name of the array; substructure and length
     # fieldnames must be given in the defaults part.
-    for (attr, itype, arrayparts) in spec["fieldmap"]:
+    for (attr, itype, arrayparts) in speci["fieldmap"]:
         if itype == 'array':
             (innerstruct, lengthfield, elements) = arrayparts
             report += ("    const struct json_attr_t %s_%s_subtype[] = {\n"
@@ -986,10 +986,10 @@ def generate(spec):
     # Generate the main structure definition describing this parse.
     # It may have object subarrays.
     report += "    const struct json_attr_t %s[] = {\n" % initname
-    if "headers" in spec:
-        for header in spec["headers"]:
+    if "headers" in speci:
+        for header in speci["headers"]:
             report += '\t' + header + "\n"
-    for (attr, itype, default) in spec["fieldmap"]:
+    for (attr, itype, default) in speci["fieldmap"]:
         if itype == 'array':
             (innerstruct, lengthfield, elements) = default
             report += ('\t{"%s",%st_array,     '
@@ -1001,10 +1001,10 @@ def generate(spec):
                 deref = ""
             else:
                 deref = "&"
-            if attr in spec.get("stringbuffered", []):
-                target = attr
+            if attr in speci.get("stringbuffered", []):
+                targt = attr
             else:
-                target = structname + "." + attr
+                targt = structname + "." + attr
             if "." in attr:
                 attr = attr[attr.rfind(".") + 1:]
             if itype == 'ignore':
@@ -1012,9 +1012,9 @@ def generate(spec):
                 continue
             report += '\t{"%s",%st_%s,%s.addr.%s = %s%s,\n' % \
                 (attr, " " * (14 - len(attr)), itype, " " * (10 - len(itype)),
-                 itype, deref, target)
+                 itype, deref, targt)
             if itype == "string":
-                report += leader + ".len = sizeof(%s)},\n" % target
+                report += leader + ".len = sizeof(%s)},\n" % targt
             else:
                 report += leader + ".dflt.%s = %s},\n" % (itype, default)
     report += """\
