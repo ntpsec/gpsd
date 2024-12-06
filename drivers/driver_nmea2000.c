@@ -1739,6 +1739,7 @@ static ssize_t nmea2000_get(struct gps_device_t *session)
     ssize_t          status;
 
     session->lexer.outbuflen = 0;
+    // FIXME: read() into a struct is not guaranteed in C
     status = read(session->gpsdata.gps_fd, &frame, sizeof(frame));
     if (status == (ssize_t)sizeof(frame)) {
         session->lexer.type = NMEA2000_PACKET;
