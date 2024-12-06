@@ -25,7 +25,7 @@ def ProcessFile(name, withname=False, verbose=False, quiet=False,
 
     bad = []
     linenum = 0
-    with open(name) as f:
+    with open(name, encoding=None) as f:
         data = f.readlines()
         for line in data:
             linenum += 1
