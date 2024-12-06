@@ -330,7 +330,10 @@ static int property_check(void)
     const struct gps_type_t **dp;
     int status;
 
-    for (dp = gpsd_drivers; NULL != *dp; dp++) {
+    for (dp = gpsd_drivers; ; dp++) {
+        if (NULL == *dp) {
+            break;
+        }
         if (COMMENT_PACKET == (*dp)->packet_type) {
             continue;
         }
@@ -370,7 +373,10 @@ static int property_check(void)
     }
 
     status = EXIT_SUCCESS;
-    for (dp = gpsd_drivers; NULL != *dp; dp++) {
+    for (dp = gpsd_drivers; ; dp++) {
+        if (NULL == *dp) {
+            break;
+        }
         if (COMMENT_PACKET == (*dp)->packet_type) {
             continue;
         }
@@ -422,10 +428,9 @@ int main(int argc, char *argv[])
         failcount += packet_test(singletests + singletest - 1);
     } else {
         (void)fputs("=== Packet identification tests ===\n", stdout);
-        for (mp = singletests;
-             mp < singletests + sizeof(singletests) / sizeof(singletests[0]);
-             mp++)
+        for (mp = singletests; mp < singletests + ROWS(singletests); mp++) {
             failcount += packet_test(mp);
+        }
         (void)fputs("=== EOF with buffer nonempty test ===\n", stdout);
         runon_test(&runontests[0]);
     }
