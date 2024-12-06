@@ -259,11 +259,11 @@ void pps_update(WINDOW *win, int y, int x)
     if (0 < pps_thread_ppsout(&session.pps_thread, &ppstimes)) {
         // NOTE: can not use double here due to precision requirements
         struct timespec timedelta;
-        int i, ymax, xmax;
+        int i, ymax UNUSED, xmax;
 
         getmaxyx(win, ymax, xmax);
-        if (0 > ymax) {
-            ymax = 0;  // squash a compiler warning
+        if (0 > xmax) {
+            xmax = 0;  // squash a compiler warning
         }
         (void)wmove(win, y, x);
         // see toff_update() for explanation of the magic number
@@ -293,18 +293,18 @@ void pps_update(WINDOW *win, int y, int x)
 
 void monitor_fixframe(WINDOW * win)
 {
-    int ymax, xmax, ycur, xcur;
+    int ymax UNUSED, xmax, ycur, xcur UNUSED;
 
     if (NULL == win) {
         return;
     }
     getyx(win, ycur, xcur);
     getmaxyx(win, ymax, xmax);
-    if (0 > xcur) {
-        xcur = 0;  // squash a compiler warning
+    if (0 > ycur) {
+        ycur = 0;  // squash a compiler warning
     }
-    if (0 > ymax) {
-        ymax = 0;  // squash a compiler warning
+    if (0 > xmax) {
+        xmax = 0;  // squash a compiler warning
     }
     (void)mvwaddch(win, ycur, xmax - 1, ACS_VLINE);
 }
@@ -841,7 +841,7 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
         // put the raw, maybe hexified, message to "buf"
         cond_hexdump(buf2, sizeof(buf2), (char *)device->lexer.outbuffer,
                      device->lexer.outbuflen);
-        (void)snprintf(buf, sizeof(buf), "(%zd) %s\n",
+        (void)snprintf(buf, sizeof(buf), "(%zu) %s\n",
                        device->lexer.outbuflen, buf2);
     }
 
