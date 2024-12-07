@@ -1,8 +1,8 @@
+# Date: 2012-03-22
 # Name: Septentrio PolarRx2
 # Chipset: PolarRx2
 # Description: OEM module
 # Submitter: José Miguel Gonçalves <jose.goncalves@inov.pt>
-# Date: 2012-03-22
 # Notes: Submitter writes:
 #     While working with a Septentrio PolarRx2 receiver, I've noticed that
 #     I never got 2D fixes with xgps, while the Septentrio proprietary
