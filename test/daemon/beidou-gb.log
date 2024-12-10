@@ -1,6 +1,6 @@
 # Name: AtlasVI/PrimaII for SiRF-TriG with NMEA 4.00 conformance patch
 # Chipset = SiRF-Trig
-# Date = 2015-03-02
+# Date: 2015-03-02
 # Submitter = Eli Huang <eli.huang.cn@gmail.com>
 # Notes: Contains Beidou and GLONASS sentences; Beidou sentences have the
 #	alternate GB talker ID rather than the BD mandated in the TSCPB 

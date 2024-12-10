@@ -1,7 +1,7 @@
 # Name: GlobalSat BU-353-S4
 # Chipset = SiRF-IV
 # Firmware = ?-GSD4e_4.0.4-P1_RPATCH.07-GS008-F-GPS-4R-1201128 01/12/2012 012
-# Date = 2014-12-31
+# Date: 2014-12-31
 # Submitter = Paul Beard <paulbeard@paulbeard.name>
 # Location = Hamilton, Waikato, 37.8S 175.3E
 $GPGGA,030719.000,3747.0873,S,17518.8938,E,1,08,1.1,59.9,M,23.7,M,,0000*7D

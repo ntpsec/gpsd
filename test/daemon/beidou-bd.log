@@ -1,6 +1,6 @@
 # Name: AtlasVI/PrimaII for SiRF-TriG
 # Chipset = SiRF-TriG
-# Date = 2015-02-25
+# Date: 2015-02-25
 # Submitter = Eli Huang <eli.huang.cn@gmail.com>
 # Notes: Contains Beidou and GLONASS sentences. The Beidou sentences use the 
 #	BD talker ID, which is mandated by the Chinese standard "Technical

@@ -1,7 +1,7 @@
 # Name: Navilock NL-551EUSB ublox5
 # Chipset = u-blox5 GPS & GALILEO SuperSense
 # Firmware = 6.02
-# Date = 2012-07-03
+# Date: 2012-07-03
 # Submitter = Bas van Duijnhoven <b.duijnhoven@chello.nl>
 # Location = Rheden, NL, 52.002N 6.036E
 $GPRMC,191418.00,V,,,,,,,040712,,,N*79
