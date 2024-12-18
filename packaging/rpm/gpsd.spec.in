@@ -608,7 +608,7 @@ desktop-file-install \
 
 * Wed Apr 19 2006 Matthew Truch <matt at truch.net> - 2.32-5
 - Don't --enable-tnt in build as it causes some gpses to not work
-  properly with sattelite view mode.  See bugzilla bug 189220.
+  properly with satellite view mode.  See bugzilla bug 189220.
 
 * Thu Apr 13 2006 Matthew Truch <matt at truch.net> - 2.32-4
 - Add dbus-glib to BuildRequires as needed for build.
