@@ -559,7 +559,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
     int nmea2_prn = nmea_satnum;
 
     *ubx_gnssid = 0;   // default to ubx_gnssid is GPS
-    *ubx_svid = 0;     // default to unnknown ubx_svid
+    *ubx_svid = 0;     // default to unknown ubx_svid
 
     if (1 > nmea_satnum) {
         // uh, oh...
