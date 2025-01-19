@@ -89,11 +89,9 @@
   # common config path (by default unused)
   /etc/gpsd/* r,
   # gpsd will call this on device attach/detach allowing for custom handlers
+  /bin/dash rix,
+  /bin/bash rix,
   /etc/gpsd/device-hook ix,
-  # which may in turn shebang one of these
-  # handle merged and non-merged user cases
-  /(,usr/}bin/dash rix,
-  /(,usr/}bin/bash rix,
 
   # control socket e.g. for gpsdctl
   /{,var/}run/gpsd.sock rw,
