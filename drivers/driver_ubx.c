@@ -3057,7 +3057,8 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
             session->gpsdata.skyview[st].elevation = (double)tmp;
         }
         tmp = getles16(buf, off + 4);
-        if (359 > tmp && 0 <= tmp) {
+        if (360 > tmp &&
+            0 <= tmp) {
             session->gpsdata.skyview[st].azimuth = (double)tmp;
         }
         session->gpsdata.skyview[st].used = used;
@@ -3662,7 +3663,7 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
         if (90 >= abs(el)) {
             session->gpsdata.skyview[st].elevation = (double)el;
         }
-        if (359 > az &&
+        if (360 > az &&
             0 <= az) {
             session->gpsdata.skyview[st].azimuth = (double)az;
         }
