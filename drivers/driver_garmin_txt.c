@@ -287,7 +287,7 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
     // only one message, set cycle start
     session->cycle_end_reliable = true;
     do {
-        struct tm gdate;                // date part of last sentence time
+        struct tm gdate = {0};            // date part of last sentence time
         unsigned int result;
         char *buf = (char *)session->lexer.outbuffer + 1;
 
