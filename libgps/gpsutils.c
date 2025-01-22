@@ -877,7 +877,10 @@ double earth_distance(double lat1, double lon1, double lat2, double lon2)
     return earth_distance_and_bearings(lat1, lon1, lat2, lon2, NULL, NULL);
 }
 
-// Wait for data until timeout, ignoring signals.
+/* Wait for data until timeout, ignoring signals.
+ *
+ * pselect() may set errno on error
+ */
 bool nanowait(int fd, struct timespec *to)
 {
     fd_set fdset;
@@ -885,6 +888,7 @@ bool nanowait(int fd, struct timespec *to)
     FD_ZERO(&fdset);
     FD_SET(fd, &fdset);
     TS_NORM(to);         // just in case
+    errno = 0;
     // sigmask is NULL, so equivalent to select()
     return pselect(fd + 1, &fdset, NULL, NULL, to, NULL) == 1;
 }
