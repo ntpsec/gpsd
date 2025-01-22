@@ -143,32 +143,32 @@ static gps_mask_t handle1000(struct gps_device_t *session)
 /* time-position-velocity report */
 {
     gps_mask_t mask;
-    struct tm unpacked_date;
+    struct tm unpacked_date = {0};
     int datum;
     char ts_buf[TIMESPEC_LEN];
 
-    /* ticks                      = getzlong(6); */
-    /* sequence                   = getzword(8); */
-    /* measurement_sequence       = getzword(9); */
+    // ticks                      = getzlong(6);
+    // sequence                   = getzword(8);
+    // measurement_sequence       = getzword(9);
     session->newdata.status = (getzword(10) & 0x1c) ? 0 : 1;
-    if (session->newdata.status != 0)
+    if (0 != session->newdata.status) {
         session->newdata.mode = (getzword(10) & 1) ? MODE_2D : MODE_3D;
-    else
+    } else {
         session->newdata.mode = MODE_NO_FIX;
+    }
 
-    /* solution_type                 = getzword(11); */
+    // solution_type                 = getzword(11);
     session->gpsdata.satellites_used = (int)getzword(12);
-    /* polar_navigation              = getzword(13); */
+    // polar_navigation              = getzword(13);
     session->context->gps_week = (unsigned short)getzword(14);
-    /* gps_seconds                   = getzlong(15); */
-    /* gps_nanoseconds               = getzlong(17); */
+    // gps_seconds                   = getzlong(15);
+    // gps_nanoseconds               = getzlong(17);
     unpacked_date.tm_mday = (int)getzword(19);
     unpacked_date.tm_mon = (int)getzword(20) - 1;
     unpacked_date.tm_year = (int)getzword(21) - 1900;
     unpacked_date.tm_hour = (int)getzword(22);
     unpacked_date.tm_min = (int)getzword(23);
     unpacked_date.tm_sec = (int)getzword(24);
-    unpacked_date.tm_isdst = 0;
     session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
     session->newdata.time.tv_nsec = getzu32(25);
     session->newdata.latitude = ((long)getzlong(27)) * RAD_2_DEG * 1e-8;

@@ -636,6 +636,8 @@ void gps_merge_fix(struct gps_fix_t *to,
  * mktime() takes struct tm as localtime.
  *
  * The inverse of gmtime(time_t)
+ *
+ * Return: -1 on error, set errno to EOVERFLOW
  */
 time_t mkgmtime(struct tm * t)
 {
@@ -644,6 +646,18 @@ time_t mkgmtime(struct tm * t)
     static const int cumdays[MONTHSPERYEAR] =
         { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
+    if (0 > t->tm_sec ||
+        0 > t->tm_min ||
+        0 > t->tm_hour ||
+        1 > t->tm_mday ||
+        0 > t->tm_mon ||
+        0 > t->tm_year ||
+        0 > t->tm_wday ||
+        0 > t->tm_yday) {
+        errno = EOVERFLOW;
+        return -1;
+    }
+    errno = 0;
     year = 1900 + t->tm_year + t->tm_mon / MONTHSPERYEAR;
     result = (year - 1970) * 365 + cumdays[t->tm_mon % MONTHSPERYEAR];
     result += (year - 1968) / 4;
@@ -666,7 +680,7 @@ time_t mkgmtime(struct tm * t)
      * if (t->tm_isdst == 1)
      * result -= 3600;
      */
-    return (result);
+    return result;
 }
 
 // ISO8601 UTC to Unix timespec, no leapsecond correction.
