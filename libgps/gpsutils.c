@@ -646,6 +646,7 @@ time_t mkgmtime(struct tm * t)
     static const int cumdays[MONTHSPERYEAR] =
         { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
+    // check ranges, ignore tm_isdst and max tm_year
     if (0 > t->tm_sec ||
         0 > t->tm_min ||
         0 > t->tm_hour ||
@@ -653,7 +654,14 @@ time_t mkgmtime(struct tm * t)
         0 > t->tm_mon ||
         0 > t->tm_year ||
         0 > t->tm_wday ||
-        0 > t->tm_yday) {
+        0 > t->tm_yday ||
+        61 < t->tm_sec ||
+        59 < t->tm_min ||
+        23 < t->tm_hour ||
+        31 < t->tm_mday ||
+        11 < t->tm_mon ||
+        6 < t->tm_wday ||
+        365 < t->tm_yday) {
         errno = EOVERFLOW;
         return -1;
     }
