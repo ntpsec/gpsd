@@ -712,7 +712,7 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     int16_t time_bias = 0;
     uint8_t time_accuracy = 0;
     uint8_t time_source = 0;
-    struct tm unpacked_date;
+    struct tm unpacked_date = {0};
     unsigned char datum;
     int64_t clk_bias;
     uint32_t clk_bias_error;
@@ -1915,7 +1915,7 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
 
     if ((MODE_NO_FIX < session->newdata.mode) &&
         (session->driver.sirf.driverstate & SIRF_GE_232)) {
-        struct tm unpacked_date;
+        struct tm unpacked_date = {0};
         unsigned subseconds;
         /*
          * Early versions of the SiRF protocol manual don't document
@@ -2086,7 +2086,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
              navtype, session->newdata.status, session->newdata.mode);
 
     if (navtype & 0x40) {       // UTC corrected timestamp?
-        struct tm unpacked_date;
+        struct tm unpacked_date = {0};
         uint32_t msec;
 
         mask |= TIME_SET;
@@ -2157,7 +2157,7 @@ static gps_mask_t sirf_msg_ppstime(struct gps_device_t *session,
              getub(buf, 14));
     if (0x07 == ((int)getub(buf, 14) & 0x07)) {
         // valid UTC time
-        struct tm unpacked_date;
+        struct tm unpacked_date = {0};
 
         memset(&unpacked_date, 0, sizeof(unpacked_date));
         unpacked_date.tm_hour = (int)getub(buf, 1);

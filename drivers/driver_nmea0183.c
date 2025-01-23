@@ -1969,7 +1969,7 @@ static gps_mask_t processGST(int count, char *field[],
      * 8 Standard deviation (meters) of altitude error
      * 9 Checksum
      */
-    struct tm date;
+    struct tm date = {0};
     timespec_t ts;
     int ret;
     char ts_buf[TIMESPEC_LEN];

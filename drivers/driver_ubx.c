@@ -1305,7 +1305,7 @@ static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
     int64_t iTOW;
     int *mode = &session->newdata.mode;
     int *status = &session->newdata.status;
-    struct tm unpacked_date;
+    struct tm unpacked_date = {0};
     unsigned flags;
     unsigned gpsFix;    // same as NAV-PVT typeFix
     unsigned valid;
@@ -2704,7 +2704,7 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
     unsigned flags2;
     unsigned flags3;
     unsigned valid;
-    struct tm unpacked_date;
+    struct tm unpacked_date = {0};
     int *status = &session->newdata.status;
     int *mode = &session->newdata.mode;
     gps_mask_t mask = 0;

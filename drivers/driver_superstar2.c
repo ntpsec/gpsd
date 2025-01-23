@@ -75,7 +75,7 @@ static gps_mask_t superstar2_msg_navsol_lla(struct gps_device_t *session,
     gps_mask_t mask;
     unsigned char flags;
     double d;
-    struct tm tm;
+    struct tm tm = {0};
     double int_part;
     char ts_buf[TIMESPEC_LEN];
 
@@ -249,7 +249,7 @@ superstar2_msg_timing(struct gps_device_t *session, unsigned char *buf,
                       size_t data_len)
 {
     gps_mask_t mask;
-    struct tm tm;
+    struct tm tm = {0};
 
     if (data_len != 65)
         return 0;

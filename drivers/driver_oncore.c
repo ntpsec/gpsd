@@ -172,7 +172,7 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     float speed, track, dop;
     unsigned int i, j, st, nsv;
     int Bbused;
-    struct tm unpacked_date;
+    struct tm unpacked_date = {0};
     char ts_buf[TIMESPEC_LEN];
 
     if (76 != data_len) {
