@@ -3039,11 +3039,12 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
         uint8_t gnssId = getub(buf, off + 0);
         uint8_t svId = getub(buf, off + 1);
         uint8_t cno = getub(buf, off + 2);
+        int elev = getsb(buf, off + 3);
+        int azim = getles16(buf, off + 4);
+        int prRes = getles16(buf, off + 6);
         // health data in flags
         unsigned long flags = getleu32(buf, off + 8);
         bool used = (bool)(flags  & 0x08);
-        int tmp;
-        int prRes;
         // Notice NO sigid!
 
         nmea_PRN = ubx2_to_prn(gnssId, svId);
@@ -3052,17 +3053,14 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
         session->gpsdata.skyview[st].PRN = nmea_PRN;
 
         session->gpsdata.skyview[st].ss = (double)cno;
-        tmp = getsb(buf, off + 3);
-        if (90 >= abs(tmp)) {
-            session->gpsdata.skyview[st].elevation = (double)tmp;
+        if (90 >= abs(elev)) {
+            session->gpsdata.skyview[st].elevation = (double)elev;
         }
-        tmp = getles16(buf, off + 4);
-        if (360 > tmp &&
-            0 <= tmp) {
-            session->gpsdata.skyview[st].azimuth = (double)tmp;
+        if (360 > azim &&
+            0 <= azim) {
+            session->gpsdata.skyview[st].azimuth = (double)azim;
         }
         session->gpsdata.skyview[st].used = used;
-        prRes = getles16(buf, off + 6);
         session->gpsdata.skyview[st].prRes = prRes / 10.0;
         // by some coincidence, our health flags matches u-blox's
         session->gpsdata.skyview[st].health = (flags >> 4) & 3;
