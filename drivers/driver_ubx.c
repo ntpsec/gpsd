@@ -3062,7 +3062,7 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
             session->gpsdata.skyview[st].azimuth = (double)tmp;
         }
         session->gpsdata.skyview[st].used = used;
-        prRes = getles16(buf, off + 4);
+        prRes = getles16(buf, off + 6);
         session->gpsdata.skyview[st].prRes = prRes / 10.0;
         // by some coincidence, our health flags matches u-blox's
         session->gpsdata.skyview[st].health = (flags >> 4) & 3;
