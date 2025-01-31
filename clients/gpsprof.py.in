@@ -471,8 +471,8 @@ class spaceplot(plotter):
         dist_3d_max = 0.0
         alt_fixes = []
         alt_fixes_r = []
-        latlon_data = ""
-        alt_data = ""
+        latlon_data = "$LLData << EOD\n"
+        alt_data = "$ALTData << EOD\n"
         # init calculated hep, sep and mrse
         calc_hep = gps.NaN
         calc_sep = gps.NaN
@@ -490,6 +490,9 @@ class spaceplot(plotter):
                 alt_fixes.append(alt)
                 # micro meters should be good enough
                 alt_data += "%.6f\n" % (alt)
+
+        latlon_data += "EOD\n"
+        alt_data += "EOD\n"
 
         if alt_fixes:
             # got altitude data
@@ -709,8 +712,10 @@ class spaceplot(plotter):
                     ) % (altitude_x, alt_ep99,
                          altitude_x, -alt_ep99)
 
+        fmt += latlon_data + alt_data
+
         # setup now done, plot it!
-        fmt += ('plot "-" using 1:2 with %s ls 3 title "%d GPS fixes" '
+        fmt += ('plot $LLData using 1:2 with %s ls 3 title "%d GPS fixes" '
                 ', cx(t,cep),cy(t,cep) ls 1 title "CEP (50%%) = %.3f meters"'
                 ', cx(t,cep95),cy(t,cep95) title "CEP (95%%) = %.3f meters"'
                 ', cx(t,cep99),cy(t,cep99) title "CEP (99%%) = %.3f meters"'
@@ -719,7 +724,7 @@ class spaceplot(plotter):
 
         if not math.isnan(stat_alt.mean):
             # add plot of altitude
-            fmt += (', "-" using ( %.3f ):( $1 - %.3f ) '
+            fmt += (', $ALTData using ( %.3f ):( $1 - %.3f ) '
                     'axes x1y2 with points ls 2 lc "green"'
                     ' title " %d AltHAE fixes"'
                     ) % (cep100_meters * 1.1, stat_alt.mean, len(alt_fixes))
@@ -740,10 +745,7 @@ class spaceplot(plotter):
                     ' title " EP(99%%) = %.3f meters"'
                     ) % (alt_ep99)
 
-        fmt += self.header() + latlon_data
-        if not math.isnan(stat_alt.mean):
-            # add altitude samples
-            fmt += 'e\n' + alt_data
+        fmt += self.header()
         return fmt
 
 
