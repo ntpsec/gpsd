@@ -797,10 +797,10 @@ class polarplot(plotter):
 
     def data(self):
         """Format data for dump."""
-        res = ""
+        res = "$Data << EOD\n"
         for (prn, ss, az, el, used) in self.fixes:
             res += "%d\t%d\t%d\t%d\t%s\n" % (prn, ss, az, el, used)
-        return res
+        return res + "EOD\n"
 
     def plot(self):
         """Format data for dump."""
@@ -909,11 +909,11 @@ set label 16 at screen 0.41, screen 0.10 "sigma\\n%.1f\\n%.1f\\n%.1f" right
         fmt += '''\
 # and finally the plot
 # flip azimuth to plot north up, east right
-# plot "-" u (90 - $3):4 t "Sat" with points ls 11
-plot "-" u (90 - $3):4:(1):($2) t "Sat" w circles lc palette
+# plot $Data u (90 - $3):4 t "Sat" with points ls 11
+plot $Data u (90 - $3):4:(1):($2) t "Sat" w circles lc palette
 '''
         # return fmt + self.header() + self.data()
-        return self.header() + fmt + self.data()
+        return self.header() + self.data() + fmt
 
 
 class polarplotunused(polarplot):
@@ -955,11 +955,11 @@ class timeplot(plotter):
 
     def data(self):
         """Format data for dump."""
-        res = ""
+        res = "$Data << EOD\n"
         for (real_sec, real_nsec, clock_sec, clock_nsec) in self.fixes:
             res += "%d\t%d\t%d\t%d\n" % (real_sec, real_nsec, clock_sec,
                                          clock_nsec)
-        return res
+        return res + "EOD\n"
 
     def plot(self):
         """Format data for dump."""
@@ -967,10 +967,10 @@ class timeplot(plotter):
 set autoscale
 set key below
 set ylabel "System clock delta from GPS time (nsec)"
-plot "-" using 0:((column(1)-column(3))*1e9 + (column(2)-column(4))) \
+plot $Data using 0:((column(1)-column(3))*1e9 + (column(2)-column(4))) \
  title "Delta" with impulses
 '''
-        return fmt + self.header() + self.data()
+        return self.header() + self.data() + fmt
 
 
 class uninstrumented(plotter):
@@ -1001,10 +1001,10 @@ class uninstrumented(plotter):
 
     def data(self):
         """Format data for dump."""
-        res = ""
+        res = "$Data << EOD\n"
         for seconds in self.fixes:
             res += "%2.6lf\n" % seconds
-        return res
+        return res + "EOD\n"
 
     def plot(self):
         """Plot the data."""
@@ -1012,9 +1012,9 @@ class uninstrumented(plotter):
 set autoscale
 set key below
 set key title "Uninstrumented total latency"
-plot "-" using 0:1 title "Total time" with impulses
+plot $Data using 0:1 title "Total time" with impulses
 '''
-        return fmt + self.header() + self.data()
+        return self.header() + self.data() + fmt
 
 
 class instrumented(plotter):
@@ -1053,14 +1053,14 @@ class instrumented(plotter):
 
     def data(self):
         """Format data for dump."""
-        res = ""
+        res = "$Data << EOD\n"
         for (fix_time, chars, sats, start, xmit, recv) in self.fixes:
             rs232_time = (chars * 10.0) / self.device['bps']
             res += "%.3f  %9u  %2u  %.6f  %.6f  %.6f  %.6f\n" \
                 % (fix_time, chars, sats, start - fix_time,
                    (start - fix_time) + rs232_time, xmit - fix_time,
                    recv - fix_time)
-        return res
+        return res + "EOD\n"
 
     def plot(self):
         """Do the plot."""
@@ -1077,10 +1077,10 @@ set key below
 plot \\\n'''
         for (i, legend) in enumerate(legends):
             j = len(legends) - i + 4
-            fmt += '    "-" using 0:%d title "%s" with impulses, \\\n' \
+            fmt += '    $Data using 0:%d title "%s" with impulses, \\\n' \
                 % (j, legend)
         fmt = fmt[:-4] + "\n"
-        return fmt + self.header() + (self.data() + "e\n") * len(legends)
+        return self.header() + self.data() + fmt
 
 
 if __name__ == '__main__':
