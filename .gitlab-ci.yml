@@ -119,17 +119,17 @@ fedora-latest:
     - eatmydata .ci-build/build.sh
   extends: .when_push
 
-alma-8-minimal:
+alma-9:
   allow_failure: true
   interruptible: true
-  image: almalinux:8
+  image: almalinux:9
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
   script:
     - dnf -y install epel-release
     - dnf -y install -y eatmydata  # Should be early but after EPEL
     - eatmydata -- dnf -y install dnf-plugins-core
-    - eatmydata -- dnf config-manager --set-enabled powertools
+    - eatmydata -- dnf config-manager --set-enabled crb
     - eatmydata -- dnf -y install diffutils python3-scons bc ncurses-devel
       qt5-qtbase-devel pps-tools-devel libnsl2-devel bluez-libs-devel
       platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial
