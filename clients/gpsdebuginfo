@@ -33,6 +33,8 @@ elif command -v python3; then
     # get gps module version
     python3 -c "import gps; print(gps.__version__)"
 fi
+
+# check the netwaork status of the gpsd TCP port.
 # use sockstat, lsof, netstat or ss, depending, for owner of port 2947
 if command -v sockstat; then
     # sockstat for FreeBSD
@@ -48,8 +50,19 @@ elif command -v ss; then
     ss -ltpn | sed -nE '1p;/:2947 |gpsd/p'
 fi
 
+# check how gpsd is running by looking at running processes
 # busybox does not support ps a or x options, so gall back to 'l'
 ps ax || ps l |  sed -nE '1p;/gpsd/p'
+
+# check that host is not swapping, happens on Rasperry Pis, etc.
+if command -v free; then
+    free
+fi
+
+# check that host load factor is not too high
+if command -v uptime; then
+    uptime | grep -o   "load .*$"
+fi
 
 if command -v gpspipe; then
     gpspipe -V
@@ -74,6 +87,8 @@ echo PYTHONPATH "$PYTHONPATH"
 if command -v gpscat; then
     head -n 1 "$(command -v gpscat)"
 fi
+
+# Check what gpsd module version that Python sees.
 if command -v python; then
     python -V
     python -c "import gps;print(gps.__version__)"
@@ -83,6 +98,7 @@ if command -v python3; then
     python3 -c "import gps;print(gps.__version__)"
 fi
 
+# check systemd.  Almost never properly configured for gpsd.
 if command -v systemctl; then
     cat /etc/*/gpsd
     systemctl cat gpsd.service
@@ -91,7 +107,11 @@ if command -v systemctl; then
     systemctl status gpsd.socket
     journalctl -u gpsd.service --since today
 fi
-if command -v aa-status; then
+
+# check apparmor.  Often configured to break gpsd
+if command -v aa-enabled; then
+    aa-enabled
+elif command -v aa-status; then
     aa-status
 elif command -v apparmor_status; then
     apparmor_status
