@@ -3056,6 +3056,11 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
         if (90 >= abs(elev)) {
             session->gpsdata.skyview[st].elevation = (double)elev;
         }
+        /* For some reason UBX allows 360 == azim here, but gpsd json does not
+         * so fix thta.  Other UBX specifies 0-359. */
+        if (360 == azim) {
+            azim = 0;
+        }
         if (360 > azim &&
             0 <= azim) {
             session->gpsdata.skyview[st].azimuth = (double)azim;
