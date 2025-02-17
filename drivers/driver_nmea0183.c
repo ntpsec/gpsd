@@ -251,7 +251,7 @@ static int faa_mode(char mode)
  *
  * return: 0 == OK,  greater than zero on failure
  */
-static int decode_ddmmyy(struct tm *date, char *ddmmyy,
+static int decode_ddmmyy(struct tm *date, const char *ddmmyy,
                          struct gps_device_t *session)
 {
     int mon;
@@ -308,6 +308,7 @@ static int decode_ddmmyy(struct tm *date, char *ddmmyy,
     date->tm_year = year;
     date->tm_mon = mon - 1;
     date->tm_mday = mday;
+    // FIXME: check fractional time!
 
     GPSD_LOG(LOG_RAW, &session->context->errout,
              "NMEA0183: merge_ddmmyy(%s) %d %d %d\n",
@@ -320,7 +321,7 @@ static int decode_ddmmyy(struct tm *date, char *ddmmyy,
  *
  * return: 0 == OK,  greater than zero on failure
  */
-static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
+static int merge_ddmmyy(const char *ddmmyy, struct gps_device_t *session)
 {
     struct tm date = {0};
     int retcode;
@@ -342,7 +343,7 @@ static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
  *
  * return: 0 == OK,  otherwise failure
  */
-static int decode_hhmmss(struct tm *date, long *nsec, char *hhmmss,
+static int decode_hhmmss(struct tm *date, long *nsec, const char *hhmmss,
                          struct gps_device_t *session)
 {
     int old_hour = date->tm_hour;
@@ -396,7 +397,7 @@ static int decode_hhmmss(struct tm *date, long *nsec, char *hhmmss,
  *
  * return: 0 == OK,  greater than zero on failure
  */
-static int merge_hhmmss(char *hhmmss, struct gps_device_t *session)
+static int merge_hhmmss(const char *hhmmss, struct gps_device_t *session)
 {
     struct tm date = {0};
     timespec_t ts = {0};
@@ -417,22 +418,34 @@ static int merge_hhmmss(char *hhmmss, struct gps_device_t *session)
     return 0;
 }
 
+/* register_fractional_time()
+ * "fractional time" is a struct timespec of seconds since midnight
+ * used to try to detect epoch changes as NMEA comes in.
+ * tag is field[0]
+ * *fld is "hhmmss.ss"
+ */
 static void register_fractional_time(const char *tag, const char *fld,
                                      struct gps_device_t *session)
 {
+    struct tm date = {0};
+    struct timespec ts = {0};
+    char ts_buf[TIMESPEC_LEN];
 
-    if ('\0' != fld[0]) {
-        char ts_buf[TIMESPEC_LEN];
-
-        session->nmea.last_frac_time = session->nmea.this_frac_time;
-        DTOTS(&session->nmea.this_frac_time, safe_atof(fld));
-        session->nmea.latch_frac_time = true;
-        GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "NMEA0183: %s: registers fractional time %s\n",
-                 tag,
-                 timespec_str(&session->nmea.this_frac_time, ts_buf,
-                              sizeof(ts_buf)));
+    if (0 != decode_hhmmss(&date, &ts.tv_nsec, fld, session)) {
+        // invalide time
+        return;
     }
+
+    ts.tv_sec = date.tm_hour * 3600 + date.tm_min * 60 + date.tm_sec;
+
+    session->nmea.last_frac_time = session->nmea.this_frac_time;
+    session->nmea.this_frac_time = ts;
+    session->nmea.latch_frac_time = true;
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: %s: registers fractional time %s\n",
+             tag,
+             timespec_str(&session->nmea.this_frac_time, ts_buf,
+                          sizeof(ts_buf)));
 }
 
 // convert NMEA sigid to ublox sigid
@@ -1099,6 +1112,7 @@ static gps_mask_t processGBS(int c UNUSED, char *field[],
     if (session->nmea.date.tm_hour == DD(field[1]) &&
         session->nmea.date.tm_min == DD(field[1] + 2) &&
         session->nmea.date.tm_sec == DD(field[1] + 4)) {
+        // FIXME: check fractional time!
         session->newdata.epy = safe_atof(field[2]);
         session->newdata.epx = safe_atof(field[3]);
         session->newdata.epv = safe_atof(field[4]);
