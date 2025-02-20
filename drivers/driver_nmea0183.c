@@ -34,7 +34,7 @@
 #include "../include/timespec.h"
 
 // $SNRSTAAT insstatus
-static struct vlist_t vsnrstat_insstatus[] = {
+static const struct vlist_t vsnrstat_insstatus[] = {
     {-1, "Failure"},
     {0, "Disabled"},
     {1, "Init started"},
@@ -44,7 +44,7 @@ static struct vlist_t vsnrstat_insstatus[] = {
 };
 
 // $SNRSTAAT odostatus
-static struct vlist_t vsnrstat_odostatus[] = {
+static const struct vlist_t vsnrstat_odostatus[] = {
     {-1, "Failure"},
     {0, "Disabled"},
     {1, "Init started"},
@@ -54,7 +54,7 @@ static struct vlist_t vsnrstat_odostatus[] = {
 };
 
 // $SNRSTAAT InstallState
-static struct vlist_t vsnrstat_InstallState[] = {
+static const struct vlist_t vsnrstat_InstallState[] = {
     {-1, "Failure"},
     {0, "In progress"},
     {1, "Weak Sats"},
@@ -64,7 +64,7 @@ static struct vlist_t vsnrstat_InstallState[] = {
 };
 
 // $SNRSTAAT mapstat
-static struct vlist_t vsnrstat_mapstat[] = {
+static const struct vlist_t vsnrstat_mapstat[] = {
     {-2, "Abnormal"},
     {-1, "Unconfigured"},
     {0, "No info"},
@@ -181,6 +181,24 @@ static int do_lat_lon(char *field[], struct gps_fix_t *out)
     return 0;
 }
 
+// decode for FAA Mode indicator.  NMEA 4+
+static const struct clist_t c_faa_mode[] = {
+    {'A', "Autonomous"},
+    {'C', "Caution"},        // Quectel Querk
+    {'D', "Differential"},
+    {'E', "Estimated"},      // dead reckoning)
+    {'F', "Float RTK"},
+    {'M', "Manual Input."},  // surveyed)
+    {'N', "Data Not Valid"},
+    {'0', "Unk"},            // Skytraq??
+    {'P', "Precise"},        // (NMEA 4+)
+    {'R', "Integer RTK"},
+    {'S', "Simulated"},
+    {'U', "Unsafe"},         // Quectel querk
+    {'V', "Invalid"},        // ??
+    {'\0', NULL}
+};
+
 /* process an FAA mode character
  * As used in $GPRMC (field 13) and similar.
  * return status as in session->newdata.status
@@ -191,6 +209,8 @@ static int faa_mode(char mode)
 
     switch (mode) {
     case '\0':  // missing
+        FALLTHROUGH
+    case 'O':  // Skytraq ??
         FALLTHROUGH
     case 'V':   // Invalid
         newstatus = STATUS_UNK;
@@ -928,14 +948,15 @@ static gps_mask_t processBWC(int count, char *field[],
             }
         }
     }
-    if (12 <= count) {
+    if (14 <= count) {
         // NMEA 2.3 and later
-        session->newdata.status = faa_mode(field[12][0]);
+        session->newdata.status = faa_mode(field[13][0]);
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: BWC: hhmmss=%s faa mode %d\n",
-             field[1], session->newdata.status);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: BWC: hhmmss=%s status %d faa mode %s(%s)\n",
+             field[1], session->newdata.status,
+             field[13], char2str(field[13][0], c_faa_mode));
     return mask;
 }
 
@@ -1456,13 +1477,15 @@ static gps_mask_t processGLL(int count, char *field[],
     }
     mask |= STATUS_SET | MODE_SET;
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: GLL: hhmmss=%s lat=%.2f lon=%.2f mode=%d status=%d\n",
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: GLL: hhmmss=%s lat=%.2f lon=%.2f mode=%d status=%d "
+             "faa mode %s(%s)\n",
              field[5],
              session->newdata.latitude,
              session->newdata.longitude,
              session->newdata.mode,
-             session->newdata.status);
+             session->newdata.status,
+             field[7], char2str(field[7][0], c_faa_mode));
     return mask;
 }
 
@@ -1585,13 +1608,15 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
         session->newdata.dgps_station = atoi(field[12]);
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: GNS: hhmmss=%s lat=%.2f lon=%.2f mode=%d status=%d\n",
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: GNS: hhmmss=%s lat=%.2f lon=%.2f mode=%d status=%d "
+             "faa mode %s(%s)\n",
              field[1],
              session->newdata.latitude,
              session->newdata.longitude,
              session->newdata.mode,
-             session->newdata.status);
+             session->newdata.status,
+             field[6], char2str(field[6][0], c_faa_mode));
     return mask;
 }
 
@@ -3911,7 +3936,9 @@ static gps_mask_t processPSRFEPE(int c UNUSED, char *field[],
     return mask;
 }
 
-//  Recommended Minimum 3D GNSS Data
+/*  Recommended Minimum 3D GNSS Data
+ *  Skytaq
+ */
 static gps_mask_t processPSTI030(int count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
@@ -4007,13 +4034,14 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PSTI,030: ddmmyy=%s hhmmss=%s lat=%.2f lon=%.2f "
-             "status=%d, RTK(Age=%.1f Ratio=%.1f)\n",
+             "status=%d, RTK(Age=%.1f Ratio=%.1f) faa mode %s(%s)\n",
              field[12], field[2],
              session->newdata.latitude,
              session->newdata.longitude,
              session->newdata.status,
              session->newdata.dgps_age,
-             session->newdata.base.ratio);
+             session->newdata.base.ratio,
+             field[13], char2str(field[13][0], c_faa_mode));
     return mask;
 }
 
@@ -4290,11 +4318,13 @@ static gps_mask_t processPSTI036(int count UNUSED, char *field[],
     mask |= ATTITUDE_SET;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: PSTI,036: mode %d heading %.2f  pitch %.2f roll %.2f\n",
+             "NMEA0183: PSTI,036: mode %d heading %.2f  pitch %.2f roll %.2f "
+             "faa mode %s(%s)\n",
              mode,
              session->gpsdata.attitude.heading,
              session->gpsdata.attitude.pitch,
-             session->gpsdata.attitude.roll);
+             session->gpsdata.attitude.roll,
+             field[7], char2str(field[7][0], c_faa_mode));
     return mask;
 }
 
@@ -4453,9 +4483,11 @@ static gps_mask_t processRMC(int count, char *field[],
                     ; // skip for now
                 }
             }
-            GPSD_LOG(LOG_DATA, &session->context->errout,
-                     "NMEA0183: RMC: status %s(%d) faa mode %s faa status %s\n",
-                     field[2], newstatus, field[12], field[13]);
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "NMEA0183: RMC: status %s(%d) faa mode %s(%s) "
+                     "faa status %s\n",
+                     field[2], newstatus, field[12],
+                     char2str(field[12][0], c_faa_mode), field[13]);
         }
 
         /*

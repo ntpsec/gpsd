@@ -67,6 +67,21 @@ const struct vlist_t vstatus_str[] = {
     {0, NULL},
 };
 
+/* char2str(ch, vlist) - given a char, return a matching string.
+ *
+ * Return: pointer to string
+ */
+const char *char2str(unsigned char ch, const struct clist_t *clist)
+{
+    while (NULL != clist->str) {
+        if (clist->ch == ch) {
+            return clist->str;
+        }
+        clist++;
+    }
+    return "Unk";
+}
+
 /* flags2str(val, vlist) - given flags, return a matching string.
  *
  * flags the flags to find in vlist

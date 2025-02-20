@@ -3010,6 +3010,11 @@ extern const char *gps_maskdump(gps_mask_t);
 
 // stuff from libgps/gpsutils.c
 
+// a char list for char2str()
+struct clist_t {
+    unsigned char ch;
+    const char *str;
+};
 // a flag list for flags2str()
 struct flist_t {
     unsigned long val;
@@ -3026,6 +3031,7 @@ extern const struct vlist_t vgnssId[];         // gnssId val to gnssId string
 extern const struct vlist_t vmode_str[];       // mode val to mode string
 extern const struct vlist_t vstatus_str[];     // status val to tatus string
 
+extern const char *char2str(unsigned char, const struct clist_t *);
 extern const char *flags2str(unsigned long flags, const struct flist_t *flist,
                              char *buffer, size_t buflen);
 extern const char *val2str(unsigned long val, const struct vlist_t *vlist);
