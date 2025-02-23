@@ -1,6 +1,6 @@
 = gpsrinex(1)
 :author: Gary E. Miller
-:date: 3 June 2022
+:date: 22 February 2025
 :email: gem@rellim.com
 :keywords: gps, gpsd, gpsrinex, RINEX, ubxtool
 :manmanual: GPSD Documentation
@@ -219,20 +219,33 @@ Grab 4 hours of raw live data from remote *gpsd* at 10.168.1.2:
 gpspipe -x 14400 -R 10.168.1.2 > 4h-raw.ubx
 ----
 
-When gpspipe is complete, feed the data to gpsfake:
+When gpspipe is complete, the file 4h-raw.ubx will contain 4 hours
+of raw UBX binary message.  Convert that raw data in gpsd JSON with
+*gpsdecode*:
 
 ----
-gpsfake -1 -P 3000 4h-raw.ubx
+gpsdecode < 4h-raw.ubx > 4h-raw.json
 ----
 
-In another window, feed the data to *gpsrinex*. Use *-n 10000000* so that
-all the data from the raw file is used:
+The file 4h-raw.json will now contain the data encoded as gpsd JSON.
+Use *gpsrinex* to read that file and create a RINEX file:
 
 ----
-gpsrinex -i 30 -n 1000000 :3000
+gpsrinex -F 4h-raw.json
 ----
 
-Repeat the process with gpsfake to send the data to *gpsprof*.
+The RINEX file will be in the current directory with the file name
+like: gpsrinexYYYYjjjHHMMSS.obs
+
+You can now use the JSON  file to generate a polar plot of the used
+satellites:
+
+----
+gpsprof -f polarused -T jpeg -r < 4h-raw.json > 4h-raw.plot
+gnuplot < 4h-raw.plot > 4h-raw.png
+----
+
+Use the image viewer of your choice to view your skyview in 4h-raw.png
 
 == RETURN VALUES
 
