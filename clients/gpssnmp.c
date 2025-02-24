@@ -642,7 +642,7 @@ int main (int argc, char **argv)
 {
     bool persist = false;
     bool do_usage = false;
-    int status;
+    int err;
     char oid[40] = "";       // requested OID
     struct fixsource_t source;
     const struct oid_mib_xlate *pxlate;
@@ -755,10 +755,11 @@ int main (int argc, char **argv)
     }
 
     // Open the stream to gpsd
-    status = gps_open(source.server, source.port, &gpsdata);
-    if (0 != status) {
-        (void)fprintf(logfd, PROGNAME ": ERROR: connection failed: %d\n",
-                      status);
+    err = gps_open(source.server, source.port, &gpsdata);
+    if (0 != err) {
+        (void)fprintf(stderr,
+                      "gpssnmp: gps_open() failed  %s(%d) errno %s(%d)\n",
+                      gps_errstr(err), err, strerror(errno), errno);
         exit(1);
     }
     // we want JSON
