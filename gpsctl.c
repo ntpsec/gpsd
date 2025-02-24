@@ -450,10 +450,11 @@ int main(int argc, char **argv)
         int i, devcount;
 
         // Try to open the stream to gpsd.
-        if (0 != gps_open(NULL, NULL, &gpsdata)) {
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "no gpsd running or network error: %s.\n",
-                     gps_errstr(errno));
+        int err = gps_open(NULL, NULL, &gpsdata);
+        if (0 != err) {
+            (void)fprintf(stderr,
+                          "gpsctl: gps_open() failed  %s(%d) errno %s(%d)\n",
+                          gps_errstr(err), err, strerror(errno), errno);
             lowlevel = true;
         }
 
