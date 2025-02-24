@@ -1156,6 +1156,7 @@ int main(int argc, char **argv)
     char   *file_in = NULL;
     int timeout = 10;
     double f;
+    int err;
 
     progname = argv[0];
 
@@ -1343,10 +1344,11 @@ int main(int argc, char **argv)
     (void)signal(SIGQUIT, quit_handler);
     (void)signal(SIGINT, quit_handler);
 
-    if (0 > gps_open(source.server, source.port, &gpsdata)) {
+    err = gps_open(source.server, source.port, &gpsdata);
+    if (0 > err) {
         (void)fprintf(stderr,
-                      "%s: no gpsd running or network error: %d, %s(%d)\n",
-                      progname, errno, gps_errstr(errno), errno);
+                      "%s: gps_open() failed  %s(%d) errno %s(%d)\n",
+                      progname, gps_errstr(err), err, strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
     if (NULL != source.device) {

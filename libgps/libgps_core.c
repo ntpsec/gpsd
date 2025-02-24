@@ -71,6 +71,7 @@ int gps_open(const char *host, const char *port,
 {
     int status = -100;
 
+    errno = 0;
     if (!gpsdata) {
         return NL_NOHOST;
     }
@@ -456,25 +457,25 @@ extern const char *gps_errstr(const int err)
      * protocol compatibility checks
      */
 #ifdef USE_QT
-#ifdef SHM_EXPORT_ENABLE
-    if (SHM_NOSHARED == err) {
-        return "no shared-memory segment or daemon not running";
-    }
-    if (SHM_NOATTACH == err) {
-        return "attach failed for unknown reason";
-    }
-#endif  // SHM_EXPORT_ENABLE
-#ifdef DBUS_EXPORT_ENABLE
-    if (DBUS_FAILURE == err) {
-        return "DBUS initialization failure";
-    }
-#endif  // DBUS_EXPORT_ENABLE
-    return netlib_errstr(err);
-#else   // USE_QT
     static char buf[32];
 
     (void)snprintf(buf, sizeof(buf), "Qt error %d", err);
     return buf;
+#else   // USE_QT
+    switch (err) {
+    case SHM_NOSHARED:
+        return "no shared-memory segment or daemon not running";
+    case SHM_NOATTACH:
+        return "attach failed for unknown reason";
+    case DBUS_FAILURE:
+        return "DBUS initialization failure";
+    case FILE_FAIL:
+        return "failed to open file";
+    case SHM_CALLOC:
+        return "calloc() failed";
+    default:
+        return netlib_errstr(err);
+    }
 #endif  // USE_QT
 }
 
