@@ -1590,6 +1590,7 @@ int main(int argc, char *argv[])
     // buffer to hold one JSON message
     char message[GPS_JSON_RESPONSE_MAX];
     const char *optstring = "?D:hil:mrsu:V";
+    int err;
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -1677,10 +1678,11 @@ int main(int argc, char *argv[])
     }
 
     // Open the stream to gpsd.
-    if (0 != gps_open(source.server, source.port, &gpsdata)) {
+    err = gps_open(source.server, source.port, &gpsdata);
+    if (0 != err) {
         (void)fprintf(stderr,
-                      "cgps: no gpsd running or network error: %d, %s\n",
-                      errno, gps_errstr(errno));
+                      "cgps: gps_open() failed  %s(%d) errno %s(%d)\n",
+                      gps_errstr(err), err, strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
 
