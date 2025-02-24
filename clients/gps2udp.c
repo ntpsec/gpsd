@@ -232,11 +232,13 @@ static void connect2gpsd(bool restart)
      */
     delay = 10;
     while (1) {
-        int status = gps_open(gpsd_source.server, gpsd_source.port, &gpsdata);
-        if (0 != status) {
+        int err = gps_open(gpsd_source.server, gpsd_source.port, &gpsdata);
+        if (0 != err) {
             (void)fprintf(stderr,
-                          "gps2udp [%s] connection failed at %s:%s\n",
-                          time2string(), gpsd_source.server, gpsd_source.port);
+                          "gps2udp [%s] gps_open(%s, %s) failed "
+                          " %s(%d) errno %s(%d)\n",
+                          time2string(), gpsd_source.server, gpsd_source.port,
+                          gps_errstr(err), err, strerror(errno), errno);
            (void)sleep(delay);
         } else {
             if (0 < debug) {
