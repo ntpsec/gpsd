@@ -326,6 +326,7 @@ int main(int argc, char **argv)
     struct exportmethod_t *method = NULL;
     char   *file_in = NULL;
     const char *optstring = "?dD:e:f:F:ghi:lm:rV";
+    int err;
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -491,10 +492,11 @@ int main(int argc, char **argv)
 
     // syslog (LOG_INFO, "---------- STARTED ----------");
 
-    if (0 != gps_open(source.server, source.port, &gpsdata)) {
+    err = gps_open(source.server, source.port, &gpsdata);
+    if (0 != err) {
         (void)fprintf(stderr,
-                      "%s: no gpsd running or network error: %d, %s\n",
-                      progname, errno, gps_errstr(errno));
+                      "%s: gps_open() failed  %s(%d) errno %s(%d)\n",
+                      progname, gps_errstr(err), err, strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
 
