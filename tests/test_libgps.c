@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
     bool forwardmode = false;
     char *fmsg = NULL;
     int debug = 0;
+    int err;
 
     // FIXME: signal() not portable.  Use sigaction() instead.
     (void)signal(SIGSEGV, onsig);
@@ -95,10 +96,10 @@ int main(int argc, char *argv[])
 		libgps_dump_state(&gpsdata);
 	    }
 	}
-    } else if (0 != gps_open(source.server, source.port, &collect)) {
-	(void)fprintf(stderr,
-		      "test_libgps: no gpsd running or network error: %d, %s\n",
-		      errno, gps_errstr(errno));
+    } else if (0 != (err = gps_open(source.server, source.port, &collect))) {
+        (void)fprintf(stderr,
+                      "test_libgps: gps_open() failed  %s(%d) errno %s(%d)\n",
+                      gps_errstr(err), err, strerror(errno), errno);
 	exit(EXIT_FAILURE);
     } else if (forwardmode) {
 	if (-1 == gps_send(&collect, fmsg)) {
