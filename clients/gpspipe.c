@@ -198,6 +198,7 @@ int main(int argc, char **argv)
     char *serialport = NULL;
     char *outfile = NULL;
     const char *optstring = "2?BdD:hln:o:pPrRwSs:tT:uvVx:Z";
+    int err;
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -392,10 +393,11 @@ int main(int argc, char **argv)
         open_serial(serialport);
     }
 
-    if (0 != gps_open(source.server, source.port, &gpsdata)) {
+    err = gps_open(source.server, source.port, &gpsdata);
+    if (0 != err) {
         (void)fprintf(stderr,
-                      "gpspipe: could not connect to gpsd %s:%s, %s(%d)\n",
-                      source.server, source.port, gps_errstr(errno), errno);
+                      "gpspipe: gps_open() failed  %s(%d) errno %s(%d)\n",
+                      gps_errstr(err), err, strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
 
