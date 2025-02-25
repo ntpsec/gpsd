@@ -31,17 +31,7 @@
  * One service known to work with obsrinex output is [CSRS-PPP]:
  *  https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php
  *
- * Examples:
- *    To collect 4 hours of samples as 30 second intervals:
- *        # gpsrinex -i 30 -n 480
- *
- * To generate RINEX 3 from a u-blox capture file:
- *     Grab 4 hours of raw live data:
- *         # gpspipe -x 14400 -R > 4h-raw.ubx
- *     Feed that data to gpsfake:
- *         # gpsfake -1 -P 3000 4h-raw.ubx
- *     In another window, convert that raw to RINEX 3:
- *         # gpsrinex -i 1 -n 1000000
+ * See the gpsrinex man page for usage examples.
  *
  * See also:
  *     [1] RINEX: The Receiver Independent Exchange Format, Version 3.04
@@ -56,7 +46,7 @@
  *     [4] RTKLIB: An Open Source Program Package for GNSS Positioning
  *     http://www.rtklib.com/
  *
- * This file is Copyright 2018 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -528,9 +518,12 @@ static void print_rinex_header(void)
     (void)fprintf(log_file, "%10.3f%50s%-20s\n",
                   (double)sample_interval_ms / 1000.0, "", "INTERVAL");
 
-    // GPS time not UTC
+    /* GPS time not UTC.  The data and time fields are I6, but some
+     * PPP services still want a leading zero.  So "    02", not "     2".
+     */
     first_time = gmtime_r(&(first_mtime.tv_sec), &tm_buf);
-    (void)fprintf(log_file, "%6d%6d%6d%6d%6d%5d.%07ld%8s%9s%-20s\n",
+    (void)fprintf(log_file, "%6d    %02d    %02d    %02d    %02d"
+                            "   %02d.%07ld%8s%9s%-20s\n",
          first_time->tm_year + 1900,
          first_time->tm_mon + 1,
          first_time->tm_mday,
@@ -541,9 +534,12 @@ static void print_rinex_header(void)
          "GPS", "",
          "TIME OF FIRST OBS");
 
-    // GPS time not UTC
+    /* GPS time not UTC.  The data and time fields are I6, but some
+     * PPP services still want a leading zero.  So "    02", not "     2".
+     */
     last_time = gmtime_r(&(last_mtime.tv_sec), &tm_buf);
-    (void)fprintf(log_file, "%6d%6d%6d%6d%6d%5d.%07ld%8s%9s%-20s\n",
+    (void)fprintf(log_file, "%6d    %02d    %02d    %02d    %02d"
+                            "   %02d.%07ld%8s%9s%-20s\n",
          last_time->tm_year + 1900,
          last_time->tm_mon + 1,
          last_time->tm_mday,
