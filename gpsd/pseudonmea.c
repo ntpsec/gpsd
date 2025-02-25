@@ -170,9 +170,12 @@ int gpsd_position_fix_dump(struct gps_device_t *session,
         fixquality = FIX_QUALITY_RTK_FLT;
         break;
     case STATUS_DR:
-        FALLTHROUGH
-    case STATUS_GNSSDR:
         fixquality = FIX_QUALITY_DR;
+        break;
+    case STATUS_GNSSDR:
+        /* NMEA doesn't know GNSS+DR from DR, so report GNSS fix
+         * What does it even mean? */
+        fixquality = FIX_QUALITY_GPS;
         break;
     case STATUS_TIME:
         fixquality = FIX_QUALITY_MANUAL;
