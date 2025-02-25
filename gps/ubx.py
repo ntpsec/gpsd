@@ -1637,6 +1637,11 @@ class ubx(object):
         ("CFG-SEC-CFG_LOCK_UNLOCKGRP2", 0x10f6000b, "U2", 1, "",
          "Configuration lockdown exempted group 2"),
 
+        # CFG-SFCORE-
+        # F9 DR products, protver 33.20
+        ("CFG-SFCORE-USE_SF", 0x10080001, "L", 1, "",
+         "Use ADR/UDR sensor fusion"),
+
         # CFG-SIGNAL-
         ("CFG-SIGNAL", 0x1031ffff, "", 0, "",
          "get all CFG-SIGNAL"),
