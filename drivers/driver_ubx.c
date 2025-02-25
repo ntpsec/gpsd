@@ -1330,37 +1330,36 @@ static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
         // 5 - Surveyed-in, so a precise 3D.
         *mode = MODE_3D;
         *status = STATUS_TIME;
-        mask |= STATUS_SET | MODE_SET;
+        mask |= LATLON_SET | SPEED_SET | MODE_SET | STATUS_SET;
         break;
 
     case UBX_MODE_3D:
         // 3
-        FALLTHROUGH
+        *mode = MODE_3D;
+        *status = STATUS_GPS;
+        mask |= LATLON_SET | SPEED_SET | MODE_SET | STATUS_SET;
+        break;
+
     case UBX_MODE_GPSDR:
         // 4
-        if (*mode != MODE_3D) {
-            *mode = MODE_3D;
-            mask |= MODE_SET;
-        }
-        *status = STATUS_GPS;   // GPSDR??
-        mask |= STATUS_SET | LATLON_SET;
+        *mode = MODE_3D;
+        *status = STATUS_GNSSDR;
+        mask |= LATLON_SET | SPEED_SET | MODE_SET | STATUS_SET;
         break;
 
     case UBX_MODE_2D:
         // 2
-        FALLTHROUGH
+        *mode = MODE_2D;
+        *status = STATUS_GPS;
+        mask |= LATLON_SET | SPEED_SET | MODE_SET | STATUS_SET;
+        break;
+
     case UBX_MODE_DR:           // consider this too as 2D
         // 1
-        if (MODE_2D != *mode) {
-            *mode = MODE_2D;
-            mask |= MODE_SET;
-        };
-        if (STATUS_GPS != *status) {
-            // FIXME: Set DR status if it is DR
-            *status = STATUS_GPS;
-            mask |= STATUS_SET;
-        }
-        mask |= LATLON_SET | SPEED_SET;
+        // chould be 3D?
+        *mode = MODE_2D;
+        *status = STATUS_DR;
+        mask |= LATLON_SET | SPEED_SET | MODE_SET | STATUS_SET;
         break;
 
     case UBX_MODE_NOFIX:
@@ -1368,14 +1367,9 @@ static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
         FALLTHROUGH
     default:
         // huh?
-        if (*mode != MODE_NO_FIX) {
-            *mode = MODE_NO_FIX;
-            mask |= MODE_SET;
-        };
-        if (*status != STATUS_UNK) {
-            *status = STATUS_UNK;
-            mask |= STATUS_SET;
-        }
+        *mode = MODE_NO_FIX;
+        *status = STATUS_UNK;
+        mask |= MODE_SET | STATUS_SET;
         break;
     }
 
@@ -2734,32 +2728,30 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
 
     case UBX_MODE_3D:
         // 3
-        FALLTHROUGH
+        *mode = MODE_3D;
+        *status = STATUS_GPS;
+        mask |= STATUS_SET | LATLON_SET | MODE_SET;
+        break;
+
     case UBX_MODE_GPSDR:
         // 4
-        if (*mode != MODE_3D) {
-            *mode = MODE_3D;
-            mask |= MODE_SET;
-        }
-        *status = STATUS_GPS;
-        mask |= STATUS_SET | LATLON_SET;
+        *mode = MODE_3D;
+        *status = STATUS_GNSSDR;
+        mask |= STATUS_SET | LATLON_SET | MODE_SET;
         break;
 
     case UBX_MODE_2D:
         // 2
-        FALLTHROUGH
+        *mode = MODE_2D;
+        *status = STATUS_GPS;
+        mask |= LATLON_SET | SPEED_SET | MODE_SET | STATUS_SET;
+        break;
+
     case UBX_MODE_DR:           // consider this too as 2D
         // 1
-        if (MODE_2D != *mode) {
-            *mode = MODE_2D;
-            mask |= MODE_SET;
-        };
-        if (STATUS_GPS != *status) {
-            // FIXME: Set DR if this is DR
-            *status = STATUS_GPS;
-            mask |= STATUS_SET;
-        }
-        mask |= LATLON_SET | SPEED_SET;
+        *mode = MODE_2D;
+        *status = STATUS_DR;
+        mask |= LATLON_SET | SPEED_SET | MODE_SET | STATUS_SET;
         break;
 
     case UBX_MODE_NOFIX:
@@ -2767,14 +2759,9 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
         FALLTHROUGH
     default:
         // huh?
-        if (*mode != MODE_NO_FIX) {
-            *mode = MODE_NO_FIX;
-            mask |= MODE_SET;
-        };
-        if (*status != STATUS_UNK) {
-            *status = STATUS_UNK;
-            mask |= STATUS_SET;
-        }
+        *mode = MODE_NO_FIX;
+        *status = STATUS_UNK;
+        mask |= MODE_SET | STATUS_SET;
         break;
     }
 
@@ -3484,33 +3471,37 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
 
         case UBX_MODE_3D:
             // 3
-            FALLTHROUGH
+            *mode = MODE_3D;
+            *status = STATUS_GPS;
+            break;
+
         case UBX_MODE_GPSDR:
             // 4
             *mode = MODE_3D;
-            // FIXME:  Set DR if this is DR
-            *status = STATUS_GPS;
+            *status = STATUS_GNSSDR;
             break;
 
         case UBX_MODE_2D:
             // 2
-            FALLTHROUGH
-        case UBX_MODE_DR:           // consider this too as 2D
-            // 1
             *mode = MODE_2D;
             if (2 == (2 & fixStat)) {
                 *status = STATUS_DGPS;
             } else {
-                // FIXME:  Set DR if this is DR
                 *status = STATUS_GPS;
             }
+            break;
+
+        case UBX_MODE_DR:           // consider this too as 2D
+            // 1
+            *mode = MODE_2D;
+            *status = STATUS_DR;
             break;
 
         case UBX_MODE_NOFIX:
             // 0
             FALLTHROUGH
         default:
-            // > 5
+            // > 5, huh??
             *mode = MODE_NO_FIX;
             *status = STATUS_UNK;
             break;
