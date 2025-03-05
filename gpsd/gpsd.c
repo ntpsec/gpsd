@@ -2202,7 +2202,6 @@ int main(int argc, char *argv[])
     struct timespec now, delta;
     const char *sudo = getenv("SUDO_COMMAND");
     int uid;
-    pid_t my_pid = getpid();
 
 
     gps_context_init(&context, "gpsd");
@@ -2535,6 +2534,7 @@ int main(int argc, char *argv[])
                      "Cannot create PID file: %s. %s(%d)\n",
                      pid_file, strerror(errno), errno);
         } else {
+            pid_t my_pid = getpid();
             (void)fprintf(fp, "%u\n", (unsigned int)my_pid);
             (void)fclose(fp);
         }
