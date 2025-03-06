@@ -146,13 +146,15 @@ extern "C" {
  * NMEA 3.01, Section 5.3 says the max sentence length shall be
  * 82 chars, including the leading $ and terminating \r\n.
  *
- * Some receivers (TN-200, GSW 2.3.2) emit oversized sentences.
- * The Trimble BX-960 receiver emits a 91-character GGA message.
- * The Skytraq S2525F8 which emits a 100-character PSTI message.
- * The current hog champion is the Skytraq PX1172RH which emits
- * a 103-character PSTI message.
+ * For Shame:
+ *  Some receivers (TN-200, GSW 2.3.2) emit oversized sentences.
+ *  The Trimble BX-960 receiver emits a 91-character GGA message.
+ *  The Skytraq S2525F8 which emits a 100-character PSTI message.
+ *  The Skytraq PX1172RH which emits a 103-character PSTI message.
+ *  The current hog champion is the Inertial Sense Inc (ISI) GRX-1 whith a
+ *  a 119-character $INFO message.
  */
-#define NMEA_MAX        110             // max length of NMEA sentence
+#define NMEA_MAX        130             // max length of NMEA sentence
 #define NMEA_MAX_FLD    100             // max fields in an NMEA sentence
 #define NMEA_BIG_BUF    (2*NMEA_MAX+1)  // longer than longest NMEA sentence
 
@@ -237,14 +239,15 @@ struct gps_lexer_t {
 #define SKY_PACKET              17
 #define ALLYSTAR_PACKET         18
 #define CASIC_PACKET            19
-#define MAX_GPSPACKET_TYPE      19      // increment this as necessary
+#define IS_PACKET               20      // Inertial Sense
+#define MAX_GPSPACKET_TYPE      20      // increment this as necessary
 // end of GPS type packets
 
-#define RTCM2_PACKET            20
-#define RTCM3_PACKET            21
-#define JSON_PACKET             22
+#define RTCM2_PACKET            21
+#define RTCM3_PACKET            22
+#define JSON_PACKET             23
 // end of non GPS type packets, AIVDM is GPS type??
-#define PACKET_TYPES            23      // increment this as necessary
+#define PACKET_TYPES            24      // increment this as necessary
 
 #define TEXTUAL_PACKET_TYPE(n)  ((((n)>=NMEA_PACKET) && ((n)<=MAX_TEXTUAL_TYPE)) || (n)==JSON_PACKET)
 #define GPS_PACKET_TYPE(n)      (((n)>=NMEA_PACKET) && ((n)<=MAX_GPSPACKET_TYPE))
