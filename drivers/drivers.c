@@ -49,14 +49,14 @@ gps_mask_t generic_parse_input(struct gps_device_t *session)
         for (dp = gpsd_drivers; *dp; dp++) {
             char *trigger = (*dp)->trigger;
 
-            if (trigger != NULL &&
+            if (NULL != trigger &&
                 str_starts_with(sentence, trigger)) {
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "found trigger string %s.\n", trigger);
                 if (*dp != session->device_type) {
                     (void)gpsd_switch_driver(session, (*dp)->type_name);
-                    if (session->device_type != NULL &&
-                        session->device_type->event_hook != NULL) {
+                    if (NULL != session->device_type &&
+                        NULL != session->device_type->event_hook) {
                         session->device_type->event_hook(session,
                                                          EVENT_TRIGGERMATCH);
                     st |= DEVICEID_SET;
@@ -391,6 +391,56 @@ const struct gps_type_t driver_garmin = {
 
 /**************************************************************************
  *
+ * Inertial Sense
+ * https://inertialsense.com/
+ * Note that many of the IS "NMEA" messages are too long, non-standard,
+ * or just broken.
+ *
+ **************************************************************************/
+static void is_event_hook(struct gps_device_t *session, event_t event)
+{
+    if (session->context->readonly) {
+        return;
+    }
+
+    if (event == EVENT_WAKEUP) {
+        /* probe for device, which is quiet by default
+         * $INFO is not a valid NMEA message type, public or proprietary */
+        (void)nmea_send(session, "$INFO");
+    }
+
+    if (session->context->passive) {
+        return;
+    }
+    if (event == EVENT_IDENTIFIED) {
+        // enable some "NMEA", at 5Hz
+        (void)nmea_send(session, "$ASCE,0,6,1,7,1,8,1,10,1,11,1,15,1");
+    }
+}
+
+// *INDENT-OFF*
+const struct gps_type_t driver_is = {
+    .type_name      = "InertialSense",  // full name of type
+    .packet_type    = NMEA_PACKET,      // associated lexer packet type
+    .flags          = DRIVER_STICKY,    // remember this
+    .trigger        = NULL,
+    .channels       = 24,               // not used, unknown channels
+    .probe_detect   = NULL,             // no probe
+    .get_packet     = packet_get1,      // how to get a packet
+    .parse_packet   = generic_parse_input,      // how to interpret a packet
+    .rtcm_writer    = gpsd_write,       // write RTCM data straight
+    .init_query     = NULL,             // non-perturbing initial query
+    .event_hook     = is_event_hook,    // lifetime event handler
+    .speed_switcher = NULL,             // no speed switcher
+    .mode_switcher  = NULL,             // no mode switcher
+    .rate_switcher  = NULL,             // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = nmea_write,       // how to send control strings
+    .time_offset     = NULL,            // no method for NTP fudge factor
+};
+/**************************************************************************
+ *
  * Ashtech (then Thales, now Magellan Professional) Receivers
  *
  **************************************************************************/
@@ -428,7 +478,6 @@ static void ashtech_event_hook(struct gps_device_t *session, event_t event)
     }
 }
 
-// *INDENT-OFF*
 const struct gps_type_t driver_ashtech = {
     .type_name      = "Ashtech",        // full name of type
     .packet_type    = NMEA_PACKET,      // associated lexer packet type
@@ -1661,6 +1710,7 @@ static const struct gps_type_t *gpsd_driver_array[] = {
     &driver_unknown,
     &driver_nmea0183,
     &driver_allystar,
+    &driver_is,
     &driver_ashtech,
     &driver_casic,
 #ifdef TRIPMATE_ENABLE
