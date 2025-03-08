@@ -7870,7 +7870,7 @@ qErrInvalid add in protVer 34 and up
 
         u = struct.unpack_from('<LLlHbb', buf, 0)
         s = ('  towMS %u towSubMS %u qErr %d week %d\n'
-             '  flags %#x refInfo %#x\n   flags  ' % u)
+             '  flags %#x refInfo %#x\n   flags ' % u)
 
         if 0x01 & u[4]:
             s += "timeBase is UTC, "
@@ -7893,9 +7893,9 @@ qErrInvalid add in protVer 34 and up
 
         # 9-series, protVer 32 and up.
         if 0x08 & u[4]:
-            s += "Quantization error valid"
+            s += ", quantization error valid"
         else:
-            s += "Quantization error invalid"
+            s += ", quantization error invalid"
         return s
 
     tim_vrfy_flags = {
