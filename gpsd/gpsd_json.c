@@ -661,7 +661,7 @@ void json_sky_dump(const struct gps_device_t *session,
                 // now the rest in alphabetic order.
                 if (0 != isfinite(datap->skyview[i].azimuth) &&
                     0 <= fabs(datap->skyview[i].azimuth) &&
-                    359 >= fabs(datap->skyview[i].azimuth)) {
+                    360 > fabs(datap->skyview[i].azimuth)) {
                     str_appendf(reply, replylen, ",\"az\":%.1f",
                                 datap->skyview[i].azimuth);
                 }
