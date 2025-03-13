@@ -660,8 +660,11 @@ static ssize_t throttled_write(struct subscriber_t *sub, const char *buf,
 
     gpsd_acquire_reporting_lock();
     status = write(sub->fd, buf, len);
-#if 0   // debug
-    fsync(sub->fd);
+#ifdef __UNUSED__  // debug
+    if (unlikely(LOG_IO <= context.errout.debug)) {
+        // flush buffers if high debug level
+        fsync(sub->fd);
+    }
 #endif  // debug
 
     gpsd_release_reporting_lock();
