@@ -4508,9 +4508,9 @@ static gps_mask_t decode_xa2_00(struct gps_device_t *session, const char *buf)
 
     // SV type, 0 to 26, mashup of constellation and signal
     unsigned u2 = getub(buf, 5);
-    unsigned u3 = getub(buf, 6);               // PRN (svid) 1 to 32 (99)
-    double d1 = getbef32(buf, 7);              // azimuth, degrees
-    double d2 = getbef32(buf, 11);             // elevation, degrees
+    unsigned prn = getub(buf, 6);              // PRN (svid) 1 to 32 (99)
+    double az = getbef32(buf, 7);              // azimuth, degrees
+    double el = getbef32(buf, 11);             // elevation, degrees
     double d3 = getbef32(buf, 15);             // signal level, db-Hz
     unsigned u4 = getbeu32(buf, 19);           // Flags
     // TOW of measurement, not current TOW!
@@ -4534,17 +4534,23 @@ static gps_mask_t decode_xa2_00(struct gps_device_t *session, const char *buf)
     // convert svtype to gnssid and svid
     gnssid = tsipv1_svtype(u2, &sigid);
     session->gpsdata.skyview[u1 - 1].gnssid = gnssid;
-    session->gpsdata.skyview[u1 - 1].svid = u3;
+    session->gpsdata.skyview[u1 - 1].svid = prn;
     session->gpsdata.skyview[u1 - 1].sigid = sigid;
     // "real" NMEA 4.0 (not 4.10 ir 4.11) PRN
-    session->gpsdata.skyview[u1 - 1].PRN = ubx2_to_prn(gnssid, u3);
+    session->gpsdata.skyview[u1 - 1].PRN = ubx2_to_prn(gnssid, prn);
+    if (0 >= session->gpsdata.skyview[u1 - 1].PRN) {
+        // bad PRN??
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1 xa2-00(%u): Bad PRN: gnssid %u, prn %u PRN %d\n",
+                 u1, gnssid, prn, session->gpsdata.skyview[u1 - 1].PRN);
+    }
     if (0 != (1 & u4)) {
-        if (90.0 >= fabs(d2)) {
-            session->gpsdata.skyview[u1 - 1].elevation = d2;
+        if (90.0 >= fabs(el)) {
+            session->gpsdata.skyview[u1 - 1].elevation = el;
         }
-        if (360.0 >= d1 &&
-            0.0 <= d1) {
-            session->gpsdata.skyview[u1 - 1].azimuth = d1;
+        if (360.0 > az &&
+            0.0 <= az) {
+            session->gpsdata.skyview[u1 - 1].azimuth = az;
         }
     }
     session->gpsdata.skyview[u1 - 1].ss = d3;
@@ -4570,7 +4576,7 @@ static gps_mask_t decode_xa2_00(struct gps_device_t *session, const char *buf)
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIPv1 xa2-00: num %u type %u (gnss %u sigid %u) PRN %u "
              "az %f el %f snr %f sflags x%0x4 tow %u\n",
-             u1, u2, gnssid, sigid, u3, d1, d2, d3, u4, tow);
+             u1, u2, gnssid, sigid, prn, az, el, d3, u4, tow);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "TSIPv1: svtype:%s flags:%s\n",
              val2str(u2, vsv_type1),
