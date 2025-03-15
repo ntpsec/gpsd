@@ -602,7 +602,11 @@ bool ubx_write(struct gps_device_t * session,
     return (ok);
 }
 
-/* Convert a ubx PRN to an NMEA 4.0 (extended) PRN and ubx gnssid, svid
+/* Convert a ubx PRN (single svid) to an NMEA 4.0 (extended)
+ * PRN and ubx gnssid, svid
+ *
+ * This does NOT match NMEA 4.10 and 4.11 where all PRN are 1-99,
+ * except IMES, QZSS, and some SBAS.
  *
  * return 0 on fail
  */
@@ -621,7 +625,10 @@ static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
         *gnssId = 0;
         *svId = ubx_PRN;
     } else if (64 >= ubx_PRN) {
-        // BeiDou, 159..163,33..64 -> 1..5,6..37
+        /* BeiDou, 159..163,33..64 -> 1..5,6..37
+         * Wikipedia, March 2025, says BDS PRNs go up to 62
+         * Where/how do they map??
+         * https://en.wikipedia.org/wiki/List_of_BeiDou_satellites */
         *gnssId = 3;
         *svId = ubx_PRN - 27;
     } else if (96 >= ubx_PRN) {
@@ -2990,7 +2997,8 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
 {
     char buf2[80];
-    unsigned int i, nchan, nsv, st, ver;
+    unsigned int i, nchan, ver;
+    int seen = 0, used_tot = 0;
     timespec_t ts_tow;
 
     if (8 > data_len) {
@@ -3018,9 +3026,13 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
         return 0;
     }
 
+#ifdef __UNUSED__    // debug
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+             "UBX: NAV-SAT: gpsd_zero_satellites()\n");
+#endif
     gpsd_zero_satellites(&session->gpsdata);
-    nsv = 0;
-    for (i = st = 0; i < nchan; i++) {
+
+    for (i = 0; i < nchan; i++) {
         unsigned int off = 8 + 12 * i;
         short nmea_PRN = 0;
         uint8_t gnssId = getub(buf, off + 0);
@@ -3035,13 +3047,20 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
         // Notice NO sigid!
 
         nmea_PRN = ubx2_to_prn(gnssId, svId);
-        session->gpsdata.skyview[st].gnssid = gnssId;
-        session->gpsdata.skyview[st].svid = svId;
-        session->gpsdata.skyview[st].PRN = nmea_PRN;
+        if (0 >= nmea_PRN) {
+            // bad PRN??
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "UBX: NAV-SAT(%d) Bad PRN: gnssid %u, svid %u PRN %d\n",
+                     seen, gnssId, svId, nmea_PRN);
+            continue;
+        }
+        session->gpsdata.skyview[seen].gnssid = gnssId;
+        session->gpsdata.skyview[seen].svid = svId;
+        session->gpsdata.skyview[seen].PRN = nmea_PRN;
 
-        session->gpsdata.skyview[st].ss = (double)cno;
+        session->gpsdata.skyview[seen].ss = (double)cno;
         if (90 >= abs(elev)) {
-            session->gpsdata.skyview[st].elevation = (double)elev;
+            session->gpsdata.skyview[seen].elevation = (double)elev;
         }
         /* For some reason UBX allows 360 == azim here, but gpsd json does not
          * so fix thta.  Other UBX specifies 0-359. */
@@ -3050,24 +3069,25 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
         }
         if (360 > azim &&
             0 <= azim) {
-            session->gpsdata.skyview[st].azimuth = (double)azim;
+            session->gpsdata.skyview[seen].azimuth = (double)azim;
         }
-        session->gpsdata.skyview[st].used = used;
-        session->gpsdata.skyview[st].prRes = prRes / 10.0;
-        // by some coincidence, our health flags matches u-blox's
-        session->gpsdata.skyview[st].health = (flags >> 4) & 3;
-        session->gpsdata.skyview[st].qualityInd = flags & 7;
+        session->gpsdata.skyview[seen].used = used;
         // sbas_in_use is not same as used
         if (used) {
-            nsv++;
-            session->gpsdata.skyview[st].used = true;
+            used_tot++;
         }
+        session->gpsdata.skyview[seen].prRes = prRes / 10.0;
+        // by some coincidence, our health flags matches u-blox's
+        session->gpsdata.skyview[seen].health = (flags >> 4) & 3;
+        session->gpsdata.skyview[seen].qualityInd = flags & 7;
         // FIXME: sigid?
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX: NAV-SAT gnssid %u, svid %u PRN %d "
-                 "prRes %d cno %u qual %d flags x%lx\n",
-                 gnssId, svId, nmea_PRN, prRes, cno,
-                 session->gpsdata.skyview[st].qualityInd,
+                 "UBX: NAV-SAT(%d) gnssid %u, svid %u PRN %d "
+                 "prRes %d cno %u el %.1f az %.1f qual %d flags x%lx\n",
+                 seen, gnssId, svId, nmea_PRN, prRes, cno,
+                 session->gpsdata.skyview[seen].elevation,
+                 session->gpsdata.skyview[seen].azimuth,
+                 session->gpsdata.skyview[seen].qualityInd,
                  flags);
         GPSD_LOG(LOG_IO, &session->context->errout,
                  "UBX: NAV-SAT: gnssId:%s flags:%s quality:%s\n",
@@ -3075,11 +3095,11 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
                  flags2str(flags, fsat_flags, buf2, sizeof(buf2)),
                  val2str(flags & 7, vquality));
 
-        st++;
+        seen++;
     }
 
-    session->gpsdata.satellites_visible = (int)st;
-    session->gpsdata.satellites_used = (int)nsv;
+    session->gpsdata.satellites_visible = seen;
+    session->gpsdata.satellites_used = used_tot;
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX: NAV-SAT: visible=%d used=%d mask={SATELLITE|USED}\n",
              session->gpsdata.satellites_visible,
@@ -3176,7 +3196,8 @@ static gps_mask_t ubx_msg_nav_sbas(struct gps_device_t *session,
 static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
 {
-    unsigned int i, nchan, nsv, st, ver;
+    unsigned int i, nchan, ver;
+    int seen = 0, used_tot = 0;
     timespec_t ts_tow;
     // saved skyview, hopefully from NAV-SAT
     struct satellite_t skyview_old[MAXCHANNELS];
@@ -3198,11 +3219,11 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
                  "UBX: NAV-SIG unknown version %d s/b 0", ver);
         return 0;
     }
-    nchan = (unsigned int)getub(buf, 5);
+    nchan = getub(buf, 5);
     if (nchan > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV-SIG: runt >%d reported visible",
-                 MAXCHANNELS);
+                 "UBX: NAV-SIG: nchan %u > MAXCHANNELS %d",
+                 nchan, MAXCHANNELS);
         return 0;
     }
     // two "unused" bytes at buf[6:7]
@@ -3211,9 +3232,13 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
      * data before initializiing it. */
     memcpy(skyview_old, session->gpsdata.skyview, sizeof(skyview_old));
 
+#ifdef __UNUSED__    // debug
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+             "UBX: NAV-SIG: gpsd_zero_satellites()\n");
+#endif
     gpsd_zero_satellites(&session->gpsdata);
-    nsv = 0;
-    for (i = st = 0; i < nchan; i++) {
+
+    for (i = 0; i < nchan; i++) {
         // like NAV-SAT, but 16 bytes instead of 12, no elevation or azimuth
         char buf2[80];
         int sat_old;
@@ -3226,34 +3251,40 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
         int16_t prRes = getles16(buf, off + 4);     // 0.1 m
         uint8_t cno = getub(buf, off + 6);          // dBHz
         uint8_t qualityInd = getub(buf, off + 7);   // quality indicator
+        // not exactly right?
+        bool used = (4 <= qualityInd) ? true : false;
         uint8_t corrSource = getub(buf, off + 8);   // correlation source
         uint8_t ionoModel = getub(buf, off + 9);    // Ionospheric model used:
         unsigned sigFlags = getleu16(buf, off + 10);
-        // not exactly right...
-        bool used = 4 <= qualityInd ? true : false;
 
-        // last 4 vytes, reserved
+        // last 4 bytes, reserved
         uint32_t reserved = getleu32(buf, 12);
 
         nmea_PRN = ubx2_to_prn(gnssId, svId);
+        if (0 >= nmea_PRN) {
+            // bad PRN??
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "UBX: NAV-SIG(%d) Bad PRN: gnssid %u, svid %u PRN %d\n",
+                     seen, gnssId, svId, nmea_PRN);
+            continue;
+        }
 
-        session->gpsdata.skyview[st].gnssid = gnssId;
-        session->gpsdata.skyview[st].svid = svId;
-        session->gpsdata.skyview[st].sigid = sigId;
-        session->gpsdata.skyview[st].freqid = freqid;
-        session->gpsdata.skyview[st].PRN = nmea_PRN;
-        session->gpsdata.skyview[st].prRes = prRes / 10.0;
-        session->gpsdata.skyview[st].qualityInd = qualityInd;
+        session->gpsdata.skyview[seen].gnssid = gnssId;
+        session->gpsdata.skyview[seen].svid = svId;
+        session->gpsdata.skyview[seen].sigid = sigId;
+        session->gpsdata.skyview[seen].freqid = freqid;
+        session->gpsdata.skyview[seen].PRN = nmea_PRN;
+        session->gpsdata.skyview[seen].prRes = prRes / 10.0;
+        session->gpsdata.skyview[seen].qualityInd = qualityInd;
 
-        session->gpsdata.skyview[st].ss = (double)cno;
-        session->gpsdata.skyview[st].used = used;
-        // by some coincidence, our health flags matches u-blox's
-        session->gpsdata.skyview[st].health = sigFlags & 3;
+        session->gpsdata.skyview[seen].ss = (double)cno;
+        session->gpsdata.skyview[seen].used = used;
         // sbas_in_use is not same as used
         if (used) {
-            nsv++;
-            session->gpsdata.skyview[st].used = true;
+            used_tot++;
         }
+        // by some coincidence, our health flags matches u-blox's
+        session->gpsdata.skyview[seen].health = sigFlags & 3;
         // try to keep elevation and azimuth from NAV-SAT
         for (sat_old = 0; sat_old < MAXCHANNELS; sat_old++) {
             if (0 >= skyview_old[sat_old].PRN) {
@@ -3265,30 +3296,34 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
                 continue;
             }
             // found it, grab the data
-            session->gpsdata.skyview[st].elevation =
-                skyview_old[sat_old].elevation;
-            session->gpsdata.skyview[st].azimuth =
+            session->gpsdata.skyview[seen].azimuth =
                 skyview_old[sat_old].azimuth;
+            session->gpsdata.skyview[seen].elevation =
+                skyview_old[sat_old].elevation;
             break;
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "UBX: NAV-SIG gnssid %u, svid %u sigid %u PRN %d freqid %u "
-                 "prRes %d cno %u qual %u corr %u, iono %u flags x%x res x%x\n",
+                 "prRes %d cno %u qual %u corr %u, iono %u flags x%x res x%x "
+                 "az %.1f el %.1f\n",
                  gnssId, svId, sigId, nmea_PRN, freqid, prRes, cno,
-                 qualityInd, corrSource, ionoModel, sigFlags, reserved);
+                 qualityInd, corrSource, ionoModel, sigFlags, reserved,
+                 session->gpsdata.skyview[seen].azimuth,
+                 session->gpsdata.skyview[seen].elevation);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "UBX: NAV-SAT: gnssId:%s flags:%s courrSource:%s "
-                 "ionoModel:%s\n",
-                 val2str(gnssId, vgnssId),
+                 "UBX: NAV-SIG(%d): gnssId:%s flags:%s quality:%s "
+                 "courrSource:%s ionoModel:%s\n",
+                 seen, val2str(gnssId, vgnssId),
                  flags2str(sigFlags, fsig_sigFlags, buf2, sizeof(buf2)),
+                 val2str(qualityInd, vquality),
                  val2str(corrSource, vsig_corrsource),
                  val2str(ionoModel, vsig_ionomodel));
 
-        st++;
+        seen++;
     }
 
-    session->gpsdata.satellites_visible = (int)st;
-    session->gpsdata.satellites_used = (int)nsv;
+    session->gpsdata.satellites_visible = seen;
+    session->gpsdata.satellites_used = used_tot;
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX: NAV-SIG: visible=%d used=%d mask={SATELLITE|USED}\n",
              session->gpsdata.satellites_visible,
@@ -3593,7 +3628,8 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
                                      unsigned char *buf, size_t data_len)
 {
     char buf2[80];
-    unsigned i, nchan, nsv, st;
+    unsigned i, nchan;
+    int seen = 0, used_tot = 0;
     unsigned chipGen;
     unsigned globalFlags;
     timespec_t ts_tow;
@@ -3626,9 +3662,13 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
         session->driver.ubx.protver = gen2ver[chipGen];
     }
 
+#ifdef __UNUSED__    // debug
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+             "UBX: NAV-SVINFO: gpsd_zero_satellites()\n");
+#endif
     gpsd_zero_satellites(&session->gpsdata);
-    nsv = 0;
-    for (i = st = 0; i < nchan; i++) {
+
+    for (i = 0; i < nchan; i++) {
         unsigned off = 8 + 12 * i;
         short nmea_PRN;
         unsigned chan = getub(buf, off);
@@ -3642,8 +3682,8 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
         int prRes = getles16(buf, off + 7);
 
         nmea_PRN = ubx_to_prn(ubx_PRN,
-                              &session->gpsdata.skyview[st].gnssid,
-                              &session->gpsdata.skyview[st].svid);
+                              &session->gpsdata.skyview[seen].gnssid,
+                              &session->gpsdata.skyview[seen].svid);
 
         if (1 > nmea_PRN) {
             // skip bad PRN
@@ -3651,62 +3691,61 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
                      "UBX: NAV-SVINFO bad NMEA PRN %d\n", nmea_PRN);
             continue;
         }
-        session->gpsdata.skyview[st].PRN = nmea_PRN;
+        session->gpsdata.skyview[seen].PRN = nmea_PRN;
 
-        session->gpsdata.skyview[st].ss = (double)cno;
+        session->gpsdata.skyview[seen].ss = (double)cno;
         if (90 >= abs(el)) {
-            session->gpsdata.skyview[st].elevation = (double)el;
+            session->gpsdata.skyview[seen].elevation = (double)el;
         }
         if (360 > az &&
             0 <= az) {
-            session->gpsdata.skyview[st].azimuth = (double)az;
+            session->gpsdata.skyview[seen].azimuth = (double)az;
         }
-        session->gpsdata.skyview[st].prRes = prRes / 100.0;
-        session->gpsdata.skyview[st].qualityInd = quality;
-        session->gpsdata.skyview[st].used = used;
-        if (0x10 == (0x10 & flags)) {
-           session->gpsdata.skyview[st].health = SAT_HEALTH_BAD;
-        } else {
-           session->gpsdata.skyview[st].health = SAT_HEALTH_OK;
-        }
-
+        session->gpsdata.skyview[seen].prRes = prRes / 100.0;
+        session->gpsdata.skyview[seen].qualityInd = quality;
+        session->gpsdata.skyview[seen].used = used;
         // sbas_in_use is not same as used
         if (used) {
             // not really 'used', just integrity data from there
-            nsv++;
-            session->gpsdata.skyview[st].used = true;
+            used_tot++;
         }
+        if (0x10 == (0x10 & flags)) {
+           session->gpsdata.skyview[seen].health = SAT_HEALTH_BAD;
+        } else {
+           session->gpsdata.skyview[seen].health = SAT_HEALTH_OK;
+        }
+
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX: NAV-SVINFO chan %u  ubx_prn %d gnssid %d, svid %d "
+                 "UBX: NAV-SVINFO chan %u ubx_prn %d gnssid %d svid %d "
                  "nmea_PRN %d flags x%x az %.0f el %.0f cno %.0f prRes %.2f "
                  "quality %u\n",
                  chan, ubx_PRN,
-                 session->gpsdata.skyview[st].gnssid,
-                 session->gpsdata.skyview[st].svid, nmea_PRN, flags,
-                 session->gpsdata.skyview[st].azimuth,
-                 session->gpsdata.skyview[st].elevation,
-                 session->gpsdata.skyview[st].ss,
-                 session->gpsdata.skyview[st].prRes,
-                 session->gpsdata.skyview[st].qualityInd);
+                 session->gpsdata.skyview[seen].gnssid,
+                 session->gpsdata.skyview[seen].svid, nmea_PRN, flags,
+                 session->gpsdata.skyview[seen].azimuth,
+                 session->gpsdata.skyview[seen].elevation,
+                 session->gpsdata.skyview[seen].ss,
+                 session->gpsdata.skyview[seen].prRes,
+                 session->gpsdata.skyview[seen].qualityInd);
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "UBX: NAV-SVINFO: flags:%s quality:%s\n",
+                 "UBX: NAV-SVINFO: flags (%s) quality %s\n",
                  flags2str(flags, fsvinfo_flags, buf2, sizeof(buf2)),
                  val2str(quality, vquality));
 
-        st++;
+        seen++;
     }
 
-    session->gpsdata.satellites_visible = (int)st;
-    session->gpsdata.satellites_used = (int)nsv;
+    session->gpsdata.satellites_visible = seen;
+    session->gpsdata.satellites_used = used_tot;
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX: NAV-SVINFO: visible=%d used=%d mask={SATELLITE|USED} "
+             "UBX: NAV-SVINFO: visible %d used %d mask {SATELLITE|USED} "
              "gFlags x%x\n",
              session->gpsdata.satellites_visible,
              session->gpsdata.satellites_used,
              globalFlags);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "UBX: NAV-SVINFO: chipGen %s\n",
-             val2str(globalFlags & 7, vglobalFlags));
+             val2str(chipGen, vglobalFlags));
     return SATELLITE_SET | USED_IS;
 }
 

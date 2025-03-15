@@ -965,7 +965,8 @@ void datum_code_string(int code, char *buffer, size_t len)
 
 /* make up an NMEA 4.0 (extended) PRN based on gnssId:svId,
  * This does NOT match NMEA 4.10 and 4.11 where all PRN are 1-99,
- * except IMEA
+ * except IMES, QZSS, and some SBAS.
+ *
  * Ref Appendix A from u-blox ZED-F9P Interface Description
  * and
  * Section 1.5.3  M10-FW500_InterfaceDescription_UBX-20053845.pdf
@@ -1020,9 +1021,11 @@ short ubx2_to_prn(int gnssId, int svId)
         }
         break;
     case 3:
-        // BeiDou, ubx gnssid:svid 1..37 -> to 401-437
-        // BeiDou, ubx PRN         159..163,33..64 -> to 401-437 ??
-        if (37 >= svId) {
+        /* BeiDou, ubx gnssid:svid    1..37 -> to 401-437
+         * have seen 1-50 on F9P ProtVer 27.50, March 2025
+         *   ubx gnssid:svid    1..50 -> to 401-450
+         * BeiDou, ubx "single svid"  159..163,33..64 -> to 401-437 ?? */
+        if (50 >= svId) {
             nmea_PRN = svId + 400;
         } else if (159 > svId) {
             // skip bad svId

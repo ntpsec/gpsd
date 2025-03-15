@@ -871,16 +871,22 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
                            const struct gps_data_t * gpsdata,
                            struct dop_t * dop)
 {
-    double prod[4][4];
-    double inv[4][4];
-    double satpos[MAXCHANNELS][4];
+    double prod[4][4] = {0};
+    double inv[4][4] = {0};
+    double satpos[MAXCHANNELS][4] = {0};
     double xdop, ydop, hdop, vdop, pdop, tdop, gdop;
     int i, j, k, n;
 
-    memset(satpos, 0, sizeof(satpos));
-
     for (n = k = 0; k < gpsdata->satellites_visible; k++) {
         // This double counts single sats where we got 2 signals from them.
+#ifdef __UNUSED__
+        GPSD_LOG(LOG_IO, errout,
+                 "CORE: PRN %d used %d az %.1f el %.1f\n",
+                gpsdata->skyview[k].PRN,
+                gpsdata->skyview[k].used,
+                gpsdata->skyview[k].azimuth,
+                gpsdata->skyview[k].elevation);
+#endif  // __UNUSED__
         if (!gpsdata->skyview[k].used) {
              // skip unused sats
              continue;
@@ -917,22 +923,19 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
     }
     /* can't use gpsdata->satellites_used as that is a counter for xxGSA,
      * and gets cleared at odd times */
-    GPSD_LOG(LOG_INF, errout, "CORE: Sats used (%d):\n", n);
+    GPSD_LOG(LOG_INF, errout, "CORE: Sats used %d visable %d:\n",
+             n, gpsdata->satellites_visible);
 
     /* If we don't have 4 satellites then we don't have enough
      * information to calculate DOPS */
     if (n < 4) {
 #ifdef __UNUSED__
         GPSD_LOG(LOG_RAW, errout,
-                 "CORE: Not enough satellites available %d < 4:\n",
-                 n);
+                 "CORE: Not enough satellites available %d < 4:\n", n);
 #endif  // __UNUSED__
         // Is this correct return code here? or should it be ERROR_SET
         return 0;
     }
-
-    memset(prod, 0, sizeof(prod));
-    memset(inv, 0, sizeof(inv));
 
 #ifdef __UNUSED__
     GPSD_LOG(LOG_INF, errout, "CORE: Line-of-sight matrix:\n");
@@ -942,8 +945,8 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
     }
 #endif  // __UNUSED__
 
-    for (i = 0; i < 4; ++i) {   //< rows
-        for (j = 0; j < 4; ++j) {       //< cols
+    for (i = 0; i < 4; ++i) {           // < rows
+        for (j = 0; j < 4; ++j) {       // < cols
             prod[i][j] = 0.0;
             for (k = 0; k < n; ++k) {
                 prod[i][j] += satpos[k][i] * satpos[k][j];
@@ -988,32 +991,32 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
     gdop = sqrt(inv[0][0] + inv[1][1] + inv[2][2] + inv[3][3]);
 
     GPSD_LOG(LOG_DATA, errout,
-             "CORE: DOPS computed/reported: X=%f/%f, Y=%f/%f, H=%f/%f, V=%f/%f, "
-             "P=%f/%f, T=%f/%f, G=%f/%f\n",
+             "CORE: DOPS computed/reported: X=%f/%f Y=%f/%f H=%f/%f "
+             "V=%f/%f P=%f/%f T=%f/%f G=%f/%f\n",
              xdop, dop->xdop, ydop, dop->ydop, hdop, dop->hdop, vdop,
              dop->vdop, pdop, dop->pdop, tdop, dop->tdop, gdop, dop->gdop);
 
     /* Check to see which DOPs we already have.  Save values if no value
      * from the GPS.  Do not overwrite values which came from the GPS */
-    if (isfinite(dop->xdop) == 0) {
+    if (0 == isfinite(dop->xdop)) {
         dop->xdop = xdop;
     }
-    if (isfinite(dop->ydop) == 0) {
+    if (0 == isfinite(dop->ydop)) {
         dop->ydop = ydop;
     }
-    if (isfinite(dop->hdop) == 0) {
+    if (0 == isfinite(dop->hdop)) {
         dop->hdop = hdop;
     }
-    if (isfinite(dop->vdop) == 0) {
+    if (0 == isfinite(dop->vdop)) {
         dop->vdop = vdop;
     }
-    if (isfinite(dop->pdop) == 0) {
+    if (0 == isfinite(dop->pdop)) {
         dop->pdop = pdop;
     }
-    if (isfinite(dop->tdop) == 0) {
+    if (0 == isfinite(dop->tdop)) {
         dop->tdop = tdop;
     }
-    if (isfinite(dop->gdop) == 0) {
+    if (0 == isfinite(dop->gdop)) {
         dop->gdop = gdop;
     }
 
@@ -2175,13 +2178,13 @@ void gpsd_wrap(struct gps_device_t *session)
  */
 void gpsd_zero_satellites( struct gps_data_t *out)
 {
-    int sat;
+    unsigned long  sat;
 
-    (void)memset(out->skyview, '\0', sizeof(out->skyview));
+    memset(out->skyview, 0, sizeof(out->skyview));
     out->satellites_visible = 0;
     // zero is good inbound data for ss, elevation, and azimuth.
     // we need to set them to invalid values
-    for ( sat = 0; sat < MAXCHANNELS; sat++ ) {
+    for (sat = 0; sat < ROWS(out->skyview); sat++) {
         out->skyview[sat].azimuth = NAN;
         out->skyview[sat].elevation = NAN;
         out->skyview[sat].ss = NAN;
@@ -2206,7 +2209,6 @@ void gpsd_zero_satellites( struct gps_data_t *out)
  * And add in the device fudge */
 void ntp_latch(struct gps_device_t *device, struct timedelta_t *td)
 {
-
     // this should be an invariant of the way this function is called
     if (0 >= device->newdata.time.tv_sec) {
         return;
