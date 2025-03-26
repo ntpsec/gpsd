@@ -1022,10 +1022,10 @@ short ubx2_to_prn(int gnssId, int svId)
         break;
     case 3:
         /* BeiDou, ubx gnssid:svid    1..37 -> to 401-437
-         * have seen 1-50 on F9P ProtVer 27.50, March 2025
-         *   ubx gnssid:svid    1..50 -> to 401-450
+         * have seen 1-63 on F10 ProtVer 40.0, March 2025
+         *   ubx gnssid:svid    1..63 -> to 401-463
          * BeiDou, ubx "single svid"  159..163,33..64 -> to 401-437 ?? */
-        if (50 >= svId) {
+        if (63 >= svId) {
             nmea_PRN = svId + 400;
         } else if (159 > svId) {
             // skip bad svId
