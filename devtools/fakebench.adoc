@@ -10,7 +10,7 @@
 include::../www/inc-menu.adoc[]
 
 This is a way to measure the speed of packet lexer dependent scripts
-such as the regression suitea.  We do this by measuring the duration of
+such as the regression suite.  We do this by measuring the duration of
 *gpsfake* parsing a relatively large file.  This measures the currently
 installed *gpsd*.  It is hoped that when making changes to the lexer
 that this test be performed to avoid performance regressions.
