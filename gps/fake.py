@@ -171,13 +171,13 @@ class TestLoad(object):
         text = logfp.read()
         logfp = open(logfp.name, 'rb')
         # Grab the packets in the normal way
-        getter = sniffer.new()
+        getter = sniffer.Device(logfp.fileno())
         # gps.packet.register_report(reporter)
         type_latch = None
         commentlen = 0
         while True:
             # Note that packet data is bytes rather than str
-            (plen, ptype, packet, _counter) = getter.get(logfp.fileno())
+            (plen, ptype, packet, _counter) = getter.get()
             if 0 >= plen:
                 break
 

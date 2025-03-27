@@ -177,8 +177,8 @@ if __name__ == '__main__':
                               [iflag, oflag, cflag, lflag, ispeed, ospeed, cc])
 
         if not options.rawmode:
-            getter = sniffer.new()
-            sniffer.register_report(reporter)
+            getter = sniffer.Device(tty)
+            getter.register_report(reporter)
         seqno = 0
         while True:
             rlist, wlist, xlist = select.select([tty], [], [])
@@ -189,7 +189,7 @@ if __name__ == '__main__':
                         break
                     print(hexdump(buf))
                 else:
-                    (length, ptype, packet, counter) = getter.get(tty)
+                    (length, ptype, packet, counter) = getter.get()
                     seqno += 1
                     if 0 == length:
                         break
