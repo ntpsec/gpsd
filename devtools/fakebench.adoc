@@ -1,0 +1,31 @@
+= How to Benchmark gps.packet
+:date: 2025 March 5
+:description: Steps for benchmarking gps.packet
+:docinfodir: ../www
+:keywords: GPS, benchamrking, Lexer
+:robots: index,follow
+:sectlinks:
+:toc: macro
+
+include::../www/inc-menu.adoc[]
+
+This is a way to measure the speed of packet lexer dependent scripts
+such as the regression suitea.  We do this by measuring the duration of
+*gpsfake* parsing a relatively large file.  This measures the currently
+installed *gpsd*.  It is hoped that when making changes to the lexer
+that this test be performed to avoid performance regressions.
+
+1. Do 'scons install' See links for further information.
+
+https://gpsd.io/building.html
+https://gpsd.io/installation.html
+
+2. Change directory to "devtools".
+
+3. Run the test several times: "./fakebench".
+
+4. Discard the first result, this is just to fill caches.  Then
+Average the rest of the results.
+
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright the GPSD project contributors

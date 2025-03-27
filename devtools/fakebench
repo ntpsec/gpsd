@@ -1,0 +1,2 @@
+#! /usr/bin/env sh
+time gpsfake -1 -q -p ../test/daemon/ublox-zed-f9p_hpg1.11.log >/dev/null
