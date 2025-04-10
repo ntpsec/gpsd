@@ -376,6 +376,8 @@ class ubx(object):
     # 4 - scale
     # 5 - Unit
     # 6 - Description
+    #
+    # Sort this list by group (bits 16 to 23) and ID in group (bits 0 to 11)
     cfgs = (
         # CFG--
         ("CFG", 0x1FFFFFFF, "", 0, "",
@@ -1789,33 +1791,21 @@ class ubx(object):
          "Survey-in minimum duration"),
         ("CFG-TMODE-SVIN_ACC_LIMIT", 0x40030011, "U4", 0.1, "mm",
          "Survey-in position accuracy limit"),
+
         # CFG-TP-
+        # group 5
         ("CFG-TP", 0x3005ffff, "", 0, "",
          "get all CFG-TP"),
-        ("CFG-TP-PULSE_DEF", 0x20050023, "E1", 1, "",
-         "Determines whether the time pulse is interpreted as frequency "
-         "or period?"),
-        ("CFG-TP-PULSE_LENGTH_DEF", 0x20050030, "E1", 1, "",
-         "Determines whether the time pulse length is interpreted as "
-         "length[us] or pulse ratio[%]?"),
         ("CFG-TP-ANT_CABLEDELAY", 0x30050001, "I2", 0.000000001, "s",
          "Antenna cable delay"),
         ("CFG-TP-PERIOD_TP1", 0x40050002, "U4", 0.000001, "s",
          "Time pulse period (TP1)"),
         ("CFG-TP-PERIOD_LOCK_TP1", 0x40050003, "U4", 0.000001, "s",
          "Time pulse period when locked to GNSS time (TP1)"),
-        ("CFG-TP-FREQ_TP1", 0x40050024, "U4", 1, "Hz",
-         "Time pulse frequency (TP1)"),
-        ("CFG-TP-FREQ_LOCK_TP1", 0x40050025, "U4", 1, "Hz",
-         "Time pulse frequency when locked to GNSS time (TP1)"),
         ("CFG-TP-LEN_TP1", 0x40050004, "U4", 0.000001, "s",
          "Time pulse length (TP1)"),
         ("CFG-TP-LEN_LOCK_TP1", 0x40050005, "U4", 0.000001, "s",
          "Time pulse length when locked to GNSS time (TP1)"),
-        ("CFG-TP-DUTY_TP1", 0x5005002a, "R8", 1, "%",
-         "Time pulse duty cycle (TP1)"),
-        ("CFG-TP-DUTY_LOCK_TP1", 0x5005002b, "R8", 1, "%",
-         "Time pulse duty cycle when locked to GNSS time (TP1)"),
         ("CFG-TP-USER_DELAY_TP1", 0x40050006, "I4", 0.000000001, "s",
          "User configurable time pulse delay (TP1)"),
         ("CFG-TP-TP1_ENA", 0x10050007, "L", 1, "",
@@ -1834,18 +1824,10 @@ class ubx(object):
          "Time pulse period (TP2)"),
         ("CFG-TP-PERIOD_LOCK_TP2", 0x4005000e, "U4", 0.000001, "s",
          "Time pulse period when locked to GNSS time (TP2)"),
-        ("CFG-TP-FREQ_TP2", 0x40050026, "U4", 1, "Hz",
-         "Time pulse frequency (TP2)"),
-        ("CFG-TP-FREQ_LOCK_TP2", 0x40050027, "U4", 1, "Hz",
-         "Time pulse frequency when locked to GNSS time (TP2)"),
         ("CFG-TP-LEN_TP2", 0x4005000f, "U4", 0.000001, "s",
          "Time pulse length (TP2)"),
         ("CFG-TP-LEN_LOCK_TP2", 0x40050010, "U4", 0.000001, "s",
          "Time pulse length when locked to GNSS time (TP2)"),
-        ("CFG-TP-DUTY_TP2", 0x5005002c, "R8", 1, "%",
-         "Time pulse duty cycle (TP2)"),
-        ("CFG-TP-DUTY_LOCK_TP2", 0x5005002d, "R8", 1, "%",
-         "Time pulse duty cycle when locked to GNSS time (TP2)"),
         ("CFG-TP-USER_DELAY_TP2", 0x40050011, "I4", 0.000000001, "s",
          "User configurable time pulse delay (TP2)"),
         ("CFG-TP-TP2_ENA", 0x10050012, "L", 1, "",
@@ -1860,7 +1842,36 @@ class ubx(object):
          "Set time pulse polarity (TP2)"),
         ("CFG-TP-TIMEGRID_TP2", 0x20050017, "E1", 1, "",
          "Time grid to use (TP2)"),
+        ("CFG-TP-PULSE_DEF", 0x20050023, "E1", 1, "",
+         "Determines whether the time pulse is interpreted as frequency "
+         "or period?"),
+        ("CFG-TP-FREQ_TP1", 0x40050024, "U4", 1, "Hz",
+         "Time pulse frequency (TP1)"),
+        ("CFG-TP-FREQ_LOCK_TP1", 0x40050025, "U4", 1, "Hz",
+         "Time pulse frequency when locked to GNSS time (TP1)"),
+        ("CFG-TP-FREQ_TP2", 0x40050026, "U4", 1, "Hz",
+         "Time pulse frequency (TP2)"),
+        ("CFG-TP-FREQ_LOCK_TP2", 0x40050027, "U4", 1, "Hz",
+         "Time pulse frequency when locked to GNSS time (TP2)"),
+        ("CFG-TP-DUTY_TP1", 0x5005002a, "R8", 1, "%",
+         "Time pulse duty cycle (TP1)"),
+        ("CFG-TP-DUTY_LOCK_TP1", 0x5005002b, "R8", 1, "%",
+         "Time pulse duty cycle when locked to GNSS time (TP1)"),
+        ("CFG-TP-DUTY_TP2", 0x5005002c, "R8", 1, "%",
+         "Time pulse duty cycle (TP2)"),
+        ("CFG-TP-DUTY_LOCK_TP2", 0x5005002d, "R8", 1, "%",
+         "Time pulse duty cycle when locked to GNSS time (TP2)"),
+        ("CFG-TP-PULSE_LENGTH_DEF", 0x20050030, "E1", 1, "",
+         "Time pulse length is length[us] or pulse ratio[%]"),
+        ("CFG-TP-DRSTR_TP1", 0x20050035, "E1", 1, "",
+         "Drive strength TP1"),
+        ("CFG-TP-DRSTR_TP2", 0x20050036, "E1", 1, "",
+         "Drive strength TP2"),
+        ("CFG-TP-MSG_ALWAYS", 0x10050037, "L", 1, "",
+         "TP message behavior"),
+
         # CFG-TXREADY-
+        # group a2
         ("CFG-TXREADY", 0x10a2ffff, "", 0, "",
          "get all CFG-TXREADY"),
         ("CFG-TXREADY-ENABLED", 0x10a20001, "L", 1, "",
@@ -1873,7 +1884,9 @@ class ubx(object):
          "Amount of data ready on interface before triggering tx ready pin"),
         ("CFG-TXREADY-INTERFACE", 0x20a20005, "E1", 1, "",
          "Interface where the tx ready feature should be linked to"),
+
         # CFG-UART1-
+        # group 52
         ("CFG-UART1", 0x4052ffff, "", 0, "",
          "get all CFG-UART1"),
         ("CFG-UART1-BAUDRATE", 0x40520001, "U4", 1, "",
