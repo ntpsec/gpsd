@@ -283,14 +283,9 @@ parser.add_argument(
 # turn the stupid Namespace into a nice dictionary
 opts = vars(parser.parse_args(options))
 
-gps_model.port = opts['port']
-gps_model.protver = opts['protver']
-gps_model.read_only = opts['read_only']
-gps_model.timestamp = opts['timestamp']
-gps_model.verbosity = opts['verbosity']
-
 if opts['port']:
     # FIXME: better error message
+    # convert symbolic port name to port number, if needed.
     valnum = gps_model.port_id_map.get(opts['port'].upper())
     opts['port'] = valnum if valnum is not None else int(opts['port'])
 
@@ -358,6 +353,12 @@ if gps.VERB_PROG <= opts['verbosity']:
     print('Options:')
     for option in sorted(opts):
         print("   %s: %s" % (option, opts[option]))
+
+gps_model.port = opts['port']
+gps_model.protver = opts['protver']
+gps_model.read_only = opts['read_only']
+gps_model.timestamp = opts['timestamp']
+gps_model.verbosity = opts['verbosity']
 
 # done parsing arguments from environment and CLI
 
