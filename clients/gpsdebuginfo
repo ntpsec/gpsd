@@ -19,6 +19,8 @@ set -x
 
 id
 uname -a
+# get sh version
+sh --version
 cat /etc/*release
 if command -v gpsd; then
     # get version
@@ -88,14 +90,16 @@ if command -v gpscat; then
     head -n 1 "$(command -v gpscat)"
 fi
 
-# Check what gpsd module version that Python sees.
+# Check what gpsd module version that Python sees, and the paths
 if command -v python; then
     python -V
     python -c "import gps;print(gps.__version__)"
+    python -m site
 fi
 if command -v python3; then
     python3 -V
     python3 -c "import gps;print(gps.__version__)"
+    python3 -m site
 fi
 
 # check systemd.  Almost never properly configured for gpsd.
