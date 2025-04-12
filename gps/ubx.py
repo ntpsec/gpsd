@@ -2533,13 +2533,50 @@ Deprecated in protVer 32.00
              (u[0], index_s(u[0], self.cfg_dgnss_mode), u[1], u[2], u[3]))
         return s
 
+    cfg_dosc_controlIf = {
+        0: "Custom host DAC",
+        1: "Microchip MCP4726",
+        2: "TI DAC8571",
+        13: "12-bit host DAC",
+        14: "14-bit host DAC",
+        15: "15-bit host DAC",
+        }
+
+    cfg_dosc_isCal = {
+        0: "Uncalibrated",
+        1: "Calibrated",
+        }
+
+    cfg_dosc_oscId = {
+        0: "Internal",
+        1: "External",
+        }
+
     def cfg_dosc(self, buf):
         """UBX-CFG-DOSC decode, Disciplined oscillator configuration"""
 
-        u = struct.unpack_from('<BBBB', buf, 0)
-        s = " version %u numOsc %u reserved1 %u" % u
-        # FIXME, partial decode
-        return s
+        u = struct.unpack_from('<BBH', buf, 0)
+        if 0 != u[0]:
+            return "  Unknown version %u" % u[0]
+        if 2 > u[1]:
+            return "  Bad numOsc %u" % u[1]
+
+        s = "  version %u numOsc %u reserved1 x%x\n" % u
+
+        for i in range(u[1]):
+            u = struct.unpack_from('<BBHLlLLHHLBBH', buf, 4 + i * 32)
+            s += ("   %d: oscId %s reserved2 x%x %s DAC %s freq %u\n"
+                  "      phaseOffset %d withTemp %u withAge %u "
+                  "timeToTemp %u\n"
+                  "      reserved3 x%x gainVco %u gainUncertainty %u\n"
+                  "      reserved4 x%02x%04x\n" %
+                  (i, index_s(u[0], self.cfg_dosc_oscId), u[1],
+                   index_s((u[2] >> 1) & 0x0f, self.cfg_dosc_controlIf),
+                   index_s(u[2] & 1, self.cfg_dosc_isCal),
+                   u[3], u[4], u[5], u[6], u[7],
+                   u[8], u[9], u[10], u[11], u[12]))
+
+        return s[0:-1]     # remove trailing \n
 
     def cfg_dynseed(self, buf):
         """UBX-CFG-DYNSEED decode,
@@ -2631,14 +2668,47 @@ protVer 15.01 and up, ADR only"""
                    flag_s(u[2], self.cfg_esfwt_flags2)))
         return s
 
+    cfg_esrc_extInt = {
+        0: "EXTINT0",
+        1: "EXTINT1",
+        }
+
     def cfg_esrc(self, buf):
         """UBX-CFG-ESRC decode, External synchronization source
         configuration"""
 
-        u = struct.unpack_from('<BBBB', buf, 0)
-        s = "  version %u numSources %u reserved1 %u" % u
-        # FIXME, partial decode
-        return s
+        u = struct.unpack_from('<BBH', buf, 0)
+        if 0 != u[0]:
+            return "  Unknown version %u" % u[0]
+        if 2 > u[1]:
+            return "  Bad numSources %u" % u[1]
+
+        s = "  version %u numSources %u reserved1 x%x\n" % u
+
+        for i in range(u[1]):
+            u = struct.unpack_from('<BBHLLLLHHlLL', buf, 4 + 36 * i)
+            extInt = index_s(u[0], self.cfg_esrc_extInt)
+            s += "    %d: extInt %s " % (i, extInt)
+            if 0 == u[1]:
+                s += "    None\n"
+            elif 1 == u[1]:
+                s += ("sourceType frequency flags x%x freq %u\n"
+                      "       reserved2 x%x withTemp %u withAge %u\n"
+                      "       timeToTemp %u maxDevLifeTime %u\n" %
+                      (u[2], u[3], u[4], u[5], u[6], u[7], u[8]))
+            elif 2 == u[1]:
+                s += ("sourceType time  flags x%x freq %u reserved2 x%x\n"
+                      "       offset %d offsetUncertainty %u "
+                      "jitter %u\n" %
+                      (u[2], u[3], u[4], u[9], u[10], u[11]))
+            elif 3 == u[1]:
+                s += ("sourceType external flags x%x freq %u "
+                      "reserved2 x%x\n" %
+                      (u[2], u[3], u[4]))
+            else:
+                s += "unknown sourceType %u\n" % u[1]
+
+        return s[0:-1]     # remove trailing \n
 
     def cfg_fixseed(self, buf):
         """UBX-CFG-FIXSEED decode,
