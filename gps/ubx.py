@@ -2539,7 +2539,7 @@ Deprecated in protVer 32.00
         2: "TI DAC8571",
         13: "12-bit host DAC",
         14: "14-bit host DAC",
-        15: "15-bit host DAC",
+        15: "16-bit host DAC",
         }
 
     cfg_dosc_isCal = {
@@ -2573,16 +2573,21 @@ Deprecated in protVer 32.00
 
         for i in range(u[1]):
             u = struct.unpack_from('<BBHLlLLHHLBBH', buf, 4 + i * 32)
-            s += ("   %d: oscId %s reserved2 x%x %s DAC %s freq %u\n"
-                  "      phaseOffset %d withTemp %u withAge %u "
-                  "timeToTemp %u\n"
+            s += "   %d: " % i
+            s += ("oscId %u reserved2 x%x flags x%x freq %u\n"
+                  "      phaseOffset %d withTemp %u withAge %u timeToTemp %u\n"
                   "      reserved3 x%x gainVco %u gainUncertainty %u\n"
-                  "      reserved4 x%02x%04x\n" %
-                  (i, index_s(u[0], self.cfg_dosc_oscId), u[1],
-                   index_s((u[2] >> 1) & 0x0f, self.cfg_dosc_controlIf),
-                   index_s(u[2] & 1, self.cfg_dosc_isCal),
-                   u[3], u[4], u[5], u[6], u[7],
-                   u[8], u[9], u[10], u[11], u[12]))
+                  "      reserved4 x%02x%04x\n" % u)
+            if gps.VERB_DECODE <= self.verbosity:
+                s += ("        oscId (%s) flags (%s, %s)\n"
+                      "        freq %.1f Hz wtihTemp %.3f ppb  "
+                      "withAge %.3f ppb/y\n"
+                      "        gainVco %.4f ppb/r gainUncertainty %3f\n" %
+                      (index_s(u[0], self.cfg_dosc_oscId),
+                       index_s((u[2] >> 1) & 0x0f, self.cfg_dosc_controlIf),
+                       index_s(u[2] & 1, self.cfg_dosc_isCal),
+                       u[3] / 4.0, u[5] / 256.0, u[6] / 256.0,
+                       u[9] / 65536.0, u[10] / 256.0))
 
         return s[0:-1]     # remove trailing \n
 
@@ -2681,6 +2686,23 @@ protVer 15.01 and up, ADR only"""
         1: "EXTINT1",
         }
 
+    cfg_esrc_polarity = {
+        0: "rising",
+        1: "falling",
+        }
+
+    cfg_esrc_sourceType = {
+        0: "None",
+        1: "Frequency",
+        2: "Time",
+        3: "External",
+        }
+
+    cfg_esrc_gnssUtc = {
+        0: "GNSS",
+        1: "UTC",
+        }
+
     def cfg_esrc(self, buf):
         """UBX-CFG-ESRC decode, External synchronization source
         configuration"""
@@ -2703,26 +2725,30 @@ protVer 15.01 and up, ADR only"""
 
         for i in range(u[1]):
             u = struct.unpack_from('<BBHLLLLHHlLL', buf, 4 + 36 * i)
-            extInt = index_s(u[0], self.cfg_esrc_extInt)
-            s += "    %d: extInt %s " % (i, extInt)
-            if 0 == u[1]:
-                s += "    None\n"
-            elif 1 == u[1]:
-                s += ("sourceType frequency flags x%x freq %u\n"
-                      "       reserved2 x%x withTemp %u withAge %u\n"
-                      "       timeToTemp %u maxDevLifeTime %u\n" %
-                      (u[2], u[3], u[4], u[5], u[6], u[7], u[8]))
-            elif 2 == u[1]:
-                s += ("sourceType time  flags x%x freq %u reserved2 x%x\n"
-                      "       offset %d offsetUncertainty %u "
-                      "jitter %u\n" %
-                      (u[2], u[3], u[4], u[9], u[10], u[11]))
-            elif 3 == u[1]:
-                s += ("sourceType external flags x%x freq %u "
-                      "reserved2 x%x\n" %
-                      (u[2], u[3], u[4]))
-            else:
-                s += "unknown sourceType %u\n" % u[1]
+            s += "    %d: " % i
+            s += ("extInt %u sourceType %u flags x%x freq %u\n"
+                  "       reserved2 x%x withTemp %u withAge %u timeToTemp %u\n"
+                  "       maxDevLifeTime %u offset %d offsetUncertainty %u "
+                  "jitter %u\n" % u)
+
+            if gps.VERB_DECODE <= self.verbosity:
+                s += ("         extInt (%s) sourceType (%s) flags (%s,%s)\n"
+                      "         freq %.1f Hz\n" %
+                      (index_s(u[0], self.cfg_esrc_extInt),
+                       index_s(u[1], self.cfg_esrc_sourceType),
+                       index_s(u[2] & 1, self.cfg_esrc_polarity),
+                       index_s((u[2] >> 1) & 1, self.cfg_esrc_gnssUtc),
+                       u[3] / 4.0))
+
+                if 1 == u[1]:
+                    s += ("         withTemp %.1f ppb withAge %.1f ppb/y\n"
+                          "         timeToTemp %u s maxDevLifeTime %u "
+                          "ppg/y\n" %
+                          (u[5] / 256.0, u[6] / 256.0, u[7], u[8]))
+                if 2 == u[1]:
+                    s += ("         offset %d ns offsetUncertainty %u ns "
+                          "jitter %u ns/s\n" %
+                          u[9:11])
 
         return s[0:-1]     # remove trailing \n
 
