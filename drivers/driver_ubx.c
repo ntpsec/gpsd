@@ -695,6 +695,74 @@ static gps_mask_t ubx_msg_ack(struct gps_device_t *session,
     return 0;
 }
 
+// UBX-CFG-DOSC
+static gps_mask_t ubx_msg_cfg_dosc(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
+{
+    unsigned version, numOsc, reserved1;
+
+    if (4 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: CFG-DOSC, runt payload len %zd", data_len);
+        return 0;
+    }
+    version = getub(buf, 0);
+
+    if (0 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: CFG-DOSC, unknown version %u\n", version);
+        return 0;
+    }
+
+    numOsc = getub(buf, 1);
+    if (2 < numOsc) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: CFG-DOSC, invalid numOsc %u\n", numOsc);
+        return 0;
+    }
+    reserved1 = getleu16(buf, 2);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX: CFG-DOSC: version %u numOsc %u reserved1 x%x \n",
+             version, numOsc, reserved1);
+
+    return 0;
+}
+
+// UBX-CFG-ESRC
+static gps_mask_t ubx_msg_cfg_esrc(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
+{
+    unsigned version, numSources, reserved1;
+
+    if (4 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: CFG-ESRC, runt payload len %zd", data_len);
+        return 0;
+    }
+    version = getub(buf, 0);
+
+    if (0 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: CFG-DOSC, unknown version %u\n", version);
+        return 0;
+    }
+
+    numSources = getub(buf, 1);
+    if (2 < numSources) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: CFG-ESRC, invalid numSources %u\n", numSources);
+        return 0;
+    }
+    reserved1 = getleu16(buf, 2);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX: CFG-ESRC: version %u numSources %u reserved1 x%x \n",
+             version, numSources, reserved1);
+
+    return 0;
+}
+
 // UBX-CFG-RATE
 // Deprecated in u-blox 10
 static gps_mask_t ubx_msg_cfg_rate(struct gps_device_t *session,
@@ -4592,6 +4660,12 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
 
     /* UBX-AID-*
      * removed in protVer 32 */
+    case UBX_CFG_DOSC:
+        mask = ubx_msg_cfg_dosc(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_CFG_ESRC:
+        mask = ubx_msg_cfg_esrc(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
     case UBX_CFG_NAV5:
         // deprecated in u-blox 10
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: CFG-NAV5\n");
