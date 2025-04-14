@@ -971,11 +971,12 @@ void datum_code_string(int code, char *buffer, size_t len)
  * and
  * Section 1.5.3  M10-FW500_InterfaceDescription_UBX-20053845.pdf
  *
- * Return PRN, or zero for error
+ * Return PRN, less than one for error
+ *        -1 for GLONASS svid 255
  */
 short ubx2_to_prn(int gnssId, int svId)
 {
-    short nmea_PRN;
+    short nmea_PRN = 0;
 
     if (1 > svId) {
         // skip 0 svId
@@ -1076,8 +1077,10 @@ short ubx2_to_prn(int gnssId, int svId)
             return 0;
         } else if (96 >= svId) {
             nmea_PRN = svId;
-        } else {
+        } else if (255 == svId) {
             // skip bad svId, 255 == tracked, but unidentified, skip
+            nmea_PRN = -1;
+        } else {
             return 0;
         }
         break;

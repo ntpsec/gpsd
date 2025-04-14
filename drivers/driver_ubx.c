@@ -3262,6 +3262,10 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
 
         nmea_PRN = ubx2_to_prn(gnssId, svId);
         if (0 >= nmea_PRN) {
+            if (-1 == nmea_PRN) {
+                // ignore GLONASS 255
+                continue;
+            }
             // bad PRN??
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "UBX: NAV-SIG(%d) Bad PRN: gnssid %u, svid %u PRN %d\n",
