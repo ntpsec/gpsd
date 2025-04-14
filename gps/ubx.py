@@ -2555,6 +2555,10 @@ Deprecated in protVer 32.00
     def cfg_dosc(self, buf):
         """UBX-CFG-DOSC decode, Disciplined oscillator configuration"""
 
+        # at least protver 16, time firmware only
+        if 16 > self.protver:
+            self.protver = 16
+
         u = struct.unpack_from('<BBH', buf, 0)
         if 0 != u[0]:
             return "  Unknown version %u" % u[0]
@@ -2562,6 +2566,10 @@ Deprecated in protVer 32.00
             return "  Bad numOsc %u" % u[1]
 
         s = "  version %u numOsc %u reserved1 x%x\n" % u
+
+        m_len = len(buf)
+        if 4 != (m_len - u[1] * 32):
+            return "  Bad ilength %u s/b %u" % (m_len, 4 + 32 * u[1])
 
         for i in range(u[1]):
             u = struct.unpack_from('<BBHLlLLHHLBBH', buf, 4 + i * 32)
@@ -2677,6 +2685,10 @@ protVer 15.01 and up, ADR only"""
         """UBX-CFG-ESRC decode, External synchronization source
         configuration"""
 
+        # at least protver 16, time firmware only
+        if 16 > self.protver:
+            self.protver = 16
+
         u = struct.unpack_from('<BBH', buf, 0)
         if 0 != u[0]:
             return "  Unknown version %u" % u[0]
@@ -2684,6 +2696,10 @@ protVer 15.01 and up, ADR only"""
             return "  Bad numSources %u" % u[1]
 
         s = "  version %u numSources %u reserved1 x%x\n" % u
+
+        m_len = len(buf)
+        if 4 != (m_len - u[1] * 36):
+            return "  Bad ilength %u s/b %u" % (m_len, 4 + 36 * u[1])
 
         for i in range(u[1]):
             u = struct.unpack_from('<BBHLLLLHHlLL', buf, 4 + 36 * i)
