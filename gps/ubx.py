@@ -2569,7 +2569,7 @@ Deprecated in protVer 32.00
 
         m_len = len(buf)
         if 4 != (m_len - u[1] * 32):
-            return "  Bad ilength %u s/b %u" % (m_len, 4 + 32 * u[1])
+            return "  Bad length %u s/b %u" % (m_len, 4 + 32 * u[1])
 
         for i in range(u[1]):
             u = struct.unpack_from('<BBHLlLLHHLBBH', buf, 4 + i * 32)
@@ -5157,6 +5157,12 @@ Deprecated in protVer 32.00
 
         u = struct.unpack_from('<BBBB', buf, 0)
         s = ' version %u nBlocks %u reserved1 %u %u' % u
+        m_len = len(buf)
+        if 4 != (m_len - 24 * u[1]):
+            # some are 20, not 24??
+            return ("  Bad length %u s/b %u, nBlocks %u" %
+                    (m_len, 4 + 24 * u[1], u[1]))
+
         for i in range(0, u[1]):
             u = struct.unpack_from('<BBBBLBBBBHHBbBbBBBB', buf, 4 + (24 * i))
             s += ("\n   blockId %u flags x%x antStatus %u antPower %u "
