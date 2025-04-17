@@ -5190,12 +5190,14 @@ Deprecated in protVer 32.00
                       "ofsQ %d magQ %u\n"
                       "    reserved3 %u %u %u" % u)
                 if gps.VERB_DECODE <= self.verbosity:
+                    # jammingState deprecated.  Use UBX-SEC-SIG (v2)
                     s += ("\n       blockId (%s) jammingState (%s) "
-                          "antStatus (%s) antPower (%s)" %
+                          "antStatus (%s) antPower (%s) agc %.1f%%" %
                           (index_s(u[0], self.mon_rf_blockId),
                            index_s(u[1] & 0x03, self.jammingState),
                            index_s(u[2], self.mon_rf_antstat),
-                           index_s(u[3], self.mon_rf_antpwr)))
+                           index_s(u[3], self.mon_rf_antpwr),
+                           u[7] / 8181))
             else:  # True == compact
                 # rare 20 byte block
                 # msglen 20 does not have flags, jammingState
@@ -5208,10 +5210,11 @@ Deprecated in protVer 32.00
                 if gps.VERB_DECODE <= self.verbosity:
                     # fixme: decode blockId
                     s += ("       blockId (%s) antStatus (%s) "
-                          "antPower (%s)\n" %
+                          "antPower (%s) agc %.1f%%\n" %
                           (index_s(u[0], self.mon_rf_blockId),
                            index_s(u[1], self.mon_rf_antstat),
-                           index_s(u[2], self.mon_rf_antpwr)))
+                           index_s(u[2], self.mon_rf_antpwr),
+                           u[8] / 81.91 ))
 
         return s[0:-1]    # remove trailing \n
 
