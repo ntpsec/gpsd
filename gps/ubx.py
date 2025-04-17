@@ -5147,6 +5147,11 @@ Deprecated in protVer 32.00
         2: "Unk",
         }
 
+    mon_rf_blockId = {
+        0: "L1",
+        1: "L2 or L5",
+        }
+
     def mon_rf(self, buf):
         """UBX-MON-RF decode, RF Information"""
 
@@ -5155,27 +5160,60 @@ Deprecated in protVer 32.00
         if 27 > self.protver:
             self.protver = 27
 
-        u = struct.unpack_from('<BBBB', buf, 0)
-        s = ' version %u nBlocks %u reserved1 %u %u' % u
+        u = struct.unpack_from('<BBH', buf, 0)
+        s = ' version %u nBlocks %u reserved1 x%x\n' % u
+
         m_len = len(buf)
-        if 4 != (m_len - 24 * u[1]):
-            # some are 20, not 24??
-            return ("  Bad length %u s/b %u, nBlocks %u" %
-                    (m_len, 4 + 24 * u[1], u[1]))
+        blockSize = (m_len - 4) / u[1]
+
+        # protVer 33.21 blockSize is 24
+        # protVer 33.30 blockSize is 20 (compact format)
+        # u-blox-F9-HPS-1.30_InterfaceDescription_UBX-22010984.pdf
+        # protVer 33.40 blockSize is 24
+        if 20 == blockSize:
+            compact = True
+        elif 24 == blockSize:
+            compact = False
+        else:
+            return ("  Bad length %u s/b %u, nBlocks %u blockSize %f" %
+                    (m_len, 4 + 24 * u[1], u[1], blockSize))
 
         for i in range(0, u[1]):
-            u = struct.unpack_from('<BBBBLBBBBHHBbBbBBBB', buf, 4 + (24 * i))
-            s += ("\n   blockId %u flags x%x antStatus %u antPower %u "
-                  "postStatus %u reserved2 %u %u %u %u"
-                  "\n    noisePerMS %u agcCnt %u jamInd %u ofsI %d magI %u "
-                  "ofsQ %d magQ %u"
-                  "\n    reserved3 %u %u %u" % u)
-            if gps.VERB_DECODE <= self.verbosity:
-                s += ('\n     jammingState (%s) antStatus (%s) antPower (%s)' %
-                      (index_s(u[1] & 0x03, self.jammingState),
-                       index_s(u[2], self.mon_rf_antstat),
-                       index_s(u[3], self.mon_rf_antpwr)))
-        return s
+            s += "   %u: " % i
+            if False == compact:
+                # common 24 byte block
+                u = struct.unpack_from('<BBBBLLHHBbBbBBBB', buf,
+                                       4 + (24 * i))
+                s += ("blockId %u flags x%x antStatus %u antPower %u "
+                      "postStatus %u reserved2 x%x\n"
+                      "    noisePerMS %u agcCnt %u jamInd %u ofsI %d magI %u "
+                      "ofsQ %d magQ %u\n"
+                      "    reserved3 %u %u %u" % u)
+                if gps.VERB_DECODE <= self.verbosity:
+                    s += ("\n       blockId (%s) jammingState (%s) "
+                          "antStatus (%s) antPower (%s)" %
+                          (index_s(u[0], self.mon_rf_blockId),
+                           index_s(u[1] & 0x03, self.jammingState),
+                           index_s(u[2], self.mon_rf_antstat),
+                           index_s(u[3], self.mon_rf_antpwr)))
+            else:  # True == compact
+                # rare 20 byte block
+                # msglen 20 does not have flags, jammingState
+                u = struct.unpack_from('<BBBBLLHHbBbB', buf, 4 + (20 * i))
+                s += ("blockId %u antStatus %u antPower %u cwSuppression %u "
+                      "postStatus %u \n"
+                      "      reserved2 x%x noisePerMS %u agcCnt %u\n"
+                      "      ofsI %d magI %u ofsQ %d magQ %u\n" % u)
+                # fixme: decode blockId
+                if gps.VERB_DECODE <= self.verbosity:
+                    # fixme: decode blockId
+                    s += ("       blockId (%s) antStatus (%s) "
+                          "antPower (%s)\n" %
+                          (index_s(u[0], self.mon_rf_blockId),
+                           index_s(u[1], self.mon_rf_antstat),
+                           index_s(u[2], self.mon_rf_antpwr)))
+
+        return s[0:-1]    # remove trailing \n
 
     def mon_rxbuf(self, buf):
         """UBX-MON-RXBUF decode, Receiver Buffer Status"""
