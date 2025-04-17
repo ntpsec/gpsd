@@ -182,6 +182,13 @@ static struct vlist_t vaStatus[] = {
     {0, NULL},
 };
 
+// UBX-MON-RF blockId
+static struct vlist_t vmon_rf_blockId[] = {
+    {0, "L1 Unk"},
+    {1, "L2 or L5"},
+    {0, NULL},
+};
+
 // UBX-MON-RF flags
 static struct vlist_t vmon_rf_flags[] = {
     {0, "Jam Unk"},
@@ -2141,8 +2148,10 @@ static gps_mask_t ubx_msg_mon_rf(struct gps_device_t *session,
 {
     unsigned i;
     gps_mask_t mask = 0;
-    unsigned version = getub(buf, 0);
-    unsigned nBlocks = getub(buf, 1);
+    unsigned version;
+    unsigned nBlocks;
+    unsigned blockSize = 0;
+    bool compact;
 
     if (4 > data_len) {
         // 4 + (nBlocks * 24)
@@ -2150,75 +2159,172 @@ static gps_mask_t ubx_msg_mon_rf(struct gps_device_t *session,
                  "UBX: MON-RF: runt payload len %zd\n", data_len);
         return 0;
     }
+    version = getub(buf, 0);
+    nBlocks = getub(buf, 1);
+
     if (0 != version) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX: MON-RF unkwnown version %u\n", version);
         return 0;
     }
+    if (0 == nBlocks) {
+        // avoid divide by zero
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: MON-RF bBlocks is zero\n");
+        return 0;
+    }
+    blockSize = (data_len - 4) / nBlocks;
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX: MON-RF: version %u, nblocks %u\n", version, nBlocks);
-    for (i = 0; (i < nBlocks) && ((4 + (i * 24)) < data_len); i++){
-        /* ZED-F9N 1 == nBlock
-         * ZED-F9P 2 == nBlock
-         * what to do with with two jamInd and two antStatus? */
-        unsigned off = i * 24;
-        unsigned blockId = getub(buf, 4 + off);
-        unsigned flags =  getub(buf, 5 + off);
-        unsigned jammingState = flags & 3;
-        unsigned antStatus = getub(buf, 6 + off);
-        unsigned antPower = getub(buf, 7 + off);
-        unsigned long postStatus = getleu32(buf, 8 + off);
-        unsigned agcCnt = getleu16(buf, 18 + off);         // 0 to 8191
-        unsigned jamInd = getub(buf, 20 + off);
-        int ofsI = getsb(buf, 21 + off);
-        unsigned magI = getub(buf, 22 + off);
-        int ofsQ = getsb(buf, 23 + off);
-        unsigned magQ = getub(buf, 24 + off);
-        unsigned ant_stat;
+             "UBX: MON-RF: version %u, nblocks %u blockSize %u\n",
+             version, nBlocks, blockSize);
 
-        switch (antStatus) {
-        case 2:
-            ant_stat = ANT_OK;
-            break;
-        case 3:
-            ant_stat = ANT_SHORT;
-            break;
-        case 4:
-            ant_stat = ANT_OPEN;
-            break;
-        case 0:
-            // Init
-            FALLTHROUGH
-        case 1:
-            // Unknown
-            FALLTHROUGH
-        default:
-            // Dunno...
-            ant_stat = ANT_UNK;
-            break;
-        }
+    if (4 != (data_len - blockSize * nBlocks)) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-MON-RF:  Bad length %zu s/b %u, nBlocks %u]n",
+                 data_len, 4 + blockSize * nBlocks, nBlocks);
+        return 0;
+    }
 
-        // use the highest ant_stat and jamInd
-        if ((unsigned)session->newdata.ant_stat < ant_stat) {
-            session->newdata.ant_stat = ant_stat;
-        }
-        if ((unsigned)session->newdata.jam < jamInd) {
-            session->newdata.jam = jamInd;
-        }
+    if (20 == blockSize) {
+        // ZED-F9R HPS 1.30 firmware
+        compact = true;
+    } else if (24 == blockSize) {
+        compact = false;
+    } else {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: MON-RF: bad blockSize%u\n", blockSize);
+        return 0;
+    }
+    for (i = 0; i < nBlocks; i++){
+        if (false == compact) {
+            /* ZED-F9N 1 == nBlock
+             * ZED-F9P 2 == nBlock
+             * what to do with with two jamInd and two antStatus? */
+            unsigned off = i * 24;
+            unsigned blockId = getub(buf, 4 + off);
+            unsigned flags =  getub(buf, 5 + off);
+            unsigned jammingState = flags & 3;
+            unsigned antStatus = getub(buf, 6 + off);
+            unsigned antPower = getub(buf, 7 + off);
+            unsigned long postStatus = getleu32(buf, 8 + off);
+            unsigned long reserved1 = getleu32(buf, 12 + off);
+            unsigned agcCnt = getleu16(buf, 18 + off);         // 0 to 8191
+            unsigned jamInd = getub(buf, 20 + off);   // aka cwsuppression
+            int ofsI = getsb(buf, 21 + off);
+            unsigned magI = getub(buf, 22 + off);
+            int ofsQ = getsb(buf, 23 + off);
+            unsigned magQ = getub(buf, 24 + off);
+            unsigned reserved2 = getleu16(buf, 25 + off);
+            unsigned ant_stat;
 
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX: MON-RF: blk %u flags x%x jammingState %u antStatus %u "
-                 "antPower %u\n"
-                 "MON-RF: postStatus %lu ageCnt %u jamInd %u "
-                 "ofsI %d magI %u ofsI %d magQ %u\n",
-                 blockId, flags, jammingState, antStatus, antPower,
-                 postStatus, agcCnt, jamInd,
-                 ofsI, magI, ofsQ, magQ);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "UBX: MON-RF:      antStatus:%s antPower:%s flags:%s\n",
-                 val2str(antStatus, vaStatus),
-                 val2str(antPower, vaPower),
-                 val2str(flags, vmon_rf_flags));
+            switch (antStatus) {
+            case 2:
+                ant_stat = ANT_OK;
+                break;
+            case 3:
+                ant_stat = ANT_SHORT;
+                break;
+            case 4:
+                ant_stat = ANT_OPEN;
+                break;
+            case 0:
+                // Init
+                FALLTHROUGH
+            case 1:
+                // Unknown
+                FALLTHROUGH
+            default:
+                // Dunno...
+                ant_stat = ANT_UNK;
+                break;
+            }
+
+            // use the highest ant_stat and jamInd
+            if ((unsigned)session->newdata.ant_stat < ant_stat) {
+                session->newdata.ant_stat = ant_stat;
+            }
+            if ((unsigned)session->newdata.jam < jamInd) {
+                session->newdata.jam = jamInd;
+            }
+
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "UBX: MON-RF: blk %u flags x%x jammingState %u "
+                     "antStatus %u antPower %u postStatus %lu reserved1 x%lx "
+                     "ageCnt %u "
+                     "jamInd %u ofsI %d magI %u ofsI %d magQ %u "
+                     "reserved2 x%x\n",
+                     blockId, flags, jammingState, antStatus, antPower,
+                     postStatus, reserved1, agcCnt, jamInd,
+                     ofsI, magI, ofsQ, magQ, reserved2);
+            GPSD_LOG(LOG_IO, &session->context->errout,
+                     "UBX: MON-RF:    blockId (%s) flags (%s) antStatus (%s) "
+                     "antPower (%s) agc %.1f%%\n",
+                     val2str(blockId, vmon_rf_blockId),
+                     val2str(flags, vmon_rf_flags),
+                     val2str(antStatus, vaStatus),
+                     val2str(antPower, vaPower), agcCnt / 81.91);
+        } else {
+            // compact, 20 bytes, HPS 1.30
+            /* ZED-F9R 2 == nBlock
+             * what to do with with two jamInd and two antStatus? */
+            unsigned off = i * 20;
+            unsigned blockId = getub(buf, 4 + off);
+            unsigned antStatus = getub(buf, 5 + off);
+            unsigned antPower = getub(buf, 6 + off);
+            unsigned cwSuppression = getub(buf, 7 + off);
+            unsigned long postStatus = getleu32(buf, 8 + off);
+            // reserved1 4 bytes
+            unsigned noisePerMS = getleu16(buf, 16 + off);
+            unsigned agcCnt = getleu16(buf, 18 + off);         // 0 to 8191
+            int ofsI = getsb(buf, 20 + off);
+            unsigned magI = getub(buf, 21 + off);
+            int ofsQ = getsb(buf, 22 + off);
+            unsigned magQ = getub(buf, 23 + off);
+            unsigned ant_stat;
+
+            switch (antStatus) {
+            case 2:
+                ant_stat = ANT_OK;
+                break;
+            case 3:
+                ant_stat = ANT_SHORT;
+                break;
+            case 4:
+                ant_stat = ANT_OPEN;
+                break;
+            case 0:
+                // Init
+                FALLTHROUGH
+            case 1:
+                // Unknown
+                FALLTHROUGH
+            default:
+                // Dunno...
+                ant_stat = ANT_UNK;
+                break;
+            }
+
+            // use the highest ant_stat and jamInd
+            if ((unsigned)session->newdata.ant_stat < ant_stat) {
+                session->newdata.ant_stat = ant_stat;
+            }
+
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "UBX: MON-RF: blk %u antStatus %u antPower %u "
+                     "cwSuppression %u postStatus %lu ageCnt %u jamInd %u "
+                     "ofsI %d magI %u ofsI %d magQ %u\n",
+                     blockId, antStatus, antPower, cwSuppression,
+                     postStatus, noisePerMS,  agcCnt,
+                     ofsI, magI, ofsQ, magQ);
+            GPSD_LOG(LOG_IO, &session->context->errout,
+                     "UBX: MON-RF:    blockId (%s) antStatus (%s) "
+                     "antPower (%s) agc %.1f%%\n",
+                     val2str(blockId, vmon_rf_blockId),
+                     val2str(antStatus, vaStatus),
+                     val2str(antPower, vaPower),
+                     agcCnt / 81.91);
+        }
     }
     if (0 < session->newdata.jam ||
         ANT_OK <= session->newdata.ant_stat) {

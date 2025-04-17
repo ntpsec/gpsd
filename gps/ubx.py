@@ -5163,8 +5163,16 @@ Deprecated in protVer 32.00
         u = struct.unpack_from('<BBH', buf, 0)
         s = ' version %u nBlocks %u reserved1 x%x\n' % u
 
+        if 0 == nBlocks:
+            # avoid ddivide by zero
+            return "  nBlocks is zero"
+
         m_len = len(buf)
+
         blockSize = (m_len - 4) / u[1]
+        if 4 != (m_len - blockSize * u[1]):
+            return ("  Bad length %u s/b %u, nBlocks %u" %
+                    (m_len, 4 + blockSize * u[1], u[1]))
 
         # protVer 33.21 blockSize is 24
         # protVer 33.30 blockSize is 20 (compact format)
