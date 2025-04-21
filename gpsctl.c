@@ -211,7 +211,7 @@ static void usage(void)
          "  --help              Show this help, then exit\n"
          "  --list              List known device types and exit.\n"
          "  --nmea              Switch device to NMEA mode.\n"
-         "  --rate RATE         Change receiver cyclte time to RATE.\n"
+         "  --rate RATE         Change receiver cycle time to RATE.\n"
          "  --reset             Force reset to default mode.\n"
 #ifdef SHM_EXPORT_ENABLE
          "  --rmshm             Remove the SHM export segment and exit.\n"
@@ -224,7 +224,7 @@ static void usage(void)
 #endif   // HAVE_GETOPT_LONG
          "  -?                  Show this help, then exit\n"
          "  -b                  Switch device to native binary mode.\n"
-         "  -c RATE             Change receiver cyclte time to RATE.\n"
+         "  -c RATE             Change receiver cycle time to RATE.\n"
          "  -D DEBUGLEVEL       Set debug level to DEBUGLEVEL.\n"
          "  -e                  Echo specified control string with wrapper.\n"
          "  -f                  Force direct access to the device.\n"
