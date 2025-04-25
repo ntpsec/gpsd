@@ -2702,6 +2702,96 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
     return mask;
 }
 
+/* $INFO, Inertial Sense product info
+ * Not a legal NMEA message name
+ * https://docs.inertialsense.com/user-manual/com-protocol/nmea/#info
+ */
+static gps_mask_t processINFO(int c UNUSED, char *field[],
+                              struct gps_device_t *session)
+{
+    /*
+     * $INFO,928404541,1.0.2.0,2.2.2.0,-377462659,2.0.0.0,-53643429,
+     *    Inertial Sense Inc,2025-01-10,16:06:13.50,GPX -1,4,0, *7D
+     *
+     * 1  Serial number    Manufacturer serial number
+     * 2  Hardware version Hardware version
+     * 3  Firmware version Firmware version
+     * 4  Build number     Firmware build number
+     * 5  Protocol version Communications protocol version
+     * 6  Repo revision    Repository revision number
+     * 7  Manufacturer     Manufacturer name
+     * 8  Build date       Build date
+     * 9  Build time       Build time
+     * 10 Add Info         Additional information
+     * 11 Hardware         Hardware: 1=uINS, 2=EVB, 3=IMX, 4=GPX
+     * 12 Reserved         Reserved for internal purpose.
+     * 13 Build type       Build type:
+     *  'a'=ALPHA, 'b'=BETA, 'c'=RELEASE CANDIDATE, 'r'=PRODUCTION RELEASE,
+     *  'd'=debug, ' '= ????
+     */
+
+    // hardwaare
+    static struct clist_t hardware[] = {
+        {'1', "uISN"},
+        {'2', "EVB"},
+        {'3', "INX"},
+        {'4', "GPX"},
+        {'\0', NULL},
+    };
+
+    if ('\0' == session->subtype[0] &&
+        !session->context->passive) {
+        // first time seen, send init
+
+        (void)nmea_send(session, "$STPC");   // stop all messsages
+
+        /* Enable all possible NMEA messages, at 1Hz
+         * 1 PIMU, 2 PPIMU, 3 PRIMU, 4 PINS1, 5 PINS2
+         * 6 PGPSP, 7 GGA, 8 GLL, 9 GSA, 10 RMC, 11 ZDA, 12 PASHR
+         * 13 PSTRB, 14 INFO, 15 GSV, 16 VTG
+         * there are many more...
+         */
+        (void)nmea_send(session,
+                        "$ASCE,0,"    // Set current port
+                        "1,0,"        // PIMU
+                        "2,0,"        // PPIMU
+                        "3,0,"        // PRIMU
+                        "4,0,"        // PINS1
+                        "5,0,"        // PINS2
+                        "6,5,"        // PGPSP
+                        "7,5,"        // GGA
+                        "8,5,"        // GLL
+                        "9,5,"        // GSA
+                        "10,5,"       // RMC
+                        "11,5,"       // ZDA
+                        "12,5,"       // PASHR
+                        "13,5,"       // PSTRB
+                        "14,0,"       // INFO
+                        "15,5,"       // GSV
+                        "16,5",       // VTG
+                        "17,5",       // ?
+                        "18,5");      // ?
+    }
+
+    // save serial number
+    strlcpy(session->gpsdata.dev.sernum, field[1],
+            sizeof(session->gpsdata.dev.sernum));
+    // save HW as subtype
+    (void)snprintf(session->subtype, sizeof(session->subtype),
+                   "%s-%.11s",
+                   char2str(field[11][0], hardware), field[2]);
+    // save FW Version as subtype1
+    (void)snprintf(session->subtype1, sizeof(session->subtype1),
+                   "FW %.11s",
+                   field[3]);
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "NMEA0183: INFO: serial %s subtype %s subtype1 %s\n",
+             session->gpsdata.dev.sernum, session->subtype, session->subtype1);
+
+    return ONLINE_SET;
+}
+
 static gps_mask_t processMTW(int c UNUSED, char *field[],
                               struct gps_device_t *session)
 {
@@ -3138,6 +3228,153 @@ static gps_mask_t processPGLOR(int c UNUSED, char *field[],
                  "NMEA0183: PGLOR: seq %s type %s\n",
                  field[1], field[2]);
     }
+    return mask;
+}
+
+// Inertial Sense GPS nav data, not a legal message name
+static gps_mask_t processPGPSP(int count UNUSED, char *field[],
+                               struct gps_device_t *session)
+{
+    /*
+     * $PGPSP,523970800,2351,778,44.06887670,-121.31410390,1114.07,1134.17,
+     * 2.55,4.32,11.26,0.13,0.52,0.25,0.10,25.7,0.0000,18*51
+     *
+     */
+    gps_mask_t mask = ONLINE_SET;
+    unsigned long i_tow = strtoul(field[1], NULL, 10);   // ms
+    int weeks = atoi(field[2]);
+    unsigned long status = strtoul(field[3], NULL, 10);
+    int used = status & 0x0ff;
+    int gpsStatus = (status >> 8) & 0x0ff;
+    int fixType = (status >> 16) & 0x0ff;
+    double lat = safe_atof(field[4]);
+    double lon = safe_atof(field[5]);
+    double altHAE = safe_atof(field[6]);
+    double altMSL = safe_atof(field[7]);
+    double pDOP = safe_atof(field[8]);
+    double hAcc = safe_atof(field[9]);
+    double vAcc = safe_atof(field[10]);
+    double vecefX = safe_atof(field[11]);
+    double vecefY = safe_atof(field[12]);
+    double vecefZ = safe_atof(field[13]);
+    double sAcc = safe_atof(field[14]);
+    double cnoMean = safe_atof(field[15]);
+    double towOffset = safe_atof(field[16]);
+    int leapS = atoi(field[17]);
+    char ts_buf[TIMESPEC_LEN];
+    char scr[128];
+
+    switch (gpsStatus) {
+    case 0:
+        // no fix
+        session->newdata.status = STATUS_UNK;
+        session->newdata.mode = MODE_NO_FIX;
+        break;
+    case 1:
+        // DR
+        session->newdata.status = STATUS_DR;
+        session->newdata.mode = MODE_3D;
+        break;
+    case 2:
+        // 2D
+        session->newdata.status = STATUS_GPS;
+        session->newdata.mode = MODE_2D;
+        break;
+    case 3:
+        // 3D
+        session->newdata.status = STATUS_GPS;
+        session->newdata.mode = MODE_3D;
+        break;
+    case 4:
+        // GPSDR
+        session->newdata.status = STATUS_GNSSDR;
+        session->newdata.mode = MODE_3D;
+        break;
+    case 5:
+        // surveyed
+        session->newdata.status = STATUS_TIME;
+        session->newdata.mode = MODE_3D;
+        break;
+    case 8:
+        // DGPS
+        session->newdata.status = STATUS_DGPS;
+        session->newdata.mode = MODE_3D;
+        break;
+    case 9:
+        // SBAS ??
+        session->newdata.status = STATUS_GPS;
+        session->newdata.mode = MODE_3D;
+        break;
+    case 10:
+        // FTK SINGLE ??
+        session->newdata.status = STATUS_RTK_FLT;  // ??
+        session->newdata.mode = MODE_3D;
+        break;
+    case 11:
+        // FTK FLOAT
+        session->newdata.status = STATUS_RTK_FLT;
+        session->newdata.mode = MODE_3D;
+        break;
+    case 12:
+        // FTK FIX
+        session->newdata.status = STATUS_RTK_FIX;
+        session->newdata.mode = MODE_3D;
+        break;
+    default:
+        // Huh?
+        session->newdata.status = STATUS_UNK;
+        session->newdata.mode = MODE_NOT_SEEN;
+        break;
+    }
+    mask |= MODE_SET | STATUS_SET;
+
+    if (MODE_2D == session->newdata.mode ||
+        MODE_3D == session->newdata.mode) {
+            timespec_t ts_tow;
+
+            session->newdata.latitude = lat;
+            session->newdata.longitude = lon;
+            mask |= LATLON_SET;
+            if (MODE_3D == session->newdata.mode) {
+                session->newdata.altHAE = altHAE;
+                session->newdata.altMSL = altMSL;
+                mask |= ALTITUDE_SET;
+            }
+            // assume leapS is valid if we are 2D ???
+            session->context->leap_seconds = leapS;
+            session->context->valid |= LEAP_SECOND_VALID;
+
+            // assume time is valid if we are 2D ???
+            MSTOTS(&ts_tow, i_tow);
+            session->newdata.time = gpsd_gpstime_resolv(session, weeks,
+                                                        ts_tow);
+
+            mask |= (TIME_SET | NTPTIME_IS);
+    }
+
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "NMEA0183: PGPSP: %s i_tow=%lu weeks=%d "
+             "status=x%lx used=%d gpsStatus=%d type=%d "
+             "lat=%.2f lon=%.2f "
+             "altHAE=%.2f altMSL=%.2f "
+             "pdop=%.2f hacc=%.2f vacc=%.2f sacc=%.2f "
+             "vecef: X=%.2f Y=%.2f Z=%.2f cnoMean=.%1f "
+             "towOffset=%.4f leapS=%d\n",
+             timespec_to_iso8601(session->newdata.time, scr, sizeof(scr)),
+             i_tow, weeks, status, used, gpsStatus, fixType, lat, lon,
+             altHAE, altMSL,
+             pDOP, hAcc, vAcc, sAcc,
+             vecefX, vecefY, vecefZ, cnoMean,
+             towOffset, leapS);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PGPSP: time=%s lat=%.2f lon=%.2f "
+             "mode=%d status=%d\n",
+             timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+             session->newdata.latitude,
+             session->newdata.longitude,
+             session->newdata.mode,
+             session->newdata.status);
     return mask;
 }
 
@@ -5173,6 +5410,10 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"GSV", NULL, 4,  false, processGSV},  // Sats in view
         // UNICORE MEMES sensor data
         {"GYOACC", NULL, 14,  false, processGYOACC},
+        // Inertial Sense info, over long
+        // INFO,928404541,1.0.2.0,2.2.2.0,-377462659,2.0.0.0,-53643429,
+        // Inertial Sense Inc,2025-01-10,16:06:13.50,GPX -1,4,0, *7D
+        {"INFO", NULL, 14,  false, processINFO},
         {"HCR", NULL, 0,  false, NULL},        // Heading Correction, 4.10+
         // Heading, Deviation and Variation
         {"HDG", NULL, 0,  false, processHDG},
@@ -5219,6 +5460,10 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PERDSYS", "FIXSESSION", 5, false, NULL},    // Fix Session
         {"PERDSYS", "GPIO", 3, false, NULL},          // GPIO
         {"PERDSYS", "VERSION", 6, false, NULL},       // Version
+
+        // Inertial Sense
+        {"PGPSP", NULL, 18,  false, processPGPSP},     // GPS nav data
+
         // Jackson Labs proprietary
         {"PJLTS", NULL, 11,  false, NULL},            // GPSDO status
         {"PJLTV", NULL, 4,  false, NULL},             // Time and 3D velocity
