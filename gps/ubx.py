@@ -5188,7 +5188,7 @@ Deprecated in protVer 32.00
 
         for i in range(0, u[1]):
             s += "   %u: " % i
-            if False == compact:
+            if compact is False:
                 # common 24 byte block
                 u = struct.unpack_from('<BBBBLLHHBbBbBBBB', buf,
                                        4 + (24 * i))
@@ -5222,7 +5222,7 @@ Deprecated in protVer 32.00
                           (index_s(u[0], self.mon_rf_blockId),
                            index_s(u[1], self.mon_rf_antstat),
                            index_s(u[2], self.mon_rf_antpwr),
-                           u[8] / 81.91 ))
+                           u[8] / 81.91))
 
         return s[0:-1]    # remove trailing \n
 
@@ -6739,7 +6739,7 @@ BeiDou Interface Control Document v1.0
                 SISMAI = (page >> 275) & 0x0f   # undecumented
                 s = ("\n    Subframe 3: PageID %u DIF %u "
                      "SIF %u AIF %u SISMAI %u " %
-                      (PageID, DIF, SIF, AIF, SISMAI))
+                     (PageID, DIF, SIF, AIF, SISMAI))
                 if 1 == PageID:
                     SISAIoe = (page >> 270) & 0x1f
                     s += ("SISAIoe %u " %
@@ -6760,7 +6760,6 @@ BeiDou Interface Control Document v1.0
                 Rev = (page >> 32) & 0x03ff
                 s += "Rev %u" % Rev
                 return s
-
 
             # We only know the 9 == words case
             return "\n    Unknown words number %u" % len(words)
@@ -10130,7 +10129,7 @@ present in 9-series and higher
                      "help": "poll UBX-MON-SPAN Signal characteristics"},
         # UBX-MON-SYS
         "MON-SYS": {"command": send_poll, "opt": [0x0a, 0x39],
-                     "help": "poll UBX-MON-SYS System state"},
+                    "help": "poll UBX-MON-SYS System state"},
         # UBX-MON-TXBUF
         "MON-TXBUF": {"command": send_poll, "opt": [0x0a, 0x08],
                       "help": "poll UBX-MON-TXBUF Transmitter Buffer Status"},
