@@ -6446,6 +6446,19 @@ protVer 34 and up
                       'name': 'UBX-NAV-EOE'},
                }
 
+    def nav2_clock(self, buf):
+        """UBX-NAV2-CLOCK decode, Clock Solution
+
+Duplicate of UBX-NAV-CLOCK
+"""
+
+        return nav_clock(self, buf)
+
+    # F9T
+    nav2_ids = {0x00: {'str': 'CLOCK', 'dec': nav2_clock, 'minlen': 20,
+                'name': "UBX-NAV2-CLOCK-PVT"},
+                }
+
     # used for RTCM3 rate config
     rtcm_ids = {5: {'str': '1005'},
                 0x4a: {'str': '1074'},
@@ -8241,6 +8254,7 @@ qErrInvalid add in protVer 34 and up
         0x21: {'str': 'LOG', 'ids': log_ids},
         0x27: {'str': 'SEC', 'ids': sec_ids},
         0x28: {'str': 'HNR', 'ids': hnr_ids},
+        0x29: {'str': 'NAV2', 'ids': nav2_ids},
         # Antaris 4
         # 0x4x USR, SCK Customer Messages
         0xf0: {'str': 'NMEA', 'ids': nmea_ids},
@@ -10241,6 +10255,64 @@ present in 9-series and higher
         # UBX-NAV-VELNED
         "NAV-VELNED": {"command": send_poll, "opt": [0x01, 0x12],
                        "help": "poll UBX-NAV-VELNED NED velocity"},
+
+        # UBX-NAV2-CLOCK
+        "NAV2-CLOCK": {"command": send_poll, "opt": [0x29, 0x22],
+                       "help": "poll UBX-NAV2-CLOCK Clock Solution"},
+        # UBX-NAV2-COV
+        "NAV2-COV": {"command": send_poll, "opt": [0x29, 0x16],
+                     "help": "poll UBX-NAV2-COV Covariance Matrices"},
+        # UBX-NAV2-DOP
+        "NAV2-DOP": {"command": send_poll, "opt": [0x29, 0x04],
+                     "help": "poll UBX-NAV2-DOP Dilution of Precision"},
+        # UBX-NAV2-POSECEF
+        "NAV2-POSECEF": {"command": send_poll, "opt": [0x29, 0x01],
+                         "help": "poll UBX-NAV2-POSECEF ECEF position"},
+        # UBX-NAV2-POSLLH
+        "NAV2-POSLLH": {"command": send_poll, "opt": [0x29, 0x02],
+                        "help": "poll UBX-NAV2-POSLLH LLH position"},
+        # UBX-NAV2-PVT
+        "NAV2-PVT": {"command": send_poll, "opt": [0x29, 0x07],
+                     "help": "poll UBX-NAV2-PVT Navigation Position Velocity "
+                     "Time Solution"},
+        # UBX-NAV2-SAT
+        "NAV2-SAT": {"command": send_poll, "opt": [0x29, 0x35],
+                     "help": "poll UBX-NAV2-SAT Satellite Information"},
+        # UBX-NAV2-SBAS
+        "NAV2-SBAS": {"command": send_poll, "opt": [0x29, 0x32],
+                      "help": "poll UBX-NAV2-SBAS SBAS Status Data"},
+        # UBX-NAV2-SIG
+        "NAV2-SIG": {"command": send_poll, "opt": [0x29, 0x43],
+                     "help": "poll UBX-NAV2-SIG Signal Information"},
+        # UBX-NAV2-STATUS
+        "NAV2-STATUS": {"command": send_poll, "opt": [0x29, 0x03],
+                        "help": "poll UBX-NAV2-STATUS Receiver Nav Status"},
+        # UBX-NAV2-TIMEBDS
+        "NAV2-TIMEBDS": {"command": send_poll, "opt": [0x29, 0x24],
+                         "help": "poll UBX-NAV2-TIMEBDS BDS Time Solution"},
+        # UBX-NAV2-TIMEGAL
+        "NAV2-TIMEGAL": {"command": send_poll, "opt": [0x29, 0x25],
+                         "help": "poll UBX-NAV2-TIMEGAL "
+                         "Galileo Time Solution"},
+        # UBX-NAV2-TIMEGLO
+        "NAV2-TIMEGLO": {"command": send_poll, "opt": [0x29, 0x23],
+                         "help": "poll UBX-NAV2-TIMEGLO GLO Time Solution"},
+        # UBX-NAV2-TIMEGPS
+        "NAV2-TIMEGPS": {"command": send_poll, "opt": [0x29, 0x20],
+                         "help": "poll UBX-NAV2-TIMEGPS GPS Time Solution"},
+        # UBX-NAV2-TIMELS
+        "NAV2-TIMELS": {"command": send_poll, "opt": [0x29, 0x26],
+                        "help": "poll UBX-NAV2-TIMELS Leap Second Info"},
+        # UBX-NAV2-TIMEUTC
+        "NAV2-TIMEUTC": {"command": send_poll, "opt": [0x29, 0x21],
+                         "help": "poll UBX-NAV2-TIMEUTC UTC Time Solution"},
+        # UBX-NAV2-VELECEF
+        "NAV2-VELECEF": {"command": send_poll, "opt": [0x29, 0x11],
+                         "help": "poll UBX-NAV2-VELECEF ECEF velocity"},
+        # UBX-NAV2-VELNED
+        "NAV2-VELNED": {"command": send_poll, "opt": [0x29, 0x12],
+                        "help": "poll UBX-NAV2-VELNED NED velocity"},
+
         # UBX-RXM-IMES
         "RXM-IMES": {"command": send_poll, "opt": [0x02, 0x61],
                      "help": "poll UBX-RXM-IMES Indoor Messaging System "
