@@ -5355,16 +5355,18 @@ Present in M10S
     def mon_sys(self, buf):
         """UBX-MON-SYS decode, Signal characteristics
 
-protVer 29.00 and up
+protVer 27.00 and up
+In:
+    ZED-F9O protVer 27.50
 Not in:
     NEO-M9N, protVer 32.00
     MAX-M10S, protVer 34.00
 """
 
-        # first seen in protver 29
-        # at least protver 29
-        if 29 > self.protver:
-            self.protver = 29
+        # first seen in protver 27
+        # at least protver 27
+        if 27 > self.protver:
+            self.protver = 27
 
         u = struct.unpack_from('<BBBBBBBBLHHHbBL', buf, 0)
         if 1 != u[0]:
@@ -5372,9 +5374,10 @@ Not in:
             return s
 
         s = ("  msgVer %u bootType %u cpuLoad %u cpuLoadMax %u memUsage %u "
-             "memUsageMax %u ioUsage %u ioUsageMax %u]n"
-             "  runTime %u noticeCount %u warnCount ^u tempValue %u\n"
-             "  reserved0 x%x %x" % u)
+             "memUsageMax %u\n"
+             "  ioUsage %u ioUsageMax %u runTime %u noticeCount %u "
+             "warnCount %u\n"
+             "  errCount %u tempValue %u reserved0 x%x %x" % u)
         if gps.VERB_DECODE <= self.verbosity:
             s += ("\n    bootType (%s)" %
                   index_s(u[1], self.mon_sys_bootType))
