@@ -5338,12 +5338,27 @@ Present in M10S
 
         return s
 
+    mon_sys_bootType = {
+        0: "Unknown",
+        1: "Cold Start",
+        2: "Watchdog",
+        3: "Hardware Reset",
+        4: "Hardware backup",
+        5: "Software backup",
+        6: "Software reset",
+        7: "VIO fail",
+        8: "VDD_X fail",
+        9: "VDD_RF fail",
+        10: "V_CORE_HIGH fail",
+        }
+
     def mon_sys(self, buf):
         """UBX-MON-SYS decode, Signal characteristics
 
 protVer 29.00 and up
 Not in:
     NEO-M9N, protVer 32.00
+    MAX-M10S, protVer 34.00
 """
 
         # first seen in protver 29
@@ -5360,6 +5375,9 @@ Not in:
              "memUsageMax %u ioUsage %u ioUsageMax %u]n"
              "  runTime %u noticeCount %u warnCount ^u tempValue %u\n"
              "  reserved0 x%x %x" % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n    bootType (%s)" %
+                  index_s(u[1], self.mon_sys_bootType))
         return s
 
     def mon_txbuf(self, buf):
@@ -5449,8 +5467,6 @@ Not in:
                       'name': 'UBX-MON-PATCH'},
                0x28: {'str': 'GNSS', 'dec': mon_gnss, 'minlen': 8,
                       'name': 'UBX-MON-GNSS'},
-               0x29: {'str': 'SYS', 'dec': mon_sys, 'minlen': 24,
-                      'name': 'UBX-MON-SYS'},
                0x2e: {'str': 'SMGR', 'dec': mon_smgr, 'minlen': 16,
                       'name': 'UBX-MON-SMGR'},
                # protVer 19 and up, ADR and UDR only
@@ -5465,6 +5481,8 @@ Not in:
                       'name': 'UBX-MON-HW3'},
                0x38: {'str': 'RF', 'dec': mon_rf, 'minlen': 4,
                       'name': 'UBX-MON-RF'},
+               0x39: {'str': 'SYS', 'dec': mon_sys, 'minlen': 24,
+                      'name': 'UBX-MON-SYS'},
                }
 
     def nav_aopstatus(self, buf):
@@ -10111,7 +10129,7 @@ present in 9-series and higher
         "MON-SPAN": {"command": send_poll, "opt": [0x0a, 0x31],
                      "help": "poll UBX-MON-SPAN Signal characteristics"},
         # UBX-MON-SYS
-        "MON-SYS": {"command": send_poll, "opt": [0x0a, 0x29],
+        "MON-SYS": {"command": send_poll, "opt": [0x0a, 0x39],
                      "help": "poll UBX-MON-SYS System state"},
         # UBX-MON-TXBUF
         "MON-TXBUF": {"command": send_poll, "opt": [0x0a, 0x08],
