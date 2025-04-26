@@ -5163,8 +5163,8 @@ Deprecated in protVer 32.00
         u = struct.unpack_from('<BBH', buf, 0)
         s = ' version %u nBlocks %u reserved1 x%x\n' % u
 
-        if 0 == nBlocks:
-            # avoid ddivide by zero
+        if 0 == [1]:
+            # avoid divide by zero
             return "  nBlocks is zero"
 
         m_len = len(buf)
@@ -5194,9 +5194,9 @@ Deprecated in protVer 32.00
                                        4 + (24 * i))
                 s += ("blockId %u flags x%x antStatus %u antPower %u "
                       "postStatus %u reserved2 x%x\n"
-                      "    noisePerMS %u agcCnt %u jamInd %u ofsI %d magI %u "
-                      "ofsQ %d magQ %u\n"
-                      "    reserved3 %u %u %u" % u)
+                      "      noisePerMS %u agcCnt %u jamInd %u ofsI %d "
+                      "magI %u ofsQ %d magQ %u\n"
+                      "      reserved3 %u %u %u" % u)
                 if gps.VERB_DECODE <= self.verbosity:
                     # jammingState deprecated.  Use UBX-SEC-SIG (v2)
                     s += ("\n       blockId (%s) jammingState (%s) "
@@ -5338,7 +5338,29 @@ Present in M10S
 
         return s
 
-    # UBX-CFG-SPT, protVer 15.01 and up, ADR and UDR only
+    def mon_sys(self, buf):
+        """UBX-MON-SYS decode, Signal characteristics
+
+protVer 29.00 and up
+Not in:
+    NEO-M9N, protVer 32.00
+"""
+
+        # first seen in protver 29
+        # at least protver 29
+        if 29 > self.protver:
+            self.protver = 29
+
+        u = struct.unpack_from('<BBBBBBBBLHHHbBL', buf, 0)
+        if 1 != u[0]:
+            s += "\n    WARNING: unknown version %u" % u[9]
+            return s
+
+        s = ("  msgVer %u bootType %u cpuLoad %u cpuLoadMax %u memUsage %u "
+             "memUsageMax %u ioUsage %u ioUsageMax %u]n"
+             "  runTime %u noticeCount %u warnCount ^u tempValue %u\n"
+             "  reserved0 x%x %x" % u)
+        return s
 
     def mon_txbuf(self, buf):
         """UBX-MON-TXBUF decode, Transmitter Buffer Status"""
@@ -5427,6 +5449,8 @@ Present in M10S
                       'name': 'UBX-MON-PATCH'},
                0x28: {'str': 'GNSS', 'dec': mon_gnss, 'minlen': 8,
                       'name': 'UBX-MON-GNSS'},
+               0x29: {'str': 'SYS', 'dec': mon_sys, 'minlen': 24,
+                      'name': 'UBX-MON-SYS'},
                0x2e: {'str': 'SMGR', 'dec': mon_smgr, 'minlen': 16,
                       'name': 'UBX-MON-SMGR'},
                # protVer 19 and up, ADR and UDR only
@@ -10086,6 +10110,9 @@ present in 9-series and higher
         # UBX-MON-SPAN
         "MON-SPAN": {"command": send_poll, "opt": [0x0a, 0x31],
                      "help": "poll UBX-MON-SPAN Signal characteristics"},
+        # UBX-MON-SYS
+        "MON-SYS": {"command": send_poll, "opt": [0x0a, 0x29],
+                     "help": "poll UBX-MON-SYS System state"},
         # UBX-MON-TXBUF
         "MON-TXBUF": {"command": send_poll, "opt": [0x0a, 0x08],
                       "help": "poll UBX-MON-TXBUF Transmitter Buffer Status"},
