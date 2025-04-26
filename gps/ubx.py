@@ -5196,11 +5196,11 @@ Deprecated in protVer 32.00
                       "postStatus %u reserved2 x%x\n"
                       "      noisePerMS %u agcCnt %u jamInd %u ofsI %d "
                       "magI %u ofsQ %d magQ %u\n"
-                      "      reserved3 %u %u %u" % u)
+                      "      reserved3 %u %u %u\n" % u)
                 if gps.VERB_DECODE <= self.verbosity:
                     # jammingState deprecated.  Use UBX-SEC-SIG (v2)
-                    s += ("\n       blockId (%s) jammingState (%s) "
-                          "antStatus (%s) antPower (%s) agc %.1f%%" %
+                    s += ("       blockId (%s) jammingState (%s) "
+                          "antStatus (%s) antPower (%s) agc %.1f%%\n" %
                           (index_s(u[0], self.mon_rf_blockId),
                            index_s(u[1] & 0x03, self.jammingState),
                            index_s(u[2], self.mon_rf_antstat),
