@@ -5200,7 +5200,8 @@ Deprecated in protVer 32.00
                 if gps.VERB_DECODE <= self.verbosity:
                     # jammingState deprecated.  Use UBX-SEC-SIG (v2)
                     s += ("       blockId (%s) jammingState (%s) "
-                          "antStatus (%s) antPower (%s) agc %.1f%%\n" %
+                          "antStatus (%s) antPower (%s)\n"
+                          "       agc %.1f%%\n" %
                           (index_s(u[0], self.mon_rf_blockId),
                            index_s(u[1] & 0x03, self.jammingState),
                            index_s(u[2], self.mon_rf_antstat),
@@ -5218,7 +5219,8 @@ Deprecated in protVer 32.00
                 if gps.VERB_DECODE <= self.verbosity:
                     # fixme: decode blockId
                     s += ("       blockId (%s) antStatus (%s) "
-                          "antPower (%s) agc %.1f%%\n" %
+                          "antPower (%s)\n"
+                          "       agc %.1f%%\n" %
                           (index_s(u[0], self.mon_rf_blockId),
                            index_s(u[1], self.mon_rf_antstat),
                            index_s(u[2], self.mon_rf_antpwr),
@@ -8109,20 +8111,38 @@ Removed in protVer 32 (u-blox 9 and 10)
 
             a_len = 4 + (4 * u[3])
             if a_len != m_len:
-                s = "  Invalid length %u a/b" % (m_len, a_len)
-            else:
-                for i in range(0, u[3]):
-                    u1 = struct.unpack_from('<L', buf, 4 + (i * 4))
-                    s += "   jamStateCentFreq x%08x\n" % u1
-                    if gps.VERB_DECODE <= self.verbosity:
-                        s += ('    centFreq (%u) jammed (%s)\n' %
-                              (u1[0] & 0x7fffff,
-                               index_s((u1[0] >> 24) & 1, self.yes_no)))
+                s += "  Invalid length %u a/b %u" % (m_len, a_len)
+                return s
+
+            for i in range(0, u[3]):
+                u1 = struct.unpack_from('<L', buf, 4 + (i * 4))
+                s += "   jamStateCentFreq x%08x\n" % u1
+                if gps.VERB_DECODE <= self.verbosity:
+                    s += ('    centFreq (%u) jammed (%s)\n' %
+                          (u1[0] & 0x7fffff,
+                           index_s((u1[0] >> 24) & 1, self.yes_no)))
 
         else:
             s = "  Unknown version %u" % u[0]
 
         return s
+
+    sec_siglog_detectionType = {
+        0: "simulated signal",
+        1: "abnormal signal",
+        2: "INS/GNSS mismatch",
+        3: "abrupt changes in GNSS signal",
+        4: "jamming indicated",
+        5: "authentication failed",
+        6: "replayed signals",
+        }
+
+    sec_siglog_eventType = {
+        0: "indication started",
+        1: "indication stopped",
+        2: "indication triggered",
+        3: "indication timed-out",
+    }
 
     def sec_siglog(self, buf):
         """UBX-SEC_SIGLOG decode, Signal Security Log"""
@@ -8133,6 +8153,18 @@ Removed in protVer 32 (u-blox 9 and 10)
         # protVer 19, ZED-F9T, ver 0
         # protVer 34, F10-TIM, ver 1
         s = " version %u numEvents %u\n" % u
+        a_len = 8 + (8 * u[1])
+        if a_len != m_len:
+            s += "  Invalid length %u a/b %u" % (m_len, a_len)
+            return s
+
+        for i in range(0, u[1]):
+            u1 = struct.unpack_from('<LBB', buf, 8 + (i * 8))
+            s += "   timeElapsed %u detectionType %u eventType %u\n" % u1
+            if gps.VERB_DECODE <= self.verbosity:
+                s += ('    detectionType (%s) eventType (%s)\n' %
+                      (index_s(u1[1], self.sec_siglog_detectionType),
+                       index_s(u1[2], self.sec_siglog_eventType)))
         return s
 
     def sec_sign(self, buf):
