@@ -8124,6 +8124,17 @@ Removed in protVer 32 (u-blox 9 and 10)
 
         return s
 
+    def sec_siglog(self, buf):
+        """UBX-SEC_SIGLOG decode, Signal Security Log"""
+
+        m_len = len(buf)
+
+        u = struct.unpack_from('<BB', buf, 0)
+        # protVer 19, ZED-F9T, ver 0
+        # protVer 34, F10-TIM, ver 1
+        s = " version %u numEvents %u\n" % u
+        return s
+
     def sec_sign(self, buf):
         """UBX-SEC_SIGN decode, Signature of a previous message"""
 
@@ -8159,6 +8170,8 @@ changed in protVer 34
                       'name': 'UBX-SEC-UNIQID'},
                0x09: {'str': 'SIG', 'minlen': 4, 'dec': sec_sig,
                       'name': 'UBX-SEC-SIG'},
+               0x10: {'str': 'SIG', 'minlen': 8, 'dec': sec_siglog,
+                      'name': 'UBX-SEC-SIGLOG'},
                }
 
     # UBX-TIM-
@@ -10407,6 +10420,9 @@ present in 9-series and higher
         # UBX-SEC-SIG
         "SEC-SIG": {"command": send_poll, "opt": [0x27, 0x09],
                     "help": "poll UBX-SEC-SIG Signal security info"},
+        # UBX-SEC-SIGLOG
+        "SEC-SIGLOG": {"command": send_poll, "opt": [0x27, 0x10],
+                       "help": "poll UBX-SEC-SIGLOG Signal security log"},
         # UBX-SEC-UNIQID
         "SEC-UNIQID": {"command": send_poll, "opt": [0x27, 0x03],
                        "help": "poll UBX-SEC-UNIQID Unique chip ID"},
