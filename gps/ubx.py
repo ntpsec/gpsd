@@ -8047,6 +8047,83 @@ Removed in protVer 32 (u-blox 9 and 10)
 
     # UBX-SEC-SESSID in protVer 34 and up
 
+    yes_no = {
+        0: "No",
+        1: "Yes",
+        }
+
+    sec_sig_jamState = {
+        0: "Unk",
+        1: "None",
+        2: "Warning",
+        }
+
+    sec_sig_spfState1 = {
+        0: "Unk",
+        1: "None",
+        2: "Warning",
+        3: "Critical",
+        }
+
+    sec_sig_spfState2 = {
+        0: "Unk",
+        1: "None",
+        2: "Indicated",
+        3: "Affirmed",
+        }
+
+    def sec_sig(self, buf):
+        """UBX-SEC_SIG decode, Signal Security Info"""
+
+        m_len = len(buf)
+
+        # protVer 19, ZED-F9T, ver 1
+        # protVer 34, F10-TIM, ver 2
+        u = struct.unpack_from('<B', buf, 0)
+        if 1 == u[0]:
+            if 12 != m_len:
+                s = "  bad length %u != 12" % m_len
+            else:
+                u = struct.unpack_from('<BBHBBHB', buf, 0)
+                s = (" version %u reserved0 x%x %x jamFlags x%x reserved1 "
+                     "x%x %x\n"
+                     " spfFlags x%x \n" % u)
+                if gps.VERB_DECODE <= self.verbosity:
+                    s += (' jamDetEnabled (%s) jamState (%s)'
+                          ' spfDetEnabled (%s) spfState (%s)\n' %
+                          (index_s(u[3] & 1, self.yes_no),
+                           index_s((u[1] >> 1) & 3, self.sec_sig_jamState),
+                           index_s(u[6] & 1, self.yes_no),
+                           index_s((u[1] >> 5) & 3, self.sec_sig_spfState1)))
+        elif 2 == u[0]:
+            u = struct.unpack_from('<BBBB', buf, 0)
+            s = (" version %u sigSecFlags x%x reserved0 x%x "
+                 "jamNumCentFraqs %u\n" % u)
+            if gps.VERB_DECODE <= self.verbosity:
+                s += (' jamDetEnabled (%s) jamState (%s)'
+                      ' spfDetEnabled (%s) spfState (%s)\n' %
+                      (index_s(u[1] & 1, self.yes_no),
+                       index_s((u[1] >> 1) & 3, self.sec_sig_jamState),
+                       index_s((u[1] >> 4) & 1, self.yes_no),
+                       index_s((u[1] >> 5) & 3, self.sec_sig_spfState2)))
+
+            a_len = 4 + (4 * u[3])
+            if a_len != m_len:
+                s = "  Invalid length %u a/b" % (m_len, a_len)
+            else:
+                for i in range(0, u[3]):
+                    u1 = struct.unpack_from('<L', buf, 4 + (i * 4))
+                    s += "   jamStateCentFreq x%08x\n" % u1
+                    if gps.VERB_DECODE <= self.verbosity:
+                        s += ('    centFreq (%u) jammed (%s)\n' %
+                              (u1[0] & 0x7fffff,
+                               index_s((u1[0] >> 24) & 1, self.yes_no)))
+
+        else:
+            s = "  Unknown version %u" % u[0]
+
+        return s
+
     def sec_sign(self, buf):
         """UBX-SEC_SIGN decode, Signature of a previous message"""
 
@@ -8080,6 +8157,8 @@ changed in protVer 34
                       'name': 'UBX-SEC-SIGN'},
                0x03: {'str': 'UNIQID', 'minlen': 9, 'dec': sec_uniqid,
                       'name': 'UBX-SEC-UNIQID'},
+               0x09: {'str': 'SIG', 'minlen': 4, 'dec': sec_sig,
+                      'name': 'UBX-SEC-SIG'},
                }
 
     # UBX-TIM-
@@ -10324,9 +10403,14 @@ present in 9-series and higher
         # UBX-RXM-RAWX
         "RXM-RAWX": {"command": send_poll, "opt": [0x02, 0x15],
                      "help": "poll UBX-RXM-RAWX raw measurement data"},
-        # UBX-CFG-SBAS
+
+        # UBX-SEC-SIG
+        "SEC-SIG": {"command": send_poll, "opt": [0x27, 0x09],
+                    "help": "poll UBX-SEC-SIG Signal security info"},
+        # UBX-SEC-UNIQID
         "SEC-UNIQID": {"command": send_poll, "opt": [0x27, 0x03],
                        "help": "poll UBX-SEC-UNIQID Unique chip ID"},
+
         # UBX-TIM-SVIN
         "TIM-SVIN": {"command": send_poll, "opt": [0x0d, 0x04],
                      "help": "poll UBX-TIM-SVIN survey in data"},
