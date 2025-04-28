@@ -34,19 +34,18 @@ static void from_sixbit_untrimmed(const unsigned char *bitvec,
                                   unsigned int start,
                                   int count, char *to)
 {
-    const char sixchr[64] =
+    const char sixchr[65] =
         "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?";
     int i;
 
     // six-bit to ASCII
     for (i = 0; i < count; i++) {
-        char newchar;
-        newchar = sixchr[ubits(bitvec, start + 6 * i, 6U, false)];
+        char newchar = sixchr[ubits(bitvec, start + 6 * i, 6U, false)];
+
         if ('@' == newchar) {
             break;
-        } else {
-            to[i] = newchar;
         }
+        to[i] = newchar;
     }
     to[i] = '\0';
 }

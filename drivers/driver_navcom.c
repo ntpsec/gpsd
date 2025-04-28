@@ -977,17 +977,18 @@ static gps_mask_t handle_0xae(struct gps_device_t *session)
     uint8_t dcclass = getub(buf, 9);
     uint16_t rfcser = getleu16(buf, 10);
     uint8_t rfcclass = getub(buf, 12);
-    uint8_t softtm[17] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-    uint8_t bootstr[17] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-    uint8_t ioptm[17] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+    uint8_t softtm[17] = {0};
+    uint8_t bootstr[17] = {0};
+    uint8_t ioptm[17] = {0};
     uint8_t iopvermaj = (uint8_t) 0x00;
     uint8_t iopvermin = (uint8_t) 0x00;
     uint8_t picver = (uint8_t) 0x00;
     uint8_t slsbn = (uint8_t) 0x00;
     uint8_t iopsbn = (uint8_t) 0x00;
+
     memcpy(softtm, &buf[13], 16);
     memcpy(bootstr, &buf[29], 16);
-    if (msg_len == 0x0037) {    // No IOP
+    if (0x0037 == msg_len) {    // No IOP
         slsbn = getub(buf, 53);
     } else {                    // IOP Present
         iopvermaj = getub(buf, 53);
@@ -1064,7 +1065,7 @@ static gps_mask_t handle_0xae(struct gps_device_t *session)
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "Navcom: received packet type 0xae (Identification Block)\n");
-    if (msg_len == 0x0037) {
+    if (0x0037 == msg_len) {
         GPSD_LOG(LOG_INF, &session->context->errout, "Navcom: ID Data: "
                  "%s %s Ver. %u.%u.%u, DC S/N: %u.%u, RF S/N: %u.%u, "
                  "Build ID: %s, Boot software: %s\n",
