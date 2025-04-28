@@ -5704,6 +5704,25 @@ UBX-NAV-EELL, protVer 19.1 and up, ADR and HPS only
 
         return s
 
+    def nav_pl(self, buf):
+        """UBX-NAV-PL decode, Protection Level Info
+
+Partial decode."""
+
+        u = struct.unpack_from('<B', buf, 0)
+        if 1 != u[0]:
+            return "  Unknown version %u" % u[0]
+
+        u = struct.unpack_from('<BBbBBBBBBBBBBLLL', buf, 0)
+        s = ("  version %u tmirCoeff %u tmirExp %u  plPosValid %u "
+             "posPosFrame %u\n"
+             "  posVelValid %u posVelFrame %u\n"
+             "  plTimeValid %u plPosInvalidityReason %u plVel %u\n"
+             "  plVelInvalidityReason %u plTimeInvalidtyReason %u "
+             "reserved0 %u\n"
+             "  iTow  %u plPos1 %u plPos2 %u" % u)
+        return s
+
     def nav_posecef(self, buf):
         """UBX-NAV-POSECEF decode, Position Solution in ECEF"""
 
@@ -6467,6 +6486,8 @@ protVer 34 and up
                # Broadcom calls this BRM-PVT-EOE
                0x61: {'str': 'EOE', 'dec': nav_eoe, 'minlen': 4,
                       'name': 'UBX-NAV-EOE'},
+               0x62: {'str': 'PL', 'dec': nav_pl, 'minlen': 52,
+                      'name': 'UBX-NAV-PL'},
                0x63: {'str': 'TIMENAVIC', 'dec': nav_timenavic, 'minlen': 20,
                       'name': 'UBX-NAV-TIMENAVIC'},
                }
@@ -10395,6 +10416,8 @@ present in 9-series and higher
         # UBX-NAV-ORB
         "NAV-ORB": {"command": send_poll, "opt": [0x01, 0x34],
                     "help": "poll UBX-NAV-ORB GNSS Orbit Database Info"},
+        "NAV-PL": {"command": send_poll, "opt": [0x01, 0x62],
+                   "help": "poll UBX-NAV-PL Protection level info"},
         # UBX-NAV-POSECEF
         "NAV-POSECEF": {"command": send_poll, "opt": [0x01, 0x01],
                         "help": "poll UBX-NAV-POSECEF ECEF position"},
