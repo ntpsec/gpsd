@@ -8094,6 +8094,7 @@ Removed in protVer 32 (u-blox 9 and 10)
                0x31: {'str': 'EPH', 'minlen': 1, 'name': 'UBX-RXM-EPH'},
                0x32: {'str': 'RTCM', 'dec': rxm_rtcm, 'minlen': 8,
                       'name': 'UBX-RXM-RTCM'},
+               0x34: {'str': 'COR', 'minlen': 12, 'name': 'UBX-RXM-COR'},
                # Broadcom calls this BRM-ASC-SCLEEP
                0x41: {'str': 'PMREQ', 'dec': rxm_pmreq, 'minlen': 4,
                       'name': 'UBX-RXM-PMREQ'},
@@ -8103,9 +8104,26 @@ Removed in protVer 32 (u-blox 9 and 10)
                       'name': 'UBX-RXM-IMES'},
                # NEO-D9S, 24 to 528 bytes
                0x72: {'str': 'PMP', 'minlen': 24, 'name': 'UBX-RXM-PMP'},
+               0x74: {'str': 'TM', 'minlen': 8, 'name': 'UBX-RXM-TM'},
                }
 
     # UBX-SEC-
+
+    def sec_osnma(self, buf):
+        """UBX-SEC_OSNMA decode, Galileo Open Service Nav Msg Auth
+
+Partial decode."""
+
+        u = struct.unpack_from('<BBHBBHlLL', buf, 0)
+        if 3 != u[0]:
+            return "  Unknown version %u" % u[0]
+
+        s = (" version %u  nmaHeader x%x osnmaMonitoring x%x "
+             "timSyncReq x%x\n"
+             " reserved0 x%x %x timeSyncReqDiff %u reserved1 x%x "
+             "dsmAuthentication x%x\n" % u)
+
+        return s
 
     # UBX-SEC-SESSID in protVer 34 and up
 
@@ -8262,6 +8280,8 @@ changed in protVer 34
                       'name': 'UBX-SEC-UNIQID'},
                0x09: {'str': 'SIG', 'minlen': 4, 'dec': sec_sig,
                       'name': 'UBX-SEC-SIG'},
+               0x0a: {'str': 'OSNMA', 'minlen': 28, 'dec': sec_osnma,
+                      'name': 'UBX-SEC-OSNMA'},
                0x10: {'str': 'SIG', 'minlen': 8, 'dec': sec_siglog,
                       'name': 'UBX-SEC-SIGLOG'},
                }
@@ -10512,6 +10532,9 @@ present in 9-series and higher
         "RXM-RAWX": {"command": send_poll, "opt": [0x02, 0x15],
                      "help": "poll UBX-RXM-RAWX raw measurement data"},
 
+        # UBX-SEC-OSNMA
+        "SEC-OSNMA": {"command": send_poll, "opt": [0x27, 0x0a],
+                      "help": "poll UBX-SEC-OSNMA GAL OSNMA info"},
         # UBX-SEC-SIG
         "SEC-SIG": {"command": send_poll, "opt": [0x27, 0x09],
                     "help": "poll UBX-SEC-SIG Signal security info"},
