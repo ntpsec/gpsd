@@ -2768,8 +2768,8 @@ static gps_mask_t processINFO(int c UNUSED, char *field[],
                         "13,5,"       // PSTRB
                         "14,0,"       // INFO
                         "15,5,"       // GSV
-                        "16,5",       // VTG
-                        "17,5",       // ?
+                        "16,5,"       // VTG
+                        "17,5,"       // ?
                         "18,5");      // ?
     }
 
