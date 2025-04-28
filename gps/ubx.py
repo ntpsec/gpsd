@@ -4974,7 +4974,8 @@ Deprecated. and undocumented, on M10, use MON-H# and MON-RF
 
         if gps.VERB_DECODE <= self.verbosity:
             s += ("\n    aStatus (%s) aPower (%s) flags (%s) "
-                  "jammingState (%s) jamInd %u xtalAbsent (%s)" %
+                  "jammingState (%s)\n"
+                  "    jamInd %u xtalAbsent (%s)" %
                   (index_s(aStatus, self.mon_rf_antstat),
                    index_s(aPower, self.mon_hw_aPower),
                    index_s(flags, self.mon_hw_flags),
@@ -9833,7 +9834,8 @@ present in 9-series and higher
     MON_IO = [0x0a, 0x02]
     MON_MSGPP = [0x0a, 0x06]
     MON_RF = [0x0a, 0x38]
-    MON_RXBUF = [0x0a, 0x0a]
+    MON_RXBUF = [0x0a, 0x38]
+    MON_SYS = [0x0a, 0x39]
     MON_TXBUF = [0x0a, 0x08]
     MON_VER = [0x0a, 0x04]
     NAV_SVIN = [0x01, 0x3b]
@@ -9912,6 +9914,8 @@ present in 9-series and higher
         if 27 <= self.protver:
             cmds.extend([ubx.MON_COMMS,        # UBX-MON-COMMS
                          ubx.MON_HW3,          # UBX-MON-HW3
+                         ubx.MON_RF,           # UBX-MON-RF
+                         ubx.MON_SYS,          # UBX-MON-SYS
                          ])
         else:
             # deprecated in 27+
