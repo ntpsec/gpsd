@@ -4052,6 +4052,8 @@ Deprecated in protVer 32.00
         # Broadcom calls this BRM-STP-ME_SETTINGS
         0x3e: {'str': 'GNSS', 'dec': cfg_gnss, 'minlen': 4,
                'name': 'UBX-CFG-GNSS'},
+        # u-blox F9 TIM
+        0x41: {'str': 'OTP', 'minlen': 12, 'name': 'UBX-CFG-OTP'},
         # in u-blox 7+  Not in u-blox 6-
         0x47: {'str': 'LOGFILTER', 'dec': cfg_logfilter, 'minlen': 12,
                'name': 'UBX-CFG-LOGFILTER'},
@@ -6309,6 +6311,24 @@ Present in M8 Timing and FTS only
                    flag_s(u[15], self.nav_timels_valid)))
         return s
 
+    nav_timenavic_valid = {
+        1: "NavicTowValid",
+        2: "NavicWnoValid",
+        4: "leapSValid",
+        }
+
+    def nav_timenavic(self, buf):
+        """UBX-NAV-TIMENAVIC decode"""
+
+        u = struct.unpack_from('<LLlhbBL', buf, 0)
+        s = ("  iTOW %u NavicTow %u fNavicTow %d navicWn %d leapS %d\n"
+             "  Valid %#x tAcc %u" % u)
+
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   valid (%s)" %
+                  (flag_s(u[5], self.nav_timenavic_valid)))
+        return s
+
     nav_timeqzss_valid = {
         1: "qzssTowValid",
         2: "qzssWnoValid",
@@ -6446,6 +6466,8 @@ protVer 34 and up
                # Broadcom calls this BRM-PVT-EOE
                0x61: {'str': 'EOE', 'dec': nav_eoe, 'minlen': 4,
                       'name': 'UBX-NAV-EOE'},
+               0x63: {'str': 'TIMENAVIC', 'dec': nav_timenavic, 'minlen': 20,
+                      'name': 'UBX-NAV-TIMENAVIC'},
                }
 
     def nav2_clock(self, buf):
@@ -10370,6 +10392,9 @@ present in 9-series and higher
         # UBX-NAV-TIMELS
         "NAV-TIMELS": {"command": send_poll, "opt": [0x01, 0x26],
                        "help": "poll UBX-NAV-TIMELS Leap Second Info"},
+        # UBX-NAV-TIMENAVIC
+        "NAV-TIMENAVIC": {"command": send_poll, "opt": [0x01, 0x63],
+                          "help": "poll UBX-NAV-TIMENAVIC Time Solution"},
         # UBX-NAV-TIMEUTC
         "NAV-TIMEUTC": {"command": send_poll, "opt": [0x01, 0x21],
                         "help": "poll UBX-NAV-TIMEUTC UTC Time Solution"},
