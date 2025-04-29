@@ -382,6 +382,7 @@ class ubx(object):
         # CFG--
         ("CFG", 0x1FFFFFFF, "", 0, "",
          "get all CFG"),
+
         # CFG-ANA-
         ("CFG-ANA", 0x1023FFFF, "", 0, "",
          "get all CFG-ANA"),
@@ -389,6 +390,7 @@ class ubx(object):
          "Use AssistNow Autonomous"),
         ("CFG-ANA-ORBMAXERR", 0x30230002, "U2", 1, "m",
          "Maximum acceptable (modeled) orbit error"),
+
         # CFG-BATCH-
         ("CFG-BATCH", 0x1026FFFF, "", 0, "",
          "get all CFG-BATCH"),
@@ -408,6 +410,13 @@ class ubx(object):
          "Include additional PVT information in UBX-LOG-BATCH messages"),
         ("CFG-BATCH-EXTRAODO", 0x1026001b, "L", 1, "",
          "Include additional ODO information in UBX-LOG-BATCH messages"),
+
+        # CFG-BDS--
+        ("CFG-BDS", 0x1034FFFF, "", 0, "",
+         "get all CFG-BDS"),
+        ("CFG-BDS-USE_GEO_PRN", 0x10340014, "L", 1, "",
+         "Use BDS geostationary sats (PRN 1-5, 59-63)"),
+
         # CFG-GEOFENCE-
         ("CFG-GEOFENCE", 0x2024FFFF, "", 0, "",
          "get all CFG-GEOFENCE"),
@@ -451,6 +460,7 @@ class ubx(object):
          "Longitude of the fourth geofence circle center"),
         ("CFG-GEOFENCE-FENCE4_RAD", 0x40240053, "U4", 0.01, "m",
          "Radius of the fourth geofence circle"),
+
         # CFG-HW
         ("CFG-HW", 0x10a3FFFF, "", 0, "",
          "get all CFG-HW"),
@@ -488,6 +498,7 @@ class ubx(object):
         # M10S, protVer 34.00
         ("CFG-HW-RF_LNA_MODE", 0x20a30057, "E1", 1, "",
          "Mode for internal LNA"),
+
         # CFG-I2C
         ("CFG-I2C", 0x2051ffff, "", 0, "",
          "get all CFG-I2C"),
@@ -497,9 +508,11 @@ class ubx(object):
          "Flag to disable timeouting the interface after 1.5 s"),
         ("CFG-I2C-ENABLED", 0x10510003, "L", 1, "",
          "Flag to indicate if the I2C interface should be enabled"),
+
         # M10S, protVer 34.00
         ("CFG-I2C-REMAP", 0x10510004, "L", 1, "",
          "I2C remapping"),
+
         # CFG-I2CINPROT
         ("CFG-I2CINPROT", 0x1071ffff, "", 0, "",
          "get all CFG-I2CINPROT"),
@@ -511,6 +524,7 @@ class ubx(object):
          "Flag to indicate if RTCM2X should be an input on I2C"),
         ("CFG-I2CINPROT-RTCM3X", 0x10710004, "L", 1, "",
          "Flag to indicate if RTCM3X should be input on I2C"),
+
         # CFG-I2COUTPROT
         ("CFG-I2COUTPROT", 0x1072ffff, "", 0, "",
          "get all CFG-I2COUTPROT"),
@@ -520,6 +534,7 @@ class ubx(object):
          "Flag to indicate if NMEA should be an output on I2C"),
         ("CFG-I2COUTPROT-RTCM3X", 0x10720004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an output on I2C"),
+
         # CFG-INFMSG-
         ("CFG-INFMSG", 0x2092ffff, "", 0, "",
          "get all CFG-INFMSG"),
@@ -543,6 +558,7 @@ class ubx(object):
          "Information message enable flags for NMEA protocol on USB"),
         ("CFG-INFMSG-NMEA_SPI", 0x2092000a, "X1", 1, "",
          "Information message enable flags for NMEA protocol on SPI"),
+
         # CFG-ITFM-
         ("CFG-ITFM", 0x2041ffff, "", 0, "",
          "get all CFG-ITFM"),
@@ -556,6 +572,7 @@ class ubx(object):
          "Antenna setting"),
         ("CFG-ITFM-ENABLE_AUX", 0x10410013, "L", 1, "",
          "Set to true to scan auxiliary bands"),
+
         # CFG-LOGFILTER-
         ("CFG-LOGFILTER", 0x10deffff, "", 0, "",
          "get all CFG-LOGFILTER"),
@@ -573,6 +590,7 @@ class ubx(object):
          "Speed threshold"),
         ("CFG-LOGFILTER-POSITION_THRS", 0x40de0008, "U4", 1, "m",
          "Position threshold"),
+
         # CFG-MOT-
         ("CFG-MOT", 0x3025ffff, "", 0, "",
          "get all CFG-MOT"),
@@ -581,6 +599,7 @@ class ubx(object):
          "as stationary"),
         ("CFG-MOT-GNSSDIST_THRS", 0x3025003b, "U2", 1, "",
          "Distance above which GNSS-based stationary motion is exit"),
+
         # CFG-MSGOUT-NMEA
         ("CFG-MSGOUT", 0x2091ffff, "", 0, "",
          "get all CFG-MSGOUT"),
@@ -724,6 +743,7 @@ class ubx(object):
          "Output rate of the NMEA-GX-ZDA message on port UART2"),
         ("CFG-MSGOUT-NMEA_ID_ZDA_USB", 0x209100db, "U1", 1, "",
          "Output rate of the NMEA-GX-ZDA message on port USB"),
+
         # CFG-MSGOUT-PUBX
         ("CFG-MSGOUT-PUBX_ID_POLYP_I2C", 0x209100ec, "U1", 1, "",
          "Output rate of the NMEA-GX-PUBX00 message on port I2C"),
@@ -755,6 +775,7 @@ class ubx(object):
          "Output rate of the NMEA-GX-PUBX04 message on port UART2"),
         ("CFG-MSGOUT-PUBX_ID_POLYT_USB", 0x209100f9, "U1", 1, "",
          "Output rate of the NMEA-GX-PUBX04 message on port USB"),
+
         # CFG-MSGOUT-RTCM_3X
         ("CFG-MSGOUT-RTCM_3X_TYPE1005_I2C", 0x209102bd, "U1", 1, "",
          "Output rate of the RTCM-3X-TYPE1005 message on port I2C"),
@@ -884,6 +905,7 @@ class ubx(object):
         ("CFG-MSGOUT-RTCM_3X_TYPE4072_1_USB", 0x20910384, "U1", 1, "",
          "Output rate of the RTCM-3X-TYPE4072, sub-type 1 message "
          "on port USB"),
+
         # CFG-MSGOUT-UBX_LOG
         ("CFG-MSGOUT-UBX_LOG_INFO_I2C", 0x20910259, "U1", 1, "",
          "Output rate of the UBX-LOG-INFO message on port I2C"),
@@ -895,6 +917,7 @@ class ubx(object):
          "Output rate of the UBX-LOG-INFO message on port UART2"),
         ("CFG-MSGOUT-UBX_LOG_INFO_USB", 0x2091025c, "U1", 1, "",
          "Output rate of the UBX-LOG-INFO message on port USB"),
+
         # CFG-MSGOUT-UBX_MON
         ("CFG-MSGOUT-UBX_MON_COMMS_I2C", 0x2091034f, "U1", 1, "",
          "Output rate of the UBX-MON-COMMS message on port I2C"),
@@ -1036,6 +1059,7 @@ class ubx(object):
          "Output rate of the UBX-MON-TXBUF message on port UART2"),
         ("CFG-MSGOUT-UBX_MON_TXBUF_USB", 0x2091019e, "U1", 1, "",
          "Output rate of the UBX-MON-TXBUF message on port USB"),
+
         # CFG-MSGOUT-UBX_NAV
         ("CFG-MSGOUT-UBX_NAV_CLOCK_I2C", 0x20910065, "U1", 1, "",
          "Output rate of the UBX-NAV-CLOCK message on port I2C"),
@@ -1177,6 +1201,7 @@ class ubx(object):
          "Output rate of the UBX-NAV-SBAS message on port UART2"),
         ("CFG-MSGOUT-UBX_NAV_SBAS_USB", 0x2091006d, "U1", 1, "",
          "Output rate of the UBX-NAV-SBAS message on port USB"),
+
         # M10S, protVer 34.00
         ("CFG-MSGOUT-UBX_NAV_EELL_I2V", 0x20910313, "U1", 1, "",
          "Output rate of the UBX-NAV-EELL message on port I2C"),
@@ -1304,6 +1329,7 @@ class ubx(object):
          "Output rate of the UBX-NAV-VELNED message on port UART2"),
         ("CFG-MSGOUT-UBX_NAV_VELNED_USB", 0x20910045, "U1", 1, "",
          "Output rate of the UBX-NAV-VELNED message on port USB"),
+
         # CFG-MSGOUT-UBX_RXM
         ("CFG-MSGOUT-UBX_RXM_MEASX_I2C", 0x20910204, "U1", 1, "",
          "Output rate of the UBX-RXM-MEASX message on port I2C"),
@@ -1355,6 +1381,7 @@ class ubx(object):
          "Output rate of the UBX-RXM-SFRBX message on port UART2"),
         ("CFG-MSGOUT-UBX_RXM_SFRBX_USB", 0x20910234, "U1", 1, "",
          "Output rate of the UBX-RXM-SFRBX message on port USB"),
+
         # CFG-MSGOUT-UBX_TIM
         ("CFG-MSGOUT-UBX_TIM_SVIN_I2C", 0x20910097, "U1", 1, "",
          "Output rate of the UBX-TIM-SVIN message on port I2C"),
@@ -1396,11 +1423,35 @@ class ubx(object):
          "Output rate of the UBX-TIM-VRFY message on port UART2"),
         ("CFG-MSGOUT-UBX_TIM_VRFY_USB", 0x20910095, "U1", 1, "",
          "Output rate of the UBX-TIM-VRFY message on port USB"),
+
+        # CFG-NAV2-
+        ("CFG-NAV2", 0x1017ffff, "", 0, "",
+         "get all CFG-NAVHPG"),
+        ("CFG-NAV2-OUT_ENABLED", 0x10170001, "L", 1, "",
+         "Enable NAV2 output"),
+
         # CFG-NAVHPG-
         ("CFG-NAVHPG", 0x2014ffff, "", 0, "",
          "get all CFG-NAVHPG"),
         ("CFG-NAVHPG-DGNSSMODE", 0x20140011, "E1", 1, "",
          "Differential corrections mode"),
+
+        # CFG-NAVMASK-
+        ("CFG-NAVMASK", 0x1018ffff, "", 0, "",
+         "get all CFG-NAVMASK"),
+        ("CFG-NAVMASK-SV_MASK_GPS", 0x50180013, "X8", 1, "",
+         "Sat mask for GPS"),
+        ("CFG-NAVMASK-SV_MASK_GAL", 0x50180014, "X8", 1, "",
+         "Sat mask for Galileo"),
+        ("CFG-NAVMASK-SV_MASK_GLO", 0x50180015, "X8", 1, "",
+         "Sat mask for GLONASS"),
+        ("CFG-NAVMASK-SV_MASK_BDS", 0x50180016, "X8", 1, "",
+         "Sat mask for BeiDou"),
+        ("CFG-NAVMASK-SV_MASK_QZSS", 0x50180017, "X8", 1, "",
+         "Sat mask for QZSS"),
+        ("CFG-NAVMASK-SV_MASK_NAVIC", 0x50180018, "X8", 1, "",
+         "Sat mask for NaVIC"),
+
         # CFG-NAVSPG-
         ("CFG-NAVSPG", 0x2011ffff, "", 0, "",
          "get all CFG-NAVSPG"),
@@ -1469,6 +1520,9 @@ class ubx(object):
          "DGNSS timeout"),
         ("CFG-NAVSPG-SIGATTCOMP", 0x201100d6, "E1", 1, "",
          "Permanently attenuated signal compensation mode"),
+        ("CFG-NAVSPG-PL_ENA", 0x101100d7, "L", 1, "",
+         "Protection level, if enabled"),
+
         # CFG-NMEA-
         ("CFG-NMEA", 0x2093ffff, "", 0, "",
          "get all CFG-NMEA"),
@@ -1516,6 +1570,7 @@ class ubx(object):
          "Talker ID for GSV NMEA messages"),
         ("CFG-NMEA-BDSTALKERID", 0x30930033, "U2", 1, "",
          "BeiDou Talker ID"),
+
         # CFG-ODO-
         ("CFG-ODO", 0x1022ffff, "", 0, "",
          "get all CFG-ODO"),
@@ -1538,6 +1593,7 @@ class ubx(object):
          "Course over ground low-pass filter level (at speed < 8 m/s)"),
         ("CFG-ODO-VELLPGAIN", 0x20220031, "U1", 1, "",
          "Velocity low-pass filter level"),
+
         # CFG-PM-
         ("CFG-PM", 0x20d0ffff, "", 0, "",
          "get all CFG-PM, reciver power management"),
@@ -1573,6 +1629,7 @@ class ubx(object):
          "Inactivity time out on EXTINT pin if enabled"),
         ("CFG-PM-LIMITPEAKCURR", 0x10d00010, "L", 1, "",
          "Limit peak current"),
+
         # CFG-QZSS-
         ("CFG-QZSS", 0x3037ffff, "", 0, "s",
          "get all CFG-QZSS"),
@@ -1582,6 +1639,9 @@ class ubx(object):
          "Use QZSS SLAS data when it is in test mode"),
         ("CFG-QZSS-USE_SLAS_RAIM_UNCORR", 0x10370007, "L", 0.001, "",
          "Raim out measurements that are not corrected by QZSS SLAS"),
+        ("CFG-QZSS-SBAS_MAX_BASELINE", 0x30370008, "U2", 1, "km",
+         "Max baseline to closest GMS"),
+
         # CFG-RATE-
         ("CFG-RATE", 0x3021ffff, "", 0, "s",
          "get all CFG-RATE"),
@@ -1591,6 +1651,7 @@ class ubx(object):
          "Ratio of number of measurements to number of navigation solutions"),
         ("CFG-RATE-TIMEREF", 0x20210003, "E1", 1, "",
          "Time system to which measurements are aligned"),
+
         # CFG-RINV-
         ("CFG-RINV", 0x10c7ffff, "", 0, "",
          "get all CFG-RINV"),
@@ -1608,6 +1669,7 @@ class ubx(object):
          "Data bytes 17-24"),
         ("CFG-RINV-CHUNK3", 0x50c70007, "X8", 1, "",
          "Data bytes 25-30 (MSB)"),
+
         # CFG-RTCM-
         ("CFG-RTCM-DF003_IN", 0x30090008, "U2", 1, "",
          "RTCM DF003 reference station ID (input)"),
@@ -1615,6 +1677,7 @@ class ubx(object):
          "RTCM input filter configuration based on DF003 value"),
         ("CFG-RTCM-DF003_OUT", 0x30090001, "U2", 1, "",
          "RTCM DF003 reference station ID (output)"),
+
         # CFG-SBAS-
         ("CFG-SBAS", 0x1036ffff, "", 0, "",
          "get all CFG-SBAS"),
@@ -1628,6 +1691,11 @@ class ubx(object):
          "Use SBAS integrity information"),
         ("CFG-SBAS-PRNSCANMASK", 0x50360006, "X8", 1, "",
          "SBAS PRN search configuration"),
+        ("CFG-SBAS-USE_IONOONLY", 0x10360007, "L", 1, "",
+         "Use only SBAS ionosphere correctiopn"),
+        ("CFG-SBAS-ACCEPT_NOT_IN_PRNMASK", 0x30360008, "X2", 1, "",
+         "Accept SBAS not in PRN mask"),
+
         # CFG-SEC-
         # M10S, protVer 34.00
         ("CFG-SEC", 0x10f6ffff, "", 0, "",
@@ -1641,11 +1709,15 @@ class ubx(object):
 
         # CFG-SFCORE-
         # F9 DR products, protver 33.20
+        ("CFG-SFCORE", 0x1008ffff, "", 0, "",
+         "get all CFG-SFIMU"),
         ("CFG-SFCORE-USE_SF", 0x10080001, "L", 1, "",
          "Use ADR/UDR sensor fusion"),
 
         # CFG-SFIMU-
         # F9 DR products, protver 33.20
+        ("CFG-SFIMU", 0x1006ffff, "", 0, "",
+         "get all CFG-SFIMU"),
         ("CFG-SFIMU-GYRO_TC_UPDATE_PERIOD", 0x30060007, "U2", 1, "s",
          "Update period for gyro bias table"),
         ("CFG-SFIMU-GYRO_RMSTHOL", 0x30060008, "U1", 2e-8, "deg/s",
@@ -1680,7 +1752,8 @@ class ubx(object):
 
         # CFG-SFODO-
         # F9 DR products, protver 33.20
-
+        ("CFG-SFODO", 0x1007ffff, "", 0, "",
+         "get all CFG-SFODO"),
         ("CFG-SFODO-COMBINE_TICKS", 0x10070001, "L", 1, "",
          "Use combined rear WT instead of the single tick."),
         ("CFG-SFODO-USE_SPEED", 0x10070003, "L", 1, "",
@@ -1761,6 +1834,7 @@ class ubx(object):
          "GLONASS L1"),
         ("CFG-SIGNAL-GLO_L2_ENA", 0x1031001a, "L", 1, "",
          "GLONASS L2"),
+
         # CFG-SPI-
         ("CFG-SPI", 0x1064ffff, "", 0, "",
          "get all CFG-SPI"),
@@ -1775,6 +1849,7 @@ class ubx(object):
          "Flag to disable timeouting the interface after 1.5s"),
         ("CFG-SPI-ENABLED", 0x10640006, "L", 1, "",
          "Flag to indicate if the SPI interface should be enabled"),
+
         # CFG-SPIINPROT-
         ("CFG-SPIINPROT", 0x1079ffff, "", 0, "",
          "get all CFG-SPIINPROT"),
@@ -1786,6 +1861,7 @@ class ubx(object):
          "Flag to indicate if RTCM2X should be an input protocol on SPI"),
         ("CFG-SPIINPROT-RTCM3X", 0x10790004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an input protocol on SPI"),
+
         # CFG-SPIOUTPROT-
         ("CFG-SPIOUTPROT", 0x107affff, "", 0, "",
          "get all CFG-SPIOUTPROT"),
@@ -1795,6 +1871,7 @@ class ubx(object):
          "Flag to indicate if NMEA should be an output protocol on SPI"),
         ("CFG-SPIOUTPROT-RTCM3X", 0x107a0004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an output protocol on SPI"),
+
         # CFG-TMODE-
         ("CFG-TMODE", 0x2003ffff, "", 0, "",
          "get all CFG-TMODE"),
@@ -1941,6 +2018,7 @@ class ubx(object):
          "Parity mode that should be used on UART1"),
         ("CFG-UART1-ENABLED", 0x10520005, "L", 1, "",
          "Flag to indicate if the UART1 should be enabled"),
+
         # CFG-UART1INPROT
         ("CFG-UART1INPROT", 0x1073ffff, "", 0, "",
          "get all CFG-UART1INPROT"),
@@ -1952,6 +2030,7 @@ class ubx(object):
          "Flag to indicate if RTCM2X should be an input protocol on UART1"),
         ("CFG-UART1INPROT-RTCM3X", 0x10730004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an input protocol on UART1"),
+
         # CFG-UART1OUTPROT
         ("CFG-UART1OUTPROT", 0x1074ffff, "", 0, "",
          "get all CFG-UART1OUTPROT"),
@@ -1961,6 +2040,7 @@ class ubx(object):
          "Flag to indicate if NMEA should be an output protocol on UART1"),
         ("CFG-UART1OUTPROT-RTCM3X", 0x10740004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an output protocol on UART1"),
+
         # CFG-UART2-
         ("CFG-UART2", 0x4053FFFF, "", 0, "",
          "get all CFG-UART2"),
@@ -1976,7 +2056,8 @@ class ubx(object):
          "Flag to indicate if the UART2 should be enabled"),
         ("CFG-UART2-REMAP", 0x10530006, "L", "1", "",
          "UART2 Remapping"),
-        # CFG-UART1INPROT
+
+        # CFG-UART2INPROT
         ("CFG-UART2INPROT", 0x1075ffff, "", 0, "",
          "get all CFG-UART2INPROT"),
         ("CFG-UART2INPROT-UBX", 0x10750001, "L", 1, "",
@@ -1987,6 +2068,7 @@ class ubx(object):
          "Flag to indicate if RTCM2X should be an input protocol on UART2"),
         ("CFG-UART2INPROT-RTCM3X", 0x10750004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an input protocol on UART2"),
+
         # CFG-UART2OUTPROT
         ("CFG-UART2OUTPROT", 0x1076ffff, "", 0, "",
          "get all CFG-UART2OUTPROT"),
@@ -1996,6 +2078,7 @@ class ubx(object):
          "Flag to indicate if NMEA should be an output protocol on UART2"),
         ("CFG-UART2OUTPROT-RTCM3X", 0x10760004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an output protocol on UART2"),
+
         # CFG-USB-
         ("CFG-USB", 0x1065ffff, "", 0, "",
          "get all CFG-USB"),
@@ -2033,6 +2116,7 @@ class ubx(object):
          "Serial number string characters 16-23"),
         ("CFG-USB-SERIAL_NO_STR3", 0x50650018, "X8", 1, "",
          "Serial number string characters 24-31"),
+
         # CFG-USB-INPROT
         ("CFG-USBINPROT", 0x1077ffff, "", 0, "",
          "get all CFG-USBINPROT"),
@@ -2044,6 +2128,7 @@ class ubx(object):
          "Flag to indicate if RTCM2X should be an input protocol on USB"),
         ("CFG-USBINPROT-RTCM3X", 0x10770004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an input protocol on USB"),
+
         # CFG-USB-OUTPROT
         ("CFG-USBOUTPROT", 0x1078ffff, "", 0, "",
          "get all CFG-USBOUTPROT"),
