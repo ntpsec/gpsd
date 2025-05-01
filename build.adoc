@@ -575,20 +575,81 @@ If you are using a USB based GPS you will likely need the Prolific
 PL2303 driver.  You can find it here:
 http://www.prolific.com.tw/US/ShowProduct.aspx?p_id=229&pcid=41
 
-== Special Notes for Raspberry Pi Build and Installation
+=== Special Notes for Raspberry Pi Build and Installation
 
-*gpsd* will build, install and run on the Raspberry Pi (RasPi) and Pi 2
-using Debian Jessie. Other distributions based on Debian (raspbian, etc)
-will work fine as well. The *gpsd* package in Debian Wheezy is known to be
-flaky, be sure to update to a new version of gpsd from source.
+*gpsd* will build, install and run on any model of Raspberry Pi. If you
+have a Paspberry Pi 3, or newer, then it is recommended that you use the
+standard Raspberry Pi Foundation OS - Raspberry Pi OS (64-bit).
 
-=== Raspbian
+Models older than a Pi 3 should use a 32-bit OS.
 
-Before compiling gpsd from source, you will need to update your system
-as root.  Switching to the latest Raspbian distribution (Buster) is
-strongly recommended.
+==== Raspberry Pi OS (64-bit)
+
+Raspberry Pi OS currently is a port of Debian 12 (Bookworm) for the
+Raspberry Pi family of SBCs, supported and maintained by the Raspberry
+Pi Foundation. For a headless or lite installation of Raspberry Pi
+OS w/o a GUI, the Raspberry Pi OS Lite (64-bit) version is a perfect
+choice! At least for Raspberry Pi's that support 64-bit kernels. Other
+Debian based distributions for the Raspberry Pi should also work.
+Raspberry Pi OS & many other Debian based distributions are available
+and easy to install with the Raspberry Pi Imager Tool downloaded from
+this URL, https://www.raspberrypi.com/software/ . Newer Raspberry Pi (4
+& 5), with current firmware can also network boot & download/install an
+OS with only a network connection on the Raspberry Pi.
+
+The *gpsd* package in most versions of Debian are generally not up to  .
+date with current gpsd, missing the latest fixes, features & device    .
+support Be sure to install a new gpsd version from source              .
+
+Before compiling gpsd from source, you should update your system as
+root. Open a terminal windows & change to root to update the system &
+then reboot:
 
 ----
+$ sudo su -
+# apt update
+# apt dist-upgrade
+# shutdown -r now
+----
+
+Multiple versions of gpsd cannot co-exist on the same system. You need
+to ensure all previous versions of gpsd are removed from your system.
+Open a terminal window, change to root & use the following commands.
+Note that some of the commands may fail or complain if gpsd is not
+already installed - that is normal. The commands are required to be sure
+any previous gpsd installation is removed:
+
+----
+$ sudo su -
+# systemctl stop gpsd.socket
+# systemctl disable gpsd.socket
+# apt purge gpsd gpsd-clients gpsd-tools
+----
+
+Then install the required packages:
+
+----
+# apt install git scons libncurses-dev asciidoctor pps-tools 
+----
+
+Scons is the build system used by the gpsd project.
+Git is required to build from a git repository.
+libncurses-dev is required by some of the gpsd command line utilities.
+asciidocotor is for building the documentation & pps-tools is for
+PPS timing.
+
+The rest of the gpsd installation is the same as for any other source based
+install as already described above.
+
+===- Raspbian
+
+Before Raspberry Pi OS, there was Raspbian. Now considered obsolete.
+To compile gpsd from source, you will need to update your system as
+root. Switching to the latest Raspbian distribution (Buster) is strongly
+recommended.
+
+----
+$ sudo su -
 # apt-get update
 # apt-get dist-upgrade
 # rpi-update
