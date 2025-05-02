@@ -813,12 +813,12 @@ static gps_mask_t msg_nav_auto(struct gps_device_t *session,
     session->newdata.status = status;
 
     // We don't know if time, or leapseconds, is valid.
-    unpacked_date.tm_year = getleu16(buf, 4) - 1900;
-    unpacked_date.tm_mon = getub(buf, 6) - 1;
-    unpacked_date.tm_mday = getub(buf, 7);
-    unpacked_date.tm_hour = getub(buf, 8);
-    unpacked_date.tm_min = getub(buf, 9);
-    unpacked_date.tm_sec = getub(buf, 10);
+    unpacked_date.tm_year = year - 1900;
+    unpacked_date.tm_mon = month - 1;
+    unpacked_date.tm_mday = day;
+    unpacked_date.tm_hour = hour;
+    unpacked_date.tm_min = min;
+    unpacked_date.tm_sec = sec;
     session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
     // If rate highter than 1Hz, we have no idea of sub-seconds...
     session->newdata.time.tv_nsec = 0;
