@@ -1,5 +1,5 @@
 [Unit]
-Description=Run ntploggps every five minutes
+Description=Run gpslogntp every five minutes
 Requisite=gpsd.service
 
 [Timer]

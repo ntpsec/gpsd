@@ -1,10 +1,10 @@
-= ntploggps(1)
+= gpslogntp(1)
 :man version: @NTPSEC_VERSION@
 include::../docs/include-man.ad[]
 
-ntploggps - log gpsd data
+gpslogntp - log gpsd data
 
-include::../docs/includes/ntploggps-body.adoc[]
+include::../docs/includes/gpslogntp-body.adoc[]
 
 == EXIT STATUS
 

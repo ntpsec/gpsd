@@ -1,4 +1,4 @@
-= ntploggps - log gpsd data for use by ntpviz
+= gpslogntp - log gpsd data for use by ntpviz
 include::include-html.ad[]
 
 [cols="10%,90%",frame="none",grid="none",style="verse"]
@@ -24,7 +24,7 @@ include::includes/manual.adoc[]
 * link:#_exit_status[EXIT STATUS]
 * link:#_authors[AUTHORS]
 
-include::includes/ntploggps-body.adoc[]
+include::includes/gpslogntp-body.adoc[]
 
 '''''
 

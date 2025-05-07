@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 
 # Copyright the NTPsec project contributors
+# Copyright the GPSD project
 #
 # SPDX-License-Identifier: BSD-2-Clause
 
 """\
-usage: ntploggps [-h] [-o] [-l LOGFILE] [-v] [-V]
+usage: gpslogntp [-h] [-o] [-l LOGFILE] [-v] [-V]
 
 gpsd log file generator
 
@@ -35,7 +36,7 @@ try:
     import argparse
 except ImportError:
     sys.stderr.write("""
-ntploggps: can't find the Python argparse module
+gpslogntp: can't find the Python argparse module
          If your Python version is < 2.7, then manual installation is needed:
          # pip install argparse
 """)
@@ -44,7 +45,7 @@ ntploggps: can't find the Python argparse module
 try:
     import gps
 except ImportError as e:
-    sys.stderr.write("ntploggps: can't find Python GPSD library.\n")
+    sys.stderr.write("gpslogntp: can't find Python GPSD library.\n")
     sys.stderr.write("%s\n" % e)
     sys.exit(1)
 
@@ -115,12 +116,12 @@ parser.add_argument('-v', '--verbose',
 
 parser.add_argument('-V', '--version',
                     action="version",
-                    version="ntploggps ntpsec-@NTPSEC_VERSION_EXTENDED@")
+                    version="gpslogntp ntpsec-@NTPSEC_VERSION_EXTENDED@")
 
 args = parser.parse_args()
 
 if args.verbose:
-    print("ntploggps: arguments:")
+    print("gpslogntp: arguments:")
     print(args)
 
 if args.logfile:
@@ -128,12 +129,12 @@ if args.logfile:
     try:
         out = open(args.logfile[0], mode='a')
     except io.UnsupportedOperation as e:
-        sys.stderr.write("ntploggps: can't open logfile %s\n" % args.logfile)
+        sys.stderr.write("gpslogntp: can't open logfile %s\n" % args.logfile)
         sys.stderr.write("%s\n" % e)
         sys.exit(1)
 
     if args.verbose:
-        print("ntploggps: opened log file %s" % args.logfile[0])
+        print("gpslogntp: opened log file %s" % args.logfile[0])
 
 else:
     # log to stdout
@@ -152,7 +153,7 @@ class GpsPoller(threading.Thread):
         try:
             self.gpsd = gps.gps(mode=gps.WATCH_ENABLE)
         except BaseException as e:
-            sys.stderr.write("ntploggps: Can't connect to gpsd, %s\n"
+            sys.stderr.write("gpslogntp: Can't connect to gpsd, %s\n"
                              "         Is gpsd running?\n" % e)
             sys.exit(1)
         self.running = True
@@ -205,7 +206,7 @@ class GpsPoller(threading.Thread):
 if __name__ == '__main__':
     # this is the main thread
     if args.verbose:
-        print("ntploggps: creating poll thread")
+        print("gpslogntp: creating poll thread")
 
     gpsp = GpsPoller()    # create the thread
     try:
@@ -262,4 +263,4 @@ if __name__ == '__main__':
     gpsp.join()
 
     if args.verbose:
-        print("ntploggps: Done -- Exiting.")
+        print("gpslogntp: Done -- Exiting.")
