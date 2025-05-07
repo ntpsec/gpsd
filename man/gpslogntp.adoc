@@ -1,31 +1,118 @@
-= gpslogntp - log gpsd data for use by ntpviz
-include::include-html.ad[]
+= gpslogntp(1)
+:author: Gary E. Miller
+:date: 06 May 2025
+:email: gem@rellim.com.
+:keywords: gps, gpsd, gpslogntp, ntp
+:manmanual: GPSD Documentation
+:mansource: GPSD, Version {gpsdver}
+:robots: index,follow
+:sectlinks:
+:toc: macro
+:type: manpage
 
-[cols="10%,90%",frame="none",grid="none",style="verse"]
-|==============================
-|image:pic/dogsnake.gif[]|
-{millshome}pictures.html[from 'Alice's Adventures in Wonderland', Lewis Carroll]
+include::../www/inc-menu.adoc[]
 
-S is for snakeoil.
+== NAME
 
-|==============================
+gpslogntp - log gpsd data for ntpviz
 
-== Manual Pages
+== SYNOPSIS
+[verse]
+gpslogntp [-h] [-l LOGFILE] [-o] [-w WAIT] [-v] [-V]
 
-include::includes/manual.adoc[]
+  -h, --help            show this help message and exit
+  -l LOGFILE, --logfile LOGFILE
+                        append log data to LOGFILE instead of stdout
+  -o, --once            log one line, then exit
+  -w WAIT, --wait WAIT  wait WAIT seconds between log lines, default 5
+  -v, --verbose         be verbose
+  -V, --version         show program's version number and exit
 
-'''''
-== Table of Contents
+== DESCRIPTION
 
-* link:#_synopsis[SYNOPSIS]
-* link:#_description[DESCRIPTION]
-* link:#_options[OPTIONS]
-* link:#_usage[USAGE]
-* link:#_exit_status[EXIT STATUS]
-* link:#_authors[AUTHORS]
+gpslogntp connects to a local gpsd daemon and logs the number of satellites
+in use and the Time Dilution of Precision (TDOP).  gpslogntp can run as
+any user, no special privileges are required.  This log is intended to
+be used by *ntpviz*.
 
-include::includes/gpslogntp-body.adoc[]
+The default is to write the data to stdout about once every 5 seconds.
+The log file looks like:
 
-'''''
+-----------------------------------------------------
+# Time       Device     TDOP     nSat
+1483668619.0 /dev/ttyS0 0.820000 7
+1483668624.0 /dev/ttyS0 0.820000 7
+1483668629.0 /dev/ttyS0 0.820000 7
+-----------------------------------------------------
 
-include::includes/footer.adoc[]
++Time+ is the POSIX time of when the log line is written.
+
++Device+ is the GPS device the data came from.
+
++TDOP+ is the Time Dilution of Precision as reported by the GPS.  Some
+GPS always output a static TDOP.
+
++nSat+ is the number of satellites in use.
+
+Formerly known as *ntploggps* and formerly part of NTPsec.
+
+Note: Many GNSS receivers always report TDOP as "1.0".
+
+== OPTIONS
+
++-h, --help+::
+  Displays usage information and exits.
+
++-l LOGFILE, --logfile LOGFILE+::
+  Append log data to LOGFILE instead of stdout
+
++-o, --once+::
+  Log one line, then exit.
+
++-v, --verbose+::
+  Be verbose
+
++-w WAIT, --wait WAIT+::
+  Wait WAIT seconds after each log line.  The default is 5 seconds.  This
+  is just the minimum wait time.  gpsd may be reporting data at a much
+  slower interval.
+
++-V, --version+::
+ show program's version number and exit
+
+== USAGE
+
++gpslogntp+::
+  This the simplest use of this program. It can be used to check the
+  status of the local gpsd daemon.
+
++gpslogntp -l /var/log/ntpstats/gpsd -w 60+ &::
+  This will continuously log the gpsd data in the background to the file
+  /var/log/ntpstats/gpsd.  Only log every 60 seconds.
+
+== AUTHORS
+
+Gary E. Miller
+
+== EXIT STATUS
+
+One of the following exit values will be returned:
+
+0 (EXIT_SUCCESS)::
+  Successful program execution.
+1 (EXIT_FAILURE)::
+  The operation failed or the command syntax was not valid.
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1), *ntpviz*(1), *ntpd*(8).
+
+== RESOURCES
+
+*Project web site:* {gpsdweb}
+
+== COPYING
+
+This file is Copyright by the GPSD project +
+This file is Copyright by the NTPSec project +
+SPDX-License-Identifier: BSD-2-clause

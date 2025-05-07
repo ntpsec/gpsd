@@ -173,6 +173,7 @@ all_manpages = {
     "man/gpsd_json.5": "man/gpsd_json.adoc",
     "man/gpsfake.1": "man/gpsfake.adoc",
     "man/gpsinit.8": "man/gpsinit.adoc",
+    "man/gpslogntp.8": "man/gpslogntp.adoc",
     "man/gpsmon.1": "man/gpsmon.adoc",
     "man/gpspipe.1": "man/gpspipe.adoc",
     "man/gpsplot.1": "man/gpsplot.adoc",
