@@ -1,5 +1,5 @@
 = Building GPSD from source
-:date: 23 June2024
+:date: 08 May 2025
 :description: Steps for Building GPSD from source
 :docinfodir: www
 :keywords: GPSD, GPS, installation
@@ -589,17 +589,18 @@ Raspberry Pi OS currently is a port of Debian 12 (Bookworm) for the
 Raspberry Pi family of SBCs, supported and maintained by the Raspberry
 Pi Foundation. For a headless or lite installation of Raspberry Pi
 OS w/o a GUI, the Raspberry Pi OS Lite (64-bit) version is a perfect
-choice! At least for Raspberry Pi's that support 64-bit kernels. Other
-Debian based distributions for the Raspberry Pi should also work.
-Raspberry Pi OS & many other Debian based distributions are available
-and easy to install with the Raspberry Pi Imager Tool downloaded from
-this URL, https://www.raspberrypi.com/software/ . Newer Raspberry Pi (4
-& 5), with current firmware can also network boot & download/install an
-OS with only a network connection on the Raspberry Pi.
+choice!  There is also Raspberry Pi OS Lite (32-bit) for older devices
+or those that want to run a 32-bit OS on newer devices.  Other Debian
+based distributions for the Raspberry Pi should also work.  Raspberry
+Pi OS & many other Debian based distributions are available and easy
+to install with the Raspberry Pi Imager Tool downloaded from this URL,
+https://www.raspberrypi.com/software/ . Newer Raspberry Pi (4 & 5), with
+current firmware can also network boot & download/install an OS with
+only a network connection on the Raspberry Pi.
 
 The *gpsd* package in most versions of Debian are generally not up to  .
 date with current gpsd, missing the latest fixes, features & device    .
-support Be sure to install a new gpsd version from source              .
+support. Be sure to install a new gpsd version from source.              .
 
 Before compiling gpsd from source, you should update your system as
 root. Open a terminal windows & change to root to update the system &
@@ -635,7 +636,7 @@ Then install the required packages:
 Scons is the build system used by the gpsd project.
 Git is required to build from a git repository.
 libncurses-dev is required by some of the gpsd command line utilities.
-asciidocotor is for building the documentation & pps-tools is for
+asciidocotor is for building the documentation, and pps-tools is for
 PPS timing.
 
 The rest of the gpsd installation is the same as for any other source based
