@@ -232,10 +232,18 @@ def unpack_u8(word, pos):
     return u[0]
 
 
+def pack_s16(number):
+    """Convert a number to 2 bytes (little endian signed)"""
+    return struct.pack('<h', number)
+
 def pack_u16(number):
     """Convert a number to 2 bytes (little endian unsigned)"""
-    return struct.pack('<H', number)
+    return struct.pack('<h', number)
 
+
+def pack_s32(number):
+    """Convert a number to 4 bytes (little endian signed)"""
+    return struct.pack('<i', number)
 
 def pack_u32(number):
     """Convert a number to 4 bytes (little endian unsigned)"""
@@ -9774,13 +9782,13 @@ pulseLenRadio, pulseLenRadioLock, userConfigDelay, flags
             m_data[1] = 1  # version
             m_data[2] = 0  # reserved
             m_data[3] = 0  # reserved
-            m_data[4:6] = pack_u16(antCableDelay)
-            m_data[6:8] = pack_u16(rfGroupDelay)
+            m_data[4:6] = pack_s16(antCableDelay)
+            m_data[6:8] = pack_s16(rfGroupDelay)
             m_data[8:12] = pack_u32(freqPeriod)
             m_data[12:16] = pack_u32(freqPeriodLock)
             m_data[16:20] = pack_u32(pulseLenRatio)
             m_data[20:24] = pack_u32(pulseLenRatioLock)
-            m_data[24:28] = pack_u32(userConfigDelay)
+            m_data[24:28] = pack_s32(userConfigDelay)
             m_data[28:32] = pack_u32(flags)
 
         self.gps_send(6, 0x31, m_data)
