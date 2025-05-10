@@ -12,13 +12,17 @@
   Add minimal support for buggy Inertial Sense GNSS messages.
   Try to work better as non-root using non-standard "capabilities".
   Add SUBSYSTEM=gnss rule to gpsd.rules
-  Moved ntploggps from NTPSec to GPSD and renamed gpslogntp.
+  Moved ntploggps from NTPSec to GPSD and renamed to gpslogntp.
   Fix many build, Coverity, and Codacy warnings.
   Improved Python interface for the lexer.
   Add support for new BeiDou PRNs and subframes.
   Officially deprecate gpsmon.
   Improve support for NMEA 4.11 (a stealthy moving target).
   Remove Oceanserver IMU support.  Never worked well.
+  Always with  build ubx, NMEA 103, rtcm104v2 and rtcm104v3 support.
+  Add support for jamming detection.
+  Add Go client example.
+  Add support for RTCM3.2
 
   Note: The new "chunk" code led to a short lived bug that led to
         CVE-2023-43628, a buffer overrun.  That bug never appeared in
