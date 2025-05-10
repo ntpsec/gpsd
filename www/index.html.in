@@ -336,6 +336,10 @@ device. Optionally, it can packetize the data.</dd>
 <dt><a href="gpsfake.html">gpsfake.1</a></dt>
 <dd>The <code>gpsfake</code> test harness simulating a GPS.</dd>
 
+<dt><a href="gpslogntp.html">gpslogntp.1</a></dt>
+<dd>A program to log "Sats Used" and "TDOP" for use with *ntpviz*.
+Fomerly part of *NTPSec* and named *ntploggps*.</dd>
+
 <dt><a href="gpsmon.html">gpsmon.1</a></dt>
 <dd>The <code>gpsmon</code> real-time packet monitor and diagnostic
 tool. (This replaces the <code>sirfmon</code> tool in older versions.)</dd>
