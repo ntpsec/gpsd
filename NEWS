@@ -1,5 +1,9 @@
                         GPSD project news
 
+3.26.1~dev: TBD
+  Increment libgps version
+  Update Debian Trixie in build.adoc
+
 3.26: 11 May 2025
   Handle NTRIPv2 that comes in "chunks".
   Add many UBX decodes.  Mostly in ubxtool, some in gpsd.
