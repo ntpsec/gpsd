@@ -3395,7 +3395,8 @@ env.Alias('upload_release', upload_release)  # For '_' vs. '-'
 
 # How to tag a release
 tag_release = Utility('tag-release', [], [
-    'git tag -s -m "Tagged for external release ${VERSION}" \
+    'git tag -u 1256D5A74A01B8145593C41EADA54A78FC147EEE \
+     -m "Tagged for external release ${VERSION}" \
      release-${VERSION}'])
 env.Alias('tag_release', tag_release)  # For '_' vs. '-'
 
