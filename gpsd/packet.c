@@ -398,8 +398,8 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
 
     /* Verify checksum is 2 hex digits.  Irnoge trailing stuff.
      * Magellan EC-10X has lower case hex in checksum. It is rare.  */
-    if (!isxdigit(end[1]) ||
-        !isxdigit(end[2])) {
+    if (!isxdigit((unsigned char) end[1]) ||
+        !isxdigit((unsigned char) end[2])) {
         return false;
     }
 
