@@ -500,7 +500,7 @@ static int json_internal_read_object(const char *cp,
             // coverity[unterminated_case]
         case post_val:
             // Ignore whitespace after either string or token values.
-            if (isspace(*cp)) {
+	  if (isspace((unsigned char) *cp)) {
                 while (*cp != '\0' && isspace((unsigned char) *cp)) {
                     ++cp;
                 }
