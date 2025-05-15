@@ -98,7 +98,7 @@ On Gentoo, a basic build only requires this package:
 === C compiler
 
 C99 conformance is required in the compiler. The C code depends on one
-C11 feature (supported by GCC, clang, and pretty much any C compiler
+C11 feature (supported by gcc, clang, and pretty much any C compiler
 that also speaks C++): anonymous unions.  We could eliminate these,
 but the cost would be source-level interface breakage if we have to
 move certain structure members in and out of unions.
@@ -107,10 +107,10 @@ Some portions of the code using shared-memory segments are improved by
 the C11 stdatomic.h features for lockless concurrency.  These are: the
 SHM export mode in shmexport.c, the code for writing clock corrections
 to NTP in ntpshmwrite.c, and the code for reading NTP corrections in
-ntpshmread.c. These features have been supported in GCC since 4.7 and
+ntpshmread.c. These features have been supported in gcc since 4.7 and
 clang since 3.1.
 
-GPSD is normally built and tested with GCC. Do not compile with a version
+GPSD is normally built and tested with gcc. Do not compile with a version
 older than 4.1.1; there are several known issues with older versions,
 including (a) non-standards-conformant floating-point generation that
 messes up regression testing, (b) a compiler bug affecting RTCM2 code
@@ -253,8 +253,8 @@ The development Fedora/RHEL packages are:
 
 You can build libQgpsmm if you have Qt (specifically QtCore and
 QtNetwork modules) version 4.5.3 or higher.  You will also need a C++
-compiler supported by Qt (tested on GCC 4.4.0/mingw on Windows and GCC
-4.1.2 on linux). Please refer to Qt's documentation at
+compiler supported by Qt (tested on gcc 4.4.0/mingw on Windows and gcc
+4.1.2 on Linux). Please refer to Qt's documentation at
 http://qt.nokia.com/doc/4.6/platform-specific.html for platform
 specific building documentation
 
@@ -506,7 +506,7 @@ all the stuff you need, like git, scons, python, etc.
 
 As a normal user, install homebrew, then install scons and asciidoctor.
 Installing scons pulls in python3. Brew will become root as needed, so
-starting asd a normal user is just security theater.
+starting as a normal user is just security theater.
 
 ----
 $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
@@ -689,12 +689,12 @@ install, as already described above.
 
 ==== Bookworm (12) and Trixie (13)
 
-These notes work on both Debian 12 (bookworm) and 13 (trixie). Bookworm
-is the current stable, and trixie is testing, that is, trixie has not
+These notes work on both Debian 12 (Bookworm) and 13 (Trixie). Bookworm
+is the current stable, and Trixie is testing, that is, Trixie has not
 yet been released as stable.
 
 The attached script has been tested on fresh netinst installations to an
-AMD64 virtual machine of bookworm from debian-12.6.0-amd64-netinst.iso,
+AMD64 virtual machine of Bookworm from debian-12.6.0-amd64-netinst.iso,
 and the weekly testing CD from Monday, 12 May, 2025.
 
 The script assumes nothing beyond a netinst installation and a few
@@ -729,11 +729,11 @@ Feel free to hack.
 #! /bin/bash
 
 # A script to pull in the prerequisites for gpsd, pull it in, compile
-# and exercise it. This script works on Debian trixie as of May 12,
-# 2025. As trixie has not been released, it is a moving target.
+# and exercise it. This script works on Debian Trixie as of May 12,
+# 2025. As Trixie has not been released, it is a moving target.
 
 # One thing this script does not do is check for and/or purge any
-# debian packages. We assume this is a freshly built system. Run
+# Debian packages. We assume this is a freshly built system. Run
 # "dpkg-query -l libgps* gpsd*" to see if there are any installed, and
 # "apt purge" them.
 
@@ -1434,10 +1434,10 @@ A suggested procedure is
 
   * Run "scons gps-makeregress".
 
-  * Merge the regression changes into the commit.  Mentiion in the
+  * Merge the regression changes into the commit.  Mention in the
     commit message that regression tests were regenerated.
 
-  * Review the diff for sanity, and if ok, push it.
+  * Review the diff for sanity, and if OK, push it.
 
 == Reverting to a clean state
 
@@ -1463,9 +1463,9 @@ Samuel Cuella reports:
 
 I use the official google toolchain from the Android NDK (Native
 Development Kit). You can also use the toolchain from code sourcery I
-guess. I cross-compile from a "regular" (with GNU userland) linux box.
+guess. I cross-compile from a "regular" (with GNU userland) Linux box.
 
-People who port software from linux to android tend to use either the
+People who port software from Linux to android tend to use either the
 NDK or code sourcery's.
 
 If you are going to include "official" guidelines, I would go for
