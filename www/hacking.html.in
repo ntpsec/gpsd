@@ -335,7 +335,7 @@ long-term maintenance burden.</p>
 <h2 id="pyversion">Python version issues and good style</h2>
 
 <p>Because Python is not used at runtime by the daemon, Python
-version-skew problem (such as the 2 to 3 transition) essentally
+version-skew problem (such as the 2 to 3 transition) essentially
 never have any effect on or reveal bugs in the C code.</p>
 
 <p>A significant part of the reason is that in GPSD-world the notion

@@ -758,7 +758,7 @@ working, SiRF-III support varies by firmware level.</p>
 
 <h2 id='toff'>Why does TOFF jump around so much?</h2>
 
-<p>Your GNSS receiver uses interative math to compute its position.  That
+<p>Your GNSS receiver uses iterative math to compute its position.  That
 needs then be encoded into variable length NMEA sentences.  Plus there are
 a variable number of NMEA sentences every fix epoch.  Then they all need
 to fit through a slow serial line.</p>
@@ -1032,7 +1032,7 @@ interface.  It exports a class that encapsulates a GPS session.</p>
 <h2 id='#duplicate_fixes'>Why does my application read multiple duplicates of the same fix?</h2>
 
 <p>A GNSS receiver takes some measurements. Later the receiver takes
-some time to calculate the postion fix. Later the receiver sends the
+some time to calculate the position fix. Later the receiver sends the
 results of the calculations (in unknown order) out a slow serial
 connection. There is no way to know what the receiver will send, or when
 it is done. Data just appears to *gpsd*. The *gpsd* has to accept this
@@ -1040,7 +1040,7 @@ data, validate it, process it, and pass it on to its clients as JSON
 message.</p>
 
 <p>The *gpsd* daemon could wait to get all the data for an epoch
-(measurement period) before outputing the JSON messages, but that would
+(measurement period) before outputting the JSON messages, but that would
 requite waiting for the next epoch data to appear, which would add a lot
 of latency. So, instead, gpsd passes in data it receives almost as soon
 as it receives it. Since many protocols (like NMEA) repeat the same data

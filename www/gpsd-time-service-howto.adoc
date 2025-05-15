@@ -339,7 +339,7 @@ $ scons -c
 $ scons timeservice=yes
 -----------------------------------------------------------------------------
 
-You may add GNSS reciver protocol (e.g. "ublox=yes" or "sirf=yes").
+You may add GNSS receiver protocol (e.g. "ublox=yes" or "sirf=yes").
 Besides the daemon, this also builds cgps and ntpshmmon.
 
 More complete, and distro specific, build instructions can be found in

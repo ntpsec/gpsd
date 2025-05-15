@@ -165,7 +165,7 @@ In the past, the GPSD project has not been very good about preserving
 stability of the binary structure layout for struct gpsdata_t between
 releases. There was a reason for this -- we were very focused
 on reducing memory footprint for SBCs and embedded devices, so we
-conditioned out various pieces of the strucure depending on what
+conditioned out various pieces of the structure depending on what
 features were or were not compiled in.
 
 We're not going to do this any more. It has been pointed out to us

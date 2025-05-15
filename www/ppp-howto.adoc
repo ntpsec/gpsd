@@ -419,7 +419,7 @@ data from the GPS:
 [PC] cp 199266051.1359 113915242.3018 122452018.0540 108761104.8641 105890706.6420 199724109.4819 117454519.9705 125481341.1019 199976227.8647 126966862.6124 121942821.9832 114690162.3442 140924407.3081 128351475.5908 129920370.5866 199424017.5063 126073289.2387 126782833.2288 120800324.7775
 ...................................
 
-After you have completed these steps, do not retart _gpsd_.  If you restart
+After you have completed these steps, do not restart _gpsd_.  If you restart
 _gpsd_ then you must restart the configuration from the beginning.
 
 == Acquire the Raw Data

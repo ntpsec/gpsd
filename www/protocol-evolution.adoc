@@ -470,7 +470,7 @@ event streams*.
 
 The big change in the second protocol version was watcher mode.  One
 of the possibilities this opens up is that you can put the report
-interpreter into an asychronous thread that magically updates a C
+interpreter into an asynchronous thread that magically updates a C
 struct for you every so often, without the rest of your program having
 to know or care how that is being done (except possibly by waiting a
 mutex to ensure it doesn't read a partially-updated state).

@@ -148,7 +148,7 @@ include::example1.c.txt[lines=24]
 ----
 
 Tell *gpsd* to send us reports using JSON. Later on *gpsd_read()* will
-decode those JSON messsages for us.  See the <<gpsd_json>> man page for
+decode those JSON messages for us.  See the <<gpsd_json>> man page for
 details on the JSON messages.
 
 Line 26::
@@ -286,7 +286,7 @@ include::example2.py.txt[]
 Line by line commentary.
 
 Start with a standard Python file header, and import the *gps*
-modile. No other imports are required.
+module. No other imports are required.
 
 Lines 1 to 7::
 [source%nowrap,python,numbered]

@@ -469,7 +469,7 @@ NMEA's $P-prefix extension mechanism.
 
 === For GPSD as a Time Service
 
-We have measured a typical intrisic time latency of about 70msec due to
+We have measured a typical intrinsic time latency of about 70msec due to
 on-GPS processing and the USB polling interval. While this is noticeably
 higher than NTP's expected accuracy of ±10msec, it should be adequate
 for most applications other than physics experiments.

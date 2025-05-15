@@ -1,5 +1,5 @@
 #
-# ## This file is obselete, and kept for historical records
+# ## This file is obsolete, and kept for historical records
 # ## only.  It documents alternate ways to use the (then) new
 # ## udev facility.
 #
@@ -32,8 +32,8 @@
 # Your own script:     SUBSYSTEM=="tty", SYSFS{idVendor}=="xxxx", SYSFS{idProduct}=="yyyy", RUN+="/usr/local/bin/myscript"
 # Static device name:  SUBSYSTEM=="tty", SYSFS{idVendor}=="xxxx", SYSFS{idProduct}=="yyyy", SYMLINK="gps-usb"
 # Path dependent name: SUBSYSTEM=="tty", SYSFS{idVendor}=="xxxx", SYSFS{idProduct}=="yyyy", SYMLINK="gps-$env{ID_PATH}"
-# In first case you do what ever you want, script received the information about context in environement variables
-# In second case you name is fixe (ex: /dev/gps-usb) this is working if your usb/serial ID(vendor:product) is unique
+# In first case you do what ever you want, script received the information about context in environment variables
+# In second case you name is fixed (ex: /dev/gps-usb) this is working if your usb/serial ID(vendor:product) is unique
 # In third case your device name depend on the port it is plugged in.
 
 
