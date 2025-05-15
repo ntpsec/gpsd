@@ -345,17 +345,19 @@ need to build with implicit_link=no.  If this happens, please report
 your platform, ideally along with a way of identifying it from Python,
 to the GPSD maintainers.
 
-After building, please run 'scons check' to test the correctness
-of the build.  It is not necessary to install first.  Python is
+After building, please run 'scons check' to test the correctness of
+the build.  It is not necessary to install first.  It should be run as
+root to avoid some error messages.  If you must run as non-root you can
+safely ignore the error messages about seteuid() and shm().  Python is
 required for regression tests. If any of the tests fail, you probably
 have a toolchain issue.  The most common such problem is failures of
 strict C99 conformance in floating-point libraries.
 
-Once you have verified that the code is working, "scons install"
-will install it in the system directories. "scons uninstall" will
-undo this. Note: because scons is a single-phase build system, this
-may recompile everything. If you want feature-configuration options,
-you need to specify them here.
+Once you have verified that the code is working, "scons install" will
+install it in the system directories.  In almost all cases this must be
+run as root. "scons uninstall" will undo this. Note: because scons is a
+single-phase build system, this may recompile everything. If you want
+feature-configuration options, you need to specify them here.
 
 To enable hotplugging of USB GPSes under Linux, you may do 'scons
 udev-install' to put the appropriate udev rules and wrapper files in
