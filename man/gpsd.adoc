@@ -1,5 +1,5 @@
 = gpsd(8)
-:date: 9 August 2024
+:date: 15 May 2025
 :keywords: gps, gpsd, gnss
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -39,7 +39,7 @@ For the lowest-numbered serial port:
 ----
 
 *gpsd* may be started as a normal user, or by using sudo, but some
-functionality will be lost.  Besst to start as root.  See
+functionality will be lost.  Best to start as root.  See
 *SECURITY AND PERMISSIONS ISSUES* below.
 
 Change the device number as appropriate if you need to use a different
