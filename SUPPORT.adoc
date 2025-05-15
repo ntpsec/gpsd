@@ -52,7 +52,7 @@ If yours is a build problem, then the entire, unredacted, build log
 will be asked for.
 
 If you have *gpsd* running, the entire, unredacted, output of
-*gpsdebuginfo* info wiil be asked for.  You can always find the lastest
+*gpsdebuginfo* info will be asked for.  You can always find the lastest
 copy of *gpsdebuginfo* info here: + https://gpsd.io/gpsdebuginfo
 
 Please be patient, it may take a day, or two, to reach the right persons.

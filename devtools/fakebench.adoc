@@ -2,7 +2,7 @@
 :date: 2025 March 5
 :description: Steps for benchmarking gps.packet
 :docinfodir: ../www
-:keywords: GPS, benchamrking, Lexer
+:keywords: GPS, benchmarking, Lexer
 :robots: index,follow
 :sectlinks:
 :toc: macro

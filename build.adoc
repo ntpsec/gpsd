@@ -227,7 +227,7 @@ does not apply to Gentoo derived systems.
 These development packages usually have a "-dev" suffix. Installing the
 development package usually installs the binary package for you.
 
-The development Debian/Ubuntu/Raspbian pacakages are:
+The development Debian/Ubuntu/Raspbian packages are:
 
 |==============================================================================
 |libncurses5-dev      | curses screen-painting library, used by cgps and gpsmon
@@ -396,7 +396,7 @@ be desired, but given to illustrate the behavior.
 The includedir=/usr/foo/include argument has no other effects; in
 particular it does add -I/usr/foo/include to compilation lines.
 
-=== Specifiying locations for prerequisites
+=== Specifying locations for prerequisites
 
 This section explains how to configure the build to find
 prerequisites.  It can be skipped by those who find that the build
@@ -737,7 +737,7 @@ Feel free to hack.
 # "dpkg-query -l libgps* gpsd*" to see if there are any installed, and
 # "apt purge" them.
 
-# The location of the buid directory. We will cd to this directory,
+# The location of the build directory. We will cd to this directory,
 # pull in the gpsd git repo, and then cd to the repo.
 devel=~/versioned
 
@@ -1571,7 +1571,7 @@ This means your gpsd binary was constructed in a way that does not
 support strict IEEE 754 Floating Point operation.  In this case, the
 regression tests ("scons check") will likely fail.
 
-A possible workaound for the i686 (32-bit) mode build with gcc is to
+A possible workaround for the i686 (32-bit) mode build with gcc is to
 set the CCFLAGS to force a compliant mode.  Like this:
 
     $ export CCFLAGS="-msse2 -mfpmath=sse"
