@@ -1391,10 +1391,10 @@ int main(int argc, char **argv)
                        "%s:%s", source.server, source.port);
     }
 
-    (void)fputs("gpsmon:INFO: gpsmon is deprecated.\n"
-                "gpsmon:INFO: gpsmon is not a full gpsd client.\n"
-                "gpsmon:INFO: gpsmon is a poorly maintained developer tool\n"
-                "gpsmon:INFO: Only developers should use gpsmon.\n",
+    (void)fputs("gpsmon:WARN: gpsmon is  deprecated and long obsolete.\n"
+                "gpsmon:WARN: gpsmon is not a full gpsd client.\n"
+                "gpsmon:WARN: gpsmon is a poorly maintained developer tool\n"
+                "gpsmon:WARN: Only developers should use gpsmon.\n",
                 stderr);
 
     activated = gpsd_activate(&session, O_PROBEONLY);
