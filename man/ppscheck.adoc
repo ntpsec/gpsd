@@ -98,7 +98,7 @@ contact the vendor for confirmation that your device does supply PPS.
 == RETURN VALUES
 
 0:: OK
-1:: if the device counld not be opened, or some other failure
+1:: if the device could not be opened, or some other failure
 
 == SEE ALSO
 

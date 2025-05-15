@@ -71,7 +71,7 @@ there is an option to exit gracefully after a given count of packets
 *-t*, *--tpv*::
   Only output TPV sentences. Implies --json.
 *-u HOST:PORT*, *--udp HOST:PORT*::
-  UDP destination for output sentenses (up to five destinations).
+  UDP destination for output sentences (up to five destinations).
 *-v*, *-V*, *--version*::
   Prints the program version, then exit. -v is deprecated December 2020.
 

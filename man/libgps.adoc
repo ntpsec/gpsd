@@ -218,7 +218,7 @@ library. *gps_open()* is replaced by the initialization of a gps session
 object: *session = gps.gps(...)*. The other calls are methods of that
 object, and have the same names as the corresponding C functions.
 
-In addtion to using *gps.read()* to read messages from *gpsd*, you can
+In addition to using *gps.read()* to read messages from *gpsd*, you can
 use the session object as an iterator, as in the code fragment given
 below. Python iterators implicitly call the function *gps.\_\_next()*
 which is just a shim over *gps.read()*. There is other advantage to

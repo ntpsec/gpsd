@@ -1695,7 +1695,7 @@ it is impossible to keep up.  Here is a table of some sigids known to
 
 Reading the raw JSON can be tedious.  You can pretty print, and
 colorize, your JSON with <<jq>> to make reading easier.  Using *jq*
-ito pretty pring a JSON file can be as simple as:
+to pretty print a JSON file can be as simple as:
 
 ----
 $ jq .  GPSD.json
