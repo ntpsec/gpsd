@@ -240,6 +240,11 @@ Newer Ubuntu (24 and up?) changed the ncurses version:
 |libncurses6-dev      | curses screen-painting library, used by cgps and gpsmon
 |==============================================================================
 
+Debian 12 uses:
+|==============================================================================
+|libncurses-dev       | curses screen-painting library, used by cgps and gpsmon
+|==============================================================================
+
 The development Fedora/RHEL packages are:
 
 |==============================================================================
@@ -679,6 +684,129 @@ The rest of the installation is just as for any other source based
 install, as already described above.
 
 === Other Debian derivatives (including stock)
+
+==== Bookworm (12) and Trixie (13)
+
+These notes work on both Debian 12 (bookworm) and 13 (trixie). Bookworm
+is the current stable, and trixie is testing, that is, trixie has not
+yet been released as stable.
+
+The attached script has been tested on fresh netinst installations to an
+AMD64 virtual machine of bookworm from debian-12.6.0-amd64-netinst.iso,
+and the weekly testing CD from Monday, 12 May, 2025.
+
+The script assumes nothing beyond a netinst installation and a few
+customizations I run so I can log in to the VM via SSH.
+
+The script takes a kitchen sink approach. It installs almost all
+dependencies for gpsd. There are notes in the script of what to take
+out if you don't want everything. It clones the gpsd repository, then
+compiles and checks it. It does not do either `scons install` or `scons
+udev-install`.
+
+If you only run `scons install` you should be able to run gpsd with
+something like
+
+----
+gpsd -n /dev/ttyACM0
+----
+
+Use your GPS receiver's device file, probably
+`/dev/ttySomethingOrOther`. After that, you are on your own.
+
+If you want udev and systemd glue, run `scons install && scons
+udev-install`. That will install gpsd, and the glue. You will have
+to reboot to make the systemd glue effective. The gpsd installation
+does not provide `/etc/default/gpsd`. Instead the script installs
+one for you. There is a prototype for one in the repository at
+`packaging/deb/etc_default_gpsd.in`.
+
+Feel free to hack.
+
+----
+#! /bin/bash
+
+# A script to pull in the prerequisites for gpsd, pull it in, compile
+# and exercise it. This script works on Debian trixie as of May 12,
+# 2025. As trixie has not been released, it is a moving target.
+
+# One thing this script does not do is check for and/or purge any
+# debian packages. We assume this is a freshly built system. Run
+# "dpkg-query -l libgps* gpsd*" to see if there are any installed, and
+# "apt purge" them.
+
+# The location of the buid directory. We will cd to this directory,
+# pull in the gpsd git repo, and then cd to the repo.
+devel=~/versioned
+
+apt update
+apt upgrade                     # expect to be asked for approval.
+
+# We take a kitchen sink approach to installing tools. If you want to
+# pare down the installation, you can remove packages from this
+# list.
+
+# Gtk3 is only required to run xgps and xgpsspeed. You do not need a
+# local X11 server installed, but it still pulls in a lot of packages.
+
+# Ubxtool and zerk may optionally use the pyserial module for direct
+# connection to the GNSS receiver.
+
+# gpsplot uses matplotlib, which is in the package python3-matplotlib.
+
+# pps-tools is for PPS timing.
+
+# The documentation, including the web site, requires ascidoctor.
+
+# manpages-dev is required for the man pages.
+
+# Not included here: libusb-1.0-0-dev, for some very old Garmin USB devices.
+
+# Everything else is required for a minimal build.
+
+apt install -y asciidoctor build-essential gcc git libgtk-3-dev libncurses-dev \
+   manpages-dev pkg-config pps-tools python-dev-is-python3 python-gi-dev \
+   python3-cairo-dev python3-gi-cairo python3-matplotlib python3-serial scons
+
+mkdir -p $devel
+
+# shellcheck disable=SC3044
+cd $devel || { printf "Cd to %s failed.\n" $devel; exit 1;}
+
+if [ ! -d gpsd ] ; then
+    git clone https://gitlab.com/gpsd/gpsd.git
+    cd gpsd || { printf "cd to %s failed.\n" $devel/gpsd; exit 1;}
+else
+    cd gpsd || { printf "cd to %s failed.\n" $devel/gpsd; exit 1;}
+    git pull
+fi
+
+PYTHONPATH="$PYTHONPATH:/usr/local/lib/python3.13/dist-packages/"
+
+scons -c && scons && scons check
+
+# && scons install && scons udev-install
+
+echo "\$PYTHONPATH" is "$PYTHONPATH"
+
+if [ -d /etc/default ] && [ ! -e /etc/default/gpsd ] ; then
+
+    cat > /etc/default/gpsd << DEFAULT
+# Devices gpsd should collect to at boot time.
+# They need to be read/writeable, either by user gpsd or the group dialout.
+DEVICES=""
+
+# Other options you want to pass to gpsd
+# GPSD_OPTIONS=""
+GPSD_OPTIONS="--listenany"
+
+# Automatically hot add/remove USB GPS devices via gpsdctl
+USBAUTO="true"
+DEFAULT
+fi
+
+printf "Enable listening on all interfaces in gpsd.socket if you want.\n";
+----
 
 ==== Bullseye (11)
 
