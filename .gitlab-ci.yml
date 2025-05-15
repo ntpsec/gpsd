@@ -38,7 +38,7 @@ alpine-3:
   stage: .pre
   script:
     - apk update
-    - apk add scons python3-dev libcap-dev ncurses-dev build-base bash linux-headers musl-dev ccache
+    - apk add scons libcap-dev ncurses-dev build-base bash linux-headers musl-dev ccache
     - .ci-build/build.sh
   extends: .when_sched
 
@@ -50,7 +50,7 @@ debian-experimental:gcc:
     PACKAGES: 'bc build-essential ccache
         libbluetooth-dev libdbus-1-dev libglib2.0-dev libncurses-dev
         libqt5network5t64 libusb-1.0-0-dev pps-tools
-        python3-all python-is-python3 python3-setuptools
+        python-is-python3 python3-setuptools
         qtbase5-dev scons'
     EXPERIMENTAL_PACKAGES: 'gcc g++'
   extends: .debian_build
@@ -65,7 +65,7 @@ debian-unstable:clang:
     PACKAGES: 'bc build-essential ccache clang
         libbluetooth-dev libdbus-1-dev libglib2.0-dev
         libncurses-dev libqt5network5t64 libusb-1.0-0-dev
-        pps-tools python3-all python-is-python3
+        pps-tools python-is-python3
         python3-setuptools qtbase5-dev scons'
   extends: .debian_build
 
@@ -80,7 +80,7 @@ debian-experimental:clang:
     PACKAGES: 'bc build-essential ccache
         libbluetooth-dev libdbus-1-dev libglib2.0-dev libncurses-dev
         libqt5network5t64 libusb-1.0-0-dev pps-tools
-        python3-all python-is-python3 python3-setuptools
+        python-is-python3 python3-setuptools
         qtbase5-dev scons'
     EXPERIMENTAL_PACKAGES: 'clang'
   extends: .debian_build
@@ -102,7 +102,7 @@ debian-unstable:minimal:
       squelch=no superstar2=no systemd=no timeservice=no tnt=no
       tripmate=no tsip=no usb=no xgps=no'
     NOCHECK: 'true'
-    PACKAGES: 'asciidoctor build-essential ccache python-is-python3 python3-all
+    PACKAGES: 'asciidoctor build-essential ccache python-is-python3
         python3-setuptools scons'
   extends: .debian_build
 
@@ -132,8 +132,8 @@ alma-9:
     - eatmydata -- dnf config-manager --set-enabled crb
     - eatmydata -- dnf -y install diffutils python3-scons bc ncurses-devel
       qt5-qtbase-devel pps-tools-devel libnsl2-devel bluez-libs-devel
-      platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial
-      python3-cairo python3-gobject-base ccache python3
+      dbus-devel libusbx-devel gtk3-devel python3-pyserial
+      python3-cairo python3-gobject-base ccache
     - eatmydata -- ln -sv scons-3 /usr/bin/scons&&ln -sv python3 /usr/bin/python
     - eatmydata -- .ci-build/build.sh
   extends: .when_push
@@ -203,7 +203,7 @@ scan-build:
     PACKAGES: 'bc build-essential clang clang-tools
         libbluetooth-dev libdbus-1-dev libglib2.0-dev
         libncurses-dev libqt5network5t64 libusb-1.0-0-dev
-        pps-tools python3-all python3-setuptools
+        pps-tools python3-setuptools
         qtbase5-dev scons'
   artifacts:
     paths:
@@ -224,7 +224,7 @@ coverity:
     PACKAGES: 'bc build-essential ca-certificates clang clang-tools curl git
         libbluetooth-dev libdbus-1-dev libglib2.0-dev
         libncurses-dev libqt5network5 libusb-1.0-0-dev
-        pps-tools python-is-python3 python3-all python3-setuptools
+        pps-tools python-is-python3 python3-setuptools
         qtbase5-dev scons'
   script:
     - apt update
@@ -268,7 +268,7 @@ coverity:
 #  when: manual
 #  script:
 #  - apt update && apt -y install build-essential debhelper
-#    po-debconf python3-all-dev python3-all-dbg libncurses-dev
+#    po-debconf libncurses-dev
 #    libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev
 #    libbluetooth-dev qtbase5-dev libqt5network5 lsb-release
 #    bc dpkg-dev scons chrpath dh-buildinfo pps-tools

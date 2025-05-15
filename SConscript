@@ -1008,7 +1008,6 @@ if not cleaning and not helping:
     # Ubuntu and OpenBSD isfinite() needs 600
     # 700 means X/Open 2008
     # glibc 2.10+ needs 700+ for strnlen()
-    # Python.h wants 600 or 700
 
     # removed 2 Jul 2019 to see if anything breaks...
     # confdefs.append('#if !defined(_XOPEN_SOURCE)')
