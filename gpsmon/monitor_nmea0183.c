@@ -294,15 +294,20 @@ static void nmea_update(void)
         assert(xmax > 0);
 
         // Add message type to sentence line??
-        if (NULL == strstr(sentences, fields[0])) {
-            size_t s_len = strnlen(sentences, sizeof(sentences));
+        if (NULL == strstr(sentences, fields[0]) &&
+            10 < xmax) {
+            /* limit to smaller of window width or sentence[]
+             * leave space in the window for line draw cahrs */
+            size_t max = (size_t)(xmax - 2) < sizeof(sentences) ? \
+                         (size_t)(xmax - 2) : sizeof(sentences);
+            size_t s_len = strnlen(sentences, max);
             char *s_end = sentences + s_len;
 
-            if ((int)(s_len + field0_len) < xmax - 2) {
+            if ((s_len + field0_len + 2) < max) {
+                // room for more
                 *s_end++ = ' ';
                 *s_end = '\0';
-                (void)strlcpy(s_end, fields[0],
-                              sizeof(sentences) - (s_len + 2));
+                (void)strlcpy(s_end, fields[0], field0_len + 2);
             } else {
                 // no room for more
                 *--s_end = '.';
