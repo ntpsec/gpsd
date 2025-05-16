@@ -805,7 +805,7 @@ static int sat_cmp(const void *p1, const void *p2)
 
 // This gets called once for each new GPS sentence.
 static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
-                             long long message_max)
+                             size_t message_max)
 {
     int newstate;
     char scr[80];
@@ -1249,7 +1249,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
 
             // codacy does not like strlen()
             // Pacify Coverity 498042, does not like size_t math
-            long long message_len = strnlen(message, message_max);
+            size_t message_len = strnlen(message, message_max);
 
             if (0 >=  message_len ||
                 0 >=  message_max) {
@@ -1262,7 +1262,9 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
                 // remove any trailing \r
                 message[message_len - 1] = '\0';
             }
-            if (OK != wprintw(messages, "\n%s", message)) {
+            /* Yes, after all the above, overlong message still slip through
+             * and crash ncurses. */
+            if (OK != wprintw(messages, "\n%.*s", (int)message_len, message)) {
                 if (OK != wprintw(messages, "\nERROR in wprintw()")) {
                     die(CGPS_ERROR, "cgps: ERROR in wprintw()\n");
                 }
