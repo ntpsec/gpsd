@@ -129,7 +129,7 @@ remove .sconsign.*dblite and retry your build.
 === Python
 
 You will need Python 2.x at minor version 6 or later or Python 3 at
-at minor version 3 or later.
+at minor version 3 or later.  The build system may already have it.
 
 While Python is required to build GPSD from source (the build uses
 some code generators in Python), it is not required to run the service
@@ -145,14 +145,8 @@ without a "python" command, invoking scons as:
   scons target_python=python3.7
 seems to help.
 
-You will need both basic Python and (if your package system makes the
-distinction) the Python development package used for building C
-extensions.  Usually these are called "python" and "python-dev". You
-will know you are missing the latter if your compilation fails
-because of a missing Python.h.
-
 The xgps and xgpsspeed clients will only be installed if these Python
-extensions are installed:
+packages are installed:
 
 |===========================================================================
 |python-gi          | Python bindings for gobject-introspection libraries
@@ -169,7 +163,7 @@ The ubxtool and zerk clients will only be usable in direct-serial mode
 if this Python extension is installed:
 
 |===========================================================================
-|pyserial           | Python Serial Port extension
+|pyserial           | Python Serial Port Extension
 |===========================================================================
 
 On Gentoo systems that package is named:
@@ -675,7 +669,7 @@ to ensure gpsd from a package is not on the system:
 Then install the required packages:
 
 ----
-# apt-get install scons libncurses5-dev python-dev pps-tools
+# apt-get install scons libncurses5-dev python3 pps-tools
 # apt-get install git-core
 ----
 
@@ -767,7 +761,7 @@ apt upgrade                     # expect to be asked for approval.
 # Everything else is required for a minimal build.
 
 apt install -y asciidoctor build-essential gcc git libgtk-3-dev libncurses-dev \
-   manpages-dev pkg-config pps-tools python-dev-is-python3 python-gi-dev \
+   manpages-dev pkg-config pps-tools python-is-python3 python-gi-dev \
    python3-cairo-dev python3-gi-cairo python3-matplotlib python3-serial scons
 
 mkdir -p $devel
@@ -832,7 +826,7 @@ Then update your system, and install the packages required by gpsd:
 # apt-get update
 # apt-get dist-upgrade
 # reboot
-# apt-get install scons libncurses-dev python-dev pps-tools
+# apt-get install scons libncurses-dev python3 pps-tools
 # apt-get install git-core
 # apt-get install build-essential manpages-dev pkg-config
 ----
@@ -928,7 +922,7 @@ Then update your system, and install the packages required by gpsd:
 # apt-get update
 # apt-get dist-upgrade
 # reboot
-# apt-get install scons libncurses-dev python-dev pps-tools
+# apt-get install scons libncurses-dev python2 pps-tools
 # apt-get install git-core
 # apt-get install build-essential manpages-dev pkg-config
 ----
@@ -999,7 +993,7 @@ to ensure gpsd from a package is not on the system:
 Then install the required packages:
 
 ----
-# apt-get install scons libncurses5-dev python-dev pps-tools
+# apt-get install scons libncurses5-dev python3 pps-tools
 # apt-get install git-core
 ----
 
@@ -1071,7 +1065,7 @@ apt-get -t wheezy-backports install scons
 and other tools:
 
 ----
-# apt-get install scons libncurses5-dev python-dev pps-tools
+# apt-get install scons libncurses5-dev python3 pps-tools
 # apt-get install git-core
 ----
 
@@ -1103,7 +1097,7 @@ apt install libncurses5-dev libtinfo-dev  pps-tools
 apt install gir1.2-gtk-3.0
 ----
 
-At some point Ubuntu renamed "python-gi" to "python3-gi".
+At some point "python-gi" was replaced by "python3-gi".
 
 If you wish to build the documentation, be warned it pulls in a
 lot of packages.  Build the documentation is a prerequisite to
@@ -1256,7 +1250,7 @@ source, and then build it.  Fedora recommends a reboot after using dnf.
 
 ----
 # dnf upgrade --refresh
-# dnf install -y gcc-c++ python3-devel scons asciidoctor bzip2
+# dnf install -y gcc-c++ scons asciidoctor bzip2
 # dnf install -y xz git dnf-plugins-core
 # git clone https://gitlab.com/gpsd/gpsd.git
 # cd gpsd
@@ -1293,7 +1287,7 @@ want to access the development source.
 # yum install \
    https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 # yum install scons
-# yum install python-devel
+# yum install python3
 # yum install ncurses-devel
 # yum install pps-tools-devel
 # git clone https://gitlab.com/gpsd/gpsd.git
