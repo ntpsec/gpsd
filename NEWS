@@ -1,8 +1,12 @@
                         GPSD project news
 
-3.26.1~dev: TBD
+3.26.1: 17 May 2025
   Increment libgps version
   Update Debian Trixie in build.adoc
+  Fix buffer overrun in cgps.
+  Make gpsmon deprecation slightly more obvious.
+  Fix some *BSD compiler warnings
+  Fix numerous typos.
 
 3.26: 11 May 2025
   Handle NTRIPv2 that comes in "chunks".
