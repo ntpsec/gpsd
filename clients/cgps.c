@@ -379,7 +379,9 @@ static void windowsetup(void)
         datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
 
         // do not block waiting for user input
-        (void)nodelay(datawin, true);
+        if (OK != nodelay(datawin, true)) {
+            die(0, "Fail creating datawin window.");
+        }
 
         if (NULL != messages) {
             (void)delwin(messages);
@@ -388,8 +390,10 @@ static void windowsetup(void)
         if (raw_flag) {
             messages = newwin(0, 0, window_ysize, 0);
 
-            (void)scrollok(messages, true);
-            (void)wsetscrreg(messages, 0, ysize - (window_ysize));
+            if (OK != scrollok(messages, true) ||
+                OK != wsetscrreg(messages, 0, ysize - (window_ysize))) {
+                die(0, "Fail creating message window.");
+            }
         }
 
         // Do the initial IMU field label setup.
@@ -1251,17 +1255,19 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
             // Pacify Coverity 498042, does not like size_t math
             size_t message_len = strnlen(message, message_max);
 
-            if (0 >=  message_len ||
-                0 >=  message_max) {
+            if (0 >= message_len ||
+                0 >= message_max) {
                 // Pacify Coverity 498042, an't happen
-                message[0] = '\0';
+                message_len = 0;
             } else if (message_len >= message_max) {
                 // huh?  Ensure NUL termianted
-                message[message_max - 1] = '\0';
+                message_len = message_max - 1;
             } else if ( '\r' == message[message_len - 1]) {
                 // remove any trailing \r
-                message[message_len - 1] = '\0';
+                message_len = message_len - 1;
             }
+            message[message_len] = '\0';
+
             /* Yes, after all the above, overlong message still slip through
              * and crash ncurses. */
             if (OK != wprintw(messages, "\n%.*s", (int)message_len, message)) {
