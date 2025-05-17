@@ -26,8 +26,6 @@ Clients:
 
 *gpscsv* [OPTIONS] [server[:port[:device]]]
 
-*gpsmon* [OPTIONS] [server[:port[:device]]]
-
 *gpspipe* [OPTIONS] [server[:port[:device]]]
 
 *gpsplot* [OPTIONS] [server[:port[:device]]]
@@ -87,7 +85,6 @@ more information on the clients.
 *gps*:: Overview of gpsd clients and helpers
 *gpscsv*:: dump the JSON output from gpsd as CSV
 *gpsdecode*:: decode GPS, RTCM or AIS streams into a readable format
-*gpsmon*:: real-time GPS packet monitor and control utility
 *gpspipe*:: tool to connect to gpsd and retrieve sentences
 *gpsplot*:: tool to dynamically dump plot data from gpsd
 *gpsprof*:: profile a GPS and gpsd, plotting latency information
@@ -189,7 +186,7 @@ The *gpsd* clients return simple success or failure codes:
 == SEE ALSO
 
 *gegps*(1), *gpsctl*(1), *gpsdebuginfo*(1), *gpsprof*(1), *gpsfake*(1),
-*gpscat*(1), *gpspipe*(1), *gpsmon*(1), *xgps*(1). *xgpsspeed*(1)
+*gpscat*(1), *gpspipe*(1), *xgps*(1). *xgpsspeed*(1)
 
 *libgps*(3), *libgpsmm*(3)
 
