@@ -50,7 +50,7 @@ var (
 
 /* main() -- the heart of the client
  *
- * Exits when conenction to the gpsd daemon is lost.
+ * Exits when connection to the gpsd daemon is lost.
  */
 func main() {
 	var gpsdDev string  // gpsd device to read
@@ -90,7 +90,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	// Who to conenct to
+	// Who to connect to
 	gpsdConn.Device = gpsdDev
 	gpsdConn.Host = gpsdHost
 	gpsdConn.Port = gpsdPort
@@ -102,7 +102,7 @@ func main() {
 	gpsdConn.Watch.Pps = true
 
 	/* Use a wait group to wait until the go routine connected to
-	 * the gpsd dameon exits.
+	 * the gpsd daemon exits.
 	 */
 	var wg sync.WaitGroup
 

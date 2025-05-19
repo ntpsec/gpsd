@@ -405,7 +405,7 @@ type Context struct {
 	Filename string
 	GLog     *GLogger // GPSD logging
 	Host     string   // hostname or IP
-	Port     string   // srouce port
+	Port     string   // source port
 	// tcp, tcp4, tcp6, udp, udp4, udp6, file, unix (socket)
 	Type  string
 	Watch WATCH // requested WATCH
@@ -442,7 +442,7 @@ func Open(src *Context) error {
 
 /* Reader() reads messages from gpsd, parses them, and sends them as
  * structures out the channel.
- * Returns only when conenction is broken, EOF, etc.
+ * Returns only when connection is broken, EOF, etc.
  * Eventually will know about files, read-only, etc.
  */
 func (src *Context) Reader(gpsDataChan chan interface{}) error {
@@ -619,7 +619,7 @@ func ConnGPSD(gpsdConn *Context, gpsDataChan chan interface{}) {
 	}
 
 	// Reader() read messages from gpsd, and sends them out the
-	// channel.  Returns only when conenction is broken.
+	// channel.  Returns only when connection is broken.
 	err = gpsdConn.Reader(gpsDataChan)
 	if nil != err {
 		gpsdConn.GLog.Log(LOG_ERROR,

@@ -2,7 +2,7 @@ This directory contains 2 files and 1 directory
 
 example3.go is a minimal gpsd client program written in Go.
 
-go.mod is a bookeeping file that the Go compiler uses.
+go.mod is a bookkeeping file that the Go compiler uses.
 It declares the two requirements for example3.go:
 
 1. The Golang compiler version
