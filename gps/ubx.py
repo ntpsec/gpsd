@@ -1640,7 +1640,7 @@ class ubx(object):
 
         # CFG-PM-
         ("CFG-PM", 0x20d0ffff, "", 0, "",
-         "get all CFG-PM, reciver power management"),
+         "get all CFG-PM, receiver power management"),
         ("CFG-PM-OPERATEMODE", 0x20d00001, "L", 1, "",
          "set PSMOO or PSMCT mode"),
         ("CFG-PM-POSUPDATEPERIOD", 0x40d00002, "U4", 1, "",
@@ -4335,8 +4335,8 @@ Deprecated in protVer 32.00
         0: 'user-defined/fixed angles',
         1: 'roll/pitch angles alignment is ongoing',
         2: 'roll/pitch/yaw angles alignment is ongoing',
-        3: 'coarse alingment used',
-        4: 'fine alingment used',
+        3: 'coarse alignment used',
+        4: 'fine alignment used',
     }
 
     def esf_alg(self, buf):
@@ -7029,7 +7029,7 @@ BeiDou Interface Control Document v1.0
                     SISAIoc = (page >> 253) & 0x03fffff
                     s += ("SISAIoe %u " %
                           (SISAIoc))
-                # else: page 60 is a mistery.
+                # else: page 60 is a mystery.
                 Rev = (page >> 32) & 0x03ff
                 s += "Rev %u" % Rev
                 return s

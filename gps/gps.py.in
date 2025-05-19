@@ -221,7 +221,7 @@ class gps_io(object):
         self.gpsd_port = gpsd_port
         # required by write for packet construction
         self.gpsd_device = gpsd_device
-        # used in read to print meaningfull error
+        # used in read to print meaningful error
         self.input_file_name = input_file_name
         self.verbosity_level = verbosity_level
         self.prog_name = os.path.basename(sys.argv[0])
@@ -254,7 +254,7 @@ class gps_io(object):
 
             # FIXME: test broken
             if write_requested:
-                # check for inconsistend arguments
+                # check for inconsistent arguments
                 if read_only:
                     sys.stderr.write('%s: read-only mode, '
                                      'can not send commands\n' %
@@ -763,7 +763,7 @@ Not intended to be used directly, use read() instead."""
         return self.response
 
     def next(self):
-        """Python 2 compatibile next().
+        """Python 2 compatible next().
 
 This is just a shim over read() to enable implicit iteration.
 Not intended to be used directly, use read() instead."""
@@ -829,7 +829,7 @@ if __name__ == '__main__':
         'arguments',
         metavar='[host [port]]',
         nargs='*',
-        help='[host [port]] Host and port to connec to gpsd on.'
+        help='[host [port]] Host and port to connect to gpsd on.'
     )
     options = parser.parse_args()
 

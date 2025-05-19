@@ -131,7 +131,7 @@ WGS84AV = 7.2921151467e-5         # rad/sec
 
 # GLONASS
 # ICD_GLONASS_5.1_(2008)_en.pdf
-# Table 3.2 Geodesic constants and parametres uniearth ellipsoid ПЗ 90.02
+# Table 3.2 Geodesic constants and parameters uniearth ellipsoid ПЗ 90.02
 # Earth rotation rate 7,292115x10-5 rad/s
 # Gravitational constant 398 600,4418×109 м3/s2
 # Gravitational constant of atmosphere( fMa ) 0.35×109 м3/s2
