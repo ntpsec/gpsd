@@ -22,7 +22,7 @@ static int on_signal(int unused, DBusMessage *msg, gpointer obj) {
     double time;
     int    mode;
     double time_uncertainty;
-    double lattitude;
+    double latitude;
     double longitude;
     double horizontal_uncertainty;
     double altitude;
@@ -52,7 +52,7 @@ static int on_signal(int unused, DBusMessage *msg, gpointer obj) {
             DBUS_TYPE_DOUBLE, &time,
             DBUS_TYPE_INT32,  &mode,
             DBUS_TYPE_DOUBLE, &time_uncertainty,
-            DBUS_TYPE_DOUBLE, &lattitude,
+            DBUS_TYPE_DOUBLE, &latitude,
             DBUS_TYPE_DOUBLE, &longitude,
             DBUS_TYPE_DOUBLE, &horizontal_uncertainty,
             DBUS_TYPE_DOUBLE, &altitude,
@@ -69,8 +69,8 @@ static int on_signal(int unused, DBusMessage *msg, gpointer obj) {
         dbus_error_free(&error);
     } else {
         fprintf(stderr,
-                "name: %s, time: %lf, longitude: %lf, lattitude: %lf\n",
-                name, time, longitude, lattitude);
+                "name: %s, time: %lf, longitude: %lf, latitude: %lf\n",
+                name, time, longitude, latitude);
     }
 
     return 0;
