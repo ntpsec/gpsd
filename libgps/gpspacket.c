@@ -71,7 +71,7 @@ void gpsd_vlog(const struct gpsd_errout_t *errout, const int errlevel,
         case LOG_RAW:
             err_str = "RAW: ";
             break;
-        case LOG_RAW1:       // 9, rediculous
+        case LOG_RAW1:       // 9, ridiculous
             err_str = "RAW1";
             break;
         case LOG_RAW2:       // 10, insane

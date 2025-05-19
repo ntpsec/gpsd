@@ -56,7 +56,7 @@ void libgps_trace(int errlevel, const char *fmt, ...)
 /* gps_open(host,) -- open a connection for reading from gpsd
  *
  * host can be:
- *     a host name or host ip - to conenct to host
+ *     a host name or host ip - to connect to host
  *        port is numeric or symbolic port to connect to
  *     GPSD_DBUS_EXPORT "DBUS export"     - to connect to local DBUS
  *     GPSD_FILE_LOCAL "local file"       - to read to local file
@@ -142,7 +142,7 @@ int gps_open(const char *host, const char *port,
 
 #ifndef USES_HOST
     if (NULL == host) {
-        // Should not happend, but this pacifies Codacy
+        // Should not happen, but this pacifies Codacy
         (void)fprintf(stderr,
              "No methods available for connecting to NULL == host!\n");
     } else {
@@ -299,7 +299,7 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
             *PRIVATE(gpsdata)->buffer = '\0';
             PRIVATE(gpsdata)->waiting = 0;
         } else {
-            // shift the remaing data to the fron.
+            // shift the remaining data to the front.
             memmove(PRIVATE(gpsdata)->buffer,
                     PRIVATE(gpsdata)->buffer + message_len,
                     PRIVATE(gpsdata)->waiting);

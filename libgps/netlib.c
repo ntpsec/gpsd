@@ -50,7 +50,7 @@
 #endif
 
 /* connect to host, using service (port) on protocol (TCP/UDP)
- * af - Adress Family
+ * af - Address Family
  * host - host to connect to
  * service -- aka port
  * protocol
@@ -58,7 +58,7 @@
  *             SOCK_NONBLOCK is supported,
  *             >1 sets the socket as non-blocking after connect()
  * bind_me -- call bind() on the socket instead of connect()
- * addrbuf -- 50 char buf to put string of IP address conencting
+ * addrbuf -- 50 char buf to put string of IP address connecting
  *            INET6_ADDRSTRLEN
  * addrbuf_sz -- sizeof(adddrbuf)
  *
@@ -218,7 +218,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
     /*
      * This is a good performance enhancement when the socket is going to
      * be used to pass a lot of short commands.  It prevents them from being
-     * delayed by the Nagle algorithm until they can be aggreagated into
+     * delayed by the Nagle algorithm until they can be aggregated into
      * a large packet.  See https://en.wikipedia.org/wiki/Nagle%27s_algorithm
      * for discussion.
      */

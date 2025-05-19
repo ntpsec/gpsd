@@ -32,7 +32,7 @@
 #endif  // USE_QT
 
 #include "../include/gps.h"
-#include "../include/gpsd.h"          // FIXME: clients chould not use gpsd.h!
+#include "../include/gpsd.h"          // FIXME: clients should not use gpsd.h!
 #include "../include/libgps.h"
 #include "../include/strfuncs.h"
 #include "../include/timespec.h"      // for NS_IN_SEC

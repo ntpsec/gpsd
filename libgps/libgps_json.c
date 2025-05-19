@@ -1008,7 +1008,7 @@ int libgps_json_unpack(const char *buf,
         }
         return FILTER(status);
     }
-    // else, unkwown class type
+    // else, unknown class type
     return -1;
 }
 
