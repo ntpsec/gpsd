@@ -678,7 +678,7 @@ def test():
     # omega Omega0, i0 seem OK.
 
     # move omega 0, Omega0 0, i0 0
-    # t = one quarter sideral day
+    # t = one quarter sidereal day
     siderial_day = 86164.0905
     print("\nTest omega 0 Omega0 0 i0 0:")
     ephm['omega'] = 0
@@ -688,7 +688,7 @@ def test():
     SatPos(ephm, siderial_day / 4)
 
     # move omega 0, Omega0 0, i0 0
-    # t = one half sideral day
+    # t = one half sidereal day
     # sat has done one orbit, earth 1/2 orbit
     print("\nTest omega 0 Omega0 0 i0 0:")
     ephm['omega'] = 0
