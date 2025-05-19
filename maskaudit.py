@@ -199,7 +199,7 @@ if __name__ == '__main__':
 
 /* Convert gps_mask_t set to a string representation
  *
- * Return pointer to static buffer contatining the string.
+ * Return pointer to static buffer containing the string.
  */
 const char *gps_maskdump(gps_mask_t set)
 {

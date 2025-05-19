@@ -41,7 +41,7 @@ import SCons
 
 # Facilitate debugging with pdb.
 # At pdb startup, the environment is such that setting breakpoints in
-# SConstruct requires specifying its full absolute path, which is incovenient.
+# SConstruct requires specifying its full absolute path, which is inconvenient.
 # Stopping here at an automatic breakpoint makes this easier.  Note that this
 # code has no effect unless pdb is loaded.
 # To use this, run with pdb and continue from the initial pdb prompt.
@@ -154,7 +154,7 @@ if SCons.__version__ in ['2.3.0', '2.3.1']:
     os.symlink = _forced_symlink
 
 
-# SCons 2.3.0 is also missing the Psuedo method.  See the workaround after
+# SCons 2.3.0 is also missing the Pseudo method.  See the workaround after
 # the initial 'env' setup.
 
 # All man pages.  Always build them all.
@@ -826,7 +826,7 @@ def CheckCompilerOption(context, option):
     old_CFLAGS = context.env['CFLAGS'][:]  # Get a *copy* of the old list
     context.env.Append(CFLAGS=option)
     new_CFLAGS = context.env['CFLAGS'][:]  # Get a *copy* of the old list
-    # we don't want to use options that gernerate warnings.
+    # we don't want to use options that generate warnings.
     context.env.Append(CFLAGS="-Werror")
     ret = context.TryLink("""
         int main(int argc, char **argv) {
@@ -1162,7 +1162,7 @@ if not cleaning and not helping:
                          "of libusb-1.0.")
                 usbflags = []
         elif config.env['target_platform'].startswith('freebsd'):
-            # FIXME: shold directly test for libusb existence.
+            # FIXME: should directly test for libusb existence.
             confdefs.append("#define HAVE_LIBUSB 1\n")
             usbflags = ["-lusb"]
         else:
@@ -1556,7 +1556,7 @@ if not cleaning and not helping:
     if not have_cppcheck:
         announce("Program cppcheck not found -- skipping cppcheck checks")
     if not have_dia:
-        announce("Program dia not found -- not rebuiding cycle.svg.")
+        announce("Program dia not found -- not rebuilding cycle.svg.")
     if not have_flake8:
         announce("Program flake8 not found -- skipping flake8 checks")
     if not have_pycodestyle:

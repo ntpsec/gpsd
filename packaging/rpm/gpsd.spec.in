@@ -506,7 +506,7 @@ desktop-file-install \
 - cgpxlogger has been merged into gpxlogger
 - Speed-setting commands now allow parity and stop-bit setting if the GPS
   chipset and adaptor can support it
-- Specfile and other packaging paraphenalia now live in a packaging
+- Specfile and other packaging paraphernalia now live in a packaging
   subdirectory
 - rtcmdecode becomes gpsdecode and can now de-armor and dump AIDVM packets
 - The client library now work correctly in locales where the decimal separator
@@ -585,14 +585,14 @@ desktop-file-install \
 * Tue Feb 27 2007 Matthew Truch <matt at truch.net> - 2.34-1
 - Upgrade to 2.34.
 - Get rid of %%makeinstall (which was never needed).
-- Possibly fix hotplug issuses (BZ 219750).
+- Possibly fix hotplug issues (BZ 219750).
 - Use %%python_sitelib for python site-files stuff.
 
 * Sat Dec 9 2006 Matthew Truch <matt at truch.net> - 2.33-6
 - Rebuild to pull in new version of python.
 
 * Tue Sep 26 2006 Matthew Truch <matt at truch.net> - 2.33-5
-- Remove openmotif requirment, and switch to lesstif.
+- Remove openmotif requirement, and switch to lesstif.
 
 * Mon Aug 28 2006 Matthew Truch <matt at truch.net> - 2.33-4
 - Bump release for rebuild in prep. for FC6.

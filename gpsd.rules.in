@@ -8,7 +8,7 @@
 # "gnss".
 
 # Subsystem "gnss" includes devices handled by the "gnss" kernel
-# modules.  The "gnss" devices are primarly configured using device
+# modules.  The "gnss" devices are primarily configured using device
 # tree options.  They may use I2C, DDC, gpio connections in place of,
 # or in addition to, plain serial connections.  They may also allow the
 # kernel to control the power state, sleep state and other properties of
@@ -21,7 +21,7 @@
 
 
 # SUBSYSTEM "gnss"
-# The rules in this section only apply to sybsystem "gnss".
+# The rules in this section only apply to subsystem "gnss".
 
 SUBSYSTEM!="gnss", GOTO="gpsd_tty_rules"
 
@@ -29,7 +29,7 @@ ACTION=="add", SUBSYSTEM=="gnss", GROUP="@GROUP@", @UDEVCOMMAND@
 ACTION=="remove", SUBSYSTEM=="gnss", @UDEVCOMMAND@
 
 # SUBSYSTEM "tty"
-# The rules in this section only apply to sybsystem "tty".
+# The rules in this section only apply to subsystem "tty".
 # Subsystem "tty" includes most of the traditional /dev/ttyXX devices.
 LABEL="gpsd_tty_rules"
 

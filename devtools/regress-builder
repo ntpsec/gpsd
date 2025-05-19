@@ -68,7 +68,7 @@ cyclesize = 2 ** len(driver_names)
 
 
 def Sequential():
-    "Generate sequential test vectors for exhautive search."
+    "Generate sequential test vectors for exhaustive search."
     for i in xrange(cyclesize):
         yield i
     return

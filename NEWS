@@ -11,7 +11,7 @@
 3.26: 11 May 2025
   Handle NTRIPv2 that comes in "chunks".
   Add many UBX decodes.  Mostly in ubxtool, some in gpsd.
-  Improve TSIP and UBX intitalization.
+  Improve TSIP and UBX initialization.
   Gather Antenna Status (ant_stat) and Jamming (jam) and send to JSON.
   Always build u-blox, RTCM104V2, RTCM104V3 drivers.
   Add partial support for badly documented ALLYSTAR GNSS messages.
@@ -220,10 +220,10 @@
   All isnan() changed to !isfinite(), fixing many bugs.
   Client-side Python libraries may automatically reconnect
   Too many other bug fixes and improvements to mention.
-  Over 1,000 commits from 46 different commiters.
+  Over 1,000 commits from 46 different committers.
 
 3.17: 2017-09-07 (Eric S. Raymond <esr@snark.thyrsus.com>)
-  Repair support for non-NMEA devices requring active probing
+  Repair support for non-NMEA devices requiring active probing
   (e.g. Garmin USB GPSes). Apply OS X build fixes.  Fix a SiRF driver
   bug that occasionally confused NTP.  Support for Spectratime iSync
   GRClok and LNRClok oscillators. gpxlogger can reconnect when
@@ -245,7 +245,7 @@
   CCFLAGS contains options that are only compatible with the
   cros1s-compiler. Fix Savannah bug #45342: SConstruct generates wrong
   *.pc files.  Fix Savannah bug #46495: gpsd_poll may crash due to
-  unitialized pointer (probably due to buggy FD_ISSET on host
+  uninitialized pointer (probably due to buggy FD_ISSET on host
   system). Fix Savannah bug #46648: gpsd crashes and buffer overflow
   is reported when terminated.  Fix Savannah bug #46802: AIVDM to CSV
   is broken in some weird cases. Fix Savannah bug #46804: JSON
@@ -531,7 +531,7 @@
   when they look wonky.  cgpxlogger has been merged into gpxlogger.
   Speed-setting commands now allow parity and stop-bit setting if the
   GPS chipset and adaptor can support it. Specfile and other packaging
-  paraphenalia now live in a packaging subdirectory.  rtcmdecode becomes
+  paraphernalia now live in a packaging subdirectory.  rtcmdecode becomes
   gpsdecode and can now de-armor and dump AIDVM packets. The client
   library now works correctly in locales where the decimal separator is
   not a period.

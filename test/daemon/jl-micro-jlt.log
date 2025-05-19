@@ -4,7 +4,7 @@
 # Date: 2021-08-21
 # Location: Adelaide, SA, Australia, 34.54S 138.35E
 # Note: Nonstandrd $GAGSV -- unique PRN mapping
-#       Nonstandrd $GNGGA -- Lock State flag repalces Quality flag.
+#       Nonstandrd $GNGGA -- Lock State flag replaces Quality flag.
 #       Proprietary $PJLTS -- GPSDO status
 #
 # This file is Copyright (c) 2021 by the GPSD project

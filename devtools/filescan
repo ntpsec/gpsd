@@ -172,7 +172,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="filescan",
         description="Scans files for tabs, non-ASCII runes," +
-                     " and trailing whitepsace on lines.",
+                     " and trailing whitespace on lines.",
         epilog="""* The name of the offending file, as given, with short horizontal rules before and after.
 * A non-compliant line number, followed by a colon, and the text of the line.
 * An offense summary string for the previous line, and offense pointers
