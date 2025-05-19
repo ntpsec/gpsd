@@ -961,7 +961,7 @@ static bool do_command(const char *line)
             (void)fclose(logfile);
         } else if ('\0' != *arg) {
             logfile = fopen(arg, "a");
-            // open new log file, arument is the name
+            // open new log file, argument is the name
             if (NULL != packetwin) {
                 if (NULL != logfile) {
                     (void)wprintw(packetwin, ">>> Logging to %s\n", arg);
@@ -1173,7 +1173,7 @@ static char *pps_report(volatile struct pps_thread_t *pps_thread UNUSED,
     return "gpsmon";
 }
 
-/* Handle sigals.  All we can really do in a signal handler is mark it
+/* Handle signals.  All we can really do in a signal handler is mark it
  * and return.
  */
 static void onsig(int sig UNUSED) {
@@ -1639,7 +1639,7 @@ int main(int argc, char **argv)
  * x: The start colmun in that row
  * flen: a leghth for to end of the n/a (should match fmt)
  * fmt: a printf(3) style format string for f
- * f: a ieee-754 double float (prefereably finite).
+ * f: a ieee-754 double float (preferably finite).
  *
  * returns: Noyhing as void
  *

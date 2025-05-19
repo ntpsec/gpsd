@@ -297,7 +297,7 @@ static void nmea_update(void)
         if (NULL == strstr(sentences, fields[0]) &&
             10 < xmax) {
             /* limit to smaller of window width or sentence[]
-             * leave space in the window for line draw cahrs */
+             * leave space in the window for line draw chars */
             size_t max = (size_t)(xmax - 2) < sizeof(sentences) ? \
                          (size_t)(xmax - 2) : sizeof(sentences);
             size_t s_len = strnlen(sentences, max);
