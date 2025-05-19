@@ -2038,7 +2038,7 @@ if __name__ == "__main__":
     usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
     epilog = ('Options can be placed in the XGPSOPTS environment variable.\n'
               'Default units can be placed in the GPSD_UNITS environment'
-              ' variabla.\n\ne'
+              ' variable.\n\n'
               'BSD terms apply: see the file COPYING in the distribution root'
               ' for details.')
 
