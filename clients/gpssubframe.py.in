@@ -333,7 +333,7 @@ Compute Velocities.  Use delta_tsv to correct pseudorange.
         print("  Sat: x %13.3f  y %13.3f  z %13.3f delta_tsv2 %g" %
               (x2, y2, z2, delta_tsv2))
 
-        # compute sat velocity by subtracting two postions.
+        # compute sat velocity by subtracting two positions.
         # because I can't get the direct method to work...
         vx = (x2 - x) / delta_t
         vy = (y2 - y) / delta_t
@@ -360,7 +360,7 @@ Compute Velocities.  Use delta_tsv to correct pseudorange.
                 all_data['tpv']['altHAE'])
             (az2, el2, rng2) = gps.enu2aer(E2, N2, U2)
             range_speed = (rng2 - rng) / delta_t
-            # doppler is postive when sat egetting nearer
+            # doppler is positive when sat egetting nearer
             dopplerl1 = -2 * range_speed / gps.GPS_L1_WL
             print("  range speed %.3f L1 doppler %.3f" %
                   (range_speed, dopplerl1))

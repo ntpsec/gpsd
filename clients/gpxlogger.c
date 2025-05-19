@@ -168,7 +168,7 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
 
     if (true == garmin &&
         0 != isfinite(gpsdata->fix.depth)) {
-        // garmin extentions cause google maps to crash
+        // garmin extensions cause google maps to crash
         (void)fprintf(gpxlogfile,
              "    <extensions>\n"
              "       <gpxx:TrackPointExtension>\n"

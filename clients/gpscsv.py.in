@@ -7,7 +7,7 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 #
-"""gpscsv -- convert gpsd JSON strams into csv files."""
+"""gpscsv -- convert gpsd JSON streams into csv files."""
 
 from __future__ import print_function
 
@@ -26,7 +26,7 @@ def _do_one_line(data):
         options.json_fields = []
         for fld in fields:
             if isinstance(data[fld], (dict, list)):
-                # skip dictionay fields
+                # skip dictionary fields
                 continue
 
             options.json_fields.append(fld)
@@ -202,7 +202,7 @@ if options.target:
         sys.exit(0)
 
 # Fields to parse
-# Python dicts are unorderd, so try to clean things up a little
+# Python dicts are unordered, so try to clean things up a little
 options.json_fields = None
 if options.fields is None:
     default_fields = {'ALMANAC': ('TOW17', 'tSV', 'ID', 'Health', 'e',
@@ -281,7 +281,7 @@ elif 'IONO' == options.mclass:
     options.subclass = 'IONO'
     options.frames = [4]
 elif 'NMCT' == options.mclass:
-    # Note: ai is probably 01, which means the NMCT data is encypted.
+    # Note: ai is probably 01, which means the NMCT data is encrypted.
     options.mclass = 'SUBFRAME'
     options.subclass = 'NMCT'
     options.frames = [4]

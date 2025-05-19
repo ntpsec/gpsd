@@ -930,7 +930,7 @@ static void print_raw(struct gps_data_t *gpsdata)
     last_svid = 0;
 
     /* get all the data for one sat into obs_tiems[]
-     * then later they can be ouput it arbitrary orders  */
+     * then later they can be output it arbitrary orders  */
     memset(obs_items, 0, sizeof(obs_items));
     for (i = 0; i < nrec; i++) {
         const unsigned char gnssid = gpsdata->raw.meas[i].gnssid;
@@ -1354,7 +1354,7 @@ int main(int argc, char **argv)
 
     // create temp file, coverity does not like tmpfile()
     // covarfity wants a umask
-    // codacy comlains about umask(), can't win...
+    // codacy complains about umask(), can't win...
     // Flawfinder: ignore
     (void)umask(0177);        // force rw-------
     strlcpy(tmp_fname, "/tmp/gpsrinexXXXXXX", sizeof(tmp_fname));
@@ -1388,7 +1388,7 @@ int main(int argc, char **argv)
         (void)gps_read(&gpsdata, NULL, 0);
         if (ERROR_SET & gpsdata.set) {
             syslog(LOG_INFO, "gps_read() error '%s'\n", gpsdata.error);
-            // dont exit, maybe useable data, maybe just EOF
+            // dont exit, maybe usable data, maybe just EOF
             break;
         }
         if (0 != sig_flag) {

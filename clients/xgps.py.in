@@ -36,7 +36,7 @@ import time
 # It looks like PyGTK, but it is not.  PyGTK is unmaintained.
 #
 # Gtk.VBox & Gtk.HBox are deprecated in 3.2 GTK.Box was deprecated.
-# Box is still deprected when styling first, last or nth? children.
+# Box is still deprecated when styling first, last or nth? children.
 # VBox and HBox are gone in 4.0; it doesn't matter much though.
 # Gtk4 breaks at least a few other things.
 
@@ -161,7 +161,7 @@ def fit_to_grid(x, y, line_width):
 
 
 def fit_circle_to_grid(x, y, radius, line_width):
-    """Fit cicrle to grid.
+    """Fit circle to grid.
 
 Adjust circle coordinates and radius to produce sharp horizontal
 and vertical tangents.

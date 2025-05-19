@@ -198,7 +198,7 @@ if __name__ == '__main__':
                             print('%d (%d@%d): %s\n' % (ptype, length,
                                   counter - length, hexdump(packet)))
                         except BrokenPipeError:
-                            # stdout piped to a prgram that died.
+                            # stdout piped to a program that died.
                             # Like "head" does by default.
                             # die quietly
                             sys.exit(1)

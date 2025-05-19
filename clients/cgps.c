@@ -1260,7 +1260,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
                 // Pacify Coverity 498042, an't happen
                 message_len = 0;
             } else if (message_len >= message_max) {
-                // huh?  Ensure NUL termianted
+                // huh?  Ensure NUL terminated
                 message_len = message_max - 1;
             } else if ( '\r' == message[message_len - 1]) {
                 // remove any trailing \r

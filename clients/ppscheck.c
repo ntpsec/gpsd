@@ -503,7 +503,7 @@ int main(int argc, char *argv[])
     bool has_kpps = false;
     bool find_kpps = false;
     const char *kpps_name = NULL;    // logical name of pps device (pps0, etc.).
-    char kpps_path[PATH_MAX] = "";   // full path to devined kpps device
+    char kpps_path[PATH_MAX] = "";   // full path to defined kpps device
     char *device = NULL;          // pointer to <device> name
     char device_real[PATH_MAX];   // realname() of <device>
     const char *optstring = "?hmpVx:";

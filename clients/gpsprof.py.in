@@ -58,7 +58,7 @@ def dist_2d(a, b):
 
 def dist_3d(a, b):
     """Calculate distance between a[x,y,z] and b[x,y,z]."""
-    # x, y, and z are othogonal, probably ECEF, probably in meters
+    # x, y, and z are orthogonal, probably ECEF, probably in meters
     return math.sqrt((a[0] - b[0]) ** 2 +
                      (a[1] - b[1]) ** 2 +
                      (a[2] - b[2]) ** 2)

@@ -1,4 +1,4 @@
-/* gpssnmp - poll gpsd varaiables for SNMP.
+/* gpssnmp - poll gpsd variables for SNMP.
  *
  * Copyright 2016 David Taylor <gpsd@david.taylor.name>
  *
@@ -390,7 +390,7 @@ static void get_one(gps_mask_t need)
     // snmpd is impatient, it will not wait longer than 5 seconds.
     clock_gettime(CLOCK_REALTIME, &ts_start);
 
-    // timout is in micro seconds.
+    // timeout is in micro seconds.
     while (gps_waiting(&gpsdata, 2 * US_IN_SEC)) {
         int status;
 
@@ -512,7 +512,7 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
         }
 
         /* got match
-         * The output here conforms to the requierments of the
+         * The output here conforms to the requirements of the
          * "pass [-p priority] MIBOID PROG" option to snmpd.conf
          */
 
