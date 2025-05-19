@@ -151,7 +151,7 @@ extern "C" {
  *  The Trimble BX-960 receiver emits a 91-character GGA message.
  *  The Skytraq S2525F8 which emits a 100-character PSTI message.
  *  The Skytraq PX1172RH which emits a 103-character PSTI message.
- *  The current hog champion is the Inertial Sense Inc (ISI) GRX-1 whith a
+ *  The current hog champion is the Inertial Sense Inc (ISI) GRX-1 with a
  *  a 119-character $INFO message.
  */
 #define NMEA_MAX        130             // max length of NMEA sentence
@@ -172,7 +172,7 @@ enum isgpsstat_t {
  *   1 octet preamble
  *   2 octets payload length (first 6 bits reserved) -->
  *       max payload length 1023 octets
- *   0-1023 octects payload
+ *   0-1023 octets payload
  *   3 octets CRC
  *   1029 octets maximum
  *

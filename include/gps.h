@@ -95,7 +95,7 @@ extern "C" {
  *       fix tow in never used struct rtcm3_1015_t
  *       remove never used struct rtcm3_1016_t and struct rtcm3_1017_t
  *       add struct baseline_t
- * 14    Move threee visibilize() into one gps_visibilize() here.
+ * 14    Move three visibilize() into one gps_visibilize() here.
  *       Move gpsd_hexpack() to here as gps_hexpack()
  *       Move gpsd_hexdump() to here as gps_hexdump()
  *       Add prRes, prRate, pr, and qualityInd to satellite_t
@@ -261,7 +261,7 @@ struct gps_fix_t {
 #define ANT_OPEN 2
 #define ANT_SHORT 3
     /* jamming indicator, 0 == None to 255 == real bad
-     * Some receviers on report No/Yes, or 0 to 3.  Those are mapped to
+     * Some receivers on report No/Yes, or 0 to 3.  Those are mapped to
      * 0 to 255. -1 is unset */
     int jam;
     // If clockbias and clockrate are zero, ignore them.
@@ -440,7 +440,7 @@ struct rtcm2_t {
             unsigned char g;       // 0 == GPS, 1 == GLONASS
             // satellite id (1 - 32), GPS PRN, or GLONASS clot number
             unsigned char ident;
-            unsigned char dq;      // data qaulity
+            unsigned char dq;      // data quality
             unsigned char clc;     // cumulative loss of continuity
             unsigned char iod;     // Issue of Data (GPS)/Time of Day (GLO)
             unsigned char me;      // multipath error
@@ -621,7 +621,7 @@ struct rtcm3_4076_hdr {
     unsigned igs_num;          // IDF002, IGS message number
     unsigned ssr_epoch;        // IDF003, SSR Epoch Time in seconds
     unsigned ssr_update;       // IDF004, SSR Update Interval
-    unsigned ssr_mmi;          // IDF005, SSR Mutiple Message Interval
+    unsigned ssr_mmi;          // IDF005, SSR Multiple Message Interval
     unsigned ssr_iod;          // IDF007, IOD SSR
     unsigned ssr_provider;     // IDF008, SSR Provider ID
     unsigned ssr_solution;     // IDF009, SSR Solution ID
@@ -2575,7 +2575,7 @@ struct satellite_t {
 
 };
 
-/* attitude_t was originally for real IMUs that are syncronous
+/* attitude_t was originally for real IMUs that are synchronous
  * to the GNSS epoch.  Skytrak introduced a "moving base/rover"
  * that is used as a "GNSS Compass".  Essentially a synthetic
  * IMU.  To support this, related data (baseline_t) is also here.

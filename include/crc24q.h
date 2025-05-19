@@ -1,4 +1,4 @@
-/* Interface for CRC-24Q cyclic redundancy chercksum code
+/* Interface for CRC-24Q cyclic redundancy checksum code
  *
  * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
