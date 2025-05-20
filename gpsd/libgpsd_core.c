@@ -923,7 +923,7 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
     }
     /* can't use gpsdata->satellites_used as that is a counter for xxGSA,
      * and gets cleared at odd times */
-    GPSD_LOG(LOG_INF, errout, "CORE: Sats used %d visable %d:\n",
+    GPSD_LOG(LOG_INF, errout, "CORE: Sats used %d visible %d:\n",
              n, gpsdata->satellites_visible);
 
     /* If we don't have 4 satellites then we don't have enough
