@@ -2051,7 +2051,7 @@ static void ship_pps_message(struct gps_device_t *session, int unit,
              session->gpsdata.qErr,
              (long long)td->real.tv_sec);
 
-    // FIXME: reports /dev/ttyAMA0 instead of /dev/pps0 whith MAGIC_HAT
+    // FIXME: reports /dev/ttyAMA0 instead of /dev/pps0 with MAGIC_HAT
 
     /* real_XXX - the time the GPS thinks it is at the PPS edge
      * clock_XXX - the time the system clock thinks it is at the PPS edge */
@@ -2185,7 +2185,7 @@ static void gpsd_terminate(struct gps_context_t *context)
 
 int main(int argc, char *argv[])
 {
-    // some of these statics suppress -W warnings due to longjmp()
+    // some of these statistics suppress -W warnings due to longjmp()
     static char *gpsd_service = NULL;
     struct subscriber_t *sub;
     fd_set rfds;
@@ -2401,7 +2401,7 @@ int main(int argc, char *argv[])
             "cap_setgid",                    // for setgid()
             "cap_setuid",                    // for setuid(), setgroups()
             "cap_fowner",                    // for chmod()
-            // not needed for unpriviledged port 2947
+            // not needed for unprivileged port 2947
             // "cap_net_bind_service",
 
             // "cap_sys_tty_config",            // ??

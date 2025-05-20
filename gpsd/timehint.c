@@ -71,7 +71,7 @@
  *
  * Segments are allocated to activated devices on a first-come-first-served
  * basis. A device's segment is marked unused when the device is closed and
- * may be re-used by devices connected later.
+ * may be reused by devices connected later.
  *
  * To debug, try looking at the live segments this way:
  *
@@ -232,7 +232,7 @@ void ntpshm_session_init(struct gps_device_t *session)
  *  precision is the NTP precision
  *      Any NMEA will be about -1 or -2. Garmin GPS-18/USB can be -6 or -7
  *      PPS over USB, then precision = -10, 1 milli sec
- *      PPS over serial, precision = -20, 1 micro sec, maybe bettter
+ *      PPS over serial, precision = -20, 1 micro sec, maybe better
  *  td is the time delta to send
  *
  * Return: void

@@ -71,7 +71,7 @@ PERMISSIONS
  *    a checksum it's much easier to get a false match from garbage.
  *    The packet recognizer gives checksummed types higher priority.
  *
- * Adding support for a new GPS protocol typically reqires adding state
+ * Adding support for a new GPS protocol typically requires adding state
  * transitions to support whatever binary packet structure it has.  The
  * goal is for the lexer to be able to cope with arbitrarily mixed packet
  * types on the input stream.  This is a requirement because (1) sometimes
@@ -572,7 +572,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = ALLY_LEADER_1;
             break;
 #ifdef ZODIAC_ENABLE
-        case 0xff:      // lattin1 smal y with diaeresis
+        case 0xff:      // lattin1 small y with diaeresis
             lexer->state = ZODIAC_LEADER_1;
             break;
 #endif  // ZODIAC_ENABLE
@@ -3243,7 +3243,7 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
     size_t idx = 0;                 // index into inbuffer.
     unsigned char *tmp_bufptr;      // pointer to head in tmp_buffer
     ssize_t taken;
-    // make tmp_buffer large, to simlify overflow prevention
+    // make tmp_buffer large, to simplify overflow prevention
     unsigned char tmp_buffer[sizeof(lexer->inbuffer) * 2];
 
     GPSD_LOG(LOG_PROG, &lexer->errout,
@@ -3583,7 +3583,7 @@ ssize_t packet_get1(struct gps_device_t *session)
     struct gps_lexer_t *lexer = &session->lexer;
 
     if (true == lexer->chunked) {
-        // De-chunking too complicate to do unline below.
+        // De-chunking too complicated to do unlike below.
         return packet_get1_chunked(session);
     }
 

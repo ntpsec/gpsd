@@ -155,7 +155,7 @@ static void gpsd_vlog(const int errlevel,
             err_str = "RAW";
             level = LOG_DEBUG;
             break;
-    case LOG_RAW1:       // 9, rediculous
+    case LOG_RAW1:       // 9, ridiculous
             err_str = "RAW1";
             level = LOG_DEBUG;
             break;
@@ -539,7 +539,7 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
 
 /* open a device for access to its data *
  * return: the opened file descriptor
- *         PLACEHOLDING_FD (-2) - for /dev/ppsX, ntrip waiting reconenct, etc.
+ *         PLACEHOLDING_FD (-2) - for /dev/ppsX, ntrip waiting reconnect, etc.
  *         UNALLOCATED_FD (-1) - for open failure
  */
 int gpsd_open(struct gps_device_t *session)
@@ -718,7 +718,7 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
             NULL == session->pps_thread.report_hook) {
             /* it is /dev/ppsX, need to set devicename, etc.
              * check report_hook to ensure not already running
-             * cast fot 32-bit ints */
+             * cast for 32-bit ints */
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "CORE: to gpsd_clear() fd %ld\n",
                      (long)session->gpsdata.gps_fd);
@@ -1604,7 +1604,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
 
             gap = TS_SUB_D(&ts_now, &session->lexer.start_time);
 
-            // used to comare gap > min_cycle, but min_cycle is now
+            // used to compare gap > min_cycle, but min_cycle is now
             // so variable as to be not helpful.  Some GPS models can
             // vary from 20Hz to 1Hz.
             if (gap > quiet_time) {
@@ -2001,7 +2001,7 @@ int gpsd_multipoll(const bool data_ready,
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "CORE: connection to ntrip server failed\n");
                 // FIXME: next stat after error should depend on if
-                // initial connect or reconenct...
+                // initial connect or reconnect...
                 device->ntrip.conn_state = NTRIP_CONN_CLOSED;
                 return DEVICE_ERROR;
             }
@@ -2152,7 +2152,7 @@ int gpsd_multipoll(const bool data_ready,
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "CORE: 2 connection to ntrip server failed\n");
                 // FIXME: next stat after error should depend on if
-                // initial connect or reconenct...
+                // initial connect or reconnect...
                 device->ntrip.conn_state = NTRIP_CONN_CLOSED;
                 return DEVICE_ERROR;
             }

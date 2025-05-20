@@ -793,7 +793,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                          subp->sub4_25.svhx[6], subp->sub4_25.svhx[7]);
                 break;
 
-            default:                    // unkown page...
+            default:                    // unknown page...
                 ;                       // no op
             }
             if ( -1 < sv ) {

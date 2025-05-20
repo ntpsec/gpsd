@@ -242,7 +242,7 @@ const char *pps_get_first(void)
  * sets KPPS file handle into inner_context->kernelpps_handle
  * usually requires root privileges
  *
- * Return: 0 on sucess
+ * Return: 0 on success
  *         less than zero on error
  */
 static int init_kernel_pps(struct inner_context_t *inner_context)
@@ -746,7 +746,7 @@ static void *gpsd_ppsmonitor(void *arg)
     ((volatile struct inner_context_t *)arg)->pps_thread = NULL;
 
     /* before the loop, figure out how we can detect edges:
-     * TIOMCIWAIT, which is linux specifix
+     * TIOMCIWAIT, which is linux specific
      * RFC2783, a.k.a kernel PPS (KPPS)
      * or if KPPS is deficient a combination of the two */
     if (0 > thread_context->devicefd ||

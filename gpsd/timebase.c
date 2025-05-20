@@ -386,7 +386,7 @@ void gpsd_century_update(struct gps_device_t *session, int century)
 }
 
 /* gpsd_gpstime() convert GPS week/tow to "GPS time"
- * "GPS time" as defined by RINEX:  GPS time + leap secods == UTC
+ * "GPS time" as defined by RINEX:  GPS time + leap seconds == UTC
  *
  * Use for time that is not "time now in UTC".
  * Do not touch: gps_week, gps_tow, GPS_VALID, rollovers in context.

@@ -1,5 +1,5 @@
 /*
- * Create psuedo NMEA (and AIVDM) messaegs.
+ * Create pseudo NMEA (and AIVDM) messaegs.
  *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
@@ -188,7 +188,7 @@ int gpsd_position_fix_dump(struct gps_device_t *session,
         break;
     }
 
-    /* Use lat/lon precision .7 becaause u-blox ZED-F9P does.
+    /* Use lat/lon precision .7 because u-blox ZED-F9P does.
      * Use lat 4 digits of integer, lon 5 digits, because:
      * http://sapos.geonord-od.de:2101/ wants that minimum */
     blen = snprintf(bufp, len,
@@ -265,7 +265,7 @@ static void gpsd_transit_fix_dump(struct gps_device_t *session,
     }
 
     // FIXME! add in "Mode Indicator" after var_dir
-    // Use lat %011.7f and lon %12.7f, becaause u-blox ZED-F9P does.
+    // Use lat %011.7f and lon %12.7f, because u-blox ZED-F9P does.
     (void)snprintf(bufp, len,
                    "$GPRMC,%s,%c,%s,%c,%s,%c,%s,%s,%s,%s,%s",
                    time_str,

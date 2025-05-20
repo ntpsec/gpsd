@@ -4744,7 +4744,7 @@ void json_data_report(const gps_mask_t changed,
 
         json_tpv_dump(changed, session, policy,
                       buf + buf_len, buflen - buf_len);
-        // attitude is syncronous to epoch, so report like TPV.
+        // attitude is synchronous to epoch, so report like TPV.
         if (0 != (changed & ATTITUDE_SET)) {
             buf_len = strnlen(buf, MAX_PACKET_LENGTH);
             json_att_dump(datap, buf + buf_len, buflen - buf_len,

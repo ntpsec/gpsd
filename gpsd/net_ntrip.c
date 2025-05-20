@@ -450,7 +450,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                  "NTRIP: Remaining source table buffer len %zd\n", len);
 
         if (0 < len) {
-            // shuffle any remaing fragment to front of buf
+            // shuffle any remaining fragment to front of buf
             // line points to the last fragment in buf
             memmove(buf, line, (size_t)len);
         }
@@ -573,7 +573,7 @@ static int ntrip_auth_encode(struct ntrip_stream_t *stream)
     return ret;
 }
 
-/* netlib_connectsock() open a blockin socket to host.
+/* netlib_connectsock() open a blocking socket to host.
  *
  * Return: socket to ntrip server on success
  *         less than zero on error
@@ -1030,7 +1030,7 @@ static int ntrip_reconnect(struct gps_device_t *device)
         device->ntrip.conn_state = NTRIP_CONN_CLOSED;
         return PLACEHOLDING_FD;
     }
-    /* will have to wait for select() to confirm conenction, then send
+    /* will have to wait for select() to confirm connection, then send
      * the ntrip request again.
      * cast for 32-bit ints */
     device->ntrip.conn_state = NTRIP_CONN_INPROGRESS;
@@ -1099,7 +1099,7 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
             return -1;
         }
         // set timeouts to give time for caster to reply.
-        // cant use device->lexer.pkt_time and gpsd_clear() reset it
+        // can't use device->lexer.pkt_time and gpsd_clear() reset it
         (void)clock_gettime(CLOCK_REALTIME, &device->ntrip.stream.stream_time);
 
         device->gpsdata.gps_fd = (gps_fd_t)ret;
@@ -1178,7 +1178,7 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
         }
         break;
     case NTRIP_CONN_INPROGRESS:      // state = 6
-        // Need to send GET within about 40 seconds or caster tiems out.
+        // Need to send GET within about 40 seconds or caster times out.
         // FIXME: partially duplicates  ntrip_stream_get_req()
         // try a write, it will fail if connection still in process, or failed.
         blen = snprintf(buf, sizeof(buf),

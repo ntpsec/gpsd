@@ -958,7 +958,7 @@ int gpsd_serial_open(struct gps_device_t *session)
                      "SER: %s already opened by another process!!!!!!!!!!!\n",
                      session->gpsdata.dev.path);
             /* caan't really continue, make it obvious to the user as
-             * none undertsand what ERROR means. */
+             * none understand what ERROR means. */
             exit(1);
 
             // (void)close(session->gpsdata.gps_fd);
@@ -996,7 +996,7 @@ int gpsd_serial_open(struct gps_device_t *session)
     // Save original terminal parameters, why?
     // At least it tests we can read port parameters.
     if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
-        // Maybe still useable somehow?  cast for 32-bit intptr_t
+        // Maybe still usable somehow?  cast for 32-bit intptr_t
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "SER: gpsd_serial_open() tcgetattr(%ld) failed: %s(%d)\n",
                  (long)session->gpsdata.gps_fd,
@@ -1198,7 +1198,7 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
             // do nothing
         } else if (-1 == ioctl(session->gpsdata.gps_fd,
                                (unsigned long)TIOCGICOUNT, &icount)) {
-            // some tty-like devices do not implment TIOCGICOUNT
+            // some tty-like devices do not implement TIOCGICOUNT
             if (ENOTTY != errno) {
                 // cast for 32-bit intptr_t
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
