@@ -24,7 +24,7 @@ The gpsd daemon needs to be started as root for best performance (it
 wants to nice itself, and needs root access to kernel PPS devices).  But
 very soon after startup it drops privileges.  The default user and group
 set after dropping root are set at build time.  Look in gpsd.c for this
-priviledge dropping code.
+privilege dropping code.
 
 Make *sure* whatever group gpsd lands in after privilege-dropping has
 dialout access - otherwise your users will see mysterious failures
