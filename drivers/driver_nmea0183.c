@@ -91,7 +91,7 @@ static const struct vlist_t vsnrstat_mapstat[] = {
  * can cause slight differences that lead to regression failures.  In
  * other cases (long double) and (double) are the same, thus no effect.
  * Storing values in volatile variables forces the exact size requested.
- * Where the volatile declaration is unnessary (and absent), such extra
+ * Where the volatile declaration is unnecessary (and absent), such extra
  * intermediate variables are normally optimized out.
  */
 
@@ -452,7 +452,7 @@ static void register_fractional_time(const char *tag, const char *fld,
     char ts_buf[TIMESPEC_LEN];
 
     if (0 != decode_hhmmss(&date, &ts.tv_nsec, fld, session)) {
-        // invalide time
+        // invalid time
         return;
     }
 
@@ -2743,7 +2743,7 @@ static gps_mask_t processINFO(int c UNUSED, char *field[],
         !session->context->passive) {
         // first time seen, send init
 
-        (void)nmea_send(session, "$STPC");   // stop all messsages
+        (void)nmea_send(session, "$STPC");   // stop all messages
 
         /* Enable all possible NMEA messages, at 1Hz
          * 1 PIMU, 2 PPIMU, 3 PRIMU, 4 PINS1, 5 PINS2
@@ -4038,7 +4038,7 @@ static gps_mask_t processPQVERNO(int c UNUSED, char* field[],
                                  struct gps_device_t* session)
 {
     /* Example request & response are provided courtesy of Quectel below.
-     * This command is not publically documented, but Quectel support
+     * This command is not publicly documented, but Quectel support
      * provided this description via email. This has been tested on
      * Quectel version L70-M39, but all recent (2022) versions of Quectel
      * support this command is well.
@@ -4331,7 +4331,7 @@ static gps_mask_t processPSTI032(int count UNUSED, char *field[],
     if ('F' == field[5][0] ||
         'O' == field[5][0]) {
         // Floating point RTK
-        // 'O' is undocuemented, private email says it is jsut a crappy 'F'.
+        // 'O' is undocuemented, private email says it is just a crappy 'F'.
         base->status = STATUS_RTK_FLT;
     } else if ('R' == field[5][0]) {
         // Fixed point RTK
@@ -5553,7 +5553,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PSXN", NULL, 0, false, NULL},
         {"PTFTTXT", NULL, 0, false, NULL},        // unknown uptime
 
-        /* Trimble Propietary
+        /* Trimble Proprietary
          * $PTNL,AVR
          * $PTNL,GGK
          */

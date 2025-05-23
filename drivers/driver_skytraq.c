@@ -1571,7 +1571,7 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
         break;
 
     case 0xb4:
-        // Positoin Pinning Status
+        // Position Pinning Status
         mask = sky_msg_B4(session, buf, len);
         break;
 
@@ -1919,7 +1919,7 @@ const struct gps_type_t driver_skytraq =
     .event_hook     = NULL,                  // lifetime event handler
     .flags          = DRIVER_STICKY,         // remember this
     .get_packet     = packet_get1,           // be prepared for Skytraq or NMEA
-    .init_query     = NULL,                  // non-perturbing initial qury
+    .init_query     = NULL,                  // non-perturbing initial query
     .mode_switcher  = sky_mode,              // Mode switcher
     .packet_type    = SKY_PACKET,            // associated lexer packet type
     .parse_packet   = skybin_parse_input,    // parse message packets

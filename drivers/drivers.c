@@ -1047,7 +1047,7 @@ static void mtk3301_event_hook(struct gps_device_t *session, event_t event)
     }
     if (event == EVENT_TRIGGERMATCH) {
         (void)nmea_send(session, "$PMTK320,0");  // power save off
-        // Fix interval, 1000 millseconds
+        // Fix interval, 1000 milliseconds
         (void)nmea_send(session, "$PMTK300,1000,0,0,0.0,0.0");
         // Set NMEA sentences.
         (void)nmea_send(session,

@@ -830,7 +830,7 @@ static bool tsip_detect(struct gps_device_t *session)
     }
 
     /* request firmware revision and look for a valid response
-     * send 0x1f, expext 0x45.  TSIPv1 does not have this, but it
+     * send 0x1f, expect 0x45.  TSIPv1 does not have this, but it
      * will respond with a TSIPv1 error message, so all good. */
     if (0 == tsip_write1(session, "\x1f", 1)) {
         unsigned int n;
@@ -950,7 +950,7 @@ static void configuration_packets_acutime_gold(struct gps_device_t *session)
         putbe32(buf, 4, 2000);  // Self-Survey Length = 2000 fixes, default 2000
         // Horizontal Uncertainty, 1-100, 1=best, 100=worst, default 100
         putbef32(buf, 8, 100);
-        // Verical Uncertainty, 1-100, 1=best, 100=worst, default 100
+        // Vertical Uncertainty, 1-100, 1=best, 100=worst, default 100
         putbef32(buf, 12, 100);
         (void)tsip_write1(session, buf, 16);
 
@@ -2110,7 +2110,7 @@ static gps_mask_t decode_x5c(struct gps_device_t *session, const char *buf)
     double el = getbef32(buf, 12) * RAD_2_DEG;   // Elevation
     double az = getbef32(buf, 16) * RAD_2_DEG;   // Azimuth
 
-    // Old Meassurement flag, unused in Lassen IQ
+    // Old Measurement flag, unused in Lassen IQ
     unsigned omf = getub(buf, 20);
 
     DTOTS(&session->gpsdata.skyview_time, ftow);
@@ -2902,7 +2902,7 @@ static gps_mask_t decode_x8f_42(struct gps_device_t *session, const char *buf)
     unsigned u3 = getbeu16(buf, 3);              // Case Sernum Prefix
     unsigned long ul1 = getbeu32(buf, 5);        // Case Sernum
     unsigned long ul2 = getbeu32(buf, 9);        // Production Number
-    unsigned long ul3 = getbeu32(buf, 13);       // Resevered
+    unsigned long ul3 = getbeu32(buf, 13);       // Reserved
     unsigned u4 = getbeu16(buf, 15);             // Machine ID
     unsigned u5 = getbeu16(buf, 17);             // Reserved
 
@@ -6177,7 +6177,7 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
         }
         break;
     case EVENT_DEACTIVATE:
-        // used to revert serial port parms here.  No need for that.
+        // used to revert serial port params here.  No need for that.
         FALLTHROUGH
     default:
         break;

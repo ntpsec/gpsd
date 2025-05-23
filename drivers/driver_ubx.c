@@ -996,7 +996,7 @@ static gps_mask_t ubx_msg_esf_meas(struct gps_device_t *session,
                  "UBX: ESF-MEAS: runt payload len %zd", data_len);
         return mask;
     }
-    // do not acumulate IMU data
+    // do not accumulate IMU data
     gps_clear_att(datap);
     (void)strlcpy(datap->msg, "UBX-ESF-MEAS", sizeof(datap->msg));
 
@@ -1139,7 +1139,7 @@ static gps_mask_t ubx_msg_esf_raw(struct gps_device_t *session,
             }
             last_sTtag = sTtag;
             datap = &session->gpsdata.imu[cur_imu];
-            // do not acumulate IMU data
+            // do not accumulate IMU data
             gps_clear_att(datap);
             (void)strlcpy(datap->msg, "UBX-ESF-RAW", sizeof(datap->msg));
         }
@@ -1438,7 +1438,7 @@ static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
 
     case UBX_MODE_DR:           // consider this too as 2D
         // 1
-        // chould be 3D?
+        // should be 3D?
         *mode = MODE_2D;
         *status = STATUS_DR;
         mask |= LATLON_SET | SPEED_SET | MODE_SET | STATUS_SET;
@@ -3237,7 +3237,7 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
             session->gpsdata.skyview[seen].elevation = (double)elev;
         }
         /* For some reason UBX allows 360 == azim here, but gpsd json does not
-         * so fix thta.  Other UBX specifies 0-359. */
+         * so fix that.  Other UBX specifies 0-359. */
         if (360 == azim) {
             azim = 0;
         }

@@ -112,7 +112,7 @@
  * 020 - heading (20 degrees from true north)
  * 0011 - speed over ground (11 metres per second); documentation says km per h
  *
- * This is an exampe of an 0x8e message that activates all NMEA sentences
+ * This is an example of an 0x8e message that activates all NMEA sentences
  * with 1s period:
  * 10 02 12 8E 7F 01 01 01 01 01 01 01 01 00 00 00 00 00 00 15 10 03
  *

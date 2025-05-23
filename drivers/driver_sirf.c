@@ -2234,7 +2234,7 @@ static gps_mask_t sirf_msg_nl(struct gps_device_t *session,
         break;
     case 35:
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF IV: unused NL 0x38, SubID: 4, ECLM Download Intiate\n");
+                 "SiRF IV: unused NL 0x38, SubID: 4, ECLM Download Initiate\n");
         break;
     case 255:
         GPSD_LOG(LOG_PROG, &session->context->errout,

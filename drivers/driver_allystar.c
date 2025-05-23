@@ -86,7 +86,7 @@ typedef enum {
     NAV_SVSTATE     = MSGID(ALLY_NAV, 0x32),
     NAV_AUTO        = MSGID(ALLY_NAV, 0xc0),
     NAV_PVT         = MSGID(ALLY_NAV, 0xc1),
-    /* NMEA_* for CFG-MSG, srouce:
+    /* NMEA_* for CFG-MSG, source:
      * https://docs.datagnss.com/rtk-board/#9download-the-latest-firmware
      */
     NMEA_GGA        = MSGID(ALLY_NMEA, 0x00),
@@ -98,7 +98,7 @@ typedef enum {
     NMEA_VTG        = MSGID(ALLY_NMEA, 0x06),
     NMEA_ZDA        = MSGID(ALLY_NMEA, 0x07),
     NMEA_TXT        = MSGID(ALLY_NMEA, 0x20),
-    /* RTCM_* for CFG-MSG, srouce:
+    /* RTCM_* for CFG-MSG, source:
      * https://docs.datagnss.com/rtk-board/#9download-the-latest-firmware
      */
     RTCM_1005       = MSGID(ALLY_RTCM, 0x05),
@@ -363,7 +363,7 @@ bool ally_write(struct gps_device_t * session,
 
 /* ALLYSTAR "svid" to ubx_gnssid, ubx_svid, ubs_sigid
  * Sort of documented in the $GPGSV section.
- * But the ranges overlap, so many PRNs are ambiguos...
+ * But the ranges overlap, so many PRNs are ambiguous...
  *
  * Returns ubx_svid
            0 on error
@@ -820,11 +820,11 @@ static gps_mask_t msg_nav_auto(struct gps_device_t *session,
     unpacked_date.tm_min = min;
     unpacked_date.tm_sec = sec;
     session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
-    // If rate highter than 1Hz, we have no idea of sub-seconds...
+    // If rate higher than 1Hz, we have no idea of sub-seconds...
     session->newdata.time.tv_nsec = 0;
     TS_NORM(&session->newdata.time);
     if (3 <= fixstate) {
-        // not sure baout states 1 and 2
+        // not sure about states 1 and 2
         mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
     }
 
@@ -1274,7 +1274,7 @@ static gps_mask_t msg_nav_pvt(struct gps_device_t *session,
  *   ALLYSTAR if (8 + 24 *numCh)
  *
  * NOT USED BECAUSE:
- *   some fields not doccumented: flags, quality
+ *   some fields not documented: flags, quality
  *   reports a cno, but does not say for L1, L2, etc.
  *   no way to know if a sat used, or unhealthy
  *
@@ -1354,7 +1354,7 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
         session->gpsdata.skyview[st].prRes = prRes / 100.0;
 
         /* Undocumented, but (quality & 7) seems to be same as
-         * tje u-blox qulityInd */
+         * the u-blox qualityInd */
         session->gpsdata.skyview[st].qualityInd = quality & 7;
 
         // No health data, no used data.
@@ -1889,18 +1889,18 @@ static void ally_mode(struct gps_device_t *session, int mode UNUSED)
         // prolly no need for NAV-AUTO and NAV-POLL
         NAV_AUTO,
         NAV_CLOCK,
-        // NAV_CLOCK2,           // unsuported TAU1202
+        // NAV_CLOCK2,           // unsupported TAU1202
         NAV_DOP,
         NAV_POSECEF,
         NAV_POSLLH,
-        // NAV_PVERR,            // unsuported TAU1202
-        // NAV_PVT,              // unsuported TAU1202
+        // NAV_PVERR,            // unsupported TAU1202
+        // NAV_PVT,              // unsupported TAU1202
         NAV_SVINFO,
         NAV_SVSTATE,
         NAV_TIME,
         NAV_TIMEUTC,
-        // NAV_VELECEF,          // unsuported TAU1202
-        // NAV_VELNED,           // unsuported TAU1202
+        // NAV_VELECEF,          // unsupported TAU1202
+        // NAV_VELNED,           // unsupported TAU1202
     };
 
     // turn on all binary NAV- messages we know of
@@ -1942,7 +1942,7 @@ static bool speed(struct gps_device_t *session, speed_t speed,
         // save new speed as the fixed speed
         session->context->fixed_port_speed = speed;
     }
-    // change port speed to new speed.  Allystar is alway 8N1
+    // change port speed to new speed.  Allystar is always 8N1
     gpsd_set_speed(session, speed, 'N', 1);
 
     return true;

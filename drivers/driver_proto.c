@@ -229,7 +229,7 @@ static gps_mask_t _proto__msg_svinfo(struct gps_device_t *session,
         if(session->gpsdata.PRN[i])
                 st++;
     }
-    /* if the satellite-info setence gives you UTC time, use it */
+    /* if the satellite-info sentence gives you UTC time, use it */
     session->gpsdata.skyview_time = NaN;
     session->gpsdata.satellites_used = nsv;
     session->gpsdata.satellites_visible = st;
@@ -512,7 +512,7 @@ const struct gps_type_t driver__proto__binary = {
     .type_name        = "_proto",
     /* Associated lexer packet type */
     .packet_type      = _PROTO__PACKET,
-    /* Driver tyoe flags */
+    /* Driver type flags */
     .flags            = DRIVER_NOFLAGS,
     /* Response string that identifies device (not active) */
     .trigger          = NULL,
