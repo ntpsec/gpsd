@@ -427,7 +427,7 @@ static struct flist_t vsave_status1[] = {
  * Used in x8f-a9 */
 static struct vlist_t vss_enable[] = {
     {0, "SS Disabled"},
-    {1, "SS Eabled"},
+    {1, "SS Enabled"},
     {0, NULL},
 };
 
@@ -2999,7 +2999,7 @@ static gps_mask_t decode_x8f_a7(struct gps_device_t *session, const char *buf,
     } else {
         // unknown mode
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIP x8f-a7: tow %llu fmt %u. Unnown mode len %d\n",
+                 "TSIP x8f-a7: tow %llu fmt %u. Unknown mode len %d\n",
                  (long long unsigned)tow, fmt, length);
     }
     // FIME, loop over the individual sat data
