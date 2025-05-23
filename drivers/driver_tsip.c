@@ -3002,7 +3002,7 @@ static gps_mask_t decode_x8f_a7(struct gps_device_t *session, const char *buf,
                  "TSIP x8f-a7: tow %llu fmt %u. Unknown mode len %d\n",
                  (long long unsigned)tow, fmt, length);
     }
-    // FIME, loop over the individual sat data
+    // FIXME: loop over the individual sat data
     return mask;
 }
 
