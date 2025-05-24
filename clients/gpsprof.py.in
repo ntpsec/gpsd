@@ -1208,7 +1208,7 @@ if __name__ == '__main__':
     options = parser.parse_args()
 
     if options.logfile:
-        options.logfp = open(options.logfile, "w", encoding=ascii)
+        options.logfp = open(options.logfile, "w", encoding="ascii")
     else:
         options.logfp = None
 
@@ -1255,7 +1255,7 @@ if __name__ == '__main__':
         plot.postprocess()
         # Save the timing data (only) for post-analysis if required.
         if options.dumpfile:
-            with open(options.dumpfile, "w", encoding=ascii) as fp:
+            with open(options.dumpfile, "w", encoding="ascii") as fp:
                 fp.write(plot.dump())
         if options.logfp:
             options.logfp.close()
