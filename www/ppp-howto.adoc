@@ -296,7 +296,7 @@ order to program it correctly. Set _UBXOPTS_ so you do not need to use
 -P option on every _ubxtool_ command:
 
 ----
-$ export UBXOPS="-P XX"
+$ export UBXOPTS="-P XX"
 ----
 
 Replace XX with your protocol version.
