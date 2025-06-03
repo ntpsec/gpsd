@@ -5664,6 +5664,8 @@ Not in:
                       'name': 'UBX-MON-RF'},
                0x39: {'str': 'SYS', 'dec': mon_sys, 'minlen': 24,
                       'name': 'UBX-MON-SYS'},
+               # protVer 50, X20
+               0x3b: {'str': 'POST', 'minlen': 12, 'name': 'UBX-MON-POST'},
                }
 
     def nav_aopstatus(self, buf):
@@ -6663,6 +6665,9 @@ protVer 34 and up
                       'name': 'UBX-NAV-PL'},
                0x63: {'str': 'TIMENAVIC', 'dec': nav_timenavic, 'minlen': 20,
                       'name': 'UBX-NAV-TIMENAVIC'},
+               # protVer 50, X20
+               0x64: {'str': 'TIMETRUSTED',  'minlen': 40,
+                      'name': 'UBX-NAV-TIMETRUSTED'},
                }
 
     def nav2_clock(self, buf):
@@ -8290,6 +8295,9 @@ Removed in protVer 32 (u-blox 9 and 10)
                0x32: {'str': 'RTCM', 'dec': rxm_rtcm, 'minlen': 8,
                       'name': 'UBX-RXM-RTCM'},
                0x34: {'str': 'COR', 'minlen': 12, 'name': 'UBX-RXM-COR'},
+               # protVer 50
+               0x36: {'str': 'SPARTNKEY', 'minlen': 4,
+                      'name': 'UBX-RXM-SPARTNKEY'},
                # Broadcom calls this BRM-ASC-SCLEEP
                0x41: {'str': 'PMREQ', 'dec': rxm_pmreq, 'minlen': 4,
                       'name': 'UBX-RXM-PMREQ'},
@@ -10533,6 +10541,9 @@ present in 9-series and higher
         # UBX-MON-PATCH
         "MON-PATCH": {"command": send_poll, "opt": [0x0a, 0x27],
                       "help": "poll UBX-MON-PATCH Info on Installed Patches"},
+        # UBX-MON-POST
+        "MON-POST": {"command": send_poll, "opt": [0x0a, 0x3b],
+                    "help": "poll UBX-MON-POST POST info"},
         # UBX-MON-RF
         "MON-RF": {"command": send_poll, "opt": [0x0a, 0x38],
                    "help": "poll UBX-MON-RF RF Information"},
@@ -10653,6 +10664,9 @@ present in 9-series and higher
         # UBX-NAV-TIMENAVIC
         "NAV-TIMENAVIC": {"command": send_poll, "opt": [0x01, 0x63],
                           "help": "poll UBX-NAV-TIMENAVIC Time Solution"},
+        # UBX-NAV-TIMETRUSTED, protVer 50, X20
+        "NAV-TIMETRUSTED": {"command": send_poll, "opt": [0x01, 0x64],
+                            "help": "poll UBX-NAV-TIMETRUSTED Tuststed Time"},
         # UBX-NAV-TIMEUTC
         "NAV-TIMEUTC": {"command": send_poll, "opt": [0x01, 0x21],
                         "help": "poll UBX-NAV-TIMEUTC UTC Time Solution"},
@@ -10731,6 +10745,9 @@ present in 9-series and higher
         # UBX-RXM-RAWX
         "RXM-RAWX": {"command": send_poll, "opt": [0x02, 0x15],
                      "help": "poll UBX-RXM-RAWX raw measurement data"},
+        # UBX-RXM-SPARTNKEY, protVer 50, X20
+        "RXM-SPARTNKEY": {"command": send_poll, "opt": [0x02, 0x36],
+                         "help": "poll UBX-RXM-SPARTNKEY get SPARTNKEY"},
 
         # UBX-SEC-OSNMA
         "SEC-OSNMA": {"command": send_poll, "opt": [0x27, 0x0a],
