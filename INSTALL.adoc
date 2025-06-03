@@ -1,6 +1,6 @@
 = GPSD Installation Instructions
 :author: Eric S. Raymond
-:date: 9 October Apr 2024
+:date: 3 June 2025
 :description: Steps for installing GPSD and verifying its performance.
 :docinfodir: www
 :email: <esr@thyrsus.com>
@@ -287,6 +287,15 @@ https://learn.adafruit.com/adafruit-ultimate-gps-hat-for-raspberry-pi/
 
 You will need to dig deeper to make the PPS work, here is a good reference:
 http://www.satsignal.eu/ntp/Raspberry-Pi-NTP.html
+
+If you are using a USB GNSS receiver, and your Raspberry Pi locks up
+as *gpsd* starts, try using the alternate USB driver.  Particularly
+on the PiZero2/3B+/3A+, BCM2835 based, models.  Edit /boot/config.txt
+and add the line "dtoverlay=dwc2,dr_mode=host" It's a slower, but more
+battle-hardened.
+
+NOTE: Some distributions use /boot/firmware/config.txt instead of
+/boot/config.txt.
 
 == Special Notes for Windows
 
