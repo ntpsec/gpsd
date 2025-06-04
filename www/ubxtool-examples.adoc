@@ -1,7 +1,7 @@
 = ubxtool examples
 Gary E. Miller <gem@rellim.com>
 :Author: Gary E. Miller
-:Date: 5 April 2023
+:Date: 3 June 2025
 :Description: U-blox GNSS receiver configuration examples
 :Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration, sudo
@@ -12,7 +12,7 @@ Gary E. Miller <gem@rellim.com>
 include::inc-menu.adoc[]
 
 WARNING: This document assumes you are using gpsd from git head, or
-version 3.25 or higher.  Using older gpsd versions will fail in strange
+version 3.26 or higher.  Using older gpsd versions will fail in strange
 ways.
 
 == Introduction
@@ -1771,9 +1771,59 @@ UBX-CFG-VALDEL and UBX-CFG-VALSET.  The bitmap for those is:
 * 2 -- BBR layer
 * 4 -- Flash layer
 
+== Antenna Testing
+
+Starting around protocol version 27, in the 9- and 10-series devices, the
+UBX-MON-SPAN message was added.  This allows your receiver to act as a
+simple spectrum analyzer for testing GNSS antennas.
+
+A scan only takes a few seconds.  To create a file with the scan data
+run this:
+
+----
+$ ubxtool -p MON-SPAN -P 27 -v3 -f /dev/ttyACM1 | \
+grep  -E  '^     1[[:digit:]]{9}, [[:digit:]]{1,3}' > ant.dat
+----
+
+The *ubxtool* command runs the MON-SPAN procedure.  The *grep*
+command extracts just the data that we beed.
+
+Convert that data into a nice plot with *gnuplot* using this
+plotfile:
+
+----
+$ cat ant.plt
+set terminal qt size 600,600
+
+set style line 12 lc rgb'#808080' lt 0 lw 1
+set grid back ls 12
+
+set xtics nomirror rotate by -45
+set format x "%9.0f"
+set yrange [20:180]
+plot 'ant.dat' using 1:2
+----
+
+And plot it to your desktop  this way:
+
+See [[FREQ]] for a list of common GNSS frequencies and bandwidths.
+
+----
+$ gnuplot -persist < ant.plt
+----
+
+You can then save the plot from the gnuplot menu as an SVG, PDF or image.
+
+== References
+
+[bibliography]
+
+- [[FREQ]] https://www.rfwireless-world.com/terminology/satellite-communication/gnss-gps-frequency-bands| GNSS and GPS Frequency Bands Explained 
+
+
 == COPYING
 
-This file is Copyright 2020 by the GPSD project +
+This file is Copyright by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause
 
 // vim: set syntax=asciidoc:
