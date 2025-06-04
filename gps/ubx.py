@@ -5480,9 +5480,14 @@ Deprecated in protVer 32.00
     def mon_span(self, buf):
         """UBX-MON-SPAN decode, Signal characteristics
 
-protVer 34.00 and up
-Present in M10S
+protVer 27.00 and up
+Present in F9, M9, M10S
 """
+
+        # first seen in protver 27
+        # at least protver 27
+        if 27 > self.protver:
+            self.protver = 27
 
         u = struct.unpack_from('<BBH', buf, 0)
         s = "  version %u numRfBlocks %u reserved0 %u" % u
