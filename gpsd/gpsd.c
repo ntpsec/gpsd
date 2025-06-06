@@ -1555,10 +1555,15 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (allocated_device(devp) && subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
+                    size_t rlen = strnlen(reply, replylen);
+
                     json_tpv_dump(NAVDATA_SET, devp, &sub->policy,
-                                  reply + strnlen(reply, replylen),
-                                  replylen - strnlen(reply, replylen));
+                                  reply + rlen, replylen - rlen);
                     rstrip(reply, replylen);
+                    if (strnlen(reply, replylen) == rlen) {
+                        // no data
+                        continue;
+                    }
                     (void)strlcat(reply, ",", replylen);
                 }
             }
@@ -1568,10 +1573,15 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (allocated_device(devp) && subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
-                    json_noise_dump(&devp->gpsdata,
-                                    reply + strnlen(reply, replylen),
-                                    replylen - strnlen(reply, replylen));
+                    size_t rlen = strnlen(reply, replylen);
+
+                    json_noise_dump(&devp->gpsdata, reply + rlen,
+                                    replylen - rlen);
                     rstrip(reply, replylen);
+                    if (strnlen(reply, replylen) == rlen) {
+                        // no data
+                        continue;
+                    }
                     (void)strlcat(reply, ",", replylen);
                 }
             }
@@ -1581,10 +1591,14 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (allocated_device(devp) && subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
-                    json_sky_dump(devp,
-                                  reply + strnlen(reply, replylen),
-                                  replylen - strnlen(reply, replylen));
+                    size_t rlen = strnlen(reply, replylen);
+
+                    json_sky_dump(devp, reply + rlen, replylen - rlen);
                     rstrip(reply, replylen);
+                    if (strnlen(reply, replylen) == rlen) {
+                        // no data
+                        continue;
+                    }
                     (void)strlcat(reply, ",", replylen);
                 }
             }
