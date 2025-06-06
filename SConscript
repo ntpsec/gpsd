@@ -1335,19 +1335,9 @@ if not cleaning and not helping:
     # check for 64 bit time_t.  Needed for 2038.
     sizeof_time_t = config.CheckTypeSize("time_t", "#include <time.h>",
                                          expect=8)
-    if 0 == sizeof_time_t:
-        # see if we can force time64_t
-        # this needs glibc 2.34 or later, and a compatible kernel
-        sizeof_time_t = config.CheckTypeSize("time_t",
-                                             "#define _TIME_BITS 64\n"
-                                             "#define _FILE_OFFSET_BITS 64\n"
-                                             "#include <time.h>",
-                                             expect=8)
-        if 0 != sizeof_time_t:
-            # force time64_t
-            confdefs.append("// Forcing 64-bit time_t\n"
-                            "#define _TIME_BITS 64\n"
-                            "#define _FILE_OFFSET_BITS 64\n")
+    # do not try to  force time64_t, that is a distro decision.
+    # it needs glibc 2.34 or later, and a compatible kernel
+    # CFLAGS += "-D_TIME_BITS 64 -D_FILE_OFFSET_BITS 64"
 
     if 0 == sizeof_time_t:
         announce("WARNING: time_t is too small.  It will fail in 2038")
