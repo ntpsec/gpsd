@@ -614,7 +614,7 @@ int gpsd_open(struct gps_device_t *session)
                  "CORE: opening UDP feed at %s, port %s.\n", host,
                  port);
         if (0 > (dsock = netlib_connectsock1(AF_UNSPEC, host, port, "udp",
-                                             0, true, NULL, 0))) {
+                                             1, true, NULL, 0))) {
             // cast for 32-bit ints.
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "CORE: UDP device open error %s(%ld).\n",
