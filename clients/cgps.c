@@ -1,7 +1,7 @@
 /*
  * Copyright 2005 Jeff Francis <jeff@gritch.org>
  *
- * This file is Copyright 2005 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -384,11 +384,16 @@ static void windowsetup(void)
         }
 
         if (NULL != messages) {
-            (void)delwin(messages);
+            if (OK != delwin(messages)) {
+                die(0, "Fail delwin(messages)");
+            }
             messages = NULL;
         }
         if (raw_flag) {
             messages = newwin(0, 0, window_ysize, 0);
+            /* FIXME?  how to check messages?
+             * "man newwin" says ERR == messages, but ERR is int, and
+             * messages is pointer. */
 
             if (OK != scrollok(messages, true) ||
                 OK != wsetscrreg(messages, 0, ysize - (window_ysize))) {
@@ -397,39 +402,43 @@ static void windowsetup(void)
         }
 
         // Do the initial IMU field label setup.
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "msg:");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time:");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "timeTag:");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Accel X:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Accel Y:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Accel Z:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro T:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg C");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro X:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg/s^2");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro Y:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg/s^2");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro Z:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg/s^2");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag X:");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Y:");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Z:");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "True Heading:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Yaw:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Pitch:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
-        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Roll:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
-        (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
+        if (OK != mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "msg:") ||
+            OK != mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time:") ||
+            OK != mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "timeTag:") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Accel X:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Accel Y:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Accel Z:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro T:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg C") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro X:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg/s^2") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro Y:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg/s^2") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro Z:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg/s^2") ||
+            OK != mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag X:") ||
+            OK != mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Y:") ||
+            OK != mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Z:") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "True Heading:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Yaw:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Pitch:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg") ||
+            OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Roll:") ||
+            OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg") ||
+            OK != wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0)) {
+            die(0, "Fail mvaddstr(datawin,,,) window.");
+        }
         // done with IMU setup
 
         // make it so
-        (void)refresh();
+        if (OK != refresh()) {
+            die(0, "Fail refresh() window.");
+        }
         return;
     } // else
 
