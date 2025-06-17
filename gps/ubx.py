@@ -4055,8 +4055,11 @@ Deprecated in protVer 32.00
         u = struct.unpack_from('<BBH', buf, 0)
         s = ' version %u layer %u position %u\n' % u
         s += '  layers (%s)' % index_s(u[1], self.cfg_valget_layers)
-
         m_len -= 4
+        if gps.VERB_DECODE <= self.verbosity:
+            # doc says max 64, but M9N returns up to 80.
+            s += '\n   count %d' % (m_len / 4)
+
         i = 0
 
         if 0 == u[0]:
@@ -4065,6 +4068,8 @@ Deprecated in protVer 32.00
                 u = struct.unpack_from('<L', buf, 4 + i * 4)
                 item = self.cfg_by_key(u[0])
                 s += ('\n    item %s/%#x' % (item[0], u[0]))
+                if gps.VERB_DECODE <= self.verbosity:
+                    s += '\n      %s' % item[5]
                 m_len -= 4
                 i += 1
         else:
