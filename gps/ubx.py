@@ -4089,7 +4089,9 @@ Deprecated in protVer 32.00
                 frmat = cfg_type[1]
                 # flavor = cfg_type[2]  UNUSED
                 v = struct.unpack_from(frmat, buf, i)
-                s += ('\n    item %s/%#x val %s' % (item[0], u[0], v[0]))
+                s += '\n    item %s/%#x val %s' % (item[0], u[0], v[0])
+                if gps.VERB_DECODE <= self.verbosity:
+                    s += '\n      %s' % item[5]
                 m_len -= size
                 i += size
 
