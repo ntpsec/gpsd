@@ -83,7 +83,7 @@ if [ -z $1 ]; then usage; exit 1; fi
 
 TEST_FILE=$1
 
-if [ `ifconfig -a | grep ${CAN_UNIT} | wc -c` -eq 0 ]; then device; exit 1; fi
+if [ `ip li sh -a | grep ${CAN_UNIT} | wc -c` -eq 0 ]; then device; exit 1; fi
 
 if [ `command -v ${CAN_PLAYER} | wc -c` -eq 0 ]; then can_utils; exit 1; fi
 
