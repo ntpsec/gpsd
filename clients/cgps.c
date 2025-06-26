@@ -1056,7 +1056,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
                 gpsdata->fix.magnetic_track);
         }
         if (0 == isfinite(gpsdata->fix.magnetic_var)) {
-            (void)strlcat(scr, "      ", sizeof(scr));
+            (void)strlcpy(buf2, "n/a", sizeof(buf2));
         } else {
             (void)snprintf(buf2, sizeof(buf2), "%6.1f",
                            gpsdata->fix.magnetic_var);
@@ -1066,7 +1066,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
         (void)strlcpy(buf2, "n/a", sizeof(buf2));
     }
     (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET,
-                    "Track %-14s %6s,%6s    deg", mag_str, buf1, buf2);
+                    "Track %-14.14s %6.6s,%6.6s    deg", mag_str, buf1, buf2);
 
     // Fill in the rate of climb.
     if (0 == isfinite(gpsdata->fix.climb)) {
