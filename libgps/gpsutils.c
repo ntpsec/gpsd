@@ -32,6 +32,17 @@
 #include <QStringList>
 #endif
 
+// decodes for gps_fix_t
+
+// ant_stat
+const struct vlist_t vant_status[] = {
+    {ANT_UNK, "UNK"},     // 0
+    {ANT_OK, "OK"},     // 1
+    {ANT_OPEN, "OPEN"},    // 2
+    {ANT_SHORT, "SHORT"},   // 3
+    {0, NULL},
+};
+
 // gnssId names
 const struct vlist_t vgnssId[] = {
     {0, "GPS"},

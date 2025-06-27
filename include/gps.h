@@ -3027,6 +3027,7 @@ struct vlist_t {
     unsigned long val;
     const char *str;
 };
+extern const struct vlist_t vant_status[];     // ant_status to string
 extern const struct vlist_t vgnssId[];         // gnssId val to gnssId string
 extern const struct vlist_t vmode_str[];       // mode val to mode string
 extern const struct vlist_t vstatus_str[];     // status val to tatus string
