@@ -4565,6 +4565,72 @@ static gps_mask_t processPSTI036(int count UNUSED, char *field[],
     return mask;
 }
 
+/* decoce $PSTMVER
+ * Private ST Teseo liv4f
+ *
+ * Response to $PSTMGETVER,255
+ *
+ */
+static gps_mask_t processPSTMVER(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    /*
+    * $PSTMVER,<SW name and version>*<checksum>
+    *
+    * $PSTMVER,FreeRTOS_V10.4.3_ARM*57
+    * $PSTMVER,BINIMG_STA8041_4.6.6.5.6_ARM*0C
+    * $PSTMVER,SWCFG_86065331*62
+    * $PSTMVER,GNSSLIB_8.4.8.13_ARM*7F
+    * $PSTMVER,OS20LIB_4.3.0_ARM*47
+    * $PSTMVER,GPSAPP_2.2.1_ARM*1D
+    * $PSTMVER,SWCFG_8102510d*35
+    * $PSTMVER,WAASLIB_2.18.0_ARM*61
+    * $PSTMVER,STAGPSLIB_5.0.0_ARM*59
+    * $PSTMVER,STA8090_622bc043*6F
+    */
+
+    gps_mask_t mask = ONLINE_SET;
+    size_t m_len =  strnlen(field[1], 40) + 2;
+    size_t st_left =  (sizeof(session->subtype) -
+                       strnlen(session->subtype, sizeof(session->subtype)));
+    size_t st1_left =  (sizeof(session->subtype1) -
+                        strnlen(session->subtype1, sizeof(session->subtype1)));
+
+    if (NULL != strstr(session->subtype, field[1]) ||
+        NULL != strstr(session->subtype1, field[1])) {
+        // already haev it, ignore.
+    } else if (m_len < st_left) {
+        // room in subtype
+        if ('\0' == session->subtype[0]) {
+            (void)strncat(session->subtype, "STM,",
+                          sizeof(session->subtype) - 1);
+        } else {
+            (void)strncat(session->subtype, ",",
+                          sizeof(session->subtype) - 1);
+        }
+        (void)strncat(session->subtype, field[1],
+                      sizeof(session->subtype) - 1);
+    } else if (m_len < st1_left) {
+        // room in subtype1
+        if ('\0' != session->subtype1[0]) {
+            (void)strncat(session->subtype1, ",",
+                          sizeof(session->subtype1) - 1);
+        }
+        (void)strncat(session->subtype1, field[1],
+                      sizeof(session->subtype1) - 1);
+    } else {
+        // else no room.  log it
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "NMEA0183: $PSTMVER: no room for: %s\n", field[1]);
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+            "NMEA0183: $PSTMVER: %s, %s\n",
+            session->subtype, session->subtype1);
+
+    return mask;
+}
+
 // Recommend Minimum Course Specific GPS/TRANSIT Data
 static gps_mask_t processRMC(int count, char *field[],
                              struct gps_device_t *session)
@@ -5333,6 +5399,8 @@ static gps_mask_t processZDA(int c UNUSED, char *field[],
     return mask;
 }
 
+
+
 /**************************************************************************
  *
  * Entry points begin here
@@ -5543,6 +5611,9 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PSTI", "036", 2, false, processPSTI036},
         // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
         {"PSTM", NULL, 0, false, NULL},
+        // STM messages
+        {"PSTMVER", NULL, 1, false, processPSTMVER},
+
         /* Kongsberg Seatex AS. Seapath 320
          * $PSXN,20,horiz-qual,hgt-qual,head-qual,rp-qual*csum
          * $PSXN,21,event*csum
