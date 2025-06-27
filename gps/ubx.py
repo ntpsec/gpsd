@@ -4056,9 +4056,6 @@ Deprecated in protVer 32.00
         s = ' version %u layer %u position %u\n' % u
         s += '  layers (%s)' % index_s(u[1], self.cfg_valget_layers)
         m_len -= 4
-        if gps.VERB_DECODE <= self.verbosity:
-            # doc says max 64, but M9N returns up to 80.
-            s += '\n   count %d' % (m_len / 4)
 
         i = 0
 
@@ -4080,6 +4077,7 @@ Deprecated in protVer 32.00
 
             # sort of duplicated in cfg_valset()
             i += 4
+            count = 0
             while 4 < m_len:
                 u = struct.unpack_from('<L', buf, i)
                 m_len -= 4
@@ -4099,6 +4097,9 @@ Deprecated in protVer 32.00
                     s += '\n      %s' % item[5]
                 m_len -= size
                 i += size
+
+            if gps.VERB_DECODE <= self.verbosity:
+                s += '\n   count %d' % (count)
 
             if 0 < m_len:
                 s += "\nWARNING: %d extra bytes!" % m_len
