@@ -4565,8 +4565,111 @@ static gps_mask_t processPSTI036(int count UNUSED, char *field[],
     return mask;
 }
 
+/* decoce $PSTMANTENNASTATUS antenna status
+ * Private STM
+ * Also used bysome Quectel.
+ * Present in ST Teseo liv4f
+ *
+ */
+static gps_mask_t processPSTMANTENNASTATUS(int c UNUSED, char *field[],
+                                          struct gps_device_t *session)
+{
+    /*
+     * $PSTMANTENNASTATUS,<ant_status>,<op_mode>,<rf_path>,<pwr_switch>*<chk>
+     * $PSTMANTENNASTATUS,0,0,0,0*51
+     *
+     *  ant_status Decimal Current
+     *      0 = Normal condition
+     *      1 = Open condition
+     *      2 = Short condition
+     *
+     *  op_mode Decimal
+     *  Current antenna detection operating mode
+     *      0 = Automatic mode
+     *      1 = Manual mode
+     *
+     * rf_path Decimal
+     * Current RF path
+     *      0 = External antenna
+     *      1 = Internal antenna
+     *
+     * pwr_switch Decimal
+     * Current antenna power status
+     *      0 = Antenna power is on
+     *      1 = Antenna power is off
+     */
+
+    static const struct vlist_t vop_mode[] = {
+        {0, "Auto"},
+        {1, "Manual"},
+        {0, NULL},
+    };
+
+    static const struct vlist_t vpwr_switch[] = {
+        {0, "On"},
+        {1, "Off"},
+        {0, NULL},
+    };
+
+    static const struct vlist_t vrf_path[] = {
+        {0, "External"},
+        {1, "Internal"},
+        {0, NULL},
+    };
+
+    gps_mask_t mask = ONLINE_SET;
+    int ant_status = atoi(field[1]);
+    int op_mode = atoi(field[2]);
+    int rf_path = atoi(field[3]);
+    int pwr_switch = atoi(field[4]);
+
+    switch(ant_status) {
+    case 0:
+        session->newdata.ant_stat = ANT_OK;
+        break;
+    case 1:
+        session->newdata.ant_stat = ANT_OPEN;
+        break;
+    case 2:
+        session->newdata.ant_stat = ANT_SHORT;
+        break;
+    default:
+        session->newdata.ant_stat = ANT_UNK;
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                "NMEA0183: ant_stat: UNKNOWN(%d)\n", ant_status);
+        break;
+    }
+
+    if (ANT_UNK != session->newdata.ant_stat) {
+        mask |= STATUS_SET;
+    }
+
+    if (0 > op_mode ||
+        1 < op_mode) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "NMEA0183: malformed PSTMANTENNASTATUS op_mode: %s\n",
+                field[2]);
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+            "NMEA0183: PSTMANTENNASTATUS ant_status:%d op_mode:%d "
+            "rf_path:%d pwr_switch:%d\n",
+            ant_status, op_mode, rf_path, pwr_switch);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "NMEA0183: PSTMANTENNASTATUS ant_status:%s(%d) op_mode:%s(%d) "
+             "rf_path:%s(%d) pwer_switch:%s(%d)\n",
+             val2str(session->newdata.ant_stat, vant_status),
+             session->newdata.ant_stat,
+             val2str(op_mode, vop_mode), op_mode,
+             val2str(rf_path, vrf_path), rf_path,
+             val2str(pwr_switch, vpwr_switch), pwr_switch);
+
+    return mask;
+}
+
 /* decoce $PSTMVER
- * Private ST Teseo liv4f
+ * Private STM
+ * Present in ST Teseo liv4f
  *
  * Response to $PSTMGETVER,255
  *
@@ -5612,6 +5715,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
         {"PSTM", NULL, 0, false, NULL},
         // STM messages
+        {"PSTMANTENNASTATUS", NULL, 4, false, processPSTMANTENNASTATUS},
         {"PSTMVER", NULL, 1, false, processPSTMVER},
 
         /* Kongsberg Seatex AS. Seapath 320
