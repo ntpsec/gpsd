@@ -92,40 +92,40 @@ vendors ever read the NMEA documentation.</p>
 
 <ul>
 <li><p>When Qualcomm bought SiRF, they stopped releasing any documentation,
-and started get creative with their interpretations of NMEA.  Thenm starting
-adding new protocols.</p></li>
+and started getting creative with their interpretations of NMEA.  Then they
+started adding new protocols.</p></li>
 
 <li><p>The QUalcomm SiRF-TriG, Furuno GT-88, Navlor CH-4701, and Quectel
-EG25-G, all emit broken $xxGSA sentences.  Each broken in  different ways.
+EG25-G, all emit broken $xxGSA sentences.  Each broken in different ways.
 </p></li>
 
 <li><p>The Quectel-chipsets implement "Querky" interpretations of the
-NMEA protocol.  *gpsd* tries to implement workarounds when possiblem
-but it would be far better is Quectel developers read the NMEA
+NMEA protocol.  *gpsd* tries to implement workarounds when possible
+but it would be far better if Quectel developers read the NMEA
 protocol documentation.</p></li>
 </ul>
 
 <h2>Implementation blunders</h2>
 
 <p>These are the screwups that lead us to wonder if the GPS chipset
-vendors ever actually test their hardware.</p>
+vendors actually test their hardware.</p>
 
 <ul>
 <li><p>The iTalk protocol  from Fastrax Inc. sometimes emits well-formed,
 checksummed binary packets in which the length is incorrect.  If you
-trust it and read the number of bytes it tells you to, you'll land in
+trust it and read the number of bytes it tells you, you'll land in
 the middle of the next packet.</p></li>
 
 <li><p>Wintec has modified the firmware on the WBT200 (and probably the
 WBT100 as well) to disable iTalk support, thus making more room in the
-flash memory for logging. This wouldn't be a problem if they had also
-disabled the protocol switch command. Users attempting to switch their
+flash memory for logging.  This wouldn't be a problem if they had also
+disabled the protocol switch command.  Users attempting to switch their
 Wintec receivers to iTalk will find their receiver is left in limbo;
-not emitting iTalk, and unable to switch back to NMEA either. A hard
+not emitting iTalk, and unable to switch back to NMEA.  A hard
 reset by removing all power sources (including onboard battery backup)
 is the only way to get the receiver to communicate again.</p></li>
 
-<li><p>Some Garmin chips issue a bogus length field, too.  This from the
+<li><p>Some Garmin chips issue a bogus length field.  This from the
 outfit that likes to tout itself as the industry leader!</p></li>
 
 <li><p>The SiRF-IV chipset has a tendency to freeze when switched from
