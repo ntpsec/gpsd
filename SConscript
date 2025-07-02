@@ -2311,7 +2311,7 @@ substmap = (
     ('@GPSAPIVERMAJ@', api_version_major),
     ('@GPSAPIVERMIN@', api_version_minor),
     ('@GPSPACKET@',  packet_ffi_shared[0].get_path()),
-    ('@GROUP@',  def_group),
+    ('@GROUP@',  env['gpsd_group']),
     ('@ICONPATH@',   installdir('icondir', add_destdir=False)),
     ('@INCLUDEDIR@', installdir('includedir', add_destdir=False)),
     ('@IRCCHAN@',    ircchan),
