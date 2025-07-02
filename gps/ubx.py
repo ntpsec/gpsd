@@ -8519,40 +8519,47 @@ changed in protVer 34
              '  towMsR %u towSubMsR %u towMsF %u towSubMsF %u accEst %u\n' % u)
         return s
 
+    tim_tp_flags_timebase = {
+        0: "GNSS",
+        1: "UTC",
+        }
+
+    tim_tp_flags_utc = {
+        0: "NA",
+        2: "OK",
+        }
+
+    tim_tp_flags_raim = {
+        0: "NA",
+        4: "inactive",
+        8: "active",
+        0x0c: "Unk",
+        }
+
+    # 9-series, protVer 32 and up.
+    tim_tp_flags_qErr = {
+        0: "Valid",
+        0x10: "Invalid",
+        }
+
     def tim_tp(self, buf):
         """UBX-TIM-TP decode, Time Pulse Timedata
 
-qErrInvalid add in protVer 34 and up
+qErrInvalid added in protVer 32 and up
 """
 
         u = struct.unpack_from('<LLlHbb', buf, 0)
         s = ('  towMS %u towSubMS %u qErr %d week %d\n'
-             '  flags %#x refInfo %#x\n   flags ' % u)
+             '  flags %#x refInfo %#x' % u)
 
-        if 0x01 & u[4]:
-            s += "timeBase is UTC, "
-        else:
-            s += "timeBase is GNSS, "
-        if 0x02 & u[4]:
-            s += "UTC available, "
-        else:
-            s += "UTC not available, "
-
-        raim = (u[4] >> 2) & 0x03
-        if 0 == raim:
-            s += "RAIM not available"
-        elif 1 == raim:
-            s += "RAIM not active"
-        elif 2 == raim:
-            s += "RAIM active"
-        else:
-            s += "RAIM ??"
-
-        # 9-series, protVer 32 and up.
-        if 0x08 & u[4]:
-            s += ", quantization error valid"
-        else:
-            s += ", quantization error invalid"
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ('\n   flags (timebase:%s UTC:%s RAIM:%s qErr:%s)' %
+                  (index_s(u[4] & 1, self.tim_tp_flags_timebase),
+                   index_s(u[4] & 2, self.tim_tp_flags_utc),
+                   index_s(u[4] & 0x0c, self.tim_tp_flags_raim),
+                   # qErr, 9-series, protVer 32 and up.
+                   index_s(u[4] & 0x10, self.tim_tp_flags_qErr))
+                  )
         return s
 
     tim_vrfy_flags = {
