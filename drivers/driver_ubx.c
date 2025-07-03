@@ -79,7 +79,7 @@
 #define outProtoMask            14
 
 // UBX Satellite/Dignal Numbering
-static struct vlist_t vgnss_sig_ids[] = {
+static const struct vlist_t vgnss_sig_ids[] = {
     {0x0000, "GPS L1 C/A"},
     {0x0003, "GPS L2 CL"},
     {0x0004, "GPS L2 CM"},
@@ -113,14 +113,14 @@ static struct vlist_t vgnss_sig_ids[] = {
 };
 
 // UBX-ACK-* ids
-static struct vlist_t vack_ids[] = {
+static const struct vlist_t vack_ids[] = {
     {UBX_ACK_ACK, "ACK-ACK"},
     {UBX_ACK_NAK, "ACK-NAK"},
     {0, NULL},
 };
 
 // UBX-INF-* inf_ids
-static struct vlist_t vinf_ids[] = {
+static const struct vlist_t vinf_ids[] = {
     {UBX_INF_DEBUG, "INF-DEBUG"},
     {UBX_INF_TEST, "INF-TEST"},
     {UBX_INF_NOTICE, "INF-NOTICE"},
@@ -130,7 +130,7 @@ static struct vlist_t vinf_ids[] = {
 };
 
 // UBX-MON-COMMS protIds
-static struct vlist_t vprotIds[] = {
+static const struct vlist_t vprotIds[] = {
     {0, "UBX"},
     {1, "NMEA"},
     {2, "RTCM2"},
@@ -140,21 +140,21 @@ static struct vlist_t vprotIds[] = {
 };
 
 // UBX-MON-COMMS txErrors
-static struct flist_t vmon_comms_txerrors[] = {
+static const struct flist_t vmon_comms_txerrors[] = {
     {1, 1, "mem"},
     {2, 2, "alloc"},
     {0, 0, NULL},
 };
 
 // UBX-MON-TXBUF errors
-static struct flist_t vmon_txbuf_errors[] = {
+static const struct flist_t vmon_txbuf_errors[] = {
     {0x40, 0x40, "mem"},
     {0x80, 0x80, "alloc"},
     {0, 0, NULL},
 };
 
 // UBX-MON-HW flags
-static struct flist_t vmon_hw_flags[] = {
+static const struct flist_t vmon_hw_flags[] = {
     {1, 1, "RTC Calibrated"},
     {2, 2, "Safeboot Active"},
     {0x04, 0x0c, "Jam OK"},
@@ -165,7 +165,7 @@ static struct flist_t vmon_hw_flags[] = {
 };
 
 // UBX-MON-HW aPower
-static struct vlist_t vaPower[] = {
+static const struct vlist_t vaPower[] = {
     {0, "Off"},
     {1, "On"},
     {2, "Unk"},
@@ -173,7 +173,7 @@ static struct vlist_t vaPower[] = {
 };
 
 // UBX-MON-HW aStatus
-static struct vlist_t vaStatus[] = {
+static const struct vlist_t vaStatus[] = {
     {0, "Init"},
     {1, "Unk"},
     {2, "OK"},
@@ -183,14 +183,14 @@ static struct vlist_t vaStatus[] = {
 };
 
 // UBX-MON-RF blockId
-static struct vlist_t vmon_rf_blockId[] = {
+static const struct vlist_t vmon_rf_blockId[] = {
     {0, "L1 Unk"},
     {1, "L2 or L5"},
     {0, NULL},
 };
 
 // UBX-MON-RF flags
-static struct vlist_t vmon_rf_flags[] = {
+static const struct vlist_t vmon_rf_flags[] = {
     {0, "Jam Unk"},
     {1, "Jam OK"},
     {2, "Jam Warn"},
@@ -200,7 +200,7 @@ static struct vlist_t vmon_rf_flags[] = {
 
 // Names for portID values in:
 //  UBX-CFG-PRT, UBX-MON-IO, UBX-MON-RXBUF, UBX-MON-TXBUF, target
-static struct vlist_t vtarget[] = {
+static const struct vlist_t vtarget[] = {
     {0, "DDC"},             // The license free name for I2C
     {1, "UART1"},
     {2, "UART2"},
@@ -214,7 +214,7 @@ static struct vlist_t vtarget[] = {
 };
 
 // UBX-HNR-PVT, UBX-NAV-SOL gpsFix, UBX-NAV-PVT fixType
-static struct vlist_t vpvt_fixType[] = {
+static const struct vlist_t vpvt_fixType[] = {
     {0, "None"},
     {1, "DR"},
     {2, "2D"},
@@ -225,7 +225,7 @@ static struct vlist_t vpvt_fixType[] = {
 };
 
 // UBX-HNR-PVT flags
-static struct flist_t fhnr_pvt_flags[] = {
+static const struct flist_t fhnr_pvt_flags[] = {
     {1, 1, "gnssFixOK"},
     {2, 2, "diffSoln"},
     {4, 4, "WKNSET"},
@@ -235,7 +235,7 @@ static struct flist_t fhnr_pvt_flags[] = {
 };
 
 // UBX-NAV-PVT flags
-static struct flist_t fnav_pvt_flags[] = {
+static const struct flist_t fnav_pvt_flags[] = {
     {1, 1, "gnssFixOK"},
     {2, 2, "diffSoln"},
     // {0, 0x1v, "psmState"},      // ??
@@ -246,7 +246,7 @@ static struct flist_t fnav_pvt_flags[] = {
 };
 
 // UBX-NAV-PVT flags2
-static struct flist_t fpvt_flags2[] = {
+static const struct flist_t fpvt_flags2[] = {
     {0x20, 0x20, "confirmedAvai"},   // protver 19+
     {0x40, 0x40, "confirmedDate"},
     {0x80, 0x80, "confirmedTime"},
@@ -254,13 +254,13 @@ static struct flist_t fpvt_flags2[] = {
 };
 
 // UBX-NAV-PVT flags3
-static struct flist_t fpvt_flags3[] = {
+static const struct flist_t fpvt_flags3[] = {
     {0x20, 0x20, "invalLlh"},
     {0, 0, NULL},
 };
 
 // UBX-HNR-PVT, UBX-NAV-PVT valid
-static struct flist_t fpvt_valid[] = {
+static const struct flist_t fpvt_valid[] = {
     {1, 1, "validDate"},
     {2, 2, "validTime"},
     {4, 4, "fullyResolved"},
@@ -269,13 +269,13 @@ static struct flist_t fpvt_valid[] = {
 };
 
 // UBX-NAV-PVT, dgps_age
-static int pvt_dgps_age[] = {
+static const int pvt_dgps_age[] = {
     -1, 1, 2, 5, 10,
     15, 20, 30, 45, 60,
     90, 120, 240};
 
 // UBX-NAV-SAT flags
-static struct flist_t fsat_flags[] = {
+static const struct flist_t fsat_flags[] = {
     // bits 0, 1, and 2 == qualityInd
     {8, 8, "Used"},
     {0x10, 0x30, "healthy"},
@@ -297,7 +297,7 @@ static struct flist_t fsat_flags[] = {
 };
 
 // UBX-NAV-SIG corrSource
-static struct vlist_t vsig_corrsource[] = {
+static const struct vlist_t vsig_corrsource[] = {
     {0, "None"},
     {1, "SBAS"},
     {2, "rBDS"},
@@ -311,7 +311,7 @@ static struct vlist_t vsig_corrsource[] = {
 };
 
 // UBX-NAV-SIG ionoModel
-static struct vlist_t vsig_ionomodel[] = {
+static const struct vlist_t vsig_ionomodel[] = {
     {0, "None"},
     {1, "Klobuchar GPS"},
     {2, "SBAS"},
@@ -320,7 +320,7 @@ static struct vlist_t vsig_ionomodel[] = {
 };
 
 // UBX-NAV-SIG sigFlags
-static struct flist_t fsig_sigFlags[] = {
+static const struct flist_t fsig_sigFlags[] = {
     {1, 3, "healthy"},
     {2, 3, "unhealthy"},
     {4, 4, "prSmoothed"},
@@ -336,7 +336,7 @@ static struct flist_t fsig_sigFlags[] = {
 
 // UBX-NAV-SVIN active
 // UBX-TIM-SVIN active
-static struct vlist_t vsvin_active[] = {
+static const struct vlist_t vsvin_active[] = {
     {0, "Inactive"},
     {1, "Active"},
     {0, NULL},
@@ -344,14 +344,14 @@ static struct vlist_t vsvin_active[] = {
 
 // UBX-NAV-SVIN valid
 // UBX-TIM-SVIN valid
-static struct vlist_t vsvin_valid[] = {
+static const struct vlist_t vsvin_valid[] = {
     {0, "Invalid"},
     {1, "Valid"},
     {0, NULL},
 };
 
 // UBX-NAV-SVINFO flags
-static struct flist_t fsvinfo_flags[] = {
+static const struct flist_t fsvinfo_flags[] = {
     {1, 1, "svUsed"},
     {2, 2, "diffCorr"},
     {4, 4, "orbitAvail"},
@@ -364,7 +364,7 @@ static struct flist_t fsvinfo_flags[] = {
 };
 
 // UBX-NAV-SVINFO globalFlags
-static struct vlist_t vglobalFlags[] = {
+static const struct vlist_t vglobalFlags[] = {
     {0, "Antaris 4"},
     {1, "u-blox 5"},
     {2, "u-blox 6"},
@@ -374,7 +374,7 @@ static struct vlist_t vglobalFlags[] = {
 };
 
 // UBX-NAV-SAT, UBX-NAV-SVINFO qualtyiInd
-static struct vlist_t vquality[] = {
+static const struct vlist_t vquality[] = {
     {0, "None"},
     {1, "Searching"},
     {2, "Acquired"},
@@ -387,7 +387,7 @@ static struct vlist_t vquality[] = {
 };
 
 // UBX-NAV-TIMEGPS valid
-static struct flist_t vtimegps_valid[] = {
+static const struct flist_t vtimegps_valid[] = {
     {1, 1, "towValid"},
     {2, 2, "weekValid"},
     {4, 4, "leapSValid"},
@@ -395,7 +395,7 @@ static struct flist_t vtimegps_valid[] = {
 };
 
 // UBX-NAV-TIMELS srcOfCurrLs
-static struct vlist_t vsrcOfCurrLs[] = {
+static const struct vlist_t vsrcOfCurrLs[] = {
     {0, "firmware"},
     {1, "GPS GLONASS difference"},
     {2, "GPS"},
@@ -408,7 +408,7 @@ static struct vlist_t vsrcOfCurrLs[] = {
 };
 
 // UBX-NAV-TIMELS srcOfLsChange
-static struct vlist_t vsrcOfLsChange[] = {
+static const struct vlist_t vsrcOfLsChange[] = {
     {0, "No Source"},
     {1, "Undefined"},
     {2, "GPS"},
@@ -420,7 +420,7 @@ static struct vlist_t vsrcOfLsChange[] = {
 };
 
 // UBX-NAV-TIMELS valid
-static struct flist_t vtimels_valid[] = {
+static const struct flist_t vtimels_valid[] = {
     {1, 1, "validCurrLs"},
     {2, 2, "validTimeToLsEvent"},
     {0, 0, NULL},
@@ -4678,6 +4678,59 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
     uint8_t flags;
     uint8_t refInfo;
     timespec_t ts_tow;
+    char buf2[80];
+    char buf3[80];
+
+    static const struct flist_t tim_tp_flags[] = {
+        {0, 1, "timebase:GNSS"},
+        {1, 1, "timebase:UTC"},
+        {0, 2, "UTC:NA"},
+        {2, 2, "UTC:OK"},
+        {0, 0x0c, "RAIM:NA"},
+        {4, 0x0c, "RAIM:inactive"},
+        {8, 0x0c, "RAIM:active"},
+        {0x0c, 0x0c, "RAIM:Unk"},
+        // qErrValid  9-series, protVer 32 and up.
+        {0, 0x10, "qErr:Valid"},
+        {0x10, 0x10, "qErr:Invalid"},
+        {0, 0, NULL},
+    };
+
+    static const struct flist_t tim_tp_refInfo[] = {
+        {0, 0x0f, "GNSS:GPS"},
+        {1, 0x0f, "GNSS:GLONASS"},
+        {2, 0x0f, "GNSS:BeiDou"},
+        {3, 0x0f, "GNSS:Galileo"},
+        {4, 0x0f, "GNSS:NavIc"},
+        {5, 0x0f, "GNSS:Unk5"},
+        {6, 0x0f, "GNSS:Unk6"},
+        {7, 0x0f, "GNSS:Unk7"},
+        {8, 0x0f, "GNSS:Unk8"},
+        {9, 0x0f, "GNSS:Unk9"},
+        {10, 0x0f, "GNSS:Unk10"},
+        {11, 0x0f, "GNSS:Unk11"},
+        {12, 0x0f, "GNSS:Unk12"},
+        {13, 0x0f, "GNSS:Unk13"},
+        {14, 0x0f, "GNSS:Unk14"},
+        {15, 0x0f, "GNSS:Unk"},
+        {0x00, 0xf0, "UTC:Unk"},
+        {0x10, 0xf0, "UTC:CRL"},
+        {0x20, 0xf0, "UTC:NIST"},
+        {0x30, 0xf0, "UTC:USNO"},
+        {0x40, 0xf0, "UTC:BIPM"},
+        {0x50, 0xf0, "UTC:EL"},
+        {0x60, 0xf0, "UTC:SU"},
+        {0x70, 0xf0, "UTC:NTSC"},
+        {0x80, 0xf0, "UTC:NPLI"},
+        {0x90, 0xf0, "UTC:Unk9"},
+        {0xa0, 0xf0, "UTC:Unk10"},
+        {0xb0, 0xf0, "UTC:Unk11"},
+        {0xc0, 0xf0, "UTC:Unk12"},
+        {0xd0, 0xf0, "UTC:Unk13"},
+        {0xe0, 0xf0, "UTC:Unk14"},
+        {0xf0, 0xf0, "UTC:Unk"},
+        {0, 0, NULL},
+    };
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -4729,9 +4782,14 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
     // cast for 32 bit compatibility
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX: TIM-TP: towMS %lu, towSubMS %lu, qErr %ld week %u "
-             "flags %#x, refInfo %#x\n",
+             "flags x%02x, refInfo x%02x\n",
              (unsigned long)towMS, (unsigned long)towSubMS, (long)qErr,
               week, flags, refInfo);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "UBX: TIM-TP: flags (%s) refInfo (%s)",
+             flags2str(flags, tim_tp_flags, buf2, sizeof(buf2)),
+             flags2str(refInfo, tim_tp_refInfo, buf3, sizeof(buf3)));
+
     return mask;
 }
 
