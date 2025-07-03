@@ -251,13 +251,26 @@ def pack_u32(number):
 
 
 def flag_s(flag, descs):
-    """Decode flag using descs, return a string.  Ignores unknown bits."""
+    """Decode single bit flags using descs, return a string.
+Ignores unknown bits."""
 
     s = ''
     for key, value in sorted(descs.items()):
         if key == (key & flag):
             s += value
             s += ' '
+
+    return s.strip()
+
+
+def flagm_s(flag, descs):
+    """Decode complex (multi-bit) flag using descs, return a string.
+Ignores unknown bits."""
+
+    s = ''
+    for val, mask, string in descs:
+        if val == (flag & mask):
+            s += string + ' '
 
     return s.strip()
 
@@ -8519,28 +8532,54 @@ changed in protVer 34
              '  towMsR %u towSubMsR %u towMsF %u towSubMsF %u accEst %u\n' % u)
         return s
 
-    tim_tp_flags_timebase = {
-        0: "GNSS",
-        1: "UTC",
-        }
+    tim_tp_flags = (
+        (0, 1, "timebase:GNSS"),
+        (1, 1, "timebase:UTC"),
+        (0, 2, "UTC:NA"),
+        (2, 2, "UTC:OK"),
+        (0, 0x0c, "RAIM:NA"),
+        (4, 0x0c, "RAIM:inactive"),
+        (8, 0x0c, "RAIM:active"),
+        (0x0c, 0x0c, "RAIM:Unk"),
+        # qErrValid  9-series, protVer 32 and up.
+        (0, 0x10, "qErr:Valid"),
+        (0x10, 0x10, "qErr:Invalid"),
+        )
 
-    tim_tp_flags_utc = {
-        0: "NA",
-        2: "OK",
-        }
-
-    tim_tp_flags_raim = {
-        0: "NA",
-        4: "inactive",
-        8: "active",
-        0x0c: "Unk",
-        }
-
-    # 9-series, protVer 32 and up.
-    tim_tp_flags_qErr = {
-        0: "Valid",
-        0x10: "Invalid",
-        }
+    tim_tp_refInfo = (
+        (0, 0x0f, "GNSS:GPS"),
+        (1, 0x0f, "GNSS:GLONASS"),
+        (2, 0x0f, "GNSS:BeiDou"),
+        (3, 0x0f, "GNSS:Galileo"),
+        (4, 0x0f, "GNSS:NavIc"),
+        (5, 0x0f, "GNSS:Unk5"),
+        (6, 0x0f, "GNSS:Unk6"),
+        (7, 0x0f, "GNSS:Unk7"),
+        (8, 0x0f, "GNSS:Unk8"),
+        (9, 0x0f, "GNSS:Unk9"),
+        (10, 0x0f, "GNSS:Unk10"),
+        (11, 0x0f, "GNSS:Unk11"),
+        (12, 0x0f, "GNSS:Unk12"),
+        (13, 0x0f, "GNSS:Unk13"),
+        (14, 0x0f, "GNSS:Unk14"),
+        (15, 0x0f, "GNSS:Unk"),
+        (0x00, 0xf0, "UTC:Unk"),
+        (0x10, 0xf0, "UTC:CRL"),
+        (0x20, 0xf0, "UTC:NIST"),
+        (0x30, 0xf0, "UTC:USNO"),
+        (0x40, 0xf0, "UTC:BIPM"),
+        (0x50, 0xf0, "UTC:EL"),
+        (0x60, 0xf0, "UTC:SU"),
+        (0x70, 0xf0, "UTC:NTSC"),
+        (0x80, 0xf0, "UTC:NPLI"),
+        (0x90, 0xf0, "UTC:Unk9"),
+        (0xa0, 0xf0, "UTC:Unk10"),
+        (0xb0, 0xf0, "UTC:Unk11"),
+        (0xc0, 0xf0, "UTC:Unk12"),
+        (0xd0, 0xf0, "UTC:Unk13"),
+        (0xe0, 0xf0, "UTC:Unk14"),
+        (0xf0, 0xf0, "UTC:Unk"),
+        )
 
     def tim_tp(self, buf):
         """UBX-TIM-TP decode, Time Pulse Timedata
@@ -8550,16 +8589,13 @@ qErrInvalid added in protVer 32 and up
 
         u = struct.unpack_from('<LLlHbb', buf, 0)
         s = ('  towMS %u towSubMS %u qErr %d week %d\n'
-             '  flags %#x refInfo %#x' % u)
+             '  flags x%02x refInfo x%02x' % u)
 
         if gps.VERB_DECODE <= self.verbosity:
-            s += ('\n   flags (timebase:%s UTC:%s RAIM:%s qErr:%s)' %
-                  (index_s(u[4] & 1, self.tim_tp_flags_timebase),
-                   index_s(u[4] & 2, self.tim_tp_flags_utc),
-                   index_s(u[4] & 0x0c, self.tim_tp_flags_raim),
-                   # qErr, 9-series, protVer 32 and up.
-                   index_s(u[4] & 0x10, self.tim_tp_flags_qErr))
-                  )
+            s += ('\n   flags (%s)'
+                  '\n   refInfo (%s)' %
+                  (flagm_s(u[4], self.tim_tp_flags),
+                   flagm_s(u[5], self.tim_tp_refInfo)))
         return s
 
     tim_vrfy_flags = {
