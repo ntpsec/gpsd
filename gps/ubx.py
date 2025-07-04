@@ -8544,6 +8544,9 @@ changed in protVer 34
         # qErrValid  9-series, protVer 32 and up.
         (0, 0x10, "qErr:Valid"),
         (0x10, 0x10, "qErr:Invalid"),
+        # TpNotLocked, 10-series, protVer 39.58 and up.
+        (0, 0x20, "TP:Locked"),
+        (0x20, 0x20, "TP:Unlocked"),
         )
 
     tim_tp_refInfo = (

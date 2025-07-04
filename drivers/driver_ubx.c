@@ -4693,6 +4693,9 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
         // qErrValid  9-series, protVer 32 and up.
         {0, 0x10, "qErr:Valid"},
         {0x10, 0x10, "qErr:Invalid"},
+        // TpNotLocked, 10-series, protVer 39.58 and up.
+        {0, 0x20, "TP:Locked"},
+        {0x20, 0x20, "TP:Unlocked"},
         {0, 0, NULL},
     };
 
