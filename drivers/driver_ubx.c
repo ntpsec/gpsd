@@ -4680,6 +4680,7 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
     timespec_t ts_tow;
     char buf2[80];
     char buf3[80];
+    const char *warn_msg = "";
 
     static const struct flist_t tim_tp_flags[] = {
         {0, 1, "timebase:GNSS"},
@@ -4693,7 +4694,7 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
         // qErrValid  9-series, protVer 32 and up.
         {0, 0x10, "qErr:Valid"},
         {0x10, 0x10, "qErr:Invalid"},
-        // TpNotLocked, 10-series, protVer 39.58 and up.
+        // TpNotLocked, 9-series, protVer 32 and up.
         {0, 0x20, "TP:Locked"},
         {0x20, 0x20, "TP:Unlocked"},
         {0, 0, NULL},
@@ -4749,9 +4750,13 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
     flags = buf[14];
     refInfo = buf[15];
 
-    // are we UTC, and towSubMs is zero?
-    if (3 == (flags & 0x03) &&
-        0 == towSubMS) {
+    if (0 != towSubMS) {
+        // not at Top Of Second !?
+        warn_msg = " Not at Top Of Second";
+    } else if (3 != (flags & 0x03)) {
+        warn_msg = " Not locked to UTC";
+    } else {
+        // are we UTC, and towSubMs is zer
 
         // leap already added!?!?
         int saved_leap = session->context->leap_seconds;
@@ -4789,9 +4794,10 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
              (unsigned long)towMS, (unsigned long)towSubMS, (long)qErr,
               week, flags, refInfo);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "UBX: TIM-TP: flags (%s) refInfo (%s)",
+             "UBX: TIM-TP: flags (%s) refInfo (%s)%s\n",
              flags2str(flags, tim_tp_flags, buf2, sizeof(buf2)),
-             flags2str(refInfo, tim_tp_refInfo, buf3, sizeof(buf3)));
+             flags2str(refInfo, tim_tp_refInfo, buf3, sizeof(buf3)),
+             warn_msg);
 
     return mask;
 }

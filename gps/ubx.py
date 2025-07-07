@@ -3906,10 +3906,11 @@ Deprecated in protVer 32.00
 
         return s
 
+    # status + 1
     cfg_tp_status = {
-        -1: "negative",
-        0: "off",
-        1: "positive",
+        0: "negative",
+        1: "off",
+        2: "positive",
         }
 
     cfg_tp_timeRef = {
@@ -3919,7 +3920,8 @@ Deprecated in protVer 32.00
         }
 
     cfg_tp_flags = {
-        1: "syncMode",
+        0: "synced only",
+        1: "always",
         }
 
     def cfg_tp(self, buf):
@@ -3927,15 +3929,15 @@ Deprecated in protVer 32.00
 
         # protVer 4.00 to 6.02
 
-        u = struct.unpack_from('<HHbBBBhhl', buf, 0)
+        u = struct.unpack_from('<LLbBBBhhl', buf, 0)
         s = ('  interval %u length %u status %d timeRef %u flags x%x res x%x\n'
              '  antennaCableDelay %u rfGroupDelay %d userDelay %d' % u)
 
         if gps.VERB_DECODE <= self.verbosity:
-            s += ("\n   flags (%s, %s, %s)" %
-                  (index_s(u[2], self.cfg_tp_status),
+            s += ("\n   status (%s) timeRef (%s) flags (%s)" %
+                  (index_s(u[2] + 1, self.cfg_tp_status),
                    index_s(u[3], self.cfg_tp_timeRef),
-                   flag_s(u[4], self.cfg_tp_flags)))
+                   index_s(u[4], self.cfg_tp_flags)))
 
         return s
 
@@ -4176,7 +4178,7 @@ Deprecated in protVer 32.00
         0x06: {'str': 'DAT', 'dec': cfg_dat, 'minlen': 2,
                'name': 'UBX-CFG-DAT'},
         # u-blox 5, 6.  Not in u-blox 7+
-        0x07: {'str': 'TP', 'dec': cfg_tp, 'minlen': 28,
+        0x07: {'str': 'TP', 'dec': cfg_tp, 'minlen': 20,
                'name': 'UBX-CFG-TP'},
         # in u-blox 5+
         0x08: {'str': 'RATE', 'dec': cfg_rate, 'minlen': 6,
@@ -8544,7 +8546,7 @@ changed in protVer 34
         # qErrValid  9-series, protVer 32 and up.
         (0, 0x10, "qErr:Valid"),
         (0x10, 0x10, "qErr:Invalid"),
-        # TpNotLocked, 10-series, protVer 39.58 and up.
+        # TpNotLocked, 9-series, protVer 32 and up.
         (0, 0x20, "TP:Locked"),
         (0x20, 0x20, "TP:Unlocked"),
         )
@@ -8586,6 +8588,8 @@ changed in protVer 34
 
     def tim_tp(self, buf):
         """UBX-TIM-TP decode, Time Pulse Timedata
+
+Note: qErr is for the next PPS edge to be received.
 
 qErrInvalid added in protVer 32 and up
 """
