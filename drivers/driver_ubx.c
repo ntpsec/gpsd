@@ -5438,7 +5438,8 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             }
             break;
         case 87:
-            if (15 > session->driver.ubx.protver) {
+            if (!session->context->passive &&
+                15 > session->driver.ubx.protver) {
                 unsigned i;
 
                 /* protver 14 or less
