@@ -8594,15 +8594,21 @@ Note: qErr is for the next PPS edge to be received.
 qErrInvalid added in protVer 32 and up
 """
 
+        # towSubMS is usually zero, but have seen 128, and 4294967168.
+        # towSubMs == 1 is 233 femto seconds!
+        # towSubMS == 128 is 29.802 pico seconds!
+        # towSubMS == 4294967168 is 0.9999999701976775 milli seconds
         u = struct.unpack_from('<LLlHbb', buf, 0)
-        s = ('  towMS %u towSubMS %u qErr %d week %d\n'
+        s = ('  towMS %u towSubMS %d qErr %d week %d\n'
              '  flags x%02x refInfo x%02x' % u)
 
         if gps.VERB_DECODE <= self.verbosity:
             s += ('\n   flags (%s)'
-                  '\n   refInfo (%s)' %
+                  '\n   refInfo (%s)'
+                  '\n   ftow %.12f' %
                   (flagm_s(u[4], self.tim_tp_flags),
-                   flagm_s(u[5], self.tim_tp_refInfo)))
+                   flagm_s(u[5], self.tim_tp_refInfo),
+                   (u[0] + (u[1] * 2 ** -32)) / 1000.0))
         return s
 
     tim_vrfy_flags = {

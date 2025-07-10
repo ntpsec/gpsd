@@ -4673,6 +4673,7 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
     gps_mask_t mask = ONLINE_SET;
     uint32_t towMS;
     uint32_t towSubMS;
+    uint64_t tow_tmp;    // temp to convert towSubMS to nano seconds.
     int32_t qErr;
     uint16_t week;
     uint8_t flags;
@@ -4743,17 +4744,26 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
     }
 
     towMS = getleu32(buf, 0);
-    // towSubMS always seems zero, which will match the PPS
+    /* towSubMS is usually zero, but have seen 128, and 4294967168.
+     * towSubMs == 1 is 233 femto seconds!
+     * towSubMS == 128 is 29.802 pico seconds!
+     * towSubMS == 4294967168 is 0.9999999701976775 milli seconds
+     */
     towSubMS = getleu32(buf, 4);
     qErr = getles32(buf, 8);
     week = getleu16(buf, 12);
     flags = buf[14];
     refInfo = buf[15];
 
-    if (0 != towSubMS) {
-        // not at Top Of Second !?
-        warn_msg = " Not at Top Of Second";
-    } else if (3 != (flags & 0x03)) {
+    MSTOTS(&ts_tow, towMS);
+    /* scale towSubMS to nano seconds, add in 500 pico seconds for rounding
+     * then remove the u-blox scaling. */
+    tow_tmp = (((uint64_t)towSubMS * 1000000UL) + 500000UL) >> 32;
+    ts_tow.tv_nsec += tow_tmp;
+    TS_NORM(&ts_tow);       // can happen on rounding 0.999999999 to 1.0
+
+    // check that it is close to top of second??
+    if (3 != (flags & 0x03)) {
         warn_msg = " Not locked to UTC";
     } else {
         // are we UTC, and towSubMs is zer
@@ -4765,39 +4775,24 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
 
         // good, save qErr and qErr_time
         session->gpsdata.qErr = qErr;
-        MSTOTS(&ts_tow, towMS);
+        // FIXME?  save as ftow??
         session->gpsdata.qErr_time = gpsd_gpstime_resolv(session, week, ts_tow);
 
         // restore leap
         session->context->leap_seconds = saved_leap;
-
-#ifdef __UNUSED
-        {
-         struct gps_device_t *ppsonly;
-         // FIXME!! should be up a layer so other drivers can use it
-         // FIXME!! this qErr can only apply to one PPS!
-         // propagate this in-band-time to all PPS-only devices
-         for (ppsonly = devices; ppsonly < devices + MAX_DEVICES; ppsonly++)
-             if (SOURCE_PPS == ppsonly->sourcetype) {
-                 pps_thread_qErrin(&ppsonly->pps_thread, qErr,
-                                   session->gpsdata.qErr_time);
-             }
-        }
-#endif  // __UNUSED
-
     }
 
-    // cast for 32 bit compatibility
+    // casts for 32 bit compatibility
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX: TIM-TP: towMS %lu, towSubMS %lu, qErr %ld week %u "
+             "UBX: TIM-TP: towMS %lu, towSubMS %ld, qErr %ld week %u "
              "flags x%02x, refInfo x%02x\n",
-             (unsigned long)towMS, (unsigned long)towSubMS, (long)qErr,
+             (unsigned long)towMS, (long)towSubMS, (long)qErr,
               week, flags, refInfo);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "UBX: TIM-TP: flags (%s) refInfo (%s)%s\n",
+             "UBX: TIM-TP: flags (%s) refInfo (%s) tos_tmp %llu %s\n",
              flags2str(flags, tim_tp_flags, buf2, sizeof(buf2)),
              flags2str(refInfo, tim_tp_refInfo, buf3, sizeof(buf3)),
-             warn_msg);
+             (long long unsigned)tow_tmp, warn_msg);
 
     return mask;
 }
