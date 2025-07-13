@@ -1,7 +1,7 @@
 = NMEA Revealed
 Eric S. Raymond <esr@thyrsus.com>
 :author: Eric S. Raymond
-:date: 28 July 2022
+:date: 12 July 2025
 :description: A programmer's guide to NMEA0183, the GPS protocol reporting standard
 :email: <esr@thyrsus.com>
 :keywords: NMEA0183, GPS, standard, protocol
@@ -603,7 +603,7 @@ numbering.
 |||65 - 99 GL|2| L1 P
 ||||3| L2 C/A
 ||||4| L2 P
-||||5 -F| Reserved
+||||5 -16| Reserved
 |Galileo| 3 (GA)|1 - 99| 0| All signals
 |||1 - 36 GA|1| E5a
 |||37 - 64 GA SBAS|2| E5b
@@ -612,7 +612,7 @@ numbering.
 ||||5| E6-BC
 ||||6| L1-A
 ||||7| L1-BC
-||||8 - F| Reserved
+||||8 - 16| Reserved
 |BDS (BeiDou System)| 4 (GB/BD)|1 - 99| 0| All signals
 |||1 - 64 BD|1| B1I
 ||||2| B1Q
@@ -623,10 +623,10 @@ numbering.
 ||||7| B2 a+b
 ||||8| B3I
 ||||9| B3Q
-||||A| B3A
-||||B| B2I
-||||C| B2Q
-||||D - F| Reserved
+||||10| B3A
+||||11| B2I
+||||12| B2Q
+||||13 - 16| Reserved
 |QZSS| 5 (GQ)|1 - 99| 0| All signals
 |||1 - 10 QZ|1| L1 C/A
 |||55 - 63 QZ SBAS|2| L1C (D)
@@ -637,8 +637,8 @@ numbering.
 ||||7| L5-I
 ||||8| L5-Q
 ||||9| L6D
-||||A| L6E
-||||B - F| Reserved
+||||10| L6E
+||||11 - 16| Reserved
 |NavIC| 6 (GI)| 0|1 - 99| All signals
 |||1 - 15 GI|1| L5-SPS
 |||33 - 64 SBAS|2| S-SPS
@@ -646,7 +646,6 @@ numbering.
 ||||4| S-RS
 ||||5| L1-SPS
 ||||6 - F| Reserved
-||||Reserved| 7 - F
 |========================================================================
 
 == Obsolete sentences
