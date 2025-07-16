@@ -236,6 +236,7 @@ def pack_s16(number):
     """Convert a number to 2 bytes (little endian signed)"""
     return struct.pack('<h', number)
 
+
 def pack_u16(number):
     """Convert a number to 2 bytes (little endian unsigned)"""
     return struct.pack('<h', number)
@@ -244,6 +245,7 @@ def pack_u16(number):
 def pack_s32(number):
     """Convert a number to 4 bytes (little endian signed)"""
     return struct.pack('<i', number)
+
 
 def pack_u32(number):
     """Convert a number to 4 bytes (little endian unsigned)"""
@@ -2371,7 +2373,8 @@ class ubx(object):
         # NOTE: Not all messages to u-blox GPS are ACKed...
 
         u = struct.unpack_from('<BB', buf, 0)
-        return '  NAK to %s' % self.class_id_s(u[0], u[1])
+        return (' NAK to %s (x%0x2:x%02x)' %
+                (self.name_s(u[0], u[1]), u[0], u[1]))
 
     # UBX-ACK-
     ack_ids = {0: {'str': 'NAK', 'dec': ack_nak, 'minlen': 2,
@@ -10639,7 +10642,7 @@ present in 9-series and higher
                       "help": "poll UBX-MON-PATCH Info on Installed Patches"},
         # UBX-MON-POST
         "MON-POST": {"command": send_poll, "opt": [0x0a, 0x3b],
-                    "help": "poll UBX-MON-POST POST info"},
+                     "help": "poll UBX-MON-POST POST info"},
         # UBX-MON-RF
         "MON-RF": {"command": send_poll, "opt": [0x0a, 0x38],
                    "help": "poll UBX-MON-RF RF Information"},
@@ -10843,7 +10846,7 @@ present in 9-series and higher
                      "help": "poll UBX-RXM-RAWX raw measurement data"},
         # UBX-RXM-SPARTNKEY, protVer 50, X20
         "RXM-SPARTNKEY": {"command": send_poll, "opt": [0x02, 0x36],
-                         "help": "poll UBX-RXM-SPARTNKEY get SPARTNKEY"},
+                          "help": "poll UBX-RXM-SPARTNKEY get SPARTNKEY"},
 
         # UBX-SEC-OSNMA
         "SEC-OSNMA": {"command": send_poll, "opt": [0x27, 0x0a],
