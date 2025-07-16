@@ -8754,6 +8754,26 @@ qErrInvalid added in protVer 32 and up
 
         return s
 
+    def name_s(self, m_class, m_id):
+        """Return UBX-cls-id as a string."""
+
+        s = 'UBX-'
+        if (((m_class in self.classes and
+              'str' in self.classes[m_class]))):
+            s += '%s-' % (self.classes[m_class]['str'])
+        else:
+            s = 'x%02x-' % (m_class)
+
+        if (((m_class in self.classes and
+              'ids' in self.classes[m_class] and
+              m_id in self.classes[m_class]['ids'] and
+              'str' in self.classes[m_class]['ids'][m_id]))):
+            s += self.classes[m_class]['ids'][m_id]['str']
+        else:
+            s += 'x%02x' % m_id
+
+        return s
+
     def decode_msg(self, out):
         """Decode one message and then return number of chars consumed"""
 
@@ -8990,6 +9010,13 @@ qErrInvalid added in protVer 32 and up
                             else:
                                 s_payload += ("  len %#x, raw %s" %
                                               (m_len, x_payload))
+                        else:
+                            # unknodn m_id
+                            s_payload = ("%s: Unknown message type\n" %
+                                         (self.name_s(m_class, m_id)))
+                            # FIXME: line lenght.
+                            s_payload += ("  len %#x, raw %s" %
+                                          (m_len, x_payload))
 
                 if not s_payload:
                     # huh?
