@@ -437,8 +437,20 @@ class ubx(object):
         # CFG-BDS--
         ("CFG-BDS", 0x1034FFFF, "", 0, "",
          "get all CFG-BDS"),
+        ("CFG-BDS-D1D2_NAVDATA", 0x20340009, "E1", 1, "",
+         "BDS D1 D2 navdata"),
         ("CFG-BDS-USE_GEO_PRN", 0x10340014, "L", 1, "",
          "Use BDS geostationary sats (PRN 1-5, 59-63)"),
+
+        # CFG-GAL-
+        ("CFG-GAL", 0x1054FFFF, "", 0, "",
+         "get all CFG-GAL"),
+        ("CFG-GAL-USE_OSNMA", 0x10540005, "L", 1, "",
+         "Use GAL Nav Data"),
+        ("CFG-GAL-OSNMA_MINTAGLENGTH", 0x20540007, "u1", 1, "",
+         "Use GAL Nav Data min length"),
+        ("CFG-GAL-OSNMA_TIMESYNC", 0x10540009, "L", 1, "",
+         "Use GAL OSNMA time sync"),
 
         # CFG-GEOFENCE-
         ("CFG-GEOFENCE", 0x2024FFFF, "", 0, "",
@@ -1458,6 +1470,30 @@ class ubx(object):
          "get all CFG-NAVHPG"),
         ("CFG-NAVHPG-DGNSSMODE", 0x20140011, "E1", 1, "",
          "Differential corrections mode"),
+        ("CFG-NAVHPG-INIFIX3D", 0x20140013, "L", 1, "",
+         "Initial fix must be 3D"),
+        ("CFG-NAVHPG-FIXMODE", 0x20140011, "E1", 1, "",
+         "Fix Mode"),
+        ("CFG-NAVHPG-WKNROLLOVER", 0x30140017, "U2", 1, "",
+         "GPS Week Follover Number"),
+        ("CFG-NAVHPG-UTCSTANDARD", 0x2014001c, "E1", 1, "",
+         "UTC Standard used"),
+        ("CFG-NAVHPG-DYNMODEL", 0x20140021, "E1", 1, "",
+         "Dynamic Model"),
+        ("CFG-NAVHPG-ACKAIDING", 0x10140025, "L", 1, "",
+         "ACK Assist Messages"),
+        ("CFG-NAVHPG-USE_USRDAT", 0x10140061, "L", 1, "",
+         "Use user datum"),
+        ("CFG-NAVHPG-USRDAT_MAJA", 0x50140062, "R8", 1, "",
+         "User datam semi-major axis"),
+        ("CFG-NAVHPG-USRDAT_FLAT", 0x50140063, "R8", 1, "",
+         "User datam flattening"),
+        ("CFG-NAVHPG-USRDAT_DX", 0x40140064, "R4", 1, "",
+         "User datam DX"),
+        ("CFG-NAVHPG-USRDAT_DY", 0x40140065, "R4", 1, "",
+         "User datam DY"),
+        ("CFG-NAVHPG-USRDAT_DZ", 0x40140066, "R4", 1, "",
+         "User datam DZ"),
 
         # CFG-NAVMASK-
         ("CFG-NAVMASK", 0x1018ffff, "", 0, "",
@@ -1870,12 +1906,16 @@ class ubx(object):
          "GAL E5A enable"),
         ("CFG-SIGNAL-GAL_E5B_ENA", 0x1031000a, "L", 1, "",
          "GAL E5b enable"),
+        ("CFG-SIGNAL-GAL_E6_ENA", 0x1031000b, "L", 1, "",
+         "GAL E6 enable"),
         ("CFG-SIGNAL-BDS_B1_ENA", 0x1031000d, "L", 1, "",
          "BeiDou B1I enable"),
         ("CFG-SIGNAL-BDS_B2_ENA", 0x1031000e, "L", 1, "",
          "BeiDou B2I enable"),
         ("CFG-SIGNAL-BDS_B1C_ENA", 0x1031000f, "L", 1, "",
          "BeiDou B1C enable"),
+        ("CFG-SIGNAL-BDS_B3_ENA", 0x10310010, "L", 1, "",
+         "BDS B3 enable"),
         ("CFG-SIGNAL-QZSS_L1CA_ENA", 0x10310012, "L", 1, "",
          "QZSS L1C/A enable"),
         ("CFG-SIGNAL-QZSS_L1S_ENA", 0x10310014, "L", 1, "",
@@ -1884,8 +1924,10 @@ class ubx(object):
          "QZSS L2C enable"),
         ("CFG-SIGNAL-QZSS_L5_ENA", 0x10310017, "L", 1, "",
          "QZSS_L5 enable"),
-        ("CFG-SIGNAL-GLO_L1%_ENA", 0x10310018, "L", 1, "",
+        ("CFG-SIGNAL-GLO_L1_ENA", 0x10310018, "L", 1, "",
          "GLONASS L1 enable"),
+        ("CFG-SIGNAL-GLO_L2_ENA", 0x1031001a, "L", 1, "",
+         "GLONASS L2 enable"),
         ("CFG-SIGNAL-NAVIC_L5_ENA", 0x1031001d, "L", 1, "",
          "NavIC L5 enable"),
         ("CFG-SIGNAL-GPS_ENA", 0x1031001f, "L", 1, "",
@@ -1904,6 +1946,8 @@ class ubx(object):
          "NavIC enable"),
         ("CFG-SIGNAL-BDS_B2A", 0x10310028, "L", 1, "",
          "BDS B2A enable"),
+        ("CFG-SIGNAL-PLAN", 0x1031003a, "E1", 1, "",
+         "SIGNAL PLAN"),
 
         # CFG-SPI-
         ("CFG-SPI", 0x1064ffff, "", 0, "",
@@ -2118,13 +2162,13 @@ class ubx(object):
          "The baud rate that should be configured on the UART2"),
         ("CFG-UART2-STOPBITS", 0x20530002, "E1", 1, "",
          "Number of stopbits that should be used on UART2"),
-        ("CFG-UART2-DATABITS", 0x20530003, "E1", "1", "",
+        ("CFG-UART2-DATABITS", 0x20530003, "E1", 1, "",
          "Number of databits that should be used on UART2"),
-        ("CFG-UART2-PARITY", 0x20530004, "E1", "1", "",
+        ("CFG-UART2-PARITY", 0x20530004, "E1", 1, "",
          "Parity mode that should be used on UART2"),
-        ("CFG-UART2-ENABLED", 0x10530005, "L", "1", "",
+        ("CFG-UART2-ENABLED", 0x10530005, "L", 1, "",
          "Flag to indicate if the UART2 should be enabled"),
-        ("CFG-UART2-REMAP", 0x10530006, "L", "1", "",
+        ("CFG-UART2-REMAP", 0x10530006, "L", 1, "",
          "UART2 Remapping"),
 
         # CFG-UART2INPROT
@@ -2257,6 +2301,7 @@ class ubx(object):
 
     cfg_by_key_group = {0x03: "TMODE",
                         0x05: "TP",
+                        0x09: "RTCM",
                         0x11: "NAVSPG",
                         0x14: "NAVHPG",
                         0x21: "RATE",
@@ -2266,11 +2311,15 @@ class ubx(object):
                         0x25: "MOT",
                         0x26: "BATCH",
                         0x31: "SIGNAL",
+                        0x34: "BDS",
+                        0x35: "GAL",
+                        0x36: "SBAS",
                         0x37: "QZSS",
                         0x41: "ITFM",
                         0x51: "I2C",
                         0x52: "UART1",
                         0x53: "UART2",
+                        0x54: "GAL",
                         0x64: "SPI",
                         0x65: "USB",
                         0x71: "I2CINPROT",
@@ -2288,9 +2337,11 @@ class ubx(object):
                         0x93: "NMEA",
                         0xa2: "TXREADY",
                         0xa3: "HW",
+                        0xa7: "SPARTN",
                         0xc7: "RINV",
                         0xd0: "PM",
                         0xde: "LOGFILTER",
+                        0xf6: "SEC",
                         }
 
     cfg_by_key_kmap = {0: "Z0",
@@ -4043,6 +4094,14 @@ Deprecated in protVer 32.00
         7: 'default',
         }
 
+    cfg_valxxx_size = {
+        1: "one bit",
+        2: "one byte",
+        3: "two bytes",
+        4: "four bytes",
+        5: "eight bytes",
+        }
+
     cfg_valxxx_trans = {
         0: "Transactionless",
         1: "(Re)start Transaction",
@@ -4093,7 +4152,11 @@ Deprecated in protVer 32.00
                 item = self.cfg_by_key(u[0])
                 s += ('\n    item %s/%#x' % (item[0], u[0]))
                 if gps.VERB_DECODE <= self.verbosity:
-                    s += '\n      %s' % item[5]
+                    size = (u[0] >> 28) & 0x07
+                    s += ('\n      size %s(%u) type %s scale %f'
+                         ' \n      %s' %
+                         (index_s(size, self.cfg_valxxx_size),
+                          size, item[2], item[3], item[5]))
                 m_len -= 4
                 i += 1
         else:
@@ -4106,6 +4169,7 @@ Deprecated in protVer 32.00
             i += 4
             count = 0
             while 4 < m_len:
+                count += 1
                 u = struct.unpack_from('<L', buf, i)
                 m_len -= 4
                 i += 4
@@ -4121,7 +4185,11 @@ Deprecated in protVer 32.00
                 v = struct.unpack_from(frmat, buf, i)
                 s += '\n    item %s/%#x val %s' % (item[0], u[0], v[0])
                 if gps.VERB_DECODE <= self.verbosity:
-                    s += '\n      %s' % item[5]
+                    rsize = (u[0] >> 28) & 0x07
+                    s += ('\n      size %s(%u) type %s scale %f'
+                         ' \n      %s' %
+                         (index_s(rsize, self.cfg_valxxx_size),
+                          rsize, item[2], item[3], item[5]))
                 m_len -= size
                 i += size
 
