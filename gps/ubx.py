@@ -10168,9 +10168,16 @@ present in 9-series and higher
         self.send_cmds(cmds)
 
     def get_config(self):
-        """CONFIG. Get a bunch of config messages"""
+        """CONFIG. Request a bunch of config messages, by protVer"""
 
+        # these two always
         cmds = [ubx.MON_VER,          # UBX-MON-VER
+                ubx.CFG_PRT,          # UBX-CFG-PRT
+                ]
+
+        if 29 > self.protver:
+            # these are gone - 29
+            cmds += [
                 ubx.CFG_ANT,          # UBX-CFG-ANT
                 ubx.CFG_DAT,          # UBX-CFG-DAT
                 # skip UBX-CFG-DGNSS, HP only
@@ -10187,7 +10194,6 @@ present in 9-series and higher
                 ubx.CFG_NAVX5,        # UBX-CFG-NAVX5
                 ubx.CFG_NMEA,         # UBX-CFG-NMEA
                 ubx.CFG_ODO,          # UBX-CFG-ODO
-                ubx.CFG_PRT,          # UBX-CFG-PRT
                 ubx.CFG_PM2,          # UBX-CFG-PM2
                 ubx.CFG_PMS,          # UBX-CFG-PMS
                 ubx.CFG_RATE,         # UBX-CFG-RATE
@@ -10195,11 +10201,12 @@ present in 9-series and higher
                 ubx.CFG_TP5,          # UBX-CFG-TP5
                 ubx.CFG_USB,          # UBX-CFG-USB
                 ]
-
-        if 20 < self.protver:
-            cmds.append(ubx.CFG_TMODE3)  # UBX-CFG-TMODE3, protVer 20+
-        if 22 < self.protver:
-            cmds.append(ubx.CFG_BATCH)   # UBX-CFG-BATCH, protVer 23.01+
+        else:
+            # under protVer 29
+            if 20 < self.protver:
+                cmds.append(ubx.CFG_TMODE3)  # UBX-CFG-TMODE3, protVer 20+
+            if 22 < self.protver:
+                cmds.append(ubx.CFG_BATCH)   # UBX-CFG-BATCH, protVer 23.01+
 
         self.send_cmds(cmds)
 
