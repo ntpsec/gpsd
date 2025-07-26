@@ -10063,16 +10063,19 @@ present in 9-series and higher
         # present in u-blox NEO-D9S+, protver 24
         # present in 9-series and higher
 
-        m_data = bytearray(4)
-        m_data[0] = 0      # version, 0 = request, 1 = transaction
-        m_data[1] = 0x7    # RAM layer, 1=RAM, 2=BBR, 4=Flash
-
+        # send CFG-VALSET one at a time, yes we could be smarter,
+        # but this gives better error messages.
         for nv in nvs:
+            m_data = bytearray(4)
+            m_data[0] = 0      # version, 0 = request, 1 = transaction
+            m_data[1] = 0x7    # RAM layer, 1=RAM, 2=BBR, 4=Flash
+
             size = 4
             nv_split = nv.split(',')
             name = nv_split[0]
             val = nv_split[1]
             if 3 <= len(nv_split):
+                # layer requested
                 m_data[1] = int(nv_split[2])
 
             item = self.cfg_by_name(name)
@@ -10085,9 +10088,9 @@ present in 9-series and higher
             frmat = cfg_type[1]
             flavor = cfg_type[2]
             if 'u' == flavor:
-                val1 = int(val)
+                val1 = int(val, 0)      # allow 0x and 0b prefix
             elif 'i' == flavor:
-                val1 = int(val)
+                val1 = int(val, 0)      # allow 0x and 0b prefix
             elif 'f' == flavor:
                 val1 = float(val)
 
@@ -10099,7 +10102,7 @@ present in 9-series and higher
 
             struct.pack_into(frmat, kv_data, 4, val1)
             m_data.extend(kv_data)
-        self.gps_send(0x06, 0x8a, m_data)
+            self.gps_send(0x06, 0x8a, m_data)
 
     def send_log_findtime(self, args):
         """UBX-LOG-FINDTIME, search log for y,m,d,h,m,s"""
