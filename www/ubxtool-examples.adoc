@@ -1,7 +1,7 @@
 = ubxtool examples
 Gary E. Miller <gem@rellim.com>
 :Author: Gary E. Miller
-:Date: 3 June 2025
+:Date: 26 July 2025
 :Description: U-blox GNSS receiver configuration examples
 :Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration, sudo
@@ -241,6 +241,57 @@ We finish the example by turning $GNGNS back off:
 $ ubxtool -p CFG-MSG,0xf0,0x0d,0
 ----
 
+== Enabling and Disabling Informationa; Messages.
+
+Sometimes the recevier will reject a setting with a simple ACK-NAK.
+If you enable the Information Messages (CFG-INFMSG-*) then the
+receiver may actually tell you why it rejected your setting.  This
+will save you some agravation, so be sure to enable  them all.
+
+=== With Configuration Items
+
+If the receiver is a 9-series, or higher, then you can change receiver
+settings using Configuration Items. These allow you to get, set and
+delete individual settings in the receiver. Before continuing this
+section, read the ubxtool man page on Configuration Items.
+
+To enable all UBX and NMEA messages on all output ports:
+
+----
+ubxtool -P 29 -z CFG-INFMSG-UBX_I2C,15  \
+ -z CFG-INFMSG-UBX_UART1,0x0f \
+ -z CFG-INFMSG-UBX_UART2,15 \
+ -z CFG-INFMSG-UBX_USB,15 \
+ -z CFG-INFMSG-UBX_SPI,15 \
+ -z CFG-INFMSG-NMEA_I2C,15 \
+ -z CFG-INFMSG-NMEA_UART1,15 \
+ -z CFG-INFMSG-NMEA_UART2,15 \
+ -z CFG-INFMSG-NMEA_USB,15 \
+ -z CFG-INFMSG-NMEA_SPI,15
+----
+
+Note that you can specify the value and a decimal, hexadecimal (0x), or
+binary (0b).
+
+----
+ubxtool -P 29 -g CFG-INFMSG
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-INFMSG-UBX_I2C/0x20920001 val 15
+    item CFG-INFMSG-UBX_UART1/0x20920002 val 15
+    item CFG-INFMSG-UBX_UART2/0x20920003 val 15
+    item CFG-INFMSG-UBX_USB/0x20920004 val 15
+    item CFG-INFMSG-UBX_SPI/0x20920005 val 15
+    item CFG-INFMSG-NMEA_I2C/0x20920006 val 15
+    item CFG-INFMSG-NMEA_UART1/0x20920007 val 15
+    item CFG-INFMSG-NMEA_UART2/0x20920008 val 15
+    item CFG-INFMSG-NMEA_USB/0x20920009 val 15
+    item CFG-INFMSG-NMEA_SPI/0x2092000a val 15
+[...]
+----
+
 == Dynamic Platform Model
 
 The most common variable mis-configured in a u-blox receiver is the
@@ -291,10 +342,10 @@ UBX-CFG-NAV5:
 
 === With Configuration Items
 
-If the receiver is a 9-series, then you can change the model using
-Configuration Items.  These allow you to get, set and delete individual
-settings in the receiver. Before continuing this section, read the
-ubxtool man page on Configuration Items.
+If the receiver is a 9-series, or higher, then you can change the model
+using Configuration Items. These allow you to get, set and delete
+individual settings in the receiver. Before continuing this section,
+read the ubxtool man page on Configuration Items.
 
 The CFG-NAVSPG Configuration Item group includes the CFG-NAV5 items
 of interest here.  So take a look at them, in the ram layer:
@@ -1003,7 +1054,7 @@ First you must understand what your GNSS receiver is capable of.  Find
 this out with the UBX-MON-GNSS message.
 
 ----
-$ ubxtool -p MON-GNSS
+$ ubxtool -p MON-GNSS -v 2
 ----
 
 If your receiver does not return an ACK-ACK message, then it is 7-series
