@@ -1134,18 +1134,59 @@ requirements, SBAS no longer has any value to the user, and is simply
 not supported.  Multiple signals per constellation are shown, and can be
 individually enabled.
 
+=== Checking Constellations using Configuration Items
+
+The 9-series, and later, did not update the UBX-MON-GNSS for the newly
+added constellations.  Support for UBX-CFG-GNSS was dropped entirely.
+So you must use configuration items.
+
+To check for enabled costellations and signals, get the SIGNALS group.
+Typical, not default, output from an F9T with L2 disabled and L5 enabled:
+
+----
+ubxtool -g CFG-SIGNAL
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-SIGNAL-GPS_L1CA_ENA/0x10310001 val 1
+    item CFG-SIGNAL-GPS_L2C_ENA/0x10310003 val 0
+    item CFG-SIGNAL-GPS_L5_ENA/0x10310004 val 1
+    item CFG-SIGNAL-SBAS_L1CA_ENA/0x10310005 val 1
+    item CFG-SIGNAL-GAL_E1_ENA/0x10310007 val 1
+    item CFG-SIGNAL-GAL_E5A_ENA/0x10310009 val 1
+    item CFG-SIGNAL-GAL_E5B_ENA/0x1031000a val 0
+    item CFG-SIGNAL-BDS_B1_ENA/0x1031000d val 1
+    item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 0
+    item CFG-SIGNAL-BDS_B1C_ENA/0x1031000f val 1
+    item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 0
+    item CFG-SIGNAL-BDS_B1C_ENA/0x1031000f val 1
+    item CFG-SIGNAL-QZSS_L1CA_ENA/0x10310012 val 1
+    item CFG-SIGNAL-QZSS_L2C_ENA/0x10310015 val 0
+    item CFG-SIGNAL-QZSS_L5_ENA/0x10310017 val 1
+    item CFG-SIGNAL-NAVIC_L5_ENA/0x1031001d val 1
+    item CFG-SIGNAL-GPS_ENA/0x1031001f val 1
+    item CFG-SIGNAL-SBAS_ENA/0x10310020 val 1
+    item CFG-SIGNAL-GAL_ENA/0x10310021 val 1
+    item CFG-SIGNAL-BDS_ENA/0x10310022 val 1
+    item CFG-SIGNAL-QZSS_ENA/0x10310024 val 1
+    item CFG-SIGNAL-NAVIC_ENA/0x10310026 val 1
+    item CFG-SIGNAL-BDS_B2A/0x10310028 val 0
+    item CFG-SIGNAL-41/0x10310029 val 0
+[...]
+----
+
+You can see that all constellations are enabled, all L1 and L5 signals
+are enabled, and all L2 signals are disabled.
+
 === Changing Constellations
 
-The 9-series receives a large number of signals in parallel, so other than
-for testing, there is no need to change the defaults that listen to
-everything.
-
-Stepping back a bit, the 8-series is more problematic.  Many of them
-can only listen to two out of the three possible frequency bands:  GPS,
-GLONASS and BeiDou.  Most default to GPS and GLONASS, but GPS and Beidou
-may work better.  This is partly because most GPS-only antennas can
-receive BeiDou, but fail to receive GLONASS.  Partly because BeiDou and
-GLONASS sats cover different regions of the earth.
+The 8-series, and some 7-series, are problematic. Many of them can only
+listen to two out of the three possible constellations: GPS, GLONASS
+and BeiDou. Most default to GPS and GLONASS, but GPS and Beidou may
+work better. This is partly because most GPS-only antennas can receive
+BeiDou, but fail to receive GLONASS. Partly because BeiDou and GLONASS
+sats cover different regions of the earth.
 
 If we first try to enable BeiDou, that will fail, as that would enable
 3 constellations when only 2 are supported.  So disable GLONASS, then
@@ -1291,6 +1332,35 @@ UBX-CFG-VALGET:
  version 1 layer 0 position 0
   layers (ram)
     item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 1
+----
+
+Some receviers, like the F9T, and the F20 HPG, can be picky about what
+signals can be enabled at the same time.  Illegal combinations will
+cause an INFMSG to be sent, if enabled.  Sometimes it is easier to turn off
+all L2 and L5, then enable what you want until your get an ACK-NAK.
+
+To disable all L2 and L5 signals at once:
+
+----
+ubxtool -P 29  -z CFG-SIGNAL-GPS_L2C_ENA,0 \
+  -z CFG-SIGNAL-GPS_L5_ENA,0 \
+  -z CFG-SIGNAL-GAL_E5A_ENA,0 \
+  -z CFG-SIGNAL-GAL_E5B_ENA,0 \
+  -z CFG-SIGNAL-BDS_B2_ENA,0 \
+  -z CFG-SIGNAL-QZSS_L2C_ENA,0 \
+  -z CFG-SIGNAL-QZSS_L5_ENA,0 \
+  -z CFG-SIGNAL-NAVIC_L5_ENA,0 \
+  -z CFG-SIGNAL-BDS_B2A,0
+----
+
+Then to turn on all the L5 signals:
+
+----
+ubxtool -P 29 -z CFG-SIGNAL-GPS_L5_ENA,1 \
+  -z CFG-SIGNAL-GAL_E5A_ENA,1 \
+  -z CFG-SIGNAL-GAL_E5B_ENA,1 \
+  -z CFG-SIGNAL-QZSS_L5_ENA,1 \
+  -z CFG-SIGNAL-NAVIC_L5_ENA,1
 ----
 
 == ADR and UDR
