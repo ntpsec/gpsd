@@ -5169,7 +5169,10 @@ u-blox 8, protVer 15 and up
         }
 
     def mon_gnss(self, buf):
-        """UBX-MON-GNSS decode, Information message major GNSS selection"""
+        """UBX-MON-GNSS decode, Information message major GNSS selection
+
+Ignores newer constellations like NavIC on 9-series and later.
+"""
         m_len = len(buf)
 
         if 8 > m_len:
@@ -9670,6 +9673,8 @@ protver 20+, and HP GNSS, required for RELPOSNED
 
 WARNING: the receiver will  ACK, then ignore, many seemingly valid settings.
 Always double check with "-p CFG-GNSS".
+
+Not supported on 9-series and later.
 """
 
         # FIXME!  Add warning if ,2 is requested on single frequency devices

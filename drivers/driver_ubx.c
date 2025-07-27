@@ -551,6 +551,7 @@ static const fw_protver_map_entry_t fw_protver_map[] = {
  * M8     2,01        15.00
  * M9     HPG 1.13    27.12
  * M10    SPG 5.00    34.00
+ * F20P   HPG 2.02    50.10
  */
 
 /* send a ubx message.
