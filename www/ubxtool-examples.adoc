@@ -153,10 +153,67 @@ an ACK-NAK meant you sent something invalid.
 
 Always double check that any settings changed stuck.
 
-This text, and these examples, will ignore ACK-ACK responses.  If any
-cause an ACK-NAK for you then you either found a bug in this document, your
-receiver does not support the requested operation, or you mistyped
+This text, and these examples, will ignore ACK-ACK responses. If any
+cause an ACK-NAK for you, then you either found a bug in this document,
+your receiver does not support the requested operation, or you mistyped
 something.
+
+The receiver can be a bit more helpful about issues when you enable the
+UBX-INF- messages.  More about that in the next section.
+
+== Enabling and Disabling Informational Messages.
+
+Sometimes the receiver will reject a setting with a simple ACK-NAK.
+If you enable the Information Messages (UBX-INF-) then the
+receiver may actually tell you why it rejected your setting.  This
+will save you some agravation, so be sure to enable them all.
+
+Prior to the 9-series, there appears to be no way to enable, or
+disable, the UBX-INF- messages, and only a few issues will generate them.
+
+=== With Configuration Items
+
+If the receiver is a 9-series, or higher, then you can change receiver
+settings using Configuration Items. These allow you to get, set and
+delete individual settings in the receiver. Before continuing this
+section, read the ubxtool man page on Configuration Items.
+
+To enable all UBX and NMEA messages on all output ports:
+
+----
+ubxtool -P 29 -z CFG-INFMSG-UBX_I2C,15  \
+ -z CFG-INFMSG-UBX_UART1,0x0f \
+ -z CFG-INFMSG-UBX_UART2,15 \
+ -z CFG-INFMSG-UBX_USB,15 \
+ -z CFG-INFMSG-UBX_SPI,15 \
+ -z CFG-INFMSG-NMEA_I2C,15 \
+ -z CFG-INFMSG-NMEA_UART1,15 \
+ -z CFG-INFMSG-NMEA_UART2,15 \
+ -z CFG-INFMSG-NMEA_USB,15 \
+ -z CFG-INFMSG-NMEA_SPI,15
+----
+
+Note that you can specify the value as a decimal, hexadecimal (0x), or
+binary (0b) number.
+
+----
+ubxtool -P 29 -g CFG-INFMSG
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-INFMSG-UBX_I2C/0x20920001 val 15
+    item CFG-INFMSG-UBX_UART1/0x20920002 val 15
+    item CFG-INFMSG-UBX_UART2/0x20920003 val 15
+    item CFG-INFMSG-UBX_USB/0x20920004 val 15
+    item CFG-INFMSG-UBX_SPI/0x20920005 val 15
+    item CFG-INFMSG-NMEA_I2C/0x20920006 val 15
+    item CFG-INFMSG-NMEA_UART1/0x20920007 val 15
+    item CFG-INFMSG-NMEA_UART2/0x20920008 val 15
+    item CFG-INFMSG-NMEA_USB/0x20920009 val 15
+    item CFG-INFMSG-NMEA_SPI/0x2092000a val 15
+[...]
+----
 
 == Enabling and Disabling Periodic Messages.
 
@@ -239,57 +296,6 @@ We finish the example by turning $GNGNS back off:
 
 ----
 $ ubxtool -p CFG-MSG,0xf0,0x0d,0
-----
-
-== Enabling and Disabling Informationa; Messages.
-
-Sometimes the recevier will reject a setting with a simple ACK-NAK.
-If you enable the Information Messages (CFG-INFMSG-*) then the
-receiver may actually tell you why it rejected your setting.  This
-will save you some agravation, so be sure to enable  them all.
-
-=== With Configuration Items
-
-If the receiver is a 9-series, or higher, then you can change receiver
-settings using Configuration Items. These allow you to get, set and
-delete individual settings in the receiver. Before continuing this
-section, read the ubxtool man page on Configuration Items.
-
-To enable all UBX and NMEA messages on all output ports:
-
-----
-ubxtool -P 29 -z CFG-INFMSG-UBX_I2C,15  \
- -z CFG-INFMSG-UBX_UART1,0x0f \
- -z CFG-INFMSG-UBX_UART2,15 \
- -z CFG-INFMSG-UBX_USB,15 \
- -z CFG-INFMSG-UBX_SPI,15 \
- -z CFG-INFMSG-NMEA_I2C,15 \
- -z CFG-INFMSG-NMEA_UART1,15 \
- -z CFG-INFMSG-NMEA_UART2,15 \
- -z CFG-INFMSG-NMEA_USB,15 \
- -z CFG-INFMSG-NMEA_SPI,15
-----
-
-Note that you can specify the value and a decimal, hexadecimal (0x), or
-binary (0b).
-
-----
-ubxtool -P 29 -g CFG-INFMSG
-[...]
-UBX-CFG-VALGET:
- version 1 layer 0 position 0
-  layers (ram)
-    item CFG-INFMSG-UBX_I2C/0x20920001 val 15
-    item CFG-INFMSG-UBX_UART1/0x20920002 val 15
-    item CFG-INFMSG-UBX_UART2/0x20920003 val 15
-    item CFG-INFMSG-UBX_USB/0x20920004 val 15
-    item CFG-INFMSG-UBX_SPI/0x20920005 val 15
-    item CFG-INFMSG-NMEA_I2C/0x20920006 val 15
-    item CFG-INFMSG-NMEA_UART1/0x20920007 val 15
-    item CFG-INFMSG-NMEA_UART2/0x20920008 val 15
-    item CFG-INFMSG-NMEA_USB/0x20920009 val 15
-    item CFG-INFMSG-NMEA_SPI/0x2092000a val 15
-[...]
 ----
 
 == Dynamic Platform Model
@@ -1907,7 +1913,7 @@ grep  -E  '^     1[[:digit:]]{9}, [[:digit:]]{1,3}' > ant.dat
 ----
 
 The *ubxtool* command runs the MON-SPAN procedure.  The *grep*
-command extracts just the data that we beed.
+command extracts just the data that we need.
 
 Convert that data into a nice plot with *gnuplot* using this
 plotfile:
