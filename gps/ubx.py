@@ -8428,6 +8428,65 @@ Removed in protVer 32 (u-blox 9 and 10)
 
     # UBX-SEC-
 
+    sec_osnma_nmaHeader = (
+        (0, 1, "NMA not auth,"),
+        (1, 1, "NMA authed,"),
+        (0, 6, "OSNMA not auth,"),
+        (2, 6, "OSNMA in test,"),
+        (4, 6, "OSNMA OK,"),
+        (6, 6, "OSNMA invalid,"),
+        (0, 0x18, "TESLA ID 0,"),
+        (8, 0x18, "TESLA ID 1,"),
+        (0x10, 0x18, "TESLA ID 2,"),
+        (0x18, 0x18, "TESLA ID 3,"),
+        (0, 0xe0, "TESLA NA,"),
+        (0x20, 0xe0, "TESLA Nominal"),
+        (0x40, 0xe0, "TESLA EOC"),
+        (0x60, 0xe0, "TESLA CREV"),
+        (0x80, 0xe0, "TESLA NPK"),
+        (0xa0, 0xe0, "TESLA PKEV"),
+        (0xc0, 0xe0, "TESLA NMT"),
+        (0xe0, 0xe0, "TESLA Alert"),
+        )
+
+    sec_osnma_osnma = (
+        (0, 1, "disabled,"),
+        (1, 1, "enabled,"),
+        (0x00, 0x60, "Header same,"),
+        (0x40, 0xc0, "pending auth,"),
+        (0x80, 0xc0, "header problem,"),
+        (0xc0, 0xc0, "Unk,"),
+        (0x100, 0x100, "noData,"),
+        (0x200, 0x200, "wrongData,"),
+        (0x400, 0x400, "wrongMaclt,"),
+        )
+
+    sec_osnma_timeSync = (
+        (0, 1, "disabled,"),
+        (1, 1, "enabled,"),
+        (0x00, 0x6e, "timeSync none,"),
+        (0x20, 0x6e, "timeSync no trusted time,"),
+        (0x40, 0x6e, "timeSync trusted time inaccurate,"),
+        (0x60, 0x6e, "timeSync trusted time inaccurate,"),
+        (0x80, 0x6e, "timeSync passed,"),
+        (0xa0, 0x6e, "timeSync replay attack,"),
+        (0xc0, 0x6e, "timeSync Unk,"),
+        (0xe0, 0x6e, "timeSync Unk,"),
+        )
+
+    sec_osnma_dsm = (
+        (0x00, "no DSM auth,"),
+        (0x01, "DSM-KROOT authed,"),
+        (0x02, "DMS-PKR authed,"),
+        (0x03, "OSNMA alert,"),
+        (0x04, "DSM-KROOT failed,"),
+        (0x05, "DSM-KROOT failed,"),
+        (0x06, "DSM unkown key,"),
+        (0x07, "Pub Key decomp failed,"),
+        (0x08, "Config unsupported,"),
+        (0x09, "Missing Merkle root,"),
+        )
+
     def sec_osnma(self, buf):
         """UBX-SEC_OSNMA decode, Galileo Open Service Nav Msg Auth
 
@@ -8440,8 +8499,19 @@ Partial decode."""
         s = (" version %u  nmaHeader x%x osnmaMonitoring x%x "
              "timSyncReq x%x\n"
              " reserved0 x%x %x timeSyncReqDiff %u reserved1 x%x "
-             "dsmAuthentication x%x\n" % u)
+             "dsmAuthentication x%x" % u)
 
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n    nmaHeader (%s)"
+                  "\n    nmaHeader (%s)"
+                  "\n    numSVs %d"
+                  "\n    timeSyncReq (%s)"
+                  "\n    dsm (%s)" % 
+                  (flagm_s(u[1], self.sec_osnma_nmaHeader),
+                   flagm_s(u[2], self.sec_osnma_osnma),
+                   (u[2] >> 1) & 0x1f,
+                   flagm_s(u[3], self.sec_osnma_timeSync),
+                   index_s(u[5], self.sec_osnma_dsm)))
         return s
 
     # UBX-SEC-SESSID in protVer 34 and up
