@@ -33,6 +33,29 @@
 
 #include "../include/timespec.h"
 
+/* hex2uchar() -- convert a signgle hex char to an insigned char
+ *
+ * Return: 0 on error
+ *         The converted char
+ */
+static unsigned char hex2uchar(unsigned char hex) {
+
+    if ('0' <= hex &&
+        '9' >= hex) {
+        return hex - '0';
+    }
+    if ('A' <= hex &&
+        'F' >= hex) {
+        return hex - 'A' + 10;
+    }
+    if ('a' <= hex &&
+        'f' >= hex) {
+        return hex - 'a' + 10;
+    }
+    // fail
+    return 0;
+}
+
 // $SNRSTAAT insstatus
 static const struct vlist_t vsnrstat_insstatus[] = {
     {-1, "Failure"},
@@ -468,74 +491,35 @@ static void register_fractional_time(const char *tag, const char *fld,
                           sizeof(ts_buf)));
 }
 
+/* Table to convert nmea sigid to ubx sigid (row index for nmea gnssid and
+ * column index for nmea sigid).
+ */
+#define NMEA_GNSSIDS 7
+#define NMEA_SIGIDS 12
+static const unsigned char nmea_to_ubx_table[NMEA_GNSSIDS][NMEA_SIGIDS] = {
+	{0, 0, 0, 0, 0, 4, 3, 6, 7, 0, 0, 0},    // Unknown assume GPS
+	{0, 0, 0, 0, 0, 4, 3, 6, 7, 0, 0, 0},    // GPS
+	{0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0},    // GLONASS
+	{0, 3, 5, 0, 10, 8, 0, 0, 0, 0, 0, 0},   // Galileo
+        // BeiDou B could be UBX 2 o3 3
+	{0, 0, 2, 5, 0, 7, 0, 0, 4, 0, 0, 2},    // BeiDou
+	{0, 0, 0, 0, 1, 4, 5, 8, 9, 0, 0, 0},    // QZSS
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};   // NavIC
+
 // convert NMEA sigid to ublox sigid
 static unsigned char nmea_sigid_to_ubx(struct gps_device_t *session,
+                                       unsigned char nmea_gnssid,
                                        unsigned char nmea_sigid)
 {
     unsigned char ubx_sigid = 0;
 
-    // FIXME: need to know gnssid to guess sigid
-    switch (nmea_sigid) {
-    default:
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: Unknown nmea_sigid %u\n", nmea_sigid);
-        FALLTHROUGH
-    case 0:
-        // missing, assume GPS L1
-        // ALLYSTAR, "all signal"
-        ubx_sigid = 0;
-        break;
-    case 1:
-        // L1
-        // ALLYSTAR, GLO G1CA
-        // ALLYSTAR, GAL E5A
-        // ALLYSTAR, BDS B1I
-        ubx_sigid = 0;
-        break;
-    case 2:
-        // E5, could be 5 or 6.
-        // ALLYSTAR, GAL E5B
-        // ALLYSTAR, BDS B2I
-        ubx_sigid = 5;
-        break;
-    case 3:
-        // B2 or L2, could be 2 or 3.
-        // ALLYSTAR, GLO G2CA
-        // ALLYSTAR, BDS B3I
-        ubx_sigid = 2;
-        break;
-    case 4:
-        // ALLYSTAR, BDS B2A
-        ubx_sigid = 7;     // This is for NMEA digid 5, but we have 4!  Close.
-        break;
-    case 5:
-        // L2
-        // ALLYSTAR, BDS B2A
-        ubx_sigid = 4;
-        break;
-    case 6:
-        // L2CL
-        // ALLYSTAR, GAL L1A
-        ubx_sigid = 3;
-        break;
-    case 7:
-        // E1, could be 0 or 1.
-        // ALLYSTAR, GAL LBC
-        ubx_sigid = 0;
-        break;
-    case 8:
-        // ALLYSTAR, GPS L5Q
-        ubx_sigid = 7;
-        break;
-    case 9:
-        // ALLYSTAR, Quectel, GPS L1C
-        // ALLYSTAR, BDS B1C
-        ubx_sigid = 0;
-        break;
-    case 11:
-        // ALLYSTAR, GPS L6
-        ubx_sigid = 0;
-        break;
+    if ((NMEA_GNSSIDS > nmea_gnssid) &&
+        (NMEA_SIGIDS > nmea_sigid)) {
+	    ubx_sigid = nmea_to_ubx_table[nmea_gnssid][nmea_sigid];
+    } else {
+	    GPSD_LOG(LOG_WARN, &session->context->errout,
+		     "NMEA0183: Unknown nmea_sigid %u with nmea_gnssid %u\n",
+		     nmea_sigid, nmea_sigid);
     }
 
     return ubx_sigid;
@@ -2202,14 +2186,12 @@ static gps_mask_t processGSV(int count, char *field[],
         // normal, pre-NMEA 4.10
         break;
     case 1:
-        // NMEA 4.10, get the signal ID
-        nmea_sigid = atoi(field[count - 1]);
-        ubx_sigid = nmea_sigid_to_ubx(session, nmea_sigid);
-        break;
+        // NMEA 4.10, and later, get the signal ID
+        nmea_sigid = hex2uchar(field[count - 1][0]);
+	break;
     case 2:
         // Quectel Querk. $PQGSV, get the signal ID, and system ID
-        nmea_sigid = atoi(field[count - 2]);
-        ubx_sigid = nmea_sigid_to_ubx(session, nmea_sigid);
+        nmea_sigid = hex2uchar(field[count - 2][0]);
         nmea_gnssid = atoi(field[count - 1]);
         if (4 > nmea_gnssid ||
             5 < nmea_gnssid) {
@@ -2308,7 +2290,7 @@ static gps_mask_t processGSV(int count, char *field[],
             } else if (5 == nmea_gnssid) {
                 session->nmea.seen_qzgsv = true;
             } else {
-                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                GPSD_LOG(LOG_WARN, &session->context->errout,
                          "NMEA0183: %s: invalid nmea_gnssid %d\n",
                          field[0], nmea_gnssid);
                 return ONLINE_SET;
@@ -2325,6 +2307,19 @@ static gps_mask_t processGSV(int count, char *field[],
         // uh, what?
         break;
     }
+
+    // If NMEA 4.10, or later,then
+    if (1 == (count % 4)) {
+	    // get ubx sig_id from nmea_gnssid, nmea_sigid, get from talker ID
+	    ubx_sigid = nmea_sigid_to_ubx(session, nmea_gnssid, nmea_sigid);
+    }
+    session->nmea.last_gsv_sigid = ubx_sigid;  // UNUSED
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+                "NMEA0183: %s: part %d of %d nmea_gnssid %d nmea_sigid %d "
+                "ubx_sigid %d\n",
+                field[0], session->nmea.part, session->nmea.await,
+                nmea_gnssid, nmea_sigid, ubx_sigid);
 
     for (fldnum = 4; fldnum < count / 4 * 4;) {
         struct satellite_t *sp;
@@ -4886,7 +4881,7 @@ static gps_mask_t processRMC(int count, char *field[],
              * like an invalid combination.... */
             if (13 < count) {
                 if ('\0' != field[13][0]) {
-                    ; // skip for now
+                    ;  // skip for now
                 }
             }
             GPSD_LOG(LOG_PROG, &session->context->errout,

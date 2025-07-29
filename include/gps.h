@@ -111,6 +111,8 @@ extern "C" {
  *       Move gst_t out of gps_data_t union.
  *       Add ROWS(), IN() macrosa
  *       MAXCHANNELS bumped from 140 to 185, for ZED-F9T
+ * 15    Improve NMEA V4.10, and above, sigid decoding
+ *       Add Teseo LIV4F antenna status and firmware version management
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -2495,13 +2497,13 @@ struct satellite_t {
     // ignore gnssid and sigid if svid is zero
     uint8_t svid;
     /* sigid as defined by u-blox 9/10, and used here
-     * BeiDou:   0 = B1I D1, 1 = B1I D2, 2 = B2I D1, 3 = B2I D2, 5 = B1 Cp
-     *           6 = B1 Cd,  7 = B2 ap, 8 = B2 ad
-     * Galileo:  0 = E1 C, 1 = E1 B, 3 = E5 aI, 4 = E5 aQ, 5 = E5 bl, 6 = E5 bQ
+     * BeiDou:   0 = B1I D1, 1 = B1I D2, 2 = B2I D1, 3 = B2I D2, 4 = B3I D1, 5 = B1 Cp
+     *           6 = B1 Cd,  7 = B2 ap, 8 = B2 ad, 10 = B3I D2
+     * Galileo:  0 = E1 C, 1 = E1 B, 3 = E5 aI, 4 = E5 aQ, 5 = E5 bl, 6 = E5 bQ, 8 = E6 B, 9 = E6 C, 10 = E6 A
      * GLONASS:  0 = L1 OF, 2 = L2 OF
      * GPS:      0 = L1C/A, 3 = L2 CL, 4 = L2 CM, 6 = L5 I, 7 = L5 Q
      * IRNSS:    0 = L5 A
-     * QZSS:     0 = L1C/A, 1 = L1 S, 4 = L2 CM, 5 = L2 CL, 8 = L5 I, 9 = L5 Q
+     * QZSS:     0 = L1C/A, 1 = L1 S, 4 = L2 CM, 5 = L2 CL, 8 = L5 I, 9 = L5 Q, 12 = L1 C/B
      * SBAS:     0 = L1C/A, ? = L5I
      *
      * sigid as defined by NMEA 4.10, according to Skytrak, NOT used here
