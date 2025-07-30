@@ -903,9 +903,9 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
                     break;
                 }
                 if (1 < gpsdata->skyview[sat_no].sigid &&
-                    8 > gpsdata->skyview[sat_no].sigid) {
+                    13 > gpsdata->skyview[sat_no].sigid) {
                     // Do not display L1, or missing
-                    // max is 8
+                    // max is 12, July 2025
                     sigid[0] = '0' + gpsdata->skyview[sat_no].sigid;
                     sigid[1] = '\0';
                 }
