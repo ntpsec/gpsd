@@ -2544,21 +2544,31 @@ class ubx(object):
 
         return None
 
+    # keep up to date with include/gps.h sigids
+    # these are UBX sigids, not NMEA sigids.
     id_map = {
         0: {"name": "GPS",
-            "sig": {0: "L1C/A", 3: "L2 CL", 4: "L2 CM"}},
+            "sig": {0: "L1C/A", 3: "L2CL", 4: "L2CM", 5: "L5I", 7: "L5Q"}},
         1: {"name": "SBAS",
-            "sig": {0: "L1C/A", 3: "L2 CL", 4: "L2 CM"}},
+            # Only L1C/A in use July 2026
+            "sig": {0: "L1C/A", 3: "L2CL", 4: "L2CM"}},
         2: {"name": "Galileo",
-            "sig": {0: "E1C", 1: "E1 B", 5: "E5 bl", 6: "E5 bQ"}},
+            "sig": {0: "E1C", 1: "E1B", 3: "E5aI", 4: "E5aQ", 5: "E5 bl",
+                    6: "E5 bQ", 8: "E6B", 9: "E6C", 10: "E6A"}},
         3: {"name": "BeiDou",
-            "sig": {0: "B1I D1", 1: "B1I D2", 2: "B2I D1", 3: "B2I D2"}},
+            "sig": {0: "B1I D1", 1: "B1I D2", 2: "B2I D1", 3: "B2I D2",
+                    5: "B1 Cp",  6: "B1 Cd", 7: "B2 ap", 8: "B2 ad",
+                    10: "B3I D2"}},
         4: {"name": "IMES",
             "sig": {0: "L1C/A", 3: "L2 CL", 4: "L2 CM"}},
         5: {"name": "QZSS",
-            "sig": {0: "L1C/A", 4: "L2 CM", 5: "L2 CL"}},
+            "sig": {0: "L1C/A", 1: "L1 S", 4: "L2 CM", 5: "L2 CL",
+                    8: "L5 I", 9: "L5 Q", 12: "L1 C/B"}},
         6: {"name": "GLONASS",
             "sig": {0: "L1 OF", 2: "L2 OF"}},
+        # formerly NavIC
+        7: {"name": "IRNSS",
+            "sig": {0: "L5A"}},
     }
 
     def gnss_s(self, gnssId, svId, sigId):
@@ -4316,9 +4326,9 @@ Deprecated in protVer 32.00
                 if gps.VERB_DECODE <= self.verbosity:
                     size = (u[0] >> 28) & 0x07
                     s += ('\n      size %s(%u) type %s scale %f'
-                         ' \n      %s' %
-                         (index_s(size, self.cfg_valxxx_size),
-                          size, item[2], item[3], item[5]))
+                          ' \n      %s' %
+                          (index_s(size, self.cfg_valxxx_size),
+                           size, item[2], item[3], item[5]))
                 m_len -= 4
                 i += 1
         else:
@@ -4349,9 +4359,9 @@ Deprecated in protVer 32.00
                 if gps.VERB_DECODE <= self.verbosity:
                     rsize = (u[0] >> 28) & 0x07
                     s += ('\n      size %s(%u) type %s scale %f'
-                         ' \n      %s' %
-                         (index_s(rsize, self.cfg_valxxx_size),
-                          rsize, item[2], item[3], item[5]))
+                          ' \n      %s' %
+                          (index_s(rsize, self.cfg_valxxx_size),
+                           rsize, item[2], item[3], item[5]))
                 m_len -= size
                 i += size
 
@@ -8665,7 +8675,7 @@ Partial decode."""
                   "\n    nmaHeader (%s)"
                   "\n    numSVs %d"
                   "\n    timeSyncReq (%s)"
-                  "\n    dsm (%s)" % 
+                  "\n    dsm (%s)" %
                   (flagm_s(u[1], self.sec_osnma_nmaHeader),
                    flagm_s(u[2], self.sec_osnma_osnma),
                    (u[2] >> 1) & 0x1f,
