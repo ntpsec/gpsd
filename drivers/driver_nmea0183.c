@@ -493,14 +493,15 @@ static void register_fractional_time(const char *tag, const char *fld,
 
 /* Table to convert nmea sigid to ubx sigid (row index for nmea gnssid and
  * column index for nmea sigid).
+ * Note: not all dcumented, some deduced by comparing UBX and NMEA.
  */
 #define NMEA_GNSSIDS 7
 #define NMEA_SIGIDS 12
 static const unsigned char nmea_to_ubx_table[NMEA_GNSSIDS][NMEA_SIGIDS] = {
 	{0, 0, 0, 0, 0, 4, 3, 6, 7, 0, 0, 0},    // Unknown assume GPS
-	{0, 0, 0, 0, 0, 4, 3, 6, 7, 0, 0, 0},    // GPS
+	{0, 4, 0, 0, 0, 4, 3, 6, 7, 0, 0, 0},    // GPS
 	{0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0},    // GLONASS
-	{0, 3, 5, 0, 10, 8, 0, 0, 0, 0, 0, 0},   // Galileo
+	{0, 3, 5, 0, 10, 8, 0, 4, 0, 0, 0, 0},   // Galileo
         // BeiDou B could be UBX 2 o3 3
 	{0, 0, 2, 5, 0, 7, 0, 0, 4, 0, 0, 2},    // BeiDou
 	{0, 0, 0, 0, 1, 4, 5, 8, 9, 0, 0, 0},    // QZSS
@@ -2068,7 +2069,7 @@ static gps_mask_t processGSV(int count, char *field[],
      *  6) 083         Azimuth, degrees
      *  7) 46          Signal-to-noise ratio in decibels
      * <repeat for up to 4 satellites per sentence>
-     *   m - 1)        NMEA 4.10 Signal Id (optional)
+     *   m - 1)        NMEA 4.10 Signal Id (optional), hexadecimal
      *                 Quecktel Querk: 0 for "All Signa;s".
      *   m=n-1)        Quectel Querk: System ID (optional)
      *                     4 = BeiDou, 5 = QZSS
@@ -2221,12 +2222,6 @@ static gps_mask_t processGSV(int count, char *field[],
         return ONLINE_SET;
     }
 
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: %s: part %d of %d nmea_gnssid %d nmea_sigid %d "
-             "ubx_sigid %d\n",
-             field[0], session->nmea.part, session->nmea.await,
-             nmea_gnssid, nmea_sigid, ubx_sigid);
-
     if (1 == session->nmea.part) {
         /*
          * might have gone from GPGSV to GLGSV/BDGSV/QZGSV,
@@ -2251,7 +2246,6 @@ static gps_mask_t processGSV(int count, char *field[],
     }
 
     session->nmea.last_gsv_talker = GSV_TALKER;
-    session->nmea.last_gsv_sigid = ubx_sigid;  // UNUSED
     switch (GSV_TALKER) {
     case 'A':        // GA Galileo
         nmea_gnssid = 3;
@@ -2305,21 +2299,24 @@ static gps_mask_t processGSV(int count, char *field[],
         break;
     default:
         // uh, what?
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: %s: unknown nmea_gnssid %d\n",
+                 field[0], nmea_gnssid);
         break;
     }
 
-    // If NMEA 4.10, or later,then
-    if (1 == (count % 4)) {
-	    // get ubx sig_id from nmea_gnssid, nmea_sigid, get from talker ID
-	    ubx_sigid = nmea_sigid_to_ubx(session, nmea_gnssid, nmea_sigid);
+    // If NMEA 4.10, or later,then, or Quectel
+    if (0 != nmea_sigid) {
+        // get ubx sig_id from nmea_gnssid, nmea_sigid, get from talker ID
+        ubx_sigid = nmea_sigid_to_ubx(session, nmea_gnssid, nmea_sigid);
     }
     session->nmea.last_gsv_sigid = ubx_sigid;  // UNUSED
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-                "NMEA0183: %s: part %d of %d nmea_gnssid %d nmea_sigid %d "
-                "ubx_sigid %d\n",
-                field[0], session->nmea.part, session->nmea.await,
-                nmea_gnssid, nmea_sigid, ubx_sigid);
+             "NMEA0183: %s: part %d of %d nmea_gnssid %d nmea_sigid %d "
+             "ubx_sigid %d\n",
+             field[0], session->nmea.part, session->nmea.await,
+             nmea_gnssid, nmea_sigid, ubx_sigid);
 
     for (fldnum = 4; fldnum < count / 4 * 4;) {
         struct satellite_t *sp;
