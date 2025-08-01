@@ -493,19 +493,21 @@ static void register_fractional_time(const char *tag, const char *fld,
 
 /* Table to convert nmea sigid to ubx sigid (row index for nmea gnssid and
  * column index for nmea sigid).
+ * 99 means unknown conversion.
  * Note: not all dcumented, some deduced by comparing UBX and NMEA.
  */
 #define NMEA_GNSSIDS 7
 #define NMEA_SIGIDS 12
 static const unsigned char nmea_to_ubx_table[NMEA_GNSSIDS][NMEA_SIGIDS] = {
-	{0, 0, 0, 0, 0, 4, 3, 6, 7, 0, 0, 0},    // Unknown assume GPS
-	{0, 4, 0, 0, 0, 4, 3, 6, 7, 0, 0, 0},    // GPS
-	{0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0},    // GLONASS
-	{0, 3, 5, 0, 10, 8, 0, 4, 0, 0, 0, 0},   // Galileo
-        // BeiDou B could be UBX 2 o3 3
-	{0, 0, 2, 5, 0, 7, 0, 0, 4, 0, 0, 2},    // BeiDou
-	{0, 0, 0, 0, 1, 4, 5, 8, 9, 0, 0, 0},    // QZSS
-	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};   // NavIC
+        {0, 0, 99, 99, 99, 4, 3, 6, 7, 99, 99, 99},       // Unknown assume GPS
+        {0, 4, 99, 99, 99, 4, 3, 6, 7, 99, 99, 99},       // GPS
+        {0, 0, 99, 2, 99, 99, 99, 99, 99, 99, 99, 99},    // GLONASS
+        // Quectel uses sigid 6 for L1-A ?
+        {0, 3, 5, 99, 10, 8, 0, 4, 99, 99, 99, 99},       // Galileo
+        // BeiDou B could be UBX 2 or 3
+        {0, 0, 2, 5, 0, 7, 99, 99, 4, 99, 99, 2},         // BeiDou
+        {0, 0, 99, 99, 1, 4, 5, 8, 9, 99, 99, 99},        // QZSS
+        {0, 0, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99}};  // IRNSS (NavIC)
 
 // convert NMEA sigid to ublox sigid
 static unsigned char nmea_sigid_to_ubx(struct gps_device_t *session,
@@ -516,11 +518,17 @@ static unsigned char nmea_sigid_to_ubx(struct gps_device_t *session,
 
     if ((NMEA_GNSSIDS > nmea_gnssid) &&
         (NMEA_SIGIDS > nmea_sigid)) {
-	    ubx_sigid = nmea_to_ubx_table[nmea_gnssid][nmea_sigid];
+        ubx_sigid = nmea_to_ubx_table[nmea_gnssid][nmea_sigid];
+        if (99 == ubx_sigid) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "NMEA0183: Unknown map nmea_gnssid:sigid %u:%d\n",
+                     nmea_gnssid, nmea_sigid);
+            ubx_sigid = 0;
+        }
     } else {
-	    GPSD_LOG(LOG_WARN, &session->context->errout,
-		     "NMEA0183: Unknown nmea_sigid %u with nmea_gnssid %u\n",
-		     nmea_sigid, nmea_sigid);
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: Unknown nmea_sigid %u with nmea_gnssid %u\n",
+                 nmea_sigid, nmea_gnssid);
     }
 
     return ubx_sigid;
@@ -2189,7 +2197,7 @@ static gps_mask_t processGSV(int count, char *field[],
     case 1:
         // NMEA 4.10, and later, get the signal ID
         nmea_sigid = hex2uchar(field[count - 1][0]);
-	break;
+        break;
     case 2:
         // Quectel Querk. $PQGSV, get the signal ID, and system ID
         nmea_sigid = hex2uchar(field[count - 2][0]);

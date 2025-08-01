@@ -2501,6 +2501,7 @@ struct satellite_t {
      *           5 = B1 Cp,  6 = B1 Cd,  7 = B2 ap, 8 = B2 ad, 10 = B3I D2
      * Galileo:  0 = E1 C, 1 = E1 B, 3 = E5 aI, 4 = E5 aQ, 5 = E5 bl,
      *           6 = E5 bQ, 8 = E6 B, 9 = E6 C, 10 = E6 A
+     *           Quectel L1-A s/b what?
      * GLONASS:  0 = L1 OF, 2 = L2 OF
      * GPS:      0 = L1C/A, 3 = L2 CL, 4 = L2 CM, 6 = L5 I, 7 = L5 Q
      * IRNSS:    0 = L5 A
@@ -2526,7 +2527,7 @@ struct satellite_t {
      *   3  E5 a+b
      *   4  E6-A
      *   5  E6-BC
-     *   6  L1-A
+     *   6  L1-A               // Quectel LC79D ??
      *   7  L1-B and L1-C (E1-C and E1-B) (L1BC)
      * GLONASS:
      *   0  All signals-
