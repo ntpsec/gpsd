@@ -2170,6 +2170,7 @@ static gps_mask_t processGSV(int count, char *field[],
     unsigned char  nmea_sigid = 0;
     int nmea_gnssid = 0;
     unsigned char  ubx_sigid = 0;
+    int sane = 0;
 
     if (3 >= count) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -2396,6 +2397,7 @@ static gps_mask_t processGSV(int count, char *field[],
         session->nmea.seen_qzgsv);
 #endif  // debug
 
+#if 0
     /*
      * Alas, we can't sanity check field counts when there are multiple sat
      * pictures, because the visible member counts *all* satellites - you
@@ -2419,6 +2421,7 @@ static gps_mask_t processGSV(int count, char *field[],
                      session->gpsdata.satellites_visible);
         }
     }
+#endif    // FIXME
 
     // not valid data until we've seen a complete set of parts
     if (session->nmea.part < session->nmea.await) {
@@ -2437,18 +2440,22 @@ static gps_mask_t processGSV(int count, char *field[],
      * elevations).  This behavior was observed under SiRF firmware
      * revision 231.000.000_A2.
      */
-     for (n = 0; n < session->gpsdata.satellites_visible; n++) {
+    sane = 0;
+    for (n = 0; n < session->gpsdata.satellites_visible; n++) {
         if (0 != session->gpsdata.skyview[n].azimuth) {
-            // odd?
-            goto sane;
+            sane = 1;
+            break;
         }
-     }
-     GPSD_LOG(LOG_WARN, &session->context->errout,
-              "NMEA0183: %s: Satellite data no good (%d of %d).\n",
-              field[0], session->nmea.part, session->nmea.await);
-     gpsd_zero_satellites(&session->gpsdata);
-     return ONLINE_SET;
-   sane:
+    }
+
+    if (0 == sane) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: %s: Satellite data no good (%d of %d).\n",
+                 field[0], session->nmea.part, session->nmea.await);
+        gpsd_zero_satellites(&session->gpsdata);
+        return ONLINE_SET;
+    }
+
     session->gpsdata.skyview_time.tv_sec = 0;
     session->gpsdata.skyview_time.tv_nsec = 0;
     GPSD_LOG(LOG_PROG, &session->context->errout,
