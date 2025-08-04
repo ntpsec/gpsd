@@ -3900,16 +3900,20 @@ Deprecated in protVer 32.00
         0x40: "osc",
         0x80: "utc",
         0x100: "rtc",
+        0x800: "sfdr",
+        0x1000: "vmon",
+        0x2000: "tct",
         0x8000: "aop",
         }
 
     cfg_rst_resetMode = {
-        0: "Hardware reset",
+        0: "Hardware reset (watchdog)",
         1: "Software reset",
         2: "Software reset (GNSS only)",
         4: "Hardware reset, after shutdown",
         8: "Controlled GNSS stop",
         9: "Controlled GNSS start",
+        0x0a: "Hardware reset (PWSEQ)",
         }
 
     def cfg_rst(self, buf):
@@ -5589,6 +5593,29 @@ Deprecated in protVer 32.00
 
         return s
 
+    mon_post_flags = (
+        (0, 1, "active"),
+        (1, 1, "inactive"),
+    )
+
+    def mon_post(self, buf):
+        """UBX-MON-POST decode, Power On Self Test information
+
+present F9T, protVer 29.
+"""
+
+        # len 0 == Poll requestm handled earlier
+
+        u = struct.unpack_from('<BBHLL', buf, 0)
+        s = ("  version %u flags x%x reserved1 x%x postState %d "
+             "reserved2 x%x" % u)
+
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ('\n    safeBoot (%s)' %
+                  (flagm_s(u[1], self.mon_post_flags)))
+
+        return s
+
     mon_rf_antstat = {
         0: "Init",
         1: "Unk",
@@ -5605,7 +5632,7 @@ Deprecated in protVer 32.00
 
     mon_rf_blockId = {
         0: "L1",
-        1: "L2 or L5",
+        1: "L2 or L5",  # varies by firmware and config
         }
 
     def mon_rf(self, buf):
@@ -5649,10 +5676,10 @@ Deprecated in protVer 32.00
                 u = struct.unpack_from('<BBBBLLHHBbBbBBBB', buf,
                                        4 + (24 * i))
                 s += ("blockId %u flags x%x antStatus %u antPower %u "
-                      "postStatus %u reserved2 x%x\n"
+                      "postStatus %u reserved1 x%x\n"
                       "      noisePerMS %u agcCnt %u jamInd %u ofsI %d "
                       "magI %u ofsQ %d magQ %u\n"
-                      "      reserved3 %u %u %u\n" % u)
+                      "      reserved2 %u %u %u\n" % u)
                 if gps.VERB_DECODE <= self.verbosity:
                     # jammingState deprecated.  Use UBX-SEC-SIG (v2)
                     s += ("       blockId (%s) jammingState (%s) "
@@ -5669,11 +5696,10 @@ Deprecated in protVer 32.00
                 u = struct.unpack_from('<BBBBLLHHbBbB', buf, 4 + (20 * i))
                 s += ("blockId %u antStatus %u antPower %u cwSuppression %u "
                       "postStatus %u \n"
-                      "      reserved2 x%x noisePerMS %u agcCnt %u\n"
+                      "      reserved1 x%x noisePerMS %u agcCnt %u\n"
                       "      ofsI %d magI %u ofsQ %d magQ %u\n" % u)
-                # fixme: decode blockId
+
                 if gps.VERB_DECODE <= self.verbosity:
-                    # fixme: decode blockId
                     s += ("       blockId (%s) antStatus (%s) "
                           "antPower (%s)\n"
                           "       agc %.1f%%\n" %
@@ -5949,8 +5975,10 @@ Not in:
                       'name': 'UBX-MON-RF'},
                0x39: {'str': 'SYS', 'dec': mon_sys, 'minlen': 24,
                       'name': 'UBX-MON-SYS'},
+               # protVer 29, F9T
                # protVer 50, X20
-               0x3b: {'str': 'POST', 'minlen': 12, 'name': 'UBX-MON-POST'},
+               0x3b: {'str': 'POST', 'dec': mon_post,'minlen': 12,
+                      'name': 'UBX-MON-POST'},
                }
 
     def nav_aopstatus(self, buf):
@@ -6215,9 +6243,13 @@ Partial decode."""
         }
 
     nav_pvt_flags = {
-        1: "gnssFixOK",
-        2: "diffSoln",
-        0x20: "headVehValid",
+        (1, 1, "gnssFixOK,"),
+        (2, 2, "diffSoln,"),
+        (0x20, 0x20, "headVehValid,"),
+        (0, 0xc0, "No Carrier Phase solution"),
+        (0x40, 0xc0, "Carrier Phase float"),
+        (0x80, 0xc0, "Carrier Phase fixed"),
+        (0xc0, 0xc0, "Carrier Phase Unk"),
         }
 
     nav_pvt_flags2 = {
@@ -6247,9 +6279,10 @@ Partial decode."""
         m_len = len(buf)
 
         # 84 bytes long in protver 14.
-        # 92 bytes long in protver 15.
+        # 92 bytes long in protver 15 and later.
 
         # flags2 is protver 27
+        # flags3 is protver 29
         u = struct.unpack_from('<LHBBBBBBLlBBBBllllLLlllllLLHHHH', buf, 0)
         s = ('  iTOW %u time %u/%u/%u %02u:%02u:%02u valid x%x\n'
              '  tAcc %u nano %d fixType %u flags x%x flags2 x%x\n'
@@ -6272,7 +6305,7 @@ Partial decode."""
                   "\n    carrSoln (%s)" %
                   (flag_s(u[7], self.nav_pvt_valid),
                    index_s(u[10], self.nav_pvt_fixType),
-                   flag_s(u[11], self.nav_pvt_flags),
+                   flagm_s(u[11], self.nav_pvt_flags),
                    flag_s(u[12], self.nav_pvt_flags2),
                    index_s((u[11] >> 2) & 0x0f, self.nav_pvt_psm),
                    index_s((u[11] >> 6) & 0x03, self.carrSoln)))
@@ -6478,6 +6511,11 @@ Present in protVer 32
         5: "RTCM3 SSR",
         6: "QZSS SLAS",
         7: "SPARTN",
+        8: "SPARTN",
+        9: "CLAS",
+        10: "LPP OSR",
+        11: "LPP SSR",
+        12: "GAL HAS",
         }
 
     nav_sig_ionoModel = {
@@ -6496,12 +6534,13 @@ Present in protVer 32
         0x40: "prCorrUsed",
         0x80: "crCorrUsed",
         0x100: "doCorrUsed",
+        0x200: "authStatus",
         }
 
     def nav_sig(self, buf):
         """decode UBX-NAV-SIG decode, Signal Information
 
-Present in 9 and 10, protVer 32 and up
+Present in 9 and 10, protVer 29 and up
 """
 
         u = struct.unpack_from('<LBBH', buf, 0)
