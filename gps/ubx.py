@@ -380,7 +380,7 @@ class ubx(object):
 
     # Names for portID values in UBX-CFG-COMMS
     # the doc does not match what is seen
-    port_ids1 = {0: 'DDC',
+    port_ids1 = {0: 'DDC',           # I2C on F9T
                  0x001: 'UART1',     # as documented on ZED-M9
                  0x003: 'USB',       # as documented on ZED-M9
                  0x004: 'SPI',       # as documented on ZED-M9
@@ -7233,6 +7233,13 @@ protVer 34 and up
         2: "clkReset",
         }
 
+    rxm_rawx_trkStat = {
+        1: "prValid",
+        2: "cpValid",
+        4: "halfCyc",
+        8: "subHalfCyc",
+        }
+
     def rxm_rawx(self, buf):
         """UBX-RXM-RAWX decode"""
         m_len = len(buf)
@@ -7247,14 +7254,17 @@ protVer 34 and up
         m_len -= 16
         i = 0
         while 0 < m_len:
-            u = struct.unpack_from('<ddfBBBBHBBBBB', buf, 16 + i * 32)
+            u = struct.unpack_from('<ddfBBBBHBBBBBB', buf, 16 + i * 32)
             s += ('\n  prmes %.3f cpMes %.3f doMes %f\n'
                   '   gnssId %u svId %u sigId %u freqId %u locktime %u '
                   'cno %u\n'
-                  '   prStdev %u cpStdev %u doStdev %u trkStat %u' % u)
+                  '   prStdev %u cpStdev %u doStdev %u trkStat %u '
+                  'reserved1 x%x' % u)
 
-            if gps.VERB_DECODE < self.verbosity:
-                s += '\n      (%s)' % self.gnss_s(u[3], u[4], u[5])
+            if gps.VERB_DECODE <= self.verbosity:
+                s += ('\n      (%s) trkStat (%s)' %
+                      (self.gnss_s(u[3], u[4], u[5]),
+                       flag_s(u[12], self.rxm_rawx_trkStat)))
 
             m_len -= 32
             i += 1
