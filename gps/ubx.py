@@ -2077,7 +2077,7 @@ class ubx(object):
          "GLONASS enable"),
         ("CFG-SIGNAL-NAVIC_ENA", 0x10310026, "L", 1, "",
          "NavIC enable"),
-        ("CFG-SIGNAL-BDS_B2A", 0x10310028, "L", 1, "",
+        ("CFG-SIGNAL-BDS_B2A_ENA", 0x10310028, "L", 1, "",
          "BDS B2A enable"),
         ("CFG-SIGNAL-PLAN", 0x1031003a, "E1", 1, "",
          "SIGNAL PLAN"),
@@ -3381,6 +3381,7 @@ Deprecated in protVer 32.00
         5: "EU",
         6: "SU",
         7: "NTSC",
+        8: "NPLI",     # India
         }
 
     cfg_nav5_dyn = {
@@ -5977,7 +5978,7 @@ Not in:
                       'name': 'UBX-MON-SYS'},
                # protVer 29, F9T
                # protVer 50, X20
-               0x3b: {'str': 'POST', 'dec': mon_post,'minlen': 12,
+               0x3b: {'str': 'POST', 'dec': mon_post, 'minlen': 12,
                       'name': 'UBX-MON-POST'},
                }
 
@@ -6258,6 +6259,12 @@ Partial decode."""
         0x80: "confirmedTime",
         }
 
+    nav_pvt_flags3 = {
+        0x01: "invalidLlh",
+        0x20: "authTime",
+        0x40: "nmaFixStatus",
+        }
+
     nav_pvt_psm = {
         0: "Not Active",
         1: "Enabled",
@@ -6283,13 +6290,13 @@ Partial decode."""
 
         # flags2 is protver 27
         # flags3 is protver 29
-        u = struct.unpack_from('<LHBBBBBBLlBBBBllllLLlllllLLHHHH', buf, 0)
+        u = struct.unpack_from('<LHBBBBBBLlBBBBllllLLlllllLLHHL', buf, 0)
         s = ('  iTOW %u time %u/%u/%u %02u:%02u:%02u valid x%x\n'
              '  tAcc %u nano %d fixType %u flags x%x flags2 x%x\n'
              '  numSV %u lon %d lat %d height %d\n'
              '  hMSL %d hAcc %u vAcc %u\n'
              '  velN %d velE %d velD %d gSpeed %d headMot %d\n'
-             '  sAcc %u headAcc %u pDOP %u reserved1 %u %u %u' % u)
+             '  sAcc %u headAcc %u pDOP %u flags3 x%x reserved0 x%x' % u)
 
         if 92 <= m_len:
             # version 15
@@ -6302,13 +6309,16 @@ Partial decode."""
                   "\n    flags (%s)"
                   "\n    flags2 (%s)"
                   "\n    psmState (%s)"
-                  "\n    carrSoln (%s)" %
+                  "\n    carrSoln (%s)"
+                  "\n    flags3 (%s) lastCorrectionAge %u" %
                   (flag_s(u[7], self.nav_pvt_valid),
                    index_s(u[10], self.nav_pvt_fixType),
                    flagm_s(u[11], self.nav_pvt_flags),
                    flag_s(u[12], self.nav_pvt_flags2),
                    index_s((u[11] >> 2) & 0x0f, self.nav_pvt_psm),
-                   index_s((u[11] >> 6) & 0x03, self.carrSoln)))
+                   index_s((u[11] >> 6) & 0x03, self.carrSoln),
+                   flag_s(u[28], self.nav_pvt_flags3),
+                   (u[28] >> 1) & 0x0f))
         return s
 
     nav_relposned_flags = {
@@ -6421,6 +6431,9 @@ High Precision GNSS products only."""
         0x100000: "prCorrUsed",
         0x200000: "crCorrUsed",
         0x400000: "doCorrUsed",
+        0x800000: "classCorrUsed",
+        0x1000000: "lppCorrUsed",
+        0x2000000: "hasCorrUsed",
         }
 
     def nav_sat(self, buf):
@@ -6789,7 +6802,7 @@ Present in M8 Timing and FTS only
                   (flag_s(u[4], self.nav_time_valid)))
         return s
 
-    nav_timels_src = {
+    nav_timels_srcOfCurrLs = {
         0: "Default",
         1: "GPS/GLONASS derived",
         2: "GPS",
@@ -6798,15 +6811,18 @@ Present in M8 Timing and FTS only
         5: "Galileo",
         6: "Aided data",
         7: "Configured",
+        8: "IRNSS",        # aka NavIC
+        255: "Unknown",
         }
 
-    nav_timels_src1 = {
+    nav_timels_srcOfLsChange = {
         0: "None",
         2: "GPS",
         3: "SBAS",
         4: "BeiDou",
         5: "Galileo",
         6: "GLONASS",
+        7: "IRNSS",        # aka NavIC
         }
 
     nav_timels_valid = {
@@ -6825,8 +6841,8 @@ Present in M8 Timing and FTS only
         if gps.VERB_DECODE <= self.verbosity:
             s += ("\n   srcOfCurrLs (%s) srcOfLsChange (%s)"
                   "\n   valid (%s)" %
-                  (index_s(u[5], self.nav_timels_src),
-                   index_s(u[7], self.nav_timels_src1),
+                  (index_s(u[5], self.nav_timels_srcOfCurrLs),
+                   index_s(u[7], self.nav_timels_srcOfLsChange),
                    flag_s(u[15], self.nav_timels_valid)))
         return s
 
@@ -6869,10 +6885,43 @@ protVer 34 and up
                   (flag_s(u[5], self.nav_timeqzss_valid)))
         return s
 
+    nav_timetrusted_refSys = {
+        0: "none",
+        1: "GPS",
+        2: "GST",
+        3: "BDT",
+        15: "IRNSS",     # NavIC
+        }
+
+    nav_timetrusted_valid = {
+        1: "trustedTimeValid",
+        2: "deltaTimeValid",
+        }
+
+    def nav_timetrusted(self, buf):
+        """UBX-NAV-TIMETRUSTED decode, external trusted time info"""
+
+        u = struct.unpack_from('<BBBBLHHLLLLlll', buf, 0)
+        if 1 != u[0]:
+            return "  Unknown version %u" % u[0]
+
+        s = ("  version %u refSys %u valid x%x reserved0 %u iTOW %d\n"
+             "  iniWno %u propWno %u iniTow %u propTow %u\n"
+             "  iniTacc %d propTacc %u deltaS %d deltaMs %d "
+             "reserved1 x%x" % u)
+
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   refSys (%s)"
+                  "\n   valid (%s)" %
+                  (index_s(u[2], self.nav_timetrusted_refSys),
+                   flag_s(u[3], self.nav_timetrusted_valid)))
+        return s
+
     nav_timeutc_valid = {
         1: "validTOW",
         2: "validWKN",
         4: "validUTC",
+        8: "authStatus",
         }
 
     def nav_timeutc(self, buf):
@@ -6989,9 +7038,10 @@ protVer 34 and up
                       'name': 'UBX-NAV-PL'},
                0x63: {'str': 'TIMENAVIC', 'dec': nav_timenavic, 'minlen': 20,
                       'name': 'UBX-NAV-TIMENAVIC'},
+               # protVer 29, F10T
                # protVer 50, X20
-               0x64: {'str': 'TIMETRUSTED',  'minlen': 40,
-                      'name': 'UBX-NAV-TIMETRUSTED'},
+               0x64: {'str': 'TIMETRUSTED', 'dec': nav_timetrusted,
+                      'minlen': 40, 'name': 'UBX-NAV-TIMETRUSTED'},
                }
 
     def nav2_clock(self, buf):
@@ -11138,6 +11188,9 @@ present in 9-series and higher
         # UBX-NAV-TIMENAVIC
         "NAV-TIMENAVIC": {"command": send_poll, "opt": [0x01, 0x63],
                           "help": "poll UBX-NAV-TIMENAVIC Time Solution"},
+        # UBX-NAV-TIMEQZSS
+        "NAV-TIMEQZSS": {"command": send_poll, "opt": [0x01, 0x27],
+                         "help": "poll UBX-NAV-TIMEQZSS Time Solution"},
         # UBX-NAV-TIMETRUSTED, protVer 50, X20
         "NAV-TIMETRUSTED": {"command": send_poll, "opt": [0x01, 0x64],
                             "help": "poll UBX-NAV-TIMETRUSTED Tuststed Time"},
