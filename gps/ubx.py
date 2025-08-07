@@ -328,7 +328,9 @@ class ubx(object):
                3: 'BeiDou',
                4: 'IMES',
                5: 'QZSS',
-               6: 'GLONASS'}
+               6: 'GLONASS',
+               7: "IRNSS",     # formerly NavIC
+               }
 
     # UBX Satellite/Dignal Numbering
     gnss_sig_id = {0x0000: 'GPS L1 C/A',
@@ -2079,6 +2081,8 @@ class ubx(object):
          "NavIC enable"),
         ("CFG-SIGNAL-BDS_B2A_ENA", 0x10310028, "L", 1, "",
          "BDS B2A enable"),
+        ("CFG-SIGNAL-41", 0x10310029, "L", 1, "",
+         "Unknown"),
         ("CFG-SIGNAL-PLAN", 0x1031003a, "E1", 1, "",
          "SIGNAL PLAN"),
 
@@ -3778,7 +3782,8 @@ Deprecated in protVer 32.00
     def cfg_prt(self, buf):
         """UBX-CFG-PRT decode, Port Configuration
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
+Still present in 42.02
 """
 
         m_len = len(buf)
@@ -6247,10 +6252,10 @@ Partial decode."""
         (1, 1, "gnssFixOK,"),
         (2, 2, "diffSoln,"),
         (0x20, 0x20, "headVehValid,"),
-        (0, 0xc0, "No Carrier Phase solution"),
-        (0x40, 0xc0, "Carrier Phase float"),
-        (0x80, 0xc0, "Carrier Phase fixed"),
-        (0xc0, 0xc0, "Carrier Phase Unk"),
+        (0, 0xc0, "No Carrier Phase solution,"),    # not before protVer 20
+        (0x40, 0xc0, "Carrier Phase float,"),
+        (0x80, 0xc0, "Carrier Phase fixed,"),
+        (0xc0, 0xc0, "Carrier Phase Unk,"),
         }
 
     nav_pvt_flags2 = {
@@ -6452,10 +6457,11 @@ Present in protVer 32
             s += ('\n   gnssId %u svid %3u cno %2u elev %3d azim %3d prRes %6d'
                   ' flags x%x' % u)
             if gps.VERB_DECODE <= self.verbosity:
-                s += ("\n     flags (%s)"
+                s += ("\n     (%s) flags (%s)"
                       "\n     qualityInd x%x (%s) health (%s)"
                       "\n     orbitSource (%s)" %
-                      (flag_s(u[6], self.nav_sat_flags),
+                      (index_s(u[0], self.gnss_id),
+                       flag_s(u[6], self.nav_sat_flags),
                        u[6] & 7, index_s(u[6] & 7, self.qualityInd),
                        index_s((u[6] >> 4) & 3, self.health),
                        index_s((u[6] >> 8) & 7, self.nav_sat_orbit)))
@@ -6479,10 +6485,17 @@ Present in protVer 32
         }
 
     nav_sbas_service = {
-        1: "Ranging",
-        2: "Corrections",
-        4: "Integrity",
-        8: "Testmode",
+        1: "Ranging,",
+        2: "Corrections,",
+        4: "Integrity,",
+        8: "Testmode,",
+        0x10: "Bad,",       # F10T, protVer 42
+        }
+
+    nav_sbas_statusFlags = {
+        0: "SBAS integrity unknown",
+        1: "SBAS integrity NA",
+        2: "SBAS integrity used",
         }
 
     def nav_sbas(self, buf):
@@ -6492,15 +6505,17 @@ Present in protVer 32
         # undocumented, but present in protver 27+
         # undocumented, but present in protver 32, NEO-M9N
 
-        u = struct.unpack_from('<LBBbBBBBB', buf, 0)
+        u = struct.unpack_from('<LBBbBBBH', buf, 0)
         s = (" iTOW %d geo %u mode x%x sys %d service x%x cnt %u "
-             "reserved0 %u %u %u" % u)
+             "statusFlags x%x\n"
+             " reserved0 x%x" % u)
         if gps.VERB_DECODE <= self.verbosity:
             s += ("\n    mode (%s) sys (%s)"
-                  "\n    service (%s)" %
+                  "\n    service (%s) statusFlags (%s)" %
                   (index_s(u[2], self.nav_sbas_mode),
                    index_s(u[3], self.nav_sbas_sys),
-                   flag_s(u[4], self.nav_sbas_service)))
+                   flag_s(u[4], self.nav_sbas_service),
+                   index_s(u[5], self.nav_sbas_statusFlags)))
 
         for i in range(0, u[5]):
             u = struct.unpack_from('<BBBBBBhHh', buf, 12 + (i * 12))
@@ -6524,8 +6539,8 @@ Present in protVer 32
         5: "RTCM3 SSR",
         6: "QZSS SLAS",
         7: "SPARTN",
-        8: "SPARTN",
-        9: "CLAS",
+        8: "CLAS",        # Dupe?
+        9: "CLAS",        # Dupe?
         10: "LPP OSR",
         11: "LPP SSR",
         12: "GAL HAS",
@@ -6540,14 +6555,18 @@ Present in protVer 32
         }
 
     nav_sig_sigFlags = {
-        4: "prSmoothed",
-        8: "prUsed",
-        0x10: "crUsed",
-        0x20: "doUsed",
-        0x40: "prCorrUsed",
-        0x80: "crCorrUsed",
-        0x100: "doCorrUsed",
-        0x200: "authStatus",
+        (0, 3, "health unkown,"),
+        (1, 3, "healthy,"),
+        (2, 3, "unhealthy,"),
+        (3, 3, "bad flag,"),
+        (4, 4, "prSmoothed"),
+        (8, 8, "prUsed"),
+        (0x10, 0x10, "crUsed"),
+        (0x20, 0x20, "doUsed"),
+        (0x40, 0x40, "prCorrUsed"),
+        (0x80, 0x80, "crCorrUsed"),
+        (0x100, 0x100, "doCorrUsed"),
+        (0x200, 0x200, "authStatus"),
         }
 
     def nav_sig(self, buf):
@@ -6569,14 +6588,13 @@ Present in 9 and 10, protVer 29 and up
             if gps.VERB_DECODE <= self.verbosity:
                 s += ("\n      (%s) corrSource (%s)"
                       "\n      qualityInd (%s)"
-                      "\n      ionoModel (%s) health (%s)"
+                      "\n      ionoModel (%s)"
                       "\n      sigFlags (%s)" %
                       (self.gnss_s(u[0], u[1], u[2]),
                        index_s(u[7], self.nav_sig_corrSource),
                        index_s(u[6], self.qualityInd),
                        index_s(u[8], self.nav_sig_ionoModel),
-                       index_s(u[9] & 3, self.health),
-                       flag_s(u[9], self.nav_sig_sigFlags)))
+                       flagm_s(u[9], self.nav_sig_sigFlags)))
         return s
 
     nav_slas_flags = {
