@@ -1,7 +1,7 @@
 = Precise Point Positioning (PPP) HOWTO
 Gary E. Miller <gem@rellim.com>
 :author: Gary E. Miller
-:date: 2 May 2022
+:date: 5 Aug 2025
 :description: This document is a guide getting high accuracy from your GPS using Precise Point Positioning (PPP).
 :email: <gem@rellim.com>
 :keywords: Precise Point Positioning, PPP, GPSD, GPS
@@ -13,7 +13,7 @@ include::inc-menu.adoc[]
 
 == WARNING
 
-This document assumes you are using gpsd versions 3.24 or git
+This document assumes you are using gpsd versions 3.26 or git
 head.  Using older versions will fail in strange ways.
 
 == Introduction
@@ -81,7 +81,7 @@ out.
 
 == Requirements
 
-This document assumes that you have installed gpsd version 3.22 or later,
+This document assumes that you have installed gpsd version 3.26 or later,
 basic knowledge of how to use _gpsd_.  Before continuing you should know how
 to start and stop _gpsd_, and how to use _cgps_ to see you current
 position and fix status.
@@ -263,9 +263,8 @@ accepts L1 only raw data, and accepts RINEX 3 files: Natural Resources
 Canada (NRCAN).  Their tool is at https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php
 
 Trimble has a free to all (requires registration) service that requires
-L1 and L2 observations in RINEX 3.
-  Their
-tool is at: https://trimblertx.com/Home.aspx
+L1 and L2 observations in RINEX 3.  Their tool is at:
+https://trimblertx.com/Home.aspx
 
 == PPP Configuration
 
@@ -280,12 +279,15 @@ Many of the configuration steps are order dependent. If in doubt, start
 over from the beginning. Be sure that _gpsd_ is running and that _cgps_
 shows that you have a stable 3D fix.
 
-=== u-blox configuration
+=== u-blox 7/8 configuration
 
-This section is only for u-blox users.  More information on _ubxtool_
-is found in ubxtools-examples <<UBXTOOLS>>
+This section is only for u-blox 7 and 8 users. More information on
+_ubxtool_ is found in ubxtools-examples <<UBXTOOLS>>
 
-Be sure your serial port speed is high enough:
+See the next section for how to configure u-blox 9 and later devices.
+
+If you are using a serial port, then be sure your serial port speed is
+high enough:
 
 ...................................
 $ gpsctl -s 115200
@@ -301,11 +303,13 @@ $ export UBXOPTS="-P XX"
 
 Replace XX with your protocol version.
 
-Disable all NMEA messages, and enable binary messages:
+Enable binary messages, and disable all NMEA messages.  The order
+matters, you do not want to enter the situation where the receiver
+is sending nothing.
 
 ...................................
-$ ubxtool -d NMEA
 $ ubxtool -e BINARY
+$ ubxtool -d NMEA
 ...................................
 
 To start simple, disable all constellations, except GPS (and QZSS):
@@ -367,6 +371,38 @@ UBX-RXM-RAWX:
 After you have completed these steps, do not restart _gpsd_.  If you restart
 _gpsd_ then you must restart the configuration from the beginning.
 
+=== u-blox 9, and later, configuration
+
+With version 9, u-blox changed the way a user configures their receivers.
+Before continuing here, become familiar with the new configuration
+items interface <<UBXTOOLS>>.
+
+If you are using a serial port, then be sure your serial port speed is
+high enough:
+
+...................................
+$ gpsctl -s 115200
+...................................
+
+_ubxtool_ needs to know the Protocol Version of your u-blox receiver in
+order to program it correctly. Set _UBXOPTS_ so you do not need to use
+-P option on every _ubxtool_ command:
+
+----
+$ export UBXOPTS="-P XX"
+----
+
+Replace XX with your protocol version.
+
+Enable binary messages, and disable all NMEA messages.  The order
+matters, you do not want to enter the situation where the receiver
+is sending nothing.
+
+...................................
+$ ubxtool -e BINARY
+$ ubxtool -d NMEA
+...................................
+
 === Javad (GREIS) configuration
 
 The section is only for users of Javad GPS supporting the GREIS
@@ -415,7 +451,7 @@ You should see this output that confirms you are seeing raw measurement
 data from the GPS:
 
 ...................................
-[PC] cp 199266957.2307 113917941.9777 122453730.9966 108761050.8140 105892190.3611 199725013.5654 117456220.7611 125484683.4227 199977132.8627 126963987.0936 121945102.6244 114688862.4874 140928054.2405 128350477.4361 129924383.6416 199424925.2522 126077127.2204 126780423.4782 120799412.3999
+[PC] cp 199266957.2307 113917941.9777 122453730.9966 108761050.8140 105892190.3611 199725013.5654 117456220.7611 125484683.4227 199977132.8627 126963987.0936 121945102.6244 114688862.4874 140928054.2405 128350477.4361 12992438.6416 199424925.2522 126077127.2204 126780423.4782 120799412.3999
 [PC] cp 199266051.1359 113915242.3018 122452018.0540 108761104.8641 105890706.6420 199724109.4819 117454519.9705 125481341.1019 199976227.8647 126966862.6124 121942821.9832 114690162.3442 140924407.3081 128351475.5908 129920370.5866 199424017.5063 126073289.2387 126782833.2288 120800324.7775
 ...................................
 
@@ -469,6 +505,17 @@ maybe within minutes, maybe up to 36 hours later, with a link to a file
 called: full_output.zip.  Unzip, and Voila!  Inside is a PDF file with
 your precise position, and other goodies.
 
+As of July 2025, CSRS-PPP accepts the following RINEX signals <<CSRS-INFO>>:
+
+----
+GPS: C1C, L1C, C2C, L2C, C1W, L1W, C2W, L2W, C1L, L1L, C2L, L2L,
+     C2S, L2S, C1X, L1X, C2X, L2X
+
+GLONASS: C1C, L1C, C2C, L2C, C1P, L1P, C2P, L2P
+
+Galileo: C1X, L1X, C5X, L5X, C1C, L1C, C5Q, L5Q
+----
+
 === Trimble RTX
 
 Before uploading today.obs to Trimble <<RTX>> you will need to change
@@ -507,6 +554,8 @@ Information on how different datums differ.
 Information on vertical datums.
 
 - [[[CSRS-PPP]]] https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php[CSRS-PPP]
+
+- [[[CSRS-INFO]]] https://webapp.csrs-scrs.nrcan-rncan.gc.ca/geod/tools-outils/ppp-info.php?locale=en[CSRS-INFO]
 
 - [[[RTX]]] https://trimblertx.com/Home.aspx[RTX]
 
