@@ -14,13 +14,16 @@
  * To configure a u-blox to output the proper data:
  *    # gpsctl -s 115200
  *    # sleep 2
- *    # ubxtool -d NMEA
  *    # ubxtool -e BINARY
+ *    # ubxtool -d NMEA
  *    # ubxtool -d GLONASS
  *    # ubxtool -d BEIDOU
  *    # ubxtool -d GALILEO
  *    # ubxtool -d SBAS
  *    # ubxtool -e RAWX
+ *
+ * Be sure to enable BINARY before disabling NMEA, so you don't end
+ * with a receiver sending nothing.
  *
  * If you have a u-blox 9 then enable GLONASS as well.
  *
@@ -31,7 +34,7 @@
  * One service known to work with obsrinex output is [CSRS-PPP]:
  *  https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php
  *
- * See the gpsrinex man page for usage examples.
+ * See the gpsrinex man page, and ppp-howto, for usage examples.
  *
  * See also:
  *     [1] RINEX: The Receiver Independent Exchange Format, Version 3.04
@@ -137,15 +140,22 @@ static char rec_vers[21] = "0";
  * C5I  L5 I Carrier Phase
  * D5I  L5 I Doppler
  *
- * CSRS-PPP supports:
- * GPS:      C1C  L1C  C2C  L2C  C1W  L1W  C2W  L2W
- * GLONASS : C1C  L1C  C2C  L2C  C1P  L1P  C2P  L2P
+ * As of July 2025, CSRS-PPP accepts the following RINEX signals:
+ *
+ * GPS: C1C, L1C, C2C, L2C, C1W, L1W, C2W, L2W, C1L, L1L, C2L, L2L,
+ *      C2S, L2S, C1X, L1X, C2X, L2X
+ *
+ * GLONASS: C1C, L1C, C2C, L2C, C1P, L1P, C2P, L2P
+ *
+ * Galileo: C1X, L1X, C5X, L5X, C1C, L1C, C5Q, L5Q
  *
  */
 typedef enum {C1C = 0, D1C, L1C,
               C2C, D2C, L2C,
               C2L, D2L, L2L,
               C5I, D5I, L5I,
+              C5P, D5P, L5P,        // B2 ap
+              C5Q, D5Q, L5Q,        // GPS L5Q, Galileo E5aq
               C7I, D7I, L7I,
               C7Q, D7Q, L7Q,
               CODEMAX} obs_codes;
@@ -156,6 +166,8 @@ static const char obs_str[CODEMAX + 1][4] = {
     "C2C", "D2C", "L2C",
     "C2L", "D2L", "L2L",
     "C5I", "D5I", "L5I",
+    "C5P", "D5P", "L5P",
+    "C5Q", "D5Q", "L5Q",
     "C7I", "D7I", "L7I",
     "C7Q", "D7Q", "L7Q",
     "XXX",
@@ -190,12 +202,18 @@ static FILE *log_file;
 
 // array of [gnssid][obs_codes[
 obs_codes obs_set[9][MAX_TYPES + 1] = {
+    /* GPS: C1 (C1C), C2 (C2C-C2L-C2X), C5 (C5I-C5Q,C5X),
+     *      P1 (C1P-C1W), P2 (C2P-C2W) */
     {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX},  // 0 -- GPS
     {C1C, L1C, D1C, CODEMAX},                 // 1 -- SBAS
+    /* Galileo: E1 (C1x), E5 (C5x), E6 (C6x), E7 (C7x), E8 (C8x
+     * E5 === E5a */
     {C1C, L1C, D1C, C7Q, L7Q, D7Q, CODEMAX},  // 2 -- Galileo
+    // B1C (C1D-C1P) and B2a (C5x)
     {C1C, L1C, D1C, C7I, L7I, D7I, CODEMAX},  // 3 -- Beidou
     {CODEMAX},                                // 4 -- IMES
     {C1C, L1C, D1C, C2L, L2L, D2L, CODEMAX},  // 5 -- QZSS
+    // GLONASS: C1 (C1C), C2 (C2C), P1 (C1P), P2 (C2P)
     {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX},  // 6 -- GLONASS
     {CODEMAX},                                // 7 -- NavIC
 };
@@ -712,6 +730,7 @@ static void one_sig(struct meas_t *meas)
                       gnssid, svid, sigid);
     }
 
+    // FIXME, will need to become a table.
     switch (sigid) {
     default:
         (void)fprintf(stderr, "ERROR: one_sig() gnmssid %u unknown sigid %u\n",
@@ -742,6 +761,12 @@ static void one_sig(struct meas_t *meas)
         lxx = L2C;
         dxx = D2C;
         break;
+    case 4:
+        // Galileo E5 aq
+        cxx = C5Q;
+        lxx = L5Q;
+        dxx = D5Q;
+        break;
     case 5:
         // QZSS L2C (L)
         cxx = C2L;
@@ -753,6 +778,19 @@ static void one_sig(struct meas_t *meas)
         cxx = C7Q;
         lxx = L7Q;
         dxx = D7Q;
+        break;
+    case 7:
+        if (GNSSID_GPS == gnssid) {
+            // GPS L5Q
+            cxx = C5Q;
+            lxx = L5Q;
+            dxx = D5Q;
+        } else {
+            // BeiDou B2 ap
+            cxx = C5P;
+            lxx = L5P;
+            dxx = D5P;
+        }
         break;
     }
 
