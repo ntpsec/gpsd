@@ -2506,7 +2506,7 @@ struct satellite_t {
      * GPS:      0 = L1C/A, 3 = L2 CL, 4 = L2 CM, 6 = L5 I, 7 = L5 Q
      * IRNSS:    0 = L5 A
      * QZSS:     0 = L1C/A, 1 = L1 S, 4 = L2 CM, 5 = L2 CL, 8 = L5 I,
-     *            9 = L5 Q, 12 = L1 C/B
+     *           9 = L5 Q, 12 = L1 C/B
      * SBAS:     0 = L1C/A, ? = L5I
      *
      * sigid as defined by NMEA 4.10, according to Skytrak, NOT used here
