@@ -118,6 +118,58 @@ const char *flags2str(unsigned long flags, const struct flist_t *flist,
     return buffer;
 }
 
+/* sigid2str()
+ *
+ * given a gpsd gnssid, and gpsd sigid, return a string for the
+ * sigid.  These are (mostly) UBX compatible.  NOT NMEA compatible.
+ *
+ * See sigid in include/gps.h
+ *
+ * return: static const string
+ */
+const char *sigid2str(unsigned char gnssid, unsigned char sigid)
+{
+    const char *rets = "Unk";
+
+#define SIGID_NUM 16
+    const char *xlate[GNSSID_CNT][SIGID_NUM] = {
+       // 0 - gep
+       {"L1C", NULL,  NULL,  "L2 CL",  "L2 CM",  NULL,  "L5 I",  "L5 Q",
+         NULL, },
+       // 1 - SBAS
+       {"L1C",},
+       // 2 - CGalileo
+       {"E1C", "E1 B", "E1 B", "E5 aI", "E5 aQ", "E5 bI", "E5 bQ",
+        NULL, "E6 B", NULL, "E6 A",},
+       // 3 - BeiDou
+       {"B1I D1", "B1I D2", "B2I D1", "B2I D2", "B3I D1", "B1 Cp", "B1 Cd",
+        "B2 ap", "B2 ad", NULL, "B3I D2",},
+       // 4 - IMESS
+       {"L5 A",},
+       // 5 - QZSS
+       {"L1C/A", "L1 S", NULL, NULL, "L2 CM", "L2 CL", NULL, "L5 I",
+        NULL, "L5 Q", NULL, NULL, "L1 C/B",},
+       // 6 - GLONASS
+       {"L1 OF", NULL, "L2 OF",},
+       // 8 - IRNSS (NavIC)
+       {"L5 A",},
+
+    };
+
+    if (GNSSID_CNT <= gnssid) {
+        rets = "GNSS-Unk";
+    } else if (SIGID_NUM <= gnssid) {
+        rets = "SIG-Unk";
+    } else {
+        rets = xlate[gnssid][sigid];
+        if (NULL == rets) {
+            rets = "Unk";
+        }
+    }
+
+    return rets;
+}
+
 /* val2str(val, vlist) - given a value, return a matching string.
  *
  * val the value to find in vlist

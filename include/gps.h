@@ -113,6 +113,7 @@ extern "C" {
  *       MAXCHANNELS bumped from 140 to 185, for ZED-F9T
  * 15    Improve NMEA V4.10, and above, sigid decoding
  *       Add Teseo LIV4F antenna status and firmware version management
+ *       Add sigid2str(), convert sigid to a string.
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -2497,6 +2498,7 @@ struct satellite_t {
     // ignore gnssid and sigid if svid is zero
     uint8_t svid;
     /* sigid as defined by u-blox 9/10, and used here
+     * also see sigid2str().
      * BeiDou:   0 = B1I D1, 1 = B1I D2, 2 = B2I D1, 3 = B2I D2, 4 = B3I D1,
      *           5 = B1 Cp,  6 = B1 Cd,  7 = B2 ap, 8 = B2 ad, 10 = B3I D2
      * Galileo:  0 = E1 C, 1 = E1 B, 3 = E5 aI, 4 = E5 aQ, 5 = E5 bl,
@@ -3036,6 +3038,7 @@ extern const struct vlist_t vant_status[];     // ant_status to string
 extern const struct vlist_t vgnssId[];         // gnssId val to gnssId string
 extern const struct vlist_t vmode_str[];       // mode val to mode string
 extern const struct vlist_t vstatus_str[];     // status val to tatus string
+extern const char *sigid2str(unsigned char, unsigned char);
 
 extern const char *char2str(unsigned char, const struct clist_t *);
 extern const char *flags2str(unsigned long flags, const struct flist_t *flist,

@@ -725,9 +725,10 @@ static void one_sig(struct meas_t *meas)
     obs_codes dxx = D1C;
 
     if (DEBUG_PROG <= debug) {
-        (void)fprintf(stderr, "INFO: one_sig() %c %u:%u:%u\n",
+        (void)fprintf(stderr, "INFO: one_sig() %c %u(%s):%u:%u(%s)\n",
                       gnssid2rinex(gnssid),
-                      gnssid, svid, sigid);
+                      gnssid, val2str(gnssid, vgnssId),
+                      svid, sigid, sigid2str(gnssid, sigid));
     }
 
     // FIXME, will need to become a table.
