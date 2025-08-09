@@ -149,9 +149,12 @@ static char rec_vers[21] = "0";
  *
  * Galileo: C1X, L1X, C5X, L5X, C1C, L1C, C5Q, L5Q
  *
+ * Note: No Doppler Dxx on GLONASS or Galileo
+ *
  */
 typedef enum {C1C = 0, D1C, L1C,
               C2C, D2C, L2C,
+              C2I, D2I, L2I,
               C2L, D2L, L2L,
               C5I, D5I, L5I,
               C5P, D5P, L5P,        // B2 ap
@@ -164,6 +167,7 @@ typedef enum {C1C = 0, D1C, L1C,
 static const char obs_str[CODEMAX + 1][4] = {
     "C1C", "D1C", "L1C",
     "C2C", "D2C", "L2C",
+    "C2I", "D2I", "L2I",
     "C2L", "D2L", "L2L",
     "C5I", "D5I", "L5I",
     "C5P", "D5P", "L5P",
@@ -209,8 +213,7 @@ obs_codes obs_set[GNSSID_CNT][MAX_TYPES + 1] = {
     /* Galileo: E1 (C1x), E5 (C5x), E6 (C6x), E7 (C7x), E8 (C8x
      * E5 === E5a */
     {C1C, L1C, D1C, C5Q, L5Q, D5Q, C7Q, L7Q, D7Q, CODEMAX},  // 2 -- Galileo
-    // B1C (C1D-C1P) and B2a (C5x)
-    {C1C, L1C, D1C, C7I, L7I, D7I, CODEMAX},  // 3 -- Beidou
+    {C2I, L2I, D2I, C5I, L5I, D5I, C5Q, L5Q, D5Q, CODEMAX},  // 3 -- Beidou
     {CODEMAX},                                // 4 -- IMES
     {C1C, L1C, D1C, C2L, L2L, D2L, CODEMAX},  // 5 -- QZSS
     // GLONASS: C1 (C1C), C2 (C2C), P1 (C1P), P2 (C2P)
@@ -355,10 +358,10 @@ static void types_of_obs(unsigned char gnssid)
         }
         snprintf(str[i], sizeof(str[0]), "%s", obs_str[obs_set[gnssid][i]]);
     }
-    (void)fprintf(log_file, "%c%5d%4s%4s%4s%4s%4s%4s%4s%4s%22s%-20s\n",
+    (void)fprintf(log_file, "%c%5d%4s%4s%4s%4s%4s%4s%4s%4s%4s%18s%-20s\n",
                   gnssid2rinex(gnssid), i,
                   str[0], str[1], str[2], str[3], str[4], str[5],
-                  "", "", "", "SYS / # / OBS TYPES");
+                  str[6], str[7], str[8], "", "SYS / # / OBS TYPES");
 }
 
 /* num_of_obs()
@@ -738,15 +741,20 @@ static void one_sig(struct meas_t *meas)
                       gnssid, sigid);
         return;
     case 0:
-        // L1C
-        cxx = C1C;
-        lxx = L1C;
-        dxx = D1C;
+        if (GNSSID_BD == gnssid) {
+            cxx = C2I;
+            lxx = L2I;
+            dxx = D2I;
+        } else {
+            // L1C
+            cxx = C1C;
+            lxx = L1C;
+            dxx = D1C;
+        }
         break;
     case 2:
         // GLONASS L2 OF or BeiDou B2I D1
         if (GNSSID_BD == gnssid) {
-            // WAG
             cxx = C7I;
             lxx = L7I;
             dxx = D7I;
@@ -769,10 +777,17 @@ static void one_sig(struct meas_t *meas)
         dxx = D5Q;
         break;
     case 5:
-        // QZSS L2C (L)
-        cxx = C2L;
-        lxx = L2L;
-        dxx = D2L;
+        if (GNSSID_BD == gnssid) {
+            // BDS B2 aP
+            cxx = C5P;
+            lxx = L5P;
+            dxx = D5P;
+        } else {
+            // QZSS L2C (L)
+            cxx = C2L;
+            lxx = L2L;
+            dxx = D2L;
+        }
         break;
     case 6:
         // Galileo E5 bQ
@@ -786,7 +801,7 @@ static void one_sig(struct meas_t *meas)
             cxx = C5Q;
             lxx = L5Q;
             dxx = D5Q;
-        } else {
+        } else if (GNSSID_BD == gnssid) {
             // BeiDou B2 ap
             cxx = C5P;
             lxx = L5P;
@@ -975,11 +990,11 @@ static void print_raw(struct gps_data_t *gpsdata)
         const unsigned char gnssid = gpsdata->raw.meas[i].gnssid;
         const unsigned char svid = gpsdata->raw.meas[i].svid;
         const unsigned char sigid = gpsdata->raw.meas[i].sigid;
+       // ignore obs_code from gpsdata->raw.meas[]
 
         if (DEBUG_RAW <= debug) {
-            (void)fprintf(stderr,"RAW: record: %u:%u:%u %s\n",
-                          gnssid, svid, sigid,
-                          gpsdata->raw.meas[i].obs_code);
+            (void)fprintf(stderr,"RAW: record: %u:%u:%u\n",
+                          gnssid, svid, sigid);
         }
 
         if (0 == svid) {
