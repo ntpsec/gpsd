@@ -173,7 +173,7 @@ static const char obs_str[CODEMAX + 1][4] = {
     "XXX",
 };
 
-#define MAX_TYPES 6     // maximum types of obs on a line
+#define MAX_TYPES 9     // maximum types of obs on a line
 
 /* structure to hold count of observations by gnssid:svid
  * MAXCHANNEL+1 is just a WAG of max size */
@@ -201,14 +201,14 @@ static struct gps_data_t gpsdata;
 static FILE *log_file;
 
 // array of [gnssid][obs_codes[
-obs_codes obs_set[9][MAX_TYPES + 1] = {
+obs_codes obs_set[GNSSID_CNT][MAX_TYPES + 1] = {
     /* GPS: C1 (C1C), C2 (C2C-C2L-C2X), C5 (C5I-C5Q,C5X),
      *      P1 (C1P-C1W), P2 (C2P-C2W) */
     {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX},  // 0 -- GPS
     {C1C, L1C, D1C, CODEMAX},                 // 1 -- SBAS
     /* Galileo: E1 (C1x), E5 (C5x), E6 (C6x), E7 (C7x), E8 (C8x
      * E5 === E5a */
-    {C1C, L1C, D1C, C7Q, L7Q, D7Q, CODEMAX},  // 2 -- Galileo
+    {C1C, L1C, D1C, C5Q, L5Q, D5Q, C7Q, L7Q, D7Q, CODEMAX},  // 2 -- Galileo
     // B1C (C1D-C1P) and B2a (C5x)
     {C1C, L1C, D1C, C7I, L7I, D7I, CODEMAX},  // 3 -- Beidou
     {CODEMAX},                                // 4 -- IMES
@@ -977,7 +977,7 @@ static void print_raw(struct gps_data_t *gpsdata)
         const unsigned char sigid = gpsdata->raw.meas[i].sigid;
 
         if (DEBUG_RAW <= debug) {
-            (void)fprintf(stderr,"record: %u:%u:%u %s\n",
+            (void)fprintf(stderr,"RAW: record: %u:%u:%u %s\n",
                           gnssid, svid, sigid,
                           gpsdata->raw.meas[i].obs_code);
         }
