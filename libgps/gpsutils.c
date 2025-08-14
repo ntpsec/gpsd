@@ -133,13 +133,12 @@ const char *sigid2str(unsigned char gnssid, unsigned char sigid)
 
 #define SIGID_NUM 16
     const char *xlate[GNSSID_CNT][SIGID_NUM] = {
-       // 0 - gep
-       {"L1C", NULL,  NULL,  "L2 CL",  "L2 CM",  NULL,  "L5 I",  "L5 Q",
-         NULL, },
+       // 0 - GPS
+       {"L1C", NULL,  NULL,  "L2 CL",  "L2 CM",  NULL,  "L5 I",  "L5 Q", },
        // 1 - SBAS
        {"L1C",},
        // 2 - CGalileo
-       {"E1C", "E1 B", "E1 B", "E5 aI", "E5 aQ", "E5 bI", "E5 bQ",
+       {"E1C", NULL, "E1 B", "E5 aI", "E5 aQ", "E5 bI", "E5 bQ",
         NULL, "E6 B", NULL, "E6 A",},
        // 3 - BeiDou
        {"B1I D1", "B1I D2", "B2I D1", "B2I D2", "B3I D1", "B1 Cp", "B1 Cd",
@@ -153,6 +152,56 @@ const char *sigid2str(unsigned char gnssid, unsigned char sigid)
        {"L1 OF", NULL, "L2 OF",},
        // 8 - IRNSS (NavIC)
        {"L5 A",},
+
+    };
+
+    if (GNSSID_CNT <= gnssid) {
+        rets = "GNSS-Unk";
+    } else if (SIGID_NUM <= gnssid) {
+        rets = "SIG-Unk";
+    } else {
+        rets = xlate[gnssid][sigid];
+        if (NULL == rets) {
+            rets = "Unk";
+        }
+    }
+
+    return rets;
+}
+
+/* sigid2obs()
+ *
+ * given a gpsd gnssid, and gpsd sigid, return a string for the
+ * RINEX observation code.  These are (mostly) UBX compatible.
+ *  NOT NMEA compatible.
+ *
+ * return: static const string
+ */
+const char *sigid2obs(unsigned char gnssid, unsigned char sigid)
+{
+    const char *rets = "Unk";
+
+#define SIGID_NUM 16
+    const char *xlate[GNSSID_CNT][SIGID_NUM] = {
+       // 0 - gep
+       {"C1C", NULL,  NULL,  "C2L",  "C2S",  NULL,  "C5I",  "C5Q", },
+       // 1 - SBAS
+       {"C1C",},
+       // 2 - Galileo
+       {"C1C", NULL, "C1B", "C5I", "C5Q", "C7I", "C7Q", NULL, "C6B",
+        NULL, "C6A",},
+       // 3 - BeiDou
+       {"C2I", "C2I", "C7I", "C7I", "C6I", "C1P", "C1D", "C5P", "C5D",
+        NULL, "C6I",},
+       // 4 - IMESS
+       {NULL,},
+       // 5 - QZSS
+       {"C1C", "C1Z", NULL, NULL, "C2S", "C2L", NULL, "C5I", NULL,
+        "C5Q", NULL, NULL, "C1E",},
+       // 6 - GLONASS
+       {"L1C", NULL, "C2C",},
+       // 8 - IRNSS (NavIC)
+       {"L5A",},
 
     };
 

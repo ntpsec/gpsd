@@ -114,6 +114,7 @@ extern "C" {
  * 15    Improve NMEA V4.10, and above, sigid decoding
  *       Add Teseo LIV4F antenna status and firmware version management
  *       Add sigid2str(), convert sigid to a string.
+ *       Add sigid2obs(), convert sigid to a RINEX observation code string.
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -3038,6 +3039,7 @@ extern const struct vlist_t vant_status[];     // ant_status to string
 extern const struct vlist_t vgnssId[];         // gnssId val to gnssId string
 extern const struct vlist_t vmode_str[];       // mode val to mode string
 extern const struct vlist_t vstatus_str[];     // status val to tatus string
+extern const char *sigid2obs(unsigned char, unsigned char);
 extern const char *sigid2str(unsigned char, unsigned char);
 
 extern const char *char2str(unsigned char, const struct clist_t *);
