@@ -697,6 +697,7 @@ else:
     # Should we build with profiling?
     if env['profiling']:
         env.Append(CCFLAGS=['-pg'])
+        env.Append(LINKFLAGS=['-pg'])
     # Should we build with coveraging?
     if env['coveraging']:
         env.Append(CFLAGS=['-coverage'])
