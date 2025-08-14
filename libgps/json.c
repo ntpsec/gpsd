@@ -66,7 +66,7 @@ PERMISSIONS
 
 #include <ctype.h>
 #include <math.h>       // for HUGE_VAL
-#include <stdarg.h>
+#include <stdarg.h>     // for va_arg(), etc.
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -90,24 +90,27 @@ void json_enable_debug(int level, FILE * fp)
     debugfp = fp;
 }
 
+static void json_trace(const char *, ...);
+
 // assemble command in printf(3) style
-static void json_trace(int errlevel, const char *fmt, ...)
+static void json_trace(const char *fmt, ...)
 {
-    if (errlevel <= debuglevel &&
-        NULL != debugfp) {
-        char buf[BUFSIZ] = {0};
-        va_list ap;
+    va_list ap;
 
-        (void)strlcpy(buf, "json: ", sizeof(buf));
-        va_start(ap, fmt);
-        str_vappendf(buf, sizeof(buf), fmt, ap);
-        va_end(ap);
-
-        (void)fputs(buf, debugfp);
-    }
+    va_start(ap, fmt);
+    (void)fprintf(debugfp, fmt, ap);
+    va_end(ap);
 }
 
-#define json_debug_trace(args) (void) json_trace args
+// major speedup by checking debuglvl before callin json_trace()
+#define json_debug_trace(lvl, fmt, ...)                \
+    do {                                              \
+        if (unlikely((lvl) <= debuglevel &&           \
+                      NULL != debugfp) ) {            \
+            json_trace(fmt, __VA_ARGS__);              \
+        }                                             \
+    } while (0)
+
 
 static char *json_target_address(const struct json_attr_t *cursor,
                                  const struct json_array_t
@@ -173,8 +176,8 @@ static char *json_target_address(const struct json_attr_t *cursor,
             parent->arr.objects.base + (offset * parent->arr.objects.stride) +
             cursor->addr.offset;
     }
-    json_debug_trace((1, "Target address for %s (offset %d) is %p\n",
-                      cursor->attribute, offset, targetaddr));
+    json_debug_trace(1, "json: Target address for %s (offset %d) is %p\n",
+                      cursor->attribute, offset, targetaddr);
     return targetaddr;
 }
 
@@ -274,12 +277,12 @@ static int json_internal_read_object(const char *cp,
                 }
         }
 
-    json_debug_trace((1, "JSON parse of '%s' begins.\n", cp));
+    json_debug_trace(1, "json: JSON parse of '%s' begins.\n", cp);
 
     // parse input JSON
     for (; *cp != '\0'; cp++) {
-        json_debug_trace((2, "State %-14s, looking at '%c' (%p)\n",
-                          statenames[state], *cp, cp));
+        json_debug_trace(2, "json: State %-14s, looking at '%c' (%p)\n",
+                          statenames[state], *cp, cp);
         switch (state) {
         case init:
             if (isspace((unsigned char) *cp)) {
@@ -288,8 +291,8 @@ static int json_internal_read_object(const char *cp,
             if (*cp == '{') {
                 state = await_attr;
             } else {
-                json_debug_trace((1,
-                                  "Non-WS when expecting object start.\n"));
+                json_debug_trace(1, "json: %s",
+                                  "Non-WS when expecting object start.\n");
                 if (NULL != end) {
                     *end = cp;
                 }
@@ -309,7 +312,8 @@ static int json_internal_read_object(const char *cp,
             } else if (*cp == '}') {
                 break;
             } else {
-                json_debug_trace((1, "Non-WS when expecting attribute.\n"));
+                json_debug_trace(1, "json: %s",
+                          "Non-WS when expecting attribute.\n");
                 if (NULL != end) {
                     *end = cp;
                 }
@@ -323,11 +327,11 @@ static int json_internal_read_object(const char *cp,
             }
             if (*cp == '"') {
                 *pattr++ = '\0';
-                json_debug_trace((1, "Collected attribute name %s\n",
-                                  attrbuf));
+                json_debug_trace(1, "json: Collected attribute name %s\n",
+                                  attrbuf);
                 for (cursor = attrs; cursor->attribute != NULL; cursor++) {
-                    json_debug_trace((2, "Checking against %s\n",
-                                      cursor->attribute));
+                    json_debug_trace(2, "json: Checking against %s\n",
+                                      cursor->attribute);
                     if (strcmp(cursor->attribute, attrbuf) == 0) {
                         break;
                     }
@@ -337,10 +341,10 @@ static int json_internal_read_object(const char *cp,
                     }
                 }
                 if (NULL == cursor->attribute) {
-                    json_debug_trace((1,
-                                      "Unknown attribute name '%s'"
+                    json_debug_trace(1,
+                                      "json: Unknown attribute name '%s'"
                                       " (attributes begin with '%s').\n",
-                                      attrbuf, attrs->attribute));
+                                      attrbuf, attrs->attribute);
                     // don't update end here, leave at attribute start
                     return JSON_ERR_BADATTR;
                 }
@@ -357,7 +361,7 @@ static int json_internal_read_object(const char *cp,
                 }
                 pval = valbuf;
             } else if (pattr >= attrbuf + JSON_ATTR_MAX - 1) {
-                json_debug_trace((1, "Attribute name too long.\n"));
+                json_debug_trace(1, "json: %s","Attribute name too long.\n");
                 // don't update end here, leave at attribute start
                 return JSON_ERR_ATTRLEN;
             } else {
@@ -371,8 +375,8 @@ static int json_internal_read_object(const char *cp,
             }
             if (*cp == '[') {
                 if (cursor->type != t_array) {
-                    json_debug_trace((1,
-                                      "Saw [ when not expecting array.\n"));
+                    json_debug_trace(1,"json: %s",
+                                      "Saw [ when not expecting array.\n");
                     if (NULL != end) {
                         *end = cp;
                     }
@@ -384,8 +388,8 @@ static int json_internal_read_object(const char *cp,
                 }
                 state = post_element;
             } else if (cursor->type == t_array) {
-                json_debug_trace((1,
-                                  "Array element was specified, but no [.\n"));
+                json_debug_trace(1, "json: %s",
+                                  "Array element was specified, but no [.\n");
                 if (NULL != end) {
                     *end = cp;
                 }
@@ -410,11 +414,11 @@ static int json_internal_read_object(const char *cp,
                 state = in_escape;
             } else if (*cp == '"') {
                 *pval++ = '\0';
-                json_debug_trace((1, "Collected string value %s\n", valbuf));
+                json_debug_trace(1, "json: Collected string value %s\n", valbuf);
                 state = post_val;
             } else if (pval > valbuf + JSON_VAL_MAX - 1 ||
                        pval > valbuf + maxlen - 1) {
-                json_debug_trace((1, "String value too long.\n"));
+                json_debug_trace(1, "json: %s",  "String value too long.\n");
                 // don't update end here, leave at value start
                 return JSON_ERR_STRLONG;
             } else {
@@ -428,7 +432,7 @@ static int json_internal_read_object(const char *cp,
             }
             if (pval > valbuf + JSON_VAL_MAX - 1 ||
                 pval > valbuf + maxlen) {
-                json_debug_trace((1, "String value too long.\n"));
+                json_debug_trace(1, "json: %s",  "String value too long.\n");
                 // don't update end here, leave at value start
                 return JSON_ERR_STRLONG;
             }
@@ -483,14 +487,15 @@ static int json_internal_read_object(const char *cp,
                 *cp == ',' ||
                 *cp == '}') {
                 *pval = '\0';
-                json_debug_trace((1, "Collected token value %s.\n", valbuf));
+                json_debug_trace(1, "json: %s",
+                                 "Collected token value %s.\n", valbuf);
                 state = post_val;
                 if (*cp == '}' ||
                     *cp == ',') {
                     --cp;
                 }
             } else if (pval > valbuf + JSON_VAL_MAX - 1) {
-                json_debug_trace((1, "Token value too long.\n"));
+                json_debug_trace(1, "json: %s", "Token value too long.\n");
                 // don't update end here, leave at value start
                 return JSON_ERR_TOKLONG;
             } else {
@@ -504,8 +509,8 @@ static int json_internal_read_object(const char *cp,
                 while (*cp != '\0' && isspace((unsigned char) *cp)) {
                     ++cp;
                 }
-                json_debug_trace((1,
-                    "Skipped trailing whitespace: value \"%s\"\n", valbuf));
+                json_debug_trace(1,
+                    "json: Skipped trailing whitespace: value \"%s\"\n", valbuf);
             }
             /*
              * We know that cursor points at the first spec matching
@@ -560,8 +565,8 @@ static int json_internal_read_object(const char *cp,
                  cursor->type != t_time &&
                  cursor->type != t_ignore &&
                  cursor->map == 0)) {
-                json_debug_trace((1, "Saw quoted value when expecting"
-                                  " non-string.\n"));
+                json_debug_trace(1, "json: %s", "Saw quoted value when expecting"
+                                  " non-string.\n");
                 return JSON_ERR_QNONSTRING;
             }
             if (!value_quoted &&
@@ -569,8 +574,9 @@ static int json_internal_read_object(const char *cp,
                  cursor->type == t_check ||
                  cursor->type == t_time ||
                  cursor->map != 0)) {
-                json_debug_trace((1, "Didn't see quoted value when expecting"
-                                  " string.\n"));
+                json_debug_trace(1, "json: %s",
+                                 "Didn't see quoted value when expecting"
+                                 " string.\n");
                 return JSON_ERR_NONQSTRING;
             }
             if (cursor->map != 0) {
@@ -578,8 +584,9 @@ static int json_internal_read_object(const char *cp,
                     if (strcmp(mp->name, valbuf) == 0) {
                         goto foundit;
                     }
-                json_debug_trace((1, "Invalid enumerated value string %s.\n",
-                                  valbuf));
+                json_debug_trace(1,
+                                 "json: Invalid enumerated value string %s.\n",
+                                  valbuf);
                 return JSON_ERR_BADENUM;
               foundit:
                 (void)snprintf(valbuf, sizeof(valbuf), "%d", mp->value);
@@ -695,9 +702,9 @@ static int json_internal_read_object(const char *cp,
                     break;
                 case t_check:
                     if (strcmp(cursor->dflt.check, valbuf) != 0) {
-                        json_debug_trace((1, "Required attribute value %s"
+                        json_debug_trace(1, "json: Required attribute value %s"
                                           " not present.\n",
-                                          cursor->dflt.check));
+                                          cursor->dflt.check);
                         // don't update end here, leave at start of attribute
                         return JSON_ERR_CHECKFAIL;
                     }
@@ -715,7 +722,8 @@ static int json_internal_read_object(const char *cp,
                 ++cp;
                 goto good_parse;
             } else {
-                json_debug_trace((1, "Garbage while expecting comma or }\n"));
+                json_debug_trace(1, "json: %s",
+                                "Garbage while expecting comma or }\n");
                 if (NULL != end) {
                     *end = cp;
                 }
@@ -725,7 +733,7 @@ static int json_internal_read_object(const char *cp,
         }
     }
     if (state == init) {
-        json_debug_trace((1, "Input was empty or white-space only\n"));
+        json_debug_trace(1, "json: %s", "Input was empty or white-space only\n");
         return JSON_ERR_EMPTY;
     }
 
@@ -737,7 +745,7 @@ static int json_internal_read_object(const char *cp,
     if (NULL != end) {
         *end = cp;
     }
-    json_debug_trace((1, "JSON parse ends.\n"));
+    json_debug_trace(1, "%s", "json: JSON parse ends.\n");
     return 0;
 }
 
@@ -750,13 +758,13 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
     if (NULL != end)
         *end = NULL;    // give it a well-defined value on parse failure
 
-    json_debug_trace((1, "Entered json_read_array()\n"));
+    json_debug_trace(1, "json: %s", "Entered json_read_array()\n");
 
     while (isspace((unsigned char)*cp)) {
         cp++;
     }
     if (*cp != '[') {
-        json_debug_trace((1, "Didn't find expected array start\n"));
+        json_debug_trace(1, "json: %s", "Didn't find expected array start\n");
         return JSON_ERR_ARRAYSTART;
     }
     cp++;
@@ -775,7 +783,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
     for (offset = 0; offset < arr->maxlen; offset++) {
         char *ep = NULL;
 
-        json_debug_trace((1, "Looking at %s\n", cp));
+        json_debug_trace(1, "json: Looking at %s\n", cp);
         switch (arr->element_type) {
         case t_string:
             if (isspace((unsigned char) *cp)) {
@@ -794,13 +802,14 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
                     *tp++ = '\0';
                     goto stringend;
                 } else if (*cp == '\0') {
-                    json_debug_trace((1,
-                                      "Bad string syntax in string list.\n"));
+                    json_debug_trace(1, "json: %s",
+                                      "Bad string syntax in string list.\n");
                     return JSON_ERR_BADSTRING;
                 } else {
                     *tp = *cp++;
                 }
-            json_debug_trace((1, "Bad string syntax in string list.\n"));
+            json_debug_trace(1, "json: %s",
+                             "Bad string syntax in string list.\n");
             return JSON_ERR_BADSTRING;
           stringend:
             break;
@@ -923,7 +932,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
         case t_check:
             FALLTHROUGH
         case t_ignore:
-            json_debug_trace((1, "Invalid array subtype.\n"));
+            json_debug_trace(1, "json: %s", "Invalid array subtype.\n");
             return JSON_ERR_SUBTYPE;
         }
         arrcount++;
@@ -931,17 +940,17 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
             cp++;
         }
         if (*cp == ']') {
-            json_debug_trace((1, "End of array found.\n"));
+            json_debug_trace(1, "json: %s", "End of array found.\n");
             goto breakout;
         }
         if (*cp == ',') {
             cp++;
         } else {
-            json_debug_trace((1, "Bad trailing syntax on array.\n"));
+            json_debug_trace(1, "json: %s", "Bad trailing syntax on array.\n");
             return JSON_ERR_BADSUBTRAIL;
         }
     }
-    json_debug_trace((1, "Too many elements in array.\n"));
+    json_debug_trace(1, "json: %s", "Too many elements in array.\n");
     if (NULL != end) {
         *end = cp;
     }
@@ -953,8 +962,8 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
     if (NULL != end) {
         *end = cp;
     }
-    json_debug_trace((1, "leaving json_read_array() with %d elements\n",
-                      arrcount));
+    json_debug_trace(1, "json: leaving json_read_array() with %d elements\n",
+                      arrcount);
     return 0;
 }
 
@@ -963,7 +972,7 @@ int json_read_object(const char *cp, const struct json_attr_t *attrs,
 {
     int st;
 
-    json_debug_trace((1, "json_read_object() sees '%s'\n", cp));
+    json_debug_trace(1, "json: json_read_object() sees '%s'\n", cp);
     st = json_internal_read_object(cp, attrs, NULL, 0, end);
     return st;
 }
