@@ -7263,10 +7263,10 @@ protVer 34 and up
         m_len = len(buf)
 
         # version not here before protver 18, I hope it is zero.
-        u = struct.unpack_from('<dHbBBBBB', buf, 0)
+        u = struct.unpack_from('<dHbBBBH', buf, 0)
         s = (' rcvTow %.3f week %u leapS %d numMeas %u recStat %#x'
              ' version %u\n'
-             ' reserved1[2] %#x %#x\n  recStat (' % u)
+             ' reserved1 x%x\n  recStat (' % u)
         s += flag_s(u[4], self.rxm_rawx_recs) + ')'
 
         m_len -= 16
