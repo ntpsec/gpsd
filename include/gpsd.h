@@ -1131,7 +1131,6 @@ extern int gpsd_multipoll(const bool,
                           float reawake_time);
 extern void gpsd_wrap(struct gps_device_t *);
 extern bool gpsd_add_device(const char *device_name, bool flag_nowait);
-extern const char *gpsd_maskdump(gps_mask_t);
 
 // exceptional driver methods
 extern bool ally_write(struct gps_device_t *, unsigned int, unsigned int,
