@@ -24,8 +24,7 @@
 #include "../include/strfuncs.h"
 
 int libgps_debuglevel = 0;
-
-static FILE *debugfp;
+FILE *debugfp = NULL;
 
 // control the level and destination of debug trace messages
 void gps_enable_debug(int level, FILE * fp)
@@ -35,20 +34,21 @@ void gps_enable_debug(int level, FILE * fp)
     json_enable_debug(level - DEBUG_JSON, fp);
 }
 
-// assemble command in printf(3) style
-void libgps_trace(int errlevel, const char *fmt, ...)
+/* assemble command in printf(3) style
+ * do not call directly, us libgps_debug_trace()
+ */
+// HOTCODE!  Do not change without profiling.
+void libgps_trace(const char *fmt, ...)
 {
-    if (errlevel <= libgps_debuglevel) {
-        char buf[BUFSIZ];
-        va_list ap;
+    char buf[BUFSIZ] = "";
+    va_list ap;
 
-        (void)strlcpy(buf, "libgps: ", sizeof(buf));
-        va_start(ap, fmt);
-        str_vappendf(buf, sizeof(buf), fmt, ap);
-        va_end(ap);
+     va_start(ap, fmt);
+    str_vappendf(buf, sizeof(buf), fmt, ap);
+    fprintf(debugfp, fmt, ap);
+    va_end(ap);
 
-        (void)fputs(buf, debugfp);
-    }
+    (void)fputs(buf, debugfp);
 }
 
 #define CONDITIONALLY_UNUSED UNUSED
@@ -84,16 +84,18 @@ int gps_open(const char *host, const char *port,
         0 == strcmp(host, GPSD_LOCAL_FILE)) {
         intptr_t fd;
 
-        libgps_debug_trace((DEBUG_CALLS, "INFO: gps_open(FILE)\n"));
+        libgps_debug_trace(DEBUG_CALLS, "libgps: INFO: gps_open%sILE)\n",
+                            host);
         if (NULL == port) {
-            libgps_debug_trace((DEBUG_CALLS,
-                               "ERROR: gps_open(FILE) missing port\n"));
+            libgps_debug_trace(DEBUG_CALLS,
+                               "libgps: ERROR: gps_open(%s) missing port\n",
+                               host);
             return FILE_FAIL;
         }
         fd = open(port, O_RDONLY);
         if (0 > fd) {
-            libgps_debug_trace((DEBUG_CALLS, "ERROR: gps_open(%s) %d\n",
-                                port,  errno));
+            libgps_debug_trace(DEBUG_CALLS, "libgps: ERROR: gps_open(%s) %d\n",
+                                port,  errno);
             return FILE_FAIL;
         }
         gpsdata->gps_fd = (gps_fd_t)fd;
@@ -168,7 +170,7 @@ int gps_close(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
 {
     int status = -1;
 
-    libgps_debug_trace((DEBUG_CALLS, "gps_close()\n"));
+    libgps_debug_trace(DEBUG_CALLS, "%s", "libgps: gps_close()\n");
 
 #ifdef SHM_EXPORT_ENABLE
     if (BAD_SOCKET((intptr_t)(gpsdata->gps_fd))) {
@@ -200,7 +202,7 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
 {
     int status = -1;
 
-    libgps_debug_trace((DEBUG_CALLS, "gps_read() begins\n"));
+    libgps_debug_trace(DEBUG_CALLS, "%s",  "libgps: gps_read() begins\n");
     if ((NULL != message) &&
         (0 < message_len)) {
         // be sure message is zero length
@@ -209,7 +211,7 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
     }
     if (NULL == PRIVATE(gpsdata)) {
         char err[] = "gps_read() NULL == privdata";
-        libgps_debug_trace((DEBUG_CALLS, "%s\n", err));
+        libgps_debug_trace(DEBUG_CALLS, "libgps: %s\n", err);
         strlcpy(gpsdata->error, err, sizeof(gpsdata->error));
         gpsdata->set = ERROR_SET;
         return -1;
@@ -248,7 +250,7 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
                 ret = -1;
             }
             gpsdata->set = ERROR_SET;
-            libgps_debug_trace((DEBUG_CALLS, "%s\n", gpsdata->error));
+            libgps_debug_trace(DEBUG_CALLS, "libgps: %s\n", gpsdata->error);
             return ret;
         }
         gpsdata->set &= ~PACKET_SET;
@@ -263,8 +265,9 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
         if (eol >= eptr) {
             /* Buffer is full but still didn't get a message.
              * discard and try again. */
-            libgps_debug_trace((DEBUG_CALLS,
-                                "gps_read() buffer full, but no message\n"));
+            libgps_debug_trace(DEBUG_CALLS, "%s",
+                                "libgps: gps_read() buffer full, "
+                                "but no message\n");
             PRIVATE(gpsdata)->buffer[0] = '\0';
             PRIVATE(gpsdata)->waiting = 0;
             return -1;
@@ -305,20 +308,18 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
                     PRIVATE(gpsdata)->waiting);
         }
         gpsdata->set |= PACKET_SET;
-    }
 #ifdef SHM_EXPORT_ENABLE
-    else if (BAD_SOCKET((intptr_t)(gpsdata->gps_fd))) {
+    } else if (BAD_SOCKET((intptr_t)(gpsdata->gps_fd))) {
         status = gps_shm_read(gpsdata);
-    }
 #endif  // SHM_EXPORT_ENABLE
 
-    else if (-1 == status &&
+    } else if (-1 == status &&
         !BAD_SOCKET((intptr_t)(gpsdata->gps_fd))) {
         status = gps_sock_read(gpsdata, message, message_len);
     }
 
-    libgps_debug_trace((DEBUG_CALLS, "gps_read() -> %d (%s)\n",
-                        status, gps_maskdump(gpsdata->set)));
+    libgps_debug_trace(DEBUG_CALLS, "libgps: gps_read() -> %d (%s)\n",
+                        status, gps_maskdump(gpsdata->set));
 
     return status;
 }
@@ -425,27 +426,30 @@ int gps_mainloop(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
 {
     int status = -1;
 
-    libgps_debug_trace((DEBUG_CALLS, "gps_mainloop() begins\n"));
+    libgps_debug_trace(DEBUG_CALLS, "%s", "libgps: gps_mainloop() begins\n");
 
 #ifdef SHM_EXPORT_ENABLE
     if (SHM_PSEUDO_FD == (intptr_t)(gpsdata->gps_fd)) {
-        libgps_debug_trace((DEBUG_CALLS, "gps_shm_mainloop() begins\n"));
+        libgps_debug_trace(DEBUG_CALLS, "%s",
+                           "libgps: gps_shm_mainloop() begins\n");
         status = gps_shm_mainloop(gpsdata, timeout, hook);
     }
 #endif  // SHM_EXPORT_ENABLE
 #ifdef DBUS_EXPORT_ENABLE
     if (DBUS_PSEUDO_FD == (intptr_t)(gpsdata->gps_fd)) {
-        libgps_debug_trace((DEBUG_CALLS, "gps_dbus_mainloop() begins\n"));
+        libgps_debug_trace(DEBUG_CALLS, "%s",
+                           "libgps: gps_dbus_mainloop() begins\n");
         status = gps_dbus_mainloop(gpsdata, timeout, hook);
     }
 #endif  // DBUS_EXPORT_ENABLE
     if (0 <= (intptr_t)(gpsdata->gps_fd)) {
-        libgps_debug_trace((DEBUG_CALLS, "gps_sock_mainloop() begins\n"));
+        libgps_debug_trace(DEBUG_CALLS, "%s",
+                           "libgps: gps_sock_mainloop() begins\n");
         status = gps_sock_mainloop(gpsdata, timeout, hook);
     }
 
-    libgps_debug_trace((DEBUG_CALLS, "gps_mainloop() -> %d (%s)\n",
-                        status, gps_maskdump(gpsdata->set)));
+    libgps_debug_trace(DEBUG_CALLS, "libgps: gps_mainloop() -> %d (%s)\n",
+                        status, gps_maskdump(gpsdata->set));
 
     return status;
 }

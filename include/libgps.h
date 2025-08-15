@@ -40,9 +40,21 @@ extern int json_ais_read(const char *, char *, size_t, struct ais_t *,
                          const char **);
 
 // debugging apparatus for the client library
+extern FILE *debugfp;
+
 #define DEBUG_CALLS     1       // shallowest debug level
 #define DEBUG_JSON      5       // minimum level for verbose JSON debugging
-#define libgps_debug_trace(args) (void) libgps_trace args
+
+// HOTCODE!  Do not change without profiling.
+// major speedup by checking debuglvl before callin json_trace()
+#define libgps_debug_trace(lvl, fmt, ...)             \
+    do {                                              \
+        if (unlikely((lvl) <= libgps_debuglevel &&    \
+                      NULL != debugfp) ) {            \
+            libgps_trace(fmt, __VA_ARGS__);           \
+        }                                             \
+    } while (0)
+
 extern int libgps_debuglevel;
 extern void libgps_dump_state(struct gps_data_t *);
 

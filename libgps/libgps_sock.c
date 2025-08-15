@@ -49,7 +49,8 @@ static bool windows_init(void)
     // request access to Windows Sockets API version 2.2
     int res = WSAStartup(MAKEWORD(2, 2), &wsadata);
     if (0 != res) {
-        libgps_debug_trace((DEBUG_CALLS, "WSAStartup returns error %d\n", res));
+        libgps_debug_trace(DEBUG_CALLS,
+                            "libgps: WSAStartup returns error %d\n", res);
     }
     return (0 == res);
 }
@@ -59,7 +60,8 @@ static bool windows_finish(void)
 {
     int res = WSACleanup();
     if (0 != res) {
-        libgps_debug_trace((DEBUG_CALLS, "WSACleanup returns error %d\n", res));
+        libgps_debug_trace(DEBUG_CALLS,
+                           "libgps: WSACleanup returns error %d\n", res);
     }
     return (0 == res);
 }
@@ -76,7 +78,8 @@ int gps_sock_open(const char *host, const char *port,
         port = DEFAULT_GPSD_PORT;
     }
 
-    libgps_debug_trace((DEBUG_CALLS, "gps_sock_open(%s, %s)\n", host, port));
+    libgps_debug_trace(DEBUG_CALLS,
+                       "libgps: gps_sock_open(%s, %s)\n", host, port);
 
 #ifdef USE_QT
     {
@@ -107,16 +110,17 @@ int gps_sock_open(const char *host, const char *port,
         sock = netlib_connectsock(AF_UNSPEC, host, port, "tcp");
         if (0 > sock) {
             gpsdata->gps_fd = PLACEHOLDING_FD;
-            libgps_debug_trace((DEBUG_CALLS,
-                               "netlib_connectsock() returns error %s(%d)\n",
-                               netlib_errstr(sock), sock));
+            libgps_debug_trace(DEBUG_CALLS,
+                               "libgps: netlib_connectsock() "
+                               "returns error %s(%d)\n",
+                               netlib_errstr(sock), sock);
             return -1;
         }
         gpsdata->gps_fd = sock;
         // (long long) to pacify Coverity 477166, printf_args
-        libgps_debug_trace((DEBUG_CALLS,
-            "netlib_connectsock() returns socket on fd %lld\n",
-            (long long)(gpsdata->gps_fd)));
+        libgps_debug_trace(DEBUG_CALLS,
+            "libgps: netlib_connectsock() returns socket on fd %lld\n",
+            (long long)(gpsdata->gps_fd));
     }
 #endif  // USE_QT
 
@@ -138,8 +142,8 @@ bool gps_sock_waiting(const struct gps_data_t *gpsdata, int timeout)
 #else
     struct timespec to;
 
-    libgps_debug_trace((DEBUG_CALLS, "gps_waiting(%d): %d\n",
-                       timeout, PRIVATE(gpsdata)->waitcount++));
+    libgps_debug_trace(DEBUG_CALLS, "libgps: gps_waiting(%d): %d\n",
+                       timeout, PRIVATE(gpsdata)->waitcount++);
     if (0 < PRIVATE(gpsdata)->waiting) {
         return true;
     }
@@ -411,9 +415,9 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
 int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
 {
     char vbuf[GPS_JSON_COMMAND_MAX];
-    libgps_debug_trace((DEBUG_CALLS, "gps_unpack(%s)\n",
+    libgps_debug_trace(DEBUG_CALLS, "libgps: gps_unpack(%s)\n",
                         gps_visibilize(vbuf, sizeof(vbuf),
-                                       buf, strnlen(buf, sizeof(vbuf)))));
+                                       buf, strnlen(buf, sizeof(vbuf))));
 
     // detect and process a JSON response
     if ('{' == buf[0]) {
@@ -422,10 +426,10 @@ int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
         while (NULL != next &&
                NULL != *next &&
                '\0' != next[0][0]) {
-            libgps_debug_trace((DEBUG_CALLS,
-                               "gps_unpack() segment parse '%s'\n",
+            libgps_debug_trace(DEBUG_CALLS,
+                               "libgps: gps_unpack() segment parse '%s'\n",
                                gps_visibilize(vbuf, sizeof(vbuf), *next,
-                                              strnlen(*next, sizeof(vbuf)))));
+                                              strnlen(*next, sizeof(vbuf))));
             if (-1 == libgps_json_unpack(*next, gpsdata, next)) {
                 break;
             }
@@ -436,10 +440,10 @@ int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
     }
 
 #ifndef USE_QT
-    libgps_debug_trace((DEBUG_CALLS,
-                        "final flags: (0x%08lx) %s\n",
+    libgps_debug_trace(DEBUG_CALLS,
+                        "libgps: final flags: (0x%08lx) %s\n",
                         (unsigned long)gpsdata->set,
-                        gps_maskdump(gpsdata->set)));
+                        gps_maskdump(gpsdata->set));
 #endif  // USE_QT
     return 0;
 }
@@ -555,7 +559,8 @@ int gps_sock_stream(struct gps_data_t *gpsdata, watch_t flags,
         }
     }
     (void)strlcat(buf, "};", sizeof(buf));
-    libgps_debug_trace((DEBUG_CALLS, "gps_sock_stream() command: %s\n", buf));
+    libgps_debug_trace(DEBUG_CALLS,
+                        "libgps: gps_sock_stream() command: %s\n", buf);
     return gps_send(gpsdata, buf);
 }
 

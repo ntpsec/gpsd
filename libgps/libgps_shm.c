@@ -10,7 +10,7 @@ notifications.  But both client and daemon will avoid all the marshalling and
 unmarshalling overhead.
 
 PERMISSIONS
-   This file is Copyright 2010 by the GPSD project
+   This file is Copyright by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -46,29 +46,29 @@ int gps_shm_open(struct gps_data_t *gpsdata)
     long shmkey = getenv("GPSD_SHM_KEY") ?
                      strtol(getenv("GPSD_SHM_KEY"), NULL, 0) : GPSD_SHM_KEY;
 
-    libgps_debug_trace((DEBUG_CALLS, "gps_shm_open()\n"));
+    libgps_debug_trace(DEBUG_CALLS, "%s",  "libgps: gps_shm_open()\n");
 
     gpsdata->privdata = NULL;
     shmid = shmget((key_t)shmkey, sizeof(struct gps_data_t), 0);
     if (-1 == shmid) {
         // daemon isn't running or failed to create shared segment
-        libgps_debug_trace((DEBUG_CALLS, "gps_shm_open(x%lx) %s(%d)\n",
-                            (unsigned long)shmkey, strerror(errno),  errno));
+        libgps_debug_trace(DEBUG_CALLS, "libgps: gps_shm_open(x%lx) %s(%d)\n",
+                            (unsigned long)shmkey, strerror(errno),  errno);
         return -1;
     }
     gpsdata->privdata =
         (struct privdata_t *)calloc(1, sizeof(struct privdata_t));
     if (NULL == gpsdata->privdata) {
-        libgps_debug_trace((DEBUG_CALLS, "calloc() %s(%d)\n",
-                            strerror(errno),  errno));
+        libgps_debug_trace(DEBUG_CALLS, "libgps: calloc() %s(%d)\n",
+                            strerror(errno),  errno);
         return -3;
     }
 
     PRIVATE(gpsdata)->shmseg = shmat(shmid, 0, 0);
     if ((void *)-1 == PRIVATE(gpsdata)->shmseg) {
         // attach failed for sume unknown reason
-        libgps_debug_trace((DEBUG_CALLS, "shmat() %s(%d)\n",
-                            strerror(errno),  errno));
+        libgps_debug_trace(DEBUG_CALLS, "libgps: shmat() %s(%d)\n",
+                            strerror(errno),  errno);
         free(gpsdata->privdata);
         gpsdata->privdata = NULL;
         return -2;

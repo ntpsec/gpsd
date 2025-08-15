@@ -3005,7 +3005,8 @@ int json_oscillator_read(const char *buf, struct gps_data_t *,
 extern void gpsd_source_spec(const char *fromstring,
                              struct fixsource_t *source);
 
-extern void libgps_trace(int errlevel, const char *, ...);
+// Do not call directly, use libgps_debug_trace()
+extern void libgps_trace(const char *, ...);
 
 extern void gps_clear_att(struct attitude_t *);
 extern void gps_clear_dop( struct dop_t *);
