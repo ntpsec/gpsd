@@ -81,13 +81,13 @@ PERMISSIONS
 #include "../include/timespec.h"
 
 static int debuglevel = 0;
-static FILE *debugfp;
+static FILE *debugjsfp = NULL;
 
 // control the level and destination of debug trace messages
 void json_enable_debug(int level, FILE * fp)
 {
     debuglevel = level;
-    debugfp = fp;
+    debugjsfp = fp;
 }
 
 static void json_trace(const char *, ...);
@@ -98,15 +98,16 @@ static void json_trace(const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    (void)fprintf(debugfp, fmt, ap);
+    (void)fprintf(debugjsfp, fmt, ap);
     va_end(ap);
 }
 
+// HOTCODE!  Do not change without profiling.
 // major speedup by checking debuglvl before callin json_trace()
 #define json_debug_trace(lvl, fmt, ...)                \
     do {                                              \
         if (unlikely((lvl) <= debuglevel &&           \
-                      NULL != debugfp) ) {            \
+                      NULL != debugjsfp) ) {            \
             json_trace(fmt, __VA_ARGS__);              \
         }                                             \
     } while (0)
