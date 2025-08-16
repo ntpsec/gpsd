@@ -100,7 +100,8 @@ static char ant_type[21] = "UNKNOWN EXT     NONE";
 static double ant_e = 0.0;
 static double ant_h = 0.0;
 static double ant_n = 0.0;
-static char marker_name[61] = "XXXX";
+static char comment[61] = "";
+static char marker_name[61] = "";
 // NON-GEODETIC means the antenna was not moving (static)
 static char marker_type[61] = "NON_GEODETIC";
 static char observer[21] = "Unknown";
@@ -424,6 +425,7 @@ static void print_rinex_header(void)
 {
     int i, j;
     char tmstr[40];              // time: yyyymmdd hhmmss UTC
+    char *s;                     // generic string pointer
     struct tm *report_time;
     struct tm *first_time;
     struct tm *last_time;
@@ -445,15 +447,28 @@ static void print_rinex_header(void)
         "gpsrinex " VERSION, "", tmstr,
         "PGM / RUN BY / DATE");
 
-    if (NULL == file_in) {
-        (void)fprintf(log_file, "%-60s%-20s\n",
-             "Source: gpsd live data", "COMMENT");
+    if ('\0' != comment[0]) {
+        // user supplied comment
+        s = comment;
+    } else if (NULL != file_in) {
+        // use file_as comment
+        s = file_in;
     } else {
-        // put file_in name in the obs dile.
-        (void)fprintf(log_file, "%-60s%-20s\n",
-             file_in, "COMMENT");
+        s = "Source: gpsd live data";
     }
-    (void)fprintf(log_file, "%-60s%-20s\n", marker_name, "MARKER NAME");
+    (void)fprintf(log_file, "%-60s%-20s\n", s, "COMMENT");
+
+    if ('\0' != marker_name[0]) {
+        // user supplied comment
+        s = marker_name;
+    } else if (NULL != file_in) {
+        // use file_as marker name
+        s = file_in;
+    } else {
+        s = "XXXX";
+    }
+    (void)fprintf(log_file, "%-60s%-20s\n", s, "MARKER NAME");
+
     (void)fprintf(log_file, "%-60s%-20s\n", marker_type, "MARKER TYPE");
     (void)fprintf(log_file, "%-20s%-40s%-20s\n",
                   observer, agency, "OBSERVER / AGENCY");
@@ -1252,7 +1267,7 @@ int main(int argc, char **argv)
     log_file = stdout;
     while (1) {
         int ch;
-        const char *optstring = "?D:f:F:hi:n:V";
+        const char *optstring = "?c:D:f:F:hi:n:V";
 
 #ifdef HAVE_GETOPT_LONG
         int option_index = 0;
@@ -1263,6 +1278,7 @@ int main(int argc, char **argv)
             {"ant_e", required_argument, NULL, ANT_E},
             {"ant_h", required_argument, NULL, ANT_H},
             {"ant_n", required_argument, NULL, ANT_N},
+            {"comment", required_argument, NULL, 'c' },
             {"count", required_argument, NULL, 'n' },
             {"debug", required_argument, NULL, 'D' },
             {"filein", required_argument, NULL, 'F' },
@@ -1288,6 +1304,9 @@ int main(int argc, char **argv)
         }
 
         switch (ch) {
+        case 'c':       // comment
+            strlcpy(comment, optarg, sizeof(comment));
+            break;
         case 'D':
             debug = atoi(optarg);
             gps_enable_debug(debug, log_file);

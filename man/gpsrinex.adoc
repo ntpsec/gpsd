@@ -1,6 +1,6 @@
 = gpsrinex(1)
 :author: Gary E. Miller
-:date: 22 February 2025
+:date: 15 August 2025
 :email: gem@rellim.com
 :keywords: gps, gpsd, gpsrinex, RINEX, ubxtool
 :manmanual: GPSD Documentation
@@ -14,7 +14,7 @@ include::../www/inc-menu.adoc[]
 
 == NAME
 
-gpsrinex - Read data from gpsd convert to RINEX3 and save to a file.
+gpsrinex - Read data from gpsd, convert to RINEX, and save to a file.
 
 == SYNOPSIS
 
@@ -27,7 +27,7 @@ gpsrinex - Read data from gpsd convert to RINEX3 and save to a file.
 == DESCRIPTION
 
 *gpsrinex* is a tool to connect to *gpsd* and output the received raw
-measurements as a RINEX 3 observation file. This is useful for sending
+measurements as a RINEX observation file. This is useful for sending
 raw measurements (pseudorange and carrierphase) from *gpsd* to a Precise
 Point Positioning (PPP) program or service.
 
@@ -39,9 +39,9 @@ remote *gpsd* without causing problems.
 *gpsrinex* needs the GNSS receiver to be sending raw measurements to *gpsd*.
 Only a few GNSS have this capability. In addition, the *gpsd* driver for
 that GNSS must support raw mode. Currently only the u-blox driver has
-this support. Only a few u-blox 8 and 9 receivers implement the required
-UBX-RXM-RAWX message. The NEO-M8T is known to work, but requires
-configuration with *ubxtool*.
+this support. Only a few u-blox 8, 9, and 10, receivers implement
+the required UBX-RXM-RAWX message. The NEO-M8T is known to work, but
+requires configuration with *ubxtool*.
 
 Before using *ubxtool* be sure to set the UBXOPTS environment variable
 with the correct protocol version for your u-blox receiver. If your
@@ -63,7 +63,7 @@ data, but no more than 24 or 48 hours of data. Most users consider 4 to
 6 hours of data as a minimum for good accuracy. Additional hours will
 not yield much improvement.
 
-The output will consist of one RINEX 3 observation file that is ready to
+The output will consist of one RINEX observation file that is ready to
 be read by your PPP program. The default filename will be in the form:
 _gpsrinexYYYYDDDDHHMM.obs_. You can override this filename with the
 *-f* option.
@@ -102,6 +102,8 @@ The following options set strings that are placed in the generated RINEX
   The antenna serial number.
 *--ant_type TYPE*::
   The antenna type.
+*--comment CMT*::
+  Free form comment.
 *--marker_name NAME*::
   The marker name.
 *--marker_type TYPE*::
@@ -116,7 +118,7 @@ The following options set strings that are placed in the generated RINEX
   The receiver version.
 
 The following options set floating point numbers that are placed in the
-generated RINEX 3 obs file. They do not change how *gpsrinex* computes
+generated RINEX obs file. They do not change how *gpsrinex* computes
 anything.
 
 *--ant_e EASTING*::
@@ -196,7 +198,7 @@ UBX-RXM-RAWX:
 UBX-RXM-RAWX:
 ----
 
-Collect 4 hours of samples at 30 second intervals, save the RINEX 3
+Collect 4 hours of samples at 30 second intervals, save the RINEX
 observations in the file today.obs:
 
 ----
@@ -262,6 +264,9 @@ https://www.ngs.noaa.gov/OPUS/
 
 The curious can find the RINEX 3.04 format described here:
 ftp://igs.org/pub/data/format/rinex304.pdf
+
+RINEX 4.02 is here:
+https://files.igs.org/pub/data/format/rinex_4.02.pdf
 
 *gpsd*(8), *gps*(1), *gpsprof*(1), *gpsfake*(1). *ubxtool*(1), *gpsd_json*(5)
 
