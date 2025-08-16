@@ -440,10 +440,13 @@ int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
     }
 
 #ifndef USE_QT
+    (void)fputs("SNARD9\n", stderr);
+    fprintf(stderr, "%s\n", gps_maskdump(gpsdata->set));
     libgps_debug_trace(DEBUG_CALLS,
                         "libgps: final flags: (0x%08lx) %s\n",
                         (unsigned long)gpsdata->set,
                         gps_maskdump(gpsdata->set));
+    (void)fputs("SNARD99\n", stderr);
 #endif  // USE_QT
     return 0;
 }

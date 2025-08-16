@@ -98,7 +98,7 @@ static void json_trace(const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    (void)fprintf(debugjsfp, fmt, ap);
+    (void)vfprintf(debugjsfp, fmt, ap);
     va_end(ap);
 }
 

@@ -40,15 +40,11 @@ void gps_enable_debug(int level, FILE * fp)
 // HOTCODE!  Do not change without profiling.
 void libgps_trace(const char *fmt, ...)
 {
-    char buf[BUFSIZ] = "";
     va_list ap;
 
-     va_start(ap, fmt);
-    str_vappendf(buf, sizeof(buf), fmt, ap);
-    fprintf(debugfp, fmt, ap);
+    va_start(ap, fmt);
+    vfprintf(debugfp, fmt, ap);
     va_end(ap);
-
-    (void)fputs(buf, debugfp);
 }
 
 #define CONDITIONALLY_UNUSED UNUSED
