@@ -57,6 +57,7 @@
 #include "../include/gpsd_config.h"   // must be before all includes
 
 #include <assert.h>
+#include <ctype.h>        // isspace()
 #include <errno.h>
 #include <libgen.h>
 #include <math.h>
@@ -919,6 +920,53 @@ static void one_sig(struct meas_t *meas)
 #endif   // debug
 }
 
+// trim speaces from the end of a string
+static  inline void rtrim(char *str)
+{
+    int end = strlen(str) - 1;
+
+    // Remove trailing whitespace
+    while (0 <= end &&
+           isspace(str[end])) {
+        str[end] = '\0';
+        end--;
+    }
+}
+
+/* dumpe one row of RINEX observations.
+ * data in obs_items[][]
+ *
+ * Return void
+ */
+static void dump_one_obs(unsigned char gnssid, unsigned char svid)
+{
+    char buf[1024];
+    int buf_len = 0;
+    int j;
+    char rinex_gnssid;
+
+    rinex_gnssid = gnssid2rinex(gnssid);
+
+    // line can be longer than 80 chars in RINEX 3 and 4
+
+    for (j = 0; j < MAX_TYPES; j++) {
+        int obs = obs_set[gnssid][j];
+
+        if (CODEMAX == obs) {
+            break;
+        }
+        buf_len += snprintf(buf + buf_len, sizeof(buf) - buf_len,
+                            "%16s", obs_items[obs]);
+        if (((int)(sizeof(buf) - 20)) < buf_len) {
+            // overflow
+            break;
+        }
+    }
+    // FIXME: figure out how to not dump empty records.
+    // FIXME: sadly the sat count is already written to tmp file.
+    rtrim(buf);
+    (void)fprintf(tmp_file, "%c%02d%s\n", rinex_gnssid, svid, buf);
+}
 
 /* print_raw()
  * print one epoch of observations into "tmp_file"
@@ -1034,17 +1082,18 @@ static void print_raw(struct gps_data_t *gpsdata)
          now_time->tm_sec,
          (long)(last_mtime.tv_nsec / 100), nsat);
 
-    last_gnssid = 0;
-    last_svid = 0;
-
     /* get all the data for one sat into obs_tiems[]
      * then later they can be output it arbitrary orders  */
     memset(obs_items, 0, sizeof(obs_items));
+
+    last_gnssid = 0;
+    last_svid = 0;
+
     for (i = 0; i < nrec; i++) {
         const unsigned char gnssid = gpsdata->raw.meas[i].gnssid;
         const unsigned char svid = gpsdata->raw.meas[i].svid;
         const unsigned char sigid = gpsdata->raw.meas[i].sigid;
-       // ignore obs_code from gpsdata->raw.meas[]
+        // ignore obs_code from gpsdata->raw.meas[]
 
         if (DEBUG_RAW <= debug) {
             (void)fprintf(stderr,"RAW: record: %u:%u:%u %s\n",
@@ -1057,60 +1106,25 @@ static void print_raw(struct gps_data_t *gpsdata)
             continue;
         }
 
-        // line can be longer than 80 chars in RINEX 3
-        if (last_gnssid != gnssid ||
-            last_svid != svid) {
-            char rinex_gnssid;
+        if (0 != last_svid &&
+            (last_gnssid != gnssid ||
+             last_svid != svid)) {
 
-            rinex_gnssid = gnssid2rinex(last_gnssid);
+            dump_one_obs(last_gnssid, last_svid);
 
-            if (0 != last_svid) {
-                int j;
-
-                (void)fprintf(tmp_file, "%c%02d", rinex_gnssid, last_svid);
-                for (j = 0; j < MAX_TYPES; j++) {
-                    int obs = obs_set[last_gnssid][j];
-
-                    if (CODEMAX == obs) {
-                        break;
-                    }
-                    (void)fprintf(tmp_file, "%16s", obs_items[obs]);
-                }
-                (void)fputs("\n", tmp_file);
-            }
+            // init for next sat.
+            memset(obs_items, 0, sizeof(obs_items));
         }
 
         last_gnssid = gnssid;
         last_svid = svid;
 
+        // add this one.
         one_sig(&gpsdata->raw.meas[i]);
-
     }
 
-    // Process the last onem why can't this go in the for loop above?
-    {
-        char rinex_gnssid;
-
-        rinex_gnssid = gnssid2rinex(last_gnssid);
-
-        if (0 != last_svid) {
-            int j;
-
-            (void)fprintf(tmp_file, "%c%02d", rinex_gnssid, last_svid);
-            for (j = 0; j < MAX_TYPES; j++) {
-                int obs = obs_set[last_gnssid][j];
-
-                if (CODEMAX == obs) {
-                    break;
-                }
-                (void)fprintf(tmp_file, "%16s", obs_items[obs]);
-            }
-            (void)fputs("\n", tmp_file);
-        }
-    }
-    // ready for new sat
-    memset(obs_items, 0, sizeof(obs_items));
-
+    // dumpe the last one
+    dump_one_obs(last_gnssid, last_svid);
     sample_count--;
 }
 
