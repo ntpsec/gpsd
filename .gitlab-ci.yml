@@ -215,17 +215,15 @@ scan-build:
 # Check if three variables required for Coverity job are set before running.
 # Otherwise do not even create the job. Also, only run for push events.
 coverity:
-  allow_failure: true
   image: debian:latest
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
     SCAN_BUILD: 'cov-analysis-linux64-*/bin/cov-build --dir cov-int'
     NOCHECK: 'true'
-    PACKAGES: 'bc build-essential ca-certificates clang clang-tools curl git
-        libbluetooth-dev libdbus-1-dev libglib2.0-dev
-        libncurses-dev libqt5network5 libusb-1.0-0-dev
-        pps-tools python-is-python3 python3-setuptools
-        qtbase5-dev scons'
+    PACKAGES: 'bc build-essential ca-certificates clang clang-tools curl file
+        git libbluetooth-dev libdbus-1-dev libglib2.0-dev libncurses-dev
+        libqt5network5 libusb-1.0-0-dev pps-tools python-is-python3
+        python3-setuptools qtbase5-dev scons'
   script:
     - apt update
     - apt -y install --no-install-recommends eatmydata
