@@ -157,7 +157,7 @@ const char *sigid2str(unsigned char gnssid, unsigned char sigid)
 
     if (GNSSID_CNT <= gnssid) {
         rets = "GNSS-Unk";
-    } else if (SIGID_NUM <= gnssid) {
+    } else if (SIGID_NUM <= sigid) {
         rets = "SIG-Unk";
     } else {
         rets = xlate[gnssid][sigid];
