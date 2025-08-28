@@ -488,8 +488,8 @@ static int json_internal_read_object(const char *cp,
                 *cp == ',' ||
                 *cp == '}') {
                 *pval = '\0';
-                json_debug_trace(1, "json: %s",
-                                 "Collected token value %s.\n", valbuf);
+                json_debug_trace(1, "json: Collected token valuen %s\n",
+                                 valbuf);
                 state = post_val;
                 if (*cp == '}' ||
                     *cp == ',') {
