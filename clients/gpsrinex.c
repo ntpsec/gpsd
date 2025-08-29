@@ -680,7 +680,7 @@ static void print_rinex_header(void)
  */
 static void print_rinex_footer(void)
 {
-    char buffer[4096];
+    char buffer[4096] = "";
 
     // print the header
     print_rinex_header();
@@ -726,7 +726,7 @@ static int compare_meas(const void  *A, const void  *B)
  * in a static buffer */
 static const char * fmt_obs(double val, unsigned char lli, unsigned char snr)
 {
-    static char buf[20];
+    static char buf[20] = "";
     char lli_c;         // set zero lli to blank
     char snr_c;         // set zero snr to blank
 
@@ -940,7 +940,7 @@ static  inline void rtrim(char *str)
  */
 static void dump_one_obs(unsigned char gnssid, unsigned char svid)
 {
-    char buf[1024];
+    char buf[1024] = "";
     int buf_len = 0;
     int j;
     char rinex_gnssid;
