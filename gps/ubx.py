@@ -2081,8 +2081,9 @@ class ubx(object):
          "NavIC enable"),
         ("CFG-SIGNAL-BDS_B2A_ENA", 0x10310028, "L", 1, "",
          "BDS B2A enable"),
-        ("CFG-SIGNAL-41", 0x10310029, "L", 1, "",
-         "Unknown"),
+        ("CFG-SIGNAL-IGNORE_BAND_OTP", 0x10310029, "L", 1, "",
+         "Enable all bands disregarding OTP band file. "
+         "For production  testing."),
         ("CFG-SIGNAL-PLAN", 0x1031003a, "E1", 1, "",
          "SIGNAL PLAN"),
 
