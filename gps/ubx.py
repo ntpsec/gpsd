@@ -2818,7 +2818,7 @@ Removed in M10 (protVer 34.00 and up)
     def cfg_ant(self, buf):
         """UBX-CFG-ANT decode
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         u = struct.unpack_from('<HH', buf, 0)
@@ -2878,7 +2878,7 @@ Deprecated in protVer 32.00
 
 "not completely  backwards-compatible."
 
-Deprecated in protVer 34.00
+Deprecated in protVer 28.00
 """
         m_len = len(buf)
 
@@ -2905,7 +2905,7 @@ Deprecated in protVer 34.00
     def cfg_dat(self, buf):
         """UBX-CFG-DAT decode, Standard Datum configuration
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         # u-blox 5 to 9, protVer 4.00 to 29
@@ -3209,7 +3209,7 @@ Programming the fixed seed for host interface signature"""
     def cfg_geofence(self, buf):
         """UBX-CFG-GEOFENCE decode, Geofencing configuration
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         # not in M10, protVer 34 and up
@@ -3249,7 +3249,7 @@ Deprecated in protVer 32.00
         """UBX-CFG-GNSS decode, GNSS system configuration
 
 Present in protVer 15 and up
-Deprecated in protVer 34.00
+Deprecated in protVer 23.01
 """
 
         u = struct.unpack_from('<BBBB', buf, 0)
@@ -3296,7 +3296,7 @@ Deprecated in protVer 34.00
     def cfg_inf(self, buf):
         """UBX-CFG-INF decode, Poll configuration for one protocol
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         m_len = len(buf)
@@ -3320,6 +3320,7 @@ Deprecated in protVer 32.00
         if gps.VERB_DECODE <= self.verbosity:
             s += ('\n   protocolId (%s)' %
                   index_s(buf[0], self.cfg_inf_protid))
+
         return s
 
     cfg_itfm_config = {
@@ -3338,7 +3339,7 @@ Deprecated in protVer 32.00
     def cfg_itfm(self, buf):
         """UBX-CFG-ITFM decode, Jamming/Interference Monitor configuration
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         u = struct.unpack_from('<LL', buf, 0)
@@ -3363,7 +3364,7 @@ Deprecated in protVer 32.00
     def cfg_logfilter(self, buf):
         """UBX-CFG-LOGFILTER decode, Data Logger Configuration
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         # u-blox 7+, protVer 14+
@@ -3422,7 +3423,7 @@ Deprecated in protVer 32.00
     def cfg_msg(self, buf):
         """UBX-CFG-MSG decode
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
         m_len = len(buf)
         if 2 == m_len:
@@ -3498,7 +3499,7 @@ Deprecated in protVer 32.00
     def cfg_nav5(self, buf):
         """UBX-CFG-NAV5 nav Engine Settings
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         u = struct.unpack_from('<HBBlLbBHHHHbbbbHHbBL', buf, 0)
@@ -3538,7 +3539,7 @@ Deprecated in protVer 32.00
     def cfg_navx5(self, buf):
         """UBX-CFG-NAVX5 decode, Navigation Engine Expert Settings
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         # deprecated protver 23+
@@ -3570,7 +3571,7 @@ Deprecated in protVer 32.00
     def cfg_nmea(self, buf):
         """UBX-CFG-NMEA decode, NMEA protocol configuration
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         # old u-blox have 4 octets, e.g. u-blox 6 w/ protVer < 14
@@ -3649,7 +3650,7 @@ Save and Load non-volatile storage data"""
     def cfg_odo(self, buf):
         """UBX-CFG-ODO decode, Odometer, Low-speed COG Engine Settings
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         u = struct.unpack_from('<BBBBBBBBBBBBBBBBBBBB', buf, 0)
@@ -3711,7 +3712,7 @@ Deprecated in protVer 32.00
     def cfg_pm2(self, buf):
         """UBX-CFG-PM2 decode, Extended Power Mode Configuration
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         # three versions, two lengths
@@ -3839,7 +3840,7 @@ Still present in 42.02
     def cfg_pwr(self, buf):
         """UBX-CFG-PWR decode, Put receiver in a defined power state
 
-Deprecated in protVer 32.00
+Deprecated in protVer 17.00
 """
 
         u = struct.unpack_from('<BBBBL', buf, 0)
@@ -3874,7 +3875,7 @@ Deprecated in protVer 32.00
     def cfg_rinv(self, buf):
         """UBX-CFG-RINV decode, Contents of Remote Inventory
 
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         # u-blox 5, protVer 6.00 to 6.02
@@ -4208,7 +4209,7 @@ Deprecated in protVer 32.00
     def cfg_tp5(self, buf):
         """UBX-CFG-TP5 decode, Time Pulse Parameters
 
-Deprecated in protVer 32.00
+Deprecated in protVer 27.00
 """
 
         m_len = len(buf)
@@ -4245,7 +4246,7 @@ Deprecated in protVer 32.00
         """UBX-CFG-USB decode, USB Configuration
 
 Only for models with built in USB.
-Deprecated in protVer 32.00
+Deprecated in protVer 23.01
 """
 
         u = struct.unpack_from('<HHHHHH', buf, 0)
@@ -4425,31 +4426,31 @@ Deprecated in protVer 32.00
         # in u-blox 5+
         # Broadcom calls this BRM-STP-PORT
         0x00: {'str': 'PRT', 'dec': cfg_prt, 'minlen': 1,
-               'name': 'UBX-CFG-PRT'},
+               'name': 'UBX-CFG-PRT', 'depver': 23.01},
         # in u-blox 5+
         # Broadcom calls this BRM-STP-MESSAGE
         0x01: {'str': 'MSG', 'dec': cfg_msg, 'minlen': 2,
-               'name': 'UBX-CFG-MSG'},
+               'name': 'UBX-CFG-MSG', 'depver': 23.01},
         # in u-blox 5+
         0x02: {'str': 'INF', 'dec': cfg_inf, 'minlen': 1,
-               'name': 'UBX-CFG-INF'},
+               'name': 'UBX-CFG-INF', 'depver': 23.01},
         # in u-blox 5+
         # Broadcom calls this BRM-STP-RESET
         0x04: {'str': 'RST', 'dec': cfg_rst, 'minlen': 4,
                'name': 'UBX-CFG-RST'},
         # in u-blox 5 to 9
         0x06: {'str': 'DAT', 'dec': cfg_dat, 'minlen': 2,
-               'name': 'UBX-CFG-DAT'},
+               'name': 'UBX-CFG-DAT', 'depver': 23.01},
         # u-blox 5, 6.  Not in u-blox 7+
         0x07: {'str': 'TP', 'dec': cfg_tp, 'minlen': 20,
                'name': 'UBX-CFG-TP'},
         # in u-blox 5+
         0x08: {'str': 'RATE', 'dec': cfg_rate, 'minlen': 6,
-               'name': 'UBX-CFG-RATE'},
+               'name': 'UBX-CFG-RATE', 'depver': 23.01},
         # in u-blox 5+
         # Broadcom calls this BRM-STP-CONFIG
         0x09: {'str': 'CFG', 'dec': cfg_cfg, 'minlen': 12,
-               'name': 'UBX-CFG-CFG'},
+               'name': 'UBX-CFG-CFG', 'depver': 28.0},
         # Antaris 4, deprecated in u-blox 5/6, gone in 7
         0x0e: {'str': 'FXM', 'dec': cfg_fxn, 'minlen': 36,
                'name': 'UBX-CFG-FXM'},
@@ -4460,62 +4461,62 @@ Deprecated in protVer 32.00
         0x12: {'str': 'EKF', 'minlen': 16, 'name': 'UBX-CFG-EKF'},
         # in u-blox 5+
         0x13: {'str': 'ANT', 'dec': cfg_ant, 'minlen': 4,
-               'name': 'UBX-CFG-ANT'},
+               'name': 'UBX-CFG-ANT', 'depver': 23.01},
         # in u-blox 5+
         0x16: {'str': 'SBAS', 'dec': cfg_sbas, 'minlen': 8,
                'name': 'UBX-CFG-SBAS'},
         # in u-blox 5+
         # Broadcom calls this BRM-STP-NMEA
         0x17: {'str': 'NMEA', 'dec': cfg_nmea, 'minlen': 4,
-               'name': 'UBX-CFG-NMEA'},
+               'name': 'UBX-CFG-NMEA', 'depver': 23.01},
         # in u-blox 6+, Not in u-blox 5-
         0x1b: {'str': 'USB', 'dec': cfg_usb, 'minlen': 108,
-               'name': 'UBX-CFG-USB'},
+               'name': 'UBX-CFG-USB', 'depver': 23.01},
         # u-blox 5 and 6.  Not in u-blox 7+
         0x1d: {'str': 'TMODE', 'dec': cfg_tmode, 'minlen': 28,
                'name': 'UBX-CFG-TMODE'},
         # in u-blox 8+. Not in u-blox 7-
         0x1e: {'str': 'ODO', 'dec': cfg_odo, 'minlen': 20,
-               'name': 'UBX-CFG-ODO'},
+               'name': 'UBX-CFG-ODO', 'depver': 23.01},
         # in u-blox 6, not in u-blox 7+
         0x22: {'str': 'NVS', 'dec': cfg_nvs, 'minlen': 13,
                'name': 'UBX-CFG-NVS'},
         # in u-blox 5+
         0x23: {'str': 'NAVX5', 'dec': cfg_navx5, 'minlen': 20,
-               'name': 'UBX-CFG-NAVX5'},
+               'name': 'UBX-CFG-NAVX5', 'depver': 23.01},
         # in u-blox 6+.  Not in 5-
         # Broadcom calls this BRM-STP-CONFIG2
         0x24: {'str': 'NAV5', 'dec': cfg_nav5, 'minlen': 36,
-               'name': 'UBX-CFG-NAV5'},
+               'name': 'UBX-CFG-NAV5', 'depver': 23.01},
         # in u-blox 6. SFDR only. Not in u-blox 5- or 7+
         0x29: {'str': 'ESFGWT', 'minlen': 44, 'name': 'UBX-CFG-ESFGWT'},
         # in u-blox 6+, Not u-blox 5-
         0x31: {'str': 'TP5', 'dec': cfg_tp5, 'minlen': 1,
-               'name': 'UBX-CFG-TP5'},
+               'name': 'UBX-CFG-TP5', 'depver': 27.0},
         # In u-blox 5, 6. Not in u-blox 7+
         0x32: {'str': 'PM', 'dec': cfg_pm, 'minlen': 24,
                'name': 'UBX-CFG-PM'},
         # in u-blox 5+
         0x34: {'str': 'RINV', 'dec': cfg_rinv, 'minlen': 1,
-               'name': 'UBX-CFG-RINV'},
+               'name': 'UBX-CFG-RINV', 'depver': 23.01},
         # in u-blox 6+.  Not in u-blox 5-
         0x39: {'str': 'ITFM', 'dec': cfg_itfm, 'minlen': 8,
-               'name': 'UBX-CFG-ITFM'},
+               'name': 'UBX-CFG-ITFM', 'depver': 23.01},
         # in u-blox 6+.  Not in u-blox 5-
         0x3b: {'str': 'PM2', 'dec': cfg_pm2, 'minlen': 44,
-               'name': 'UBX-CFG-PM2'},
+               'name': 'UBX-CFG-PM2', 'depver': 23.01},
         # in u-blox 6 and 7.  Not in u-blox 5- or 8+
         0x3d: {'str': 'TMODE2', 'dec': cfg_tmode2, 'minlen': 28,
                'name': 'UBX-CFG-TMODE2'},
         # in u-blox 7+  Not in u-blox 6-
         # Broadcom calls this BRM-STP-ME_SETTINGS
         0x3e: {'str': 'GNSS', 'dec': cfg_gnss, 'minlen': 4,
-               'name': 'UBX-CFG-GNSS'},
+               'name': 'UBX-CFG-GNSS', 'depver': 23.01},
         # u-blox F9 TIM
         0x41: {'str': 'OTP', 'minlen': 12, 'name': 'UBX-CFG-OTP'},
         # in u-blox 7+  Not in u-blox 6-
         0x47: {'str': 'LOGFILTER', 'dec': cfg_logfilter, 'minlen': 12,
-               'name': 'UBX-CFG-LOGFILTER'},
+               'name': 'UBX-CFG-LOGFILTER', 'depver': 23.01},
         # protVer 19 and up, UDR only
         0x4c: {'str': 'ESFA', 'dec': cfg_esfa, 'minlen': 20,
                'name': 'UBX-CFG-ESFA'},
@@ -4529,7 +4530,7 @@ Deprecated in protVer 32.00
                'name': 'UBX-CFG-ESFALG'},
         # Not in u-blox 7-
         0x57: {'str': 'PWR', 'dec': cfg_pwr, 'minlen': 8,
-               'name': 'UBX-CFG-PWR'},
+               'name': 'UBX-CFG-PWR', 'depver': 17.0},
         # Not before u-blox 8, protVer 15, ADR and UDR only
         0x5c: {'str': 'HNR', 'dec': cfg_hnr, 'minlen': 4,
                'name': 'UBX-CFG-HNR'},
@@ -4546,7 +4547,7 @@ Deprecated in protVer 32.00
         0x64: {'str': 'SPT', 'minlen': 12, 'name': 'UBX-CFG-SPT'},
         # Not in u-blox 8-
         0x69: {'str': 'GEOFENCE', 'dec': cfg_geofence, 'minlen': 8,
-               'name': 'UBX-CFG-GEOFENCE'},
+               'name': 'UBX-CFG-GEOFENCE', 'depver': 23.01},
         # Not in u-blox 8-
         0x70: {'str': 'DGNSS', 'dec': cfg_dgnss, 'minlen': 4,
                'name': 'UBX-CFG-DGNSS'},
@@ -5395,7 +5396,7 @@ Present from Antaris (4) to M10
 68 bytes in 6-series
 60 bytes in 8-series and 9-series
 56 bytes in protVer 34 (10-series)
-Deprecated in protVer 32.00 ( M9), use MON-H# and MON-RF
+Deprecated in protVer 29.00 ( M9), use MON-H# and MON-RF
 Deprecated. and undocumented, on M10, use MON-H# and MON-RF
 """
         m_len = len(buf)
@@ -5457,7 +5458,7 @@ Deprecated. and undocumented, on M10, use MON-H# and MON-RF
     def mon_hw2(self, buf):
         """UBX-MON-HW2 decode, Extended Hardware Status
 
-Deprecated in protVer 32.00
+Deprecated in protVer 29.00
 """
 
         u = struct.unpack_from('<bBbBBBBBLLLLL', buf, 0)
@@ -5544,7 +5545,10 @@ Deprecated in protVer 32.00
         return s
 
     def mon_io(self, buf):
-        """UBX-MON-IO decode, I/O Subsystem Status"""
+        """UBX-MON-IO decode, I/O Subsystem Status
+
+Deprecated in protVer 29.00
+"""
         m_len = len(buf)
 
         s = ''
@@ -5559,7 +5563,10 @@ Deprecated in protVer 32.00
         return s
 
     def mon_msgpp(self, buf):
-        """UBX-MON-MSGPP decode, Message Parse and Process Status"""
+        """UBX-MON-MSGPP decode, Message Parse and Process Status
+
+Deprecated in protVer 29.00
+"""
 
         s = ''
         for i in range(1, 7):
@@ -5718,7 +5725,10 @@ present F9T, protVer 29.
         return s[0:-1]    # remove trailing \n
 
     def mon_rxbuf(self, buf):
-        """UBX-MON-RXBUF decode, Receiver Buffer Status"""
+        """UBX-MON-RXBUF decode, Receiver Buffer Status
+
+Deprecated in protVer 29.00
+"""
 
         rxbuf_name = {
            1: " pending   ",
@@ -5880,7 +5890,10 @@ Not in:
         return s
 
     def mon_txbuf(self, buf):
-        """UBX-MON-TXBUF decode, Transmitter Buffer Status"""
+        """UBX-MON-TXBUF decode, Transmitter Buffer Status
+
+Deprecated in protVer 29.00
+"""
 
         txbuf_name = {
            1: " pending   ",
@@ -5947,19 +5960,19 @@ Not in:
         return s
 
     mon_ids = {0x02: {'str': 'IO', 'dec': mon_io, 'minlen': 20,
-                      'name': 'UBX-MON-IO'},
+                      'name': 'UBX-MON-IO', 'depver': 29.0},
                0x04: {'str': 'VER', 'dec': mon_ver, 'minlen': 40,
                       'name': 'UBX-MON-VER'},
                0x06: {'str': 'MSGPP', 'dec': mon_msgpp, 'minlen': 120,
-                      'name': 'UBX-MON-MSGPP'},
+                      'name': 'UBX-MON-MSGPP', 'depver': 29.0},
                0x07: {'str': 'RXBUF', 'dec': mon_rxbuf, 'minlen': 24,
-                      'name': 'UBX-MON-RXBUF'},
+                      'name': 'UBX-MON-RXBUF', 'depver': 29.0},
                0x08: {'str': 'TXBUF', 'dec': mon_txbuf, 'minlen': 28,
-                      'name': 'UBX-MON-TXBUF'},
+                      'name': 'UBX-MON-TXBUF', 'depver': 29.0},
                0x09: {'str': 'HW', 'dec': mon_hw, 'minlen': 60,
                       'name': 'UBX-MON-HW'},
                0x0b: {'str': 'HW2', 'dec': mon_hw2, 'minlen': 28,
-                      'name': 'UBX-MON-HW2'},
+                      'name': 'UBX-MON-HW2', 'depver': 29.0},
                0x21: {'str': 'RXR', 'dec': mon_rxr, 'minlen': 1,
                       'name': 'UBX-MON-RXR'},
                0x27: {'str': 'PATCH', 'dec': mon_patch, 'minlen': 4,
@@ -9436,25 +9449,33 @@ qErrInvalid added in protVer 32 and up
                         if m_id in this_class['ids']:
                             # got an entry for this message
                             # name is mandatory
-                            s_payload = this_class['ids'][m_id]['name']
+                            this_id = this_class['ids'][m_id]
+                            s_payload = this_id['name']
                             s_payload += ':\n'
 
-                            if ((('minlen' in this_class['ids'][m_id]) and
+                            if ((('depver' in this_id) and
+                                 (this_id['depver'] <= self.protver))):
+                                s_payload += ('WARNING:  protVer is %s, '
+                                              ' %s deprecated in %.2f and '
+                                              'higher\n' %
+                                              (self.protver, this_id['name'],
+                                               this_id['depver']))
+
+                            if ((('minlen' in this_id) and
                                  (0 == m_len) and
-                                 (0 != this_class['ids'][m_id]['minlen']))):
+                                 (0 != this_id['minlen']))):
                                 s_payload += "  Poll request"
-                            elif (('minlen' in this_class['ids'][m_id]) and
-                                  (this_class['ids'][m_id]['minlen'] >
-                                   m_len)):
+                            elif (('minlen' in this_id) and
+                                  (this_id['minlen'] > m_len)):
                                 # failed minimum length for this message
                                 s_payload += "  Bad Length %s" % m_len
-                            elif 'dec' in this_class['ids'][m_id]:
+                            elif 'dec' in this_id:
                                 # got a decoder for this message
-                                dec = this_class['ids'][m_id]['dec']
-                                s_payload += dec(self, m_payload)
+                                s_payload += this_id['dec'](self, m_payload)
                             else:
                                 s_payload += ("  len %#x, raw %s" %
                                               (m_len, x_payload))
+
                         else:
                             # unknodn m_id
                             s_payload = ("%s: Unknown message type\n" %
@@ -10241,7 +10262,10 @@ Not supported on 9-series and later.
         self.gps_send(6, 0x0, m_data)
 
     def send_cfg_rate(self, args):
-        """UBX-CFG-RATE, poll/set rate settings"""
+        """UBX-CFG-RATE, poll/set rate settings
+
+Deprecated in protVer 23.01
+"""
 
         if 0 == len(args):
             # poll
@@ -10790,8 +10814,7 @@ present in 9-series and higher
         # UBX-CFG-NAV5
         "MODEL": {"command": send_cfg_nav5_model,
                   "help": "set UBX-CFG-NAV5 Dynamic Platform Model. "
-                          "MODEL,model",
-                  "args": 1},
+                          "MODEL,model"},
         # UBX-CFG-CFG
         "RESET": {"command": send_cfg_cfg,
                   "help": "UBX-CFG-CFG reset config to defaults",
