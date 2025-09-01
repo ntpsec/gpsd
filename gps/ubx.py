@@ -2624,6 +2624,7 @@ class ubx(object):
     def aid_alm(self, buf):
         """UBX-AID-ALM decode, GPS Aiding Almanac Data
 
+Deprecated in protVer 23.00
 Removed in protVer 32.00 and up
 """
         m_len = len(buf)
@@ -2647,6 +2648,7 @@ Removed in protVer 32.00 and up
     def aid_alp(self, buf):
         """UBX-AID-ALP decode, AlmanacPlus
 
+Deprecated in protVer 23.00
 Removed in M10 (protVer 34.00 and up)
 """
 
@@ -2674,6 +2676,7 @@ Removed in M10 (protVer 34.00 and up)
     def aid_alpsrv(self, buf):
         """UBX-AID-ALPSRV decode, AlmanacPlus
 
+Deprecated in protVer 23.00
 Removed in M10 (protVer 34.00 and up)
 """
 
@@ -2689,6 +2692,7 @@ Removed in M10 (protVer 34.00 and up)
     def aid_aop(self, buf):
         """UBX-AID-AOP decode, AssistNow Autonomous data
 
+Deprecated in protVer 23.00
 Removed in M10 (protVer 34.00 and up)
 """
         m_len = len(buf)
@@ -2709,6 +2713,7 @@ Removed in M10 (protVer 34.00 and up)
     def aid_data(self, buf):
         """UBX-AID-DATA decode, Poll all GPS Initial Aiding Data
 
+Deprecated in protVer 23.00
 Removed in M10 (protVer 34.00 and up)
 """
 
@@ -2720,6 +2725,7 @@ Removed in M10 (protVer 34.00 and up)
     def aid_eph(self, buf):
         """UBX-AID-EPH decode, GPS Aiding Ephemeris Data
 
+Deprecated in protVer 23.00
 Removed in M10 (protVer 34.00 and up)
 """
         m_len = len(buf)
@@ -2747,6 +2753,7 @@ Removed in M10 (protVer 34.00 and up)
     def aid_hui(self, buf):
         """UBX-AID-HUI decode, GPS Heatlh, UTC, Ionosphere
 
+Deprecated in protVer 23.00
 Removed in M10 (protVer 34.00 and up)
 """
 
@@ -2762,6 +2769,7 @@ Removed in M10 (protVer 34.00 and up)
     def aid_ini(self, buf):
         """UBX-AID-INI decode, Aiding position, time, frequency, clock drift
 
+Deprecated in protVer 23.00
 Removed in M10 (protVer 34.00 and up)
 """
 
@@ -2776,6 +2784,7 @@ Removed in M10 (protVer 34.00 and up)
     def aid_req(self, buf):
         """UBX-AID-REQ decode, Sends a poll for all GPS Aiding Data
 
+Deprecated in protVer 23.00
 Removed in M10 (protVer 34.00 and up)
 """
 
@@ -2786,25 +2795,25 @@ Removed in M10 (protVer 34.00 and up)
     aid_ids = {
                # u-blox 6
                0x00: {'str': 'REQ', 'dec': aid_req, 'minlen': 0,
-                      'name': 'UBX-AID-REQ'},
+                      'name': 'UBX-AID-REQ', 'depver': 23.0},
                0x01: {'str': 'INI', 'dec': aid_ini, 'minlen': 48,
-                      'name': 'UBX-AID-INI'},
+                      'name': 'UBX-AID-INI', 'depver': 23.0},
                0x02: {'str': 'HUI', 'dec': aid_hui, 'minlen': 72,
-                      'name': 'UBX-AID-HUI'},
+                      'name': 'UBX-AID-HUI', 'depver': 23.0},
                # u-blox 6
                0x10: {'str': 'DATA', 'dec': aid_data, 'minlen': 0,
-                      'name': 'UBX-AID-DATA'},
+                      'name': 'UBX-AID-DATA', 'depver': 23.0},
                0x30: {'str': 'ALM', 'dec': aid_alm, 'minlen': 1,
-                      'name': 'UBX-AID-ALM'},
+                      'name': 'UBX-AID-ALM', 'depver': 23.0},
                0x31: {'str': 'EPH', 'dec': aid_eph, 'minlen': 1,
-                      'name': 'UBX-AID-EPH'},
+                      'name': 'UBX-AID-EPH', 'depver': 23.0},
                # u-blox 6
                0x32: {'str': 'ALPSRV', 'dec': aid_alpsrv, 'minlen': 8,
-                      'name': 'UBX-AID-ALPSRV'},
+                      'name': 'UBX-AID-ALPSRV', 'depver': 23.01},
                0x33: {'str': 'AOP', 'dec': aid_aop, 'minlen': 1,
-                      'name': 'UBX-AID-AOP'},
+                      'name': 'UBX-AID-AOP', 'depver': 23.0},
                0x50: {'str': 'ALP', 'dec': aid_alp, 'minlen': 1,
-                      'name': 'UBX-AID-ALP'},
+                      'name': 'UBX-AID-ALP', 'depver': 23.0},
                }
 
     cfg_ant_pins = {
@@ -4089,7 +4098,10 @@ Deprecated in protVer 32.00
         }
 
     def cfg_tmode(self, buf):
-        """UBX-CFG-TMODE decode, Time Mode Settings"""
+        """UBX-CFG-TMODE decode, Time Mode Settings
+
+Deprecated in protVer 13.00
+"""
 
         # u-blox 5, protVer 5.00 to 6.02 (timing feature only)
 
@@ -4472,9 +4484,9 @@ Deprecated in protVer 23.01
         # in u-blox 6+, Not in u-blox 5-
         0x1b: {'str': 'USB', 'dec': cfg_usb, 'minlen': 108,
                'name': 'UBX-CFG-USB', 'depver': 23.01},
-        # u-blox 5 and 6.  Not in u-blox 7+
+        # u-blox 5 and 6. Timing  only.  Not in u-blox 7+
         0x1d: {'str': 'TMODE', 'dec': cfg_tmode, 'minlen': 28,
-               'name': 'UBX-CFG-TMODE'},
+               'name': 'UBX-CFG-TMODE', 'depver': 13.0},
         # in u-blox 8+. Not in u-blox 7-
         0x1e: {'str': 'ODO', 'dec': cfg_odo, 'minlen': 20,
                'name': 'UBX-CFG-ODO', 'depver': 23.01},
