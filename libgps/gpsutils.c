@@ -123,75 +123,75 @@ const char *flags2str(unsigned long flags, const struct flist_t *flist,
  */
 #define SIGID_NUM 16
 struct sig_xlate_t {
-    uint8_t nmea_sigid;        // NMEA 4.10 signal id.  0 == None
     const char *name;          // plain name
     const char *obs;           // RINEX observation code
+    uint8_t nmea_sigid;        // NMEA 4.10 signal id.  0 == None
 } const sig_xlate[GNSSID_CNT][SIGID_NUM] = {
     {   // 0 - GPS
-        {1, "L1 C/A", "C1C"},
-        {0, NULL, NULL},
-        {0, NULL, NULL},
-        {6, "L2 CL", "C2L"},
-        {5, "L2 CM", "C2S"},
-        {0, NULL, NULL},        // 5
-        {7, "L5 I", "C5I"},
-        {8, "L5 Q", "C5Q"},
+        {"L1 C/A",   "C1C", 1},
+        {NULL,       NULL},
+        {NULL,       NULL},
+        {"L2 CL",    "C2L", 6},
+        {"L2 CM",    "C2S", 5},
+        {NULL,       NULL},        // 5
+        {"L5 I",     "C5I", 7},
+        {"L5 Q",     "C5Q", 8},
     },
     {   // 1- SBAS
-        {1, "L1C", "C1C"},
+        {"L1C",      "C1C", 1},
         // {1, "L5I", "C5I"},  // ??
     },
     {   // 2 - Galileo
-        {7, "E1 C", "C1C"},
-        {7, "E1 B", "C1B"},
-        {0, NULL, NULL},
-        {1, "E5 aI", "C5I"},  // 3
-        {1, "E5 aQ", "C5Q"},
-        {2, "E5 bI", "C7I"},
-        {2, "E5 bQ", "C7Q"},
-        {0, NULL, NULL},
-        {5, "E6 B", "C6B"},   // 8
-        {5, "E6 C", "C6C"},
-        {4, "E6 A", "C6A"},
+        {"E1 C",     "C1C", 7},
+        {"E1 B",     "C1B", 7},
+        {NULL,       NULL},
+        {"E5 aI",    "C5I", 1},  // 3
+        {"E5 aQ",    "C5Q", 1},
+        {"E5 bI",    "C7I", 2},
+        {"E5 bQ",    "C7Q", 2},
+        {NULL,       NULL},
+        {"E6 B",     "C6B", 5},   // 8
+        {"E6 C",     "C6C", 5},
+        {"E6 A",     "C6A", 4},
     },
     {   // 3 - BeiDou
-        {1, "B1I D1", "C2I"},
-        {1, "B1I D2", "C2I"},
-        {0xb, "B2I D1", "C7I"},
-        {0xb, "B2I D2", "C7I"},
-        {0xb, "B3I D1", "C6I"},
-        {3, "B1 Cp", "C1P"},  // 5
-        {3, "B1 Cd", "C1D"},
-        {5, "B2 ap", "C5P"},
-        {5, "B2 ad", "C5P"},
-        {0, NULL, NULL},       // 9
-        {0xb, "B3I D2", "C6I"},
+        {"B1I D1",   "C2I", 1},
+        {"B1I D2",   "C2I", 1},
+        {"B2I D1",   "C7I", 0xb},
+        {"B2I D2",   "C7I", 0xb},
+        {"B3I D1",   "C6I", 0xb},
+        {"B1 Cp",    "C1P", 3},  // 5
+        {"B1 Cd",    "C1D", 3},
+        {"B2 ap",    "C5P", 5},
+        {"B2 ad",    "C5P", 5},
+        {NULL,       NULL},       // 9
+        {"B3I D2",   "C6I", 0xb},
     },
-    {   // 4 - IMESS
-        {0, "L5 A", NULL},
+    {   // 4 - IMES
+        {"L5 A",     NULL, 0},
     },
     {   // 5 - QZSS
-        {1, "L1 C/A", "C1C"},
-        {4, "L1 S", "C1Z"},
-        {0, NULL, NULL},
-        {0, NULL, NULL},
-        {5, "L2 CM", "C2S"},
-        {6, "L2 CL", "C2L"},   // 5
-        {0, NULL, NULL},
-        {0, NULL, NULL},
-        {7, "L5 I", "C5I"},
-        {8, "L5 Q", "C5Q"},
-        {0, NULL, NULL},       //  10
-        {0, NULL, NULL},
-        {0, "L1 C/B", "C1E"},
+        {"L1 C/A",   "C1C", 1},
+        {"L1 S",     "C1Z", 4},
+        {NULL,       NULL},
+        {NULL,       NULL},
+        {"L2 CM",    "C2S", 5},
+        {"L2 CL",    "C2L", 6},   // 5
+        {NULL,       NULL},
+        {NULL,       NULL},
+        {"L5 I",     "C5I", 7},
+        {"L5 Q",     "C5Q", 8},
+        {NULL,       NULL},    //  10
+        {NULL,       NULL},
+        {"L1 C/B",   "C1E", 0},
     },
     {   // 6 - GLONASS
-        {1, "L1 OF", "C1C"},
-        {0, NULL, NULL},
-        {3, "L2 OF", "C2C"},
+        {"L1 OF",    "C1C", 1},
+        {NULL,       NULL},
+        {"L2 OF",    "C2C", 3},
     },
     {   // 8 - IRNSS (NavIC)
-        {1, "L5 A", "C5A",},
+        {"L5 A",     "C5A", 1},
     },
 };
 
@@ -237,7 +237,7 @@ const char *sigid2obs(unsigned char gnssid, unsigned char sigid)
 
     if (GNSSID_CNT <= gnssid) {
         rets = "GNSS-Unk";
-    } else if (SIGID_NUM <= gnssid) {
+    } else if (SIGID_NUM <= sigid) {
         rets = "SIG-Unk";
     } else {
         rets = sig_xlate[gnssid][sigid].obs;
