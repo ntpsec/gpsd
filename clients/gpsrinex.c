@@ -157,31 +157,128 @@ static char rec_vers[21] = "0";
  * Note: No Doppler Dxx on GLONASS or Galileo
  *
  */
-typedef enum {C1C = 0, D1C, L1C,
+typedef enum {CODENONE = 0,
+              C1B, D1B, L1B,
+              C1C, D1C, L1C,
+              C1D, D1D, L1D,
+              C1E, D1E, L1E,
               C1P, D1P, L1P,
+              C1Z, D1Z, L1Z,
               C2C, D2C, L2C,
               C2I, D2I, L2I,
               C2L, D2L, L2L,
+              C2S, D2S, L2S,
+              C5A, D5A, L5A,
               C5I, D5I, L5I,
               C5P, D5P, L5P,        // B2 ap
               C5Q, D5Q, L5Q,        // GPS L5Q, Galileo E5aq
+              C6A, D6A, L6A,
+              C6B, D6B, L6B,
+              C6C, D6C, L6C,
+              C6I, D6I, L6I,
               C7I, D7I, L7I,
               C7Q, D7Q, L7Q,
               CODEMAX} obs_codes;
 
 // convert obs_codes to strings
 static const char obs_str[CODEMAX + 1][4] = {
+    "YYY",
+    "C1B", "D1B", "L1B",
     "C1C", "D1C", "L1C",
+    "C1D", "D1D", "L1D",
+    "C1E", "D1E", "L1E",
     "C1P", "D1P", "L1P",
+    "C1Z", "D1Z", "L1Z",
     "C2C", "D2C", "L2C",
     "C2I", "D2I", "L2I",
     "C2L", "D2L", "L2L",
+    "C2S", "D2S", "L2S",
     "C5I", "D5I", "L5I",
+    "C5A", "D5A", "L5A",
     "C5P", "D5P", "L5P",
     "C5Q", "D5Q", "L5Q",
+    "C6A", "D6A", "L6A",
+    "C6B", "D6B", "L6B",
+    "C6C", "D6C", "L6C",
+    "C6I", "D6I", "L6I",
     "C7I", "D7I", "L7I",
     "C7Q", "D7Q", "L7Q",
     "XXX",
+};
+
+/* Translate table from gnmssid/sigid to obs code id
+ */
+#define SIGID_NUM 16
+struct obs_xlate_t {
+    obs_codes cxx;
+    obs_codes dxx;
+    obs_codes lxx;
+} const obs_xlate[GNSSID_CNT][SIGID_NUM] = {
+    {   // 0 - GPS
+        {C1C, D1C, L1C},
+        {CODENONE},
+        {CODENONE},
+        {C2L, D2L, L2L},
+        {C2S, D2S, L2S},
+        {CODENONE},        // 5
+        {C5I, D5I, L5I },
+        {C5Q, D5Q, L5Q },
+    },
+    {   // 1- SBAS
+        {C1C, D1C, L1C},
+    },
+    {   // 2 - Galileo
+        {C1C, D1C, L1C},
+        {C1B, D1B, L1B},
+        {CODENONE},
+        {C5I, D5I, L5I},  // 3
+        {C5Q, D5Q, L5Q},
+        {C7I, D7I, L7I},
+        {C7Q, D7Q, L7Q},
+        {CODENONE},
+        {C6B, D6B, L6B},   // 8
+        {C6C, D6C, L6C},
+        {C6A, D6A, L6A},
+    },
+    {   // 3 - BeiDou
+        {C2I, D2I, L2I},
+        {C2I, D2I, L2I},
+        {C7I, D7I, L7I},
+        {C7I, D7I, L7I},
+        {C6I, D6I, L6I},
+        {C1P, D1P, L1P},             // 5
+        {C1D, D1D, L1D},
+        {C5P, D5P, L5P},
+        {C5P, D5P, L5P},
+        {CODENONE},       // 9
+        {C6I, D6I, L6I},
+    },
+    {   // 4 - IMES
+        {CODENONE},
+    },
+    {   // 5 - QZSS
+        {C1C, D1C, L1C},
+        {C1Z, D1Z, L1Z},
+        {CODENONE},
+        {CODENONE},
+        {C2S, D2S, L2S},
+        {C2L, D2L, L2L},   // 5
+        {CODENONE},
+        {CODENONE},
+        {C5I, D5I, L5I},
+        {C5Q, D5Q, L5Q},
+        {CODENONE},
+        {CODENONE},
+        {C1E, D1E, L1E},   // xc
+    },
+    {   // 6 - GLONASS
+        {C1C, D1C, L1C},
+        {CODENONE},
+        {C2C, D2C, L2C},
+    },
+    {   // 8 - IRNSS (NavIC)
+        {C5A, D5A, L5A},
+    },
 };
 
 #define MAX_TYPES 12     // maximum types of obs on a line
@@ -211,9 +308,9 @@ static int debug = DEBUG_INFO;               // debug level
 static struct gps_data_t gpsdata;
 static FILE *log_file;
 
-// array of [gnssid][obs_codes[
+// array of useable [gnssid][obs_codes[
 obs_codes obs_set[GNSSID_CNT][MAX_TYPES + 1] = {
-    {C1C, L1C, D1C, C2C, L2C, D2C, C5Q, L5Q, D5Q, CODEMAX},  // 0 -- GPS
+    {C1C, L1C, D1C, C2L, L2L, D2L, C5Q, L5Q, D5Q, CODEMAX},  // 0 -- GPS
     {C1C, L1C, D1C, CODEMAX},                 // 1 -- SBAS
 
     /* Galileo: E1 (C1x), E5 (C5x), E6 (C6x), E7 (C7x), E8 (C8x
@@ -770,8 +867,8 @@ static void one_sig(struct meas_t *meas)
     unsigned svid = meas->svid;
     unsigned sigid = meas->sigid;
     obs_codes cxx = C1C;
-    obs_codes lxx = L1C;
     obs_codes dxx = D1C;
+    obs_codes lxx = L1C;
 
     if (DEBUG_PROG <= debug) {
         (void)fprintf(stderr, "INFO: one_sig() %c %u(%s):%u:%u(%s)\n",
@@ -780,80 +877,14 @@ static void one_sig(struct meas_t *meas)
                       svid, sigid, sigid2str(gnssid, sigid));
     }
 
-    // FIXME, will need to become a table.
-    switch (sigid) {
-    default:
-        (void)fprintf(stderr, "ERROR: one_sig() gnmssid %u unknown sigid %u\n",
-                      gnssid, sigid);
-        return;
-    case 0:
-        if (GNSSID_BD == gnssid) {
-            cxx = C2I;
-            lxx = L2I;
-            dxx = D2I;
-        } else {
-            // L1C
-            cxx = C1C;
-            lxx = L1C;
-            dxx = D1C;
-        }
-        break;
-    case 2:
-        // GLONASS L2 OF or BeiDou B2I D1
-        if (GNSSID_BD == gnssid) {
-            cxx = C7I;
-            lxx = L7I;
-            dxx = D7I;
-        } else {
-            cxx = C2C;
-            lxx = L2C;
-            dxx = D2C;
-        }
-        break;
-    case 3:
-        // GPS L2 or BD B2I D2
-        cxx = C2C;
-        lxx = L2C;
-        dxx = D2C;
-        break;
-    case 4:
-        // Galileo E5 aq
-        cxx = C5Q;
-        lxx = L5Q;
-        dxx = D5Q;
-        break;
-    case 5:
-        if (GNSSID_BD == gnssid) {
-            // BDS B1 aP
-            cxx = C1P;
-            lxx = L1P;
-            dxx = D1P;
-        } else {
-            // QZSS L2C (L)
-            cxx = C2L;
-            lxx = L2L;
-            dxx = D2L;
-        }
-        break;
-    case 6:
-        // Galileo E5 bQ
-        cxx = C7Q;
-        lxx = L7Q;
-        dxx = D7Q;
-        break;
-    case 7:
-        if (GNSSID_GPS == gnssid) {
-            // GPS L5Q
-            cxx = C5Q;
-            lxx = L5Q;
-            dxx = D5Q;
-        } else if (GNSSID_BD == gnssid) {
-            // BeiDou B2 ap
-            cxx = C5P;
-            lxx = L5P;
-            dxx = D5P;
-        }
-        break;
+    if (GNSSID_CNT <= gnssid) {
+        cxx = dxx = lxx = CODENONE;
+    } else if (SIGID_NUM <= sigid) {
+        cxx = dxx = lxx = CODENONE;
+    } else {
+        cxx = obs_xlate[gnssid][sigid].cxx;
+        dxx = obs_xlate[gnssid][sigid].dxx;
+        lxx = obs_xlate[gnssid][sigid].lxx;
     }
 
     // map snr to RINEX snr flag [1-9]
