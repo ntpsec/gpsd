@@ -2569,7 +2569,7 @@ nox11_env = env['ENV'].copy()
 nox11_env['DISPLAY'] = ''
 
 # The diagram editor dia is required in order to edit the diagram masters
-if have_dia:
+if have_dia and config.env['manbuild']:
     env.Command("www/cycle.svg", ["www/cycle.dia"],
                 ["cd %s; dia -e www/cycle.svg www/cycle.dia" % variantdir],
                 ENV=nox11_env)
