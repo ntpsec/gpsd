@@ -503,12 +503,12 @@ static void num_of_obs(struct obs_cnt_t *obs, obs_codes *codes)
 #if DEBUG   // debug
         if (DEBUG_PROG <= debug) {
             (void)fprintf(stderr, "INFO: num_of_obs() %u:%u %d: %s\n",
-                          obs->gnssid, obs->svid, codes[i], str[i]);
+                          obs->gnssid, obs->svid % 100, codes[i], str[i]);
         }
 #endif  // debug
     }
     (void)fprintf(log_file,"   %c%02d%6s%6s%6s%6s%6s%6s%6s%6s%6s%-20s\n",
-                  gnssid2rinex(obs->gnssid), obs->svid,
+                  gnssid2rinex(obs->gnssid), obs->svid % 100,
                   str[0], str[1], str[2], str[3], str[4], str[5],
                   str[6], str[7], str[8], "PRN / # OF OBS");
 }
@@ -864,7 +864,7 @@ static void one_sig(struct meas_t *meas)
 {
     unsigned char snr;
     unsigned gnssid = meas->gnssid;
-    unsigned svid = meas->svid;
+    unsigned svid = meas->svid % 100;
     unsigned sigid = meas->sigid;
     obs_codes cxx = C1C;
     obs_codes dxx = D1C;
@@ -1128,7 +1128,7 @@ static void print_raw(struct gps_data_t *gpsdata)
 
         if (DEBUG_RAW <= debug) {
             (void)fprintf(stderr,"RAW: record: %u:%u:%u %s\n",
-                          gnssid, svid, sigid,
+                          gnssid, svid % 100, sigid,
                           sigid2obs(gnssid, sigid));
         }
 
