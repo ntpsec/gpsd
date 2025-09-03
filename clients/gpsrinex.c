@@ -1122,13 +1122,13 @@ static void print_raw(struct gps_data_t *gpsdata)
 
     for (i = 0; i < nrec; i++) {
         const unsigned char gnssid = gpsdata->raw.meas[i].gnssid;
-        const unsigned char svid = gpsdata->raw.meas[i].svid;
+        const unsigned char svid = gpsdata->raw.meas[i].svid % 100;
         const unsigned char sigid = gpsdata->raw.meas[i].sigid;
         // ignore obs_code from gpsdata->raw.meas[]
 
         if (DEBUG_RAW <= debug) {
             (void)fprintf(stderr,"RAW: record: %u:%u:%u %s\n",
-                          gnssid, svid % 100, sigid,
+                          gnssid, svid, sigid,
                           sigid2obs(gnssid, sigid));
         }
 
