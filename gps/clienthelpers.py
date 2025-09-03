@@ -6,7 +6,7 @@
 #
 # See gpsclient.c for code comments.
 #
-# This file is Copyright 2019 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
 """GPSd client helpers submodule."""
 
@@ -966,5 +966,48 @@ def wgs84_separation(lat, lon):
 
 Given a lat/lon in degrees"""
     return __bilinear(lat, lon, GEOID_DELTA)
+
+
+sigid2name_table = [
+    # 0 - GPS
+    ["L1 C/A", "", "", "L2 CL", "L2 CM",
+     "", "L5 I", "L5 Q"],
+
+    # 1- SBAS
+    ["L1C"],
+
+    # 2 - Galileo
+    ["E1 C", "E1 B", "",  "E5 aI", "E5 aQ",
+     "E5 bI", "E5 bQ", "", "E6 B", "E6 C",
+     "E6 A"],
+
+    # 3 - BeiDou
+    ["B1I D1", "B1I D2", "B2I D1", "B2I D2", "B3I D1",
+     "B1 Cp", "B1 Cd", "B2 ap", "B2 ad", "",
+     "B3I D2"],
+
+    # 4 - IMES
+    ["L5 A"],
+
+    # 5 - QZSS
+    ["L1 C/A", "L1 S", "", "", "L2 CM", "L2 CL",
+     "", "", "L5 I", "L5 Q", "",
+     "", "L1 C/B"],
+
+    # 6 - GLONASS
+    ["L1 OF", "", "L2 OF"],
+
+    # 8 - IRNSS (NavIC)
+    ["L5 A"]
+]
+
+
+def sigid2name(gnssid, sigid):
+    """ Convert gpsd sigid to signal name"""
+
+    try:
+        return sigid2name_table[gnssid][sigid]
+    except IndexError:
+        return "Unk"
 
 # vim: set expandtab shiftwidth=4

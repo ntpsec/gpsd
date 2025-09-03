@@ -11,7 +11,7 @@ XGPSOPTS is processed before the CLI options.
 #    Options in the XGPSOPTS environment variable will be parsed before
 #    the CLI options.  A handy place to put your '-l m -u m '
 #
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -260,9 +260,11 @@ class SkyView(Gtk.DrawingArea):
                         prres_str = prres
 
                     if "sigid" in sat1:
-                        sig = "%4d" % sat1.sigid
+                        sig = gps.clienthelpers.sigid2name(sat1.gnssid,
+                                                           sat1.sigid)
                     else:
-                        sig = "   0"
+                        sig = gps.clienthelpers.sigid2name(sat1.gnssid, 0)
+
                     if sig_str:
                         sig_str += ", " + sig
                     else:
@@ -1254,9 +1256,9 @@ frame * {
         sat_view = Gtk.TreeView(model=self.satlist)
         sat_view.set_fixed_height_mode(True)  # supposed to speed up TreeView
 
-        satcols = [['Constellation', 0],
+        satcols = [['GNSS', 0],
                    ['svid', 1],
-                   ['sig', 1],
+                   ['sig  ', 1],
                    ['PRN', 1],
                    ['Elev', 1],
                    ['Azim', 1],
@@ -1743,9 +1745,10 @@ frame * {
                                            self._int_to_str(satellite.svid,
                                                             1, 199))
                 if 'sigid' in satellite:
-                    s = int(satellite.sigid)
+                    s = gps.clienthelpers.sigid2name(satellite.gnssid,
+                                                     satellite.sigid)
                 else:
-                    s = "   "
+                    s = "      "
                 self.set_satlist_field(i, 2, s)
 
                 # NMEA uses PRN up to 437
