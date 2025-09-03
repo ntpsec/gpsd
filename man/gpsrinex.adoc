@@ -1,6 +1,6 @@
 = gpsrinex(1)
 :author: Gary E. Miller
-:date: 15 August 2025
+:date: 3 September 2025
 :email: gem@rellim.com
 :keywords: gps, gpsd, gpsrinex, RINEX, ubxtool
 :manmanual: GPSD Documentation
@@ -82,6 +82,10 @@ and watches all devices opened by *gpsd*.
   save RINEX into FILE.
 *-F INFILE*, *--filein INFILE*::
   Read GPS JSON from file, not from a live _gpsd_.
+*-g CODES*, *--gnss CODES*::
+  Only output a GNSS system if the RINUEX code is in CODES.
+  C = BeiDou, E = Galileo G = GPS, I = IRNSS, J = QZSS, 
+  R = GLONASS, S = SBAS.
 *-i SECS*, *--interval SECS*::
   wait [interval] seconds between epochs. The interval can be specified
   to the millisecond. OPUS accepts intervals of 1, 2, 3, 5, 10, 15 or,30

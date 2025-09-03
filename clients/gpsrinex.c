@@ -83,12 +83,15 @@
 
 #define DEBUG 0       // More logging
 
-static char *progname;
-char   *file_in = NULL;                  // file name from -F [file_in]
-static struct fixsource_t source;
 static double ecefx = 0.0;
 static double ecefy = 0.0;
 static double ecefz = 0.0;
+static char *gnss = NULL;                // GNSS to use CEGIJRS
+static char gnss_map[GNSSID_CNT] = {0};  // map GNSSID to use
+static char   *file_in = NULL;           // file name from -F [file_in]
+static struct fixsource_t source;
+static char *progname;
+
 static timespec_t start_time = {0};      // report gen time, UTC
 static timespec_t first_mtime = {0};     // GPS time, not UTC
 static timespec_t last_mtime = {0};      // GPS time, not UTC
@@ -325,6 +328,50 @@ obs_codes obs_set[GNSSID_CNT][MAX_TYPES + 1] = {
     {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX},  // 6 -- GLONASS
     {CODEMAX},                                // 7 -- NavIC
 };
+
+/* convert a RINEX 3 constellation code to a UBX gnssid
+ * see [1] Section 3.5
+ *
+ * Return gnssid
+ *        GNSSID_CNT on error
+ */
+static unsigned rinex2gnssid(char rinex)
+{
+    switch (rinex) {
+    case 'c':
+            FALLTHROUGH
+    case 'C':
+        return GNSSID_BD;       // 3 = BeiDou
+    case 'e':
+            FALLTHROUGH
+    case 'E':
+        return GNSSID_GAL;      // 2 = Galileo
+    case 'g':
+            FALLTHROUGH
+    case 'G':
+        return GNSSID_GPS;      // 0 = GPS
+    case 'i':
+            FALLTHROUGH
+    case 'I':
+        return GNSSID_IRNSS;    // 7 = IRNSS
+    case 'j':
+            FALLTHROUGH
+    case 'J':
+        return GNSSID_QZSS;     // 5 = QZSS
+    case 'r':
+            FALLTHROUGH
+    case 'R':
+        return GNSSID_GLO;      // 6 = GLONASS
+    case 's':
+            FALLTHROUGH
+    case 'S':
+        return GNSSID_SBAS;     // 1 = SBAS
+    default:             // Huh?
+        // 4 = IMES - unsupported
+        break;
+    }
+    return GNSSID_CNT;
+}
 
 /* convert a u-blox/gpsd gnssid to the RINEX 3 constellation code
  * see [1] Section 3.5
@@ -1068,25 +1115,29 @@ static void print_raw(struct gps_data_t *gpsdata)
 
     // second just to get a count, needed for epoch header
     for (i = 0; i < nrec; i++) {
+        unsigned char gnssid = gpsdata->raw.meas[i].gnssid;
+
         if (0 == gpsdata->raw.meas[i].svid) {
             // bad svid
             continue;
         }
-        if (GNSSID_IMES == gpsdata->raw.meas[i].gnssid) {
-            // skip IMES
+        if (GNSSID_CNT <= gnssid) {
+            // invalid gnssid
+            gpsdata->raw.meas[i].svid = 0;  // mark ignore
             continue;
         }
-        if (GNSSID_CNT <= gpsdata->raw.meas[i].gnssid) {
-            // invalid gnssid
+        if (0 == gnss_map[gnssid]) {
+            // skip IMES, unrequested gnssid
+            gpsdata->raw.meas[i].svid = 0;  // mark ignore
             continue;
         }
         // prevent separate sigid from double counting gnssid:svid
-        if (last_gnssid == gpsdata->raw.meas[i].gnssid &&
+        if (last_gnssid == gnssid &&
             last_svid == gpsdata->raw.meas[i].svid) {
             // duplicate sat
             continue;
         }
-        last_gnssid = gpsdata->raw.meas[i].gnssid;
+        last_gnssid = gnssid;
         last_svid = gpsdata->raw.meas[i].svid;
         nsat++;
     }
@@ -1133,7 +1184,7 @@ static void print_raw(struct gps_data_t *gpsdata)
         }
 
         if (0 == svid) {
-            // should not happen...
+            // bad sivid, or set to ignore.
             continue;
         }
 
@@ -1248,6 +1299,7 @@ static void usage(void)
           "     -f FILE, --fileout FILE    Output to filename\n"
           "                                default: gpsrinexYYYYDDDDHHMM.obs\n"
           "     -F INFILE, --filein INFILE Read from INFILE, not gpsd\n"
+          "     -g, --gnss                 GNSS to use. Default: CEGIJRS\n"
           "     -h, --help                 print this usage and exit\n"
           "     -i SEC, --interval SEC     Time between samples in seconds\n"
           "                                default: %0.3f\n"
@@ -1312,7 +1364,7 @@ int main(int argc, char **argv)
     log_file = stdout;
     while (1) {
         int ch;
-        const char *optstring = "?c:D:f:F:hi:n:V";
+        const char *optstring = "?c:D:f:F:g:hi:n:V";
 
 #ifdef HAVE_GETOPT_LONG
         int option_index = 0;
@@ -1328,6 +1380,7 @@ int main(int argc, char **argv)
             {"debug", required_argument, NULL, 'D' },
             {"filein", required_argument, NULL, 'F' },
             {"fileout", required_argument, NULL, 'f' },
+            {"gnss", required_argument, NULL, 'g' },
             {"help", no_argument, NULL, 'h' },
             {"interval", required_argument, NULL, 'i' },
             {"marker_name", required_argument, NULL, MARKER_NAME},
@@ -1367,6 +1420,12 @@ int main(int argc, char **argv)
                 free(file_in);
             }
             file_in = strdup(optarg);
+            break;
+        case 'g':       // GNSS
+            if (NULL != gnss) {
+                free(gnss);
+            }
+            gnss = strdup(optarg);
             break;
         case 'i':               // set sampling interval
             f = safe_atof(optarg); // still in seconds
@@ -1470,6 +1529,23 @@ int main(int argc, char **argv)
                       source.server, source.port, device);
     }
 
+    if (NULL == gnss) {
+        // want all gnss, except IMES;
+        memset(gnss_map, 1, sizeof(gnss_map));
+    } else {
+        int i;
+
+        for (i = 0; '\0' != gnss[i]; i++) {
+            unsigned code = rinex2gnssid(gnss[i]);
+            if (GNSSID_CNT <= code) {
+                continue;
+            }
+            gnss_map[code] = 1;
+        }
+        free(gnss);         // pacify -Wanalyzer-malloc-leak
+    }
+    gnss_map[GNSSID_IMES] = 0;
+
     // save start time of report
     (void)clock_gettime(CLOCK_REALTIME, &start_time);
     report_time = gmtime_r(&(start_time.tv_sec), &tm_buf);
@@ -1566,7 +1642,7 @@ int main(int argc, char **argv)
         syslog(LOG_INFO, "exiting, signal %d received", sig_flag);
     }
     if (NULL != file_in) {
-        free(file_in);      // pacify -Wanalyzer-malloc-leak
+        free(file_in);       // pacify -Wanalyzer-malloc-leak
     }
     exit(EXIT_SUCCESS);
 }
