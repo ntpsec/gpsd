@@ -191,7 +191,7 @@ various additional capabilities and extensions:
 
 |============================================================================
 |C++ compiler     | allows building libgpsmm C++ wrapper for client library
-|Qt 4.53+         | allows building libQgpsmm C++ wrapper for client library
+|Qt 5.8+          | allows building libQgpsmm C++ wrapper for client library
 |(n)curses        | curses screen-painting library, used by cgps and gpsmon
 |pps-tools        | adds support for the KPPS API, for improved timing
 |libusb           | Userspace access to USB devices
@@ -246,11 +246,10 @@ The development Fedora/RHEL packages are:
 |==============================================================================
 
 You can build libQgpsmm if you have Qt (specifically QtCore and
-QtNetwork modules) version 4.5.3 or higher.  You will also need a C++
-compiler supported by Qt (tested on gcc 4.4.0/mingw on Windows and gcc
-4.1.2 on Linux). Please refer to Qt's documentation at
-http://qt.nokia.com/doc/4.6/platform-specific.html for platform
-specific building documentation
+QtNetwork modules) version 5.8 or higher. You will also need a C++
+compiler supported by Qt. Please refer to Qt's documentation at
+https://doc.qt.io/archives/qt-5.15/linux-building.html for "Linux
+specific" building documentation
 
 Depending on how your distribution packages ncurses you may also require
 libtinfo5, a separate terminfo library.
@@ -1341,8 +1340,8 @@ support D-Bus. Build with the option "dbus_export=no" to disable it
 qt=yes: libQgpsmm is a Qt version of the libgps/libgpsmm
 pair. Thanks to the multi-platform approach of Qt, it allows the gpsd
 client library to be available on all the Qt supported platforms.
-Please see http://qt.nokia.com/doc/4.6/supported-platforms.html for a
-status of Qt supported platforms as of version 4.6.
+Please see https://doc.qt.io/archives/qt-5.8/supported-platforms.html for a
+status of Qt supported platforms as of version 5.8.
 
 minimal=no: people building for extremely constrained environments
 may want to set this.  It changes the default for all boolean (feature)
