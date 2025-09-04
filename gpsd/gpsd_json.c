@@ -715,6 +715,49 @@ void json_sky_dump(const struct gps_device_t *session,
     }
 }
 
+/* FiXME: should be done once in parse_uri_dest() or close by
+ * strip "user@example.com:password@" from a uri.
+ * better not be an @ after the host name.
+ *
+ * Needs proper tests.
+ */
+static const char *obfuscate_uri(const char *uri)
+{
+    static char buf[GPS_PATH_MAX];
+    char *p;
+    const char *at = NULL;
+    const char *last_at = NULL;
+
+    // Find the protocol separator
+    const char* proto_end = strstr(uri, "://");
+    if (!proto_end) {
+        // none
+        return uri;
+    }
+
+    at = proto_end + 3;
+    last_at = NULL;
+    while (at &&
+           '\0' != *at) {
+        at = strchr(at, '@');
+        if (!at) {
+            break;
+        }
+        last_at = at;
+        at++;
+    }
+    if (!last_at) {
+        return uri;   // No credentials,
+    }
+
+    // grab prefix
+    p = stpncpy(buf, uri, 3 + proto_end - uri);
+    // p = stpcpy(p, "XXXX:XXXX");  // just strip, not obfuscae.
+    p = stpcpy(p, last_at + 1);
+
+    return buf;
+}
+
 void json_device_dump(const struct gps_device_t *device,
                       char *reply, size_t replylen)
 {
@@ -722,7 +765,7 @@ void json_device_dump(const struct gps_device_t *device,
     char buf1[JSON_VAL_MAX * 2 + 1];
 
     (void)strlcpy(reply, "{\"class\":\"DEVICE\",\"path\":\"", replylen);
-    (void)strlcat(reply, device->gpsdata.dev.path, replylen);
+    (void)strlcat(reply, obfuscate_uri(device->gpsdata.dev.path), replylen);
     (void)strlcat(reply, "\"", replylen);
     if (NULL != device->device_type) {
         (void)strlcat(reply, ",\"driver\":\"", replylen);
