@@ -7133,6 +7133,8 @@ Duplicate of UBX-NAV-CLOCK
                        'name': 'UBX-NAV2-SAT'},
                 0x36: {'str': 'COV', 'minlen': 64,
                        'name': 'UBX-NAV2-COV'},
+                0x42: {'str': 'SLAS', 'minlen': 20,
+                       'name': 'UBX-NAV2-SLAS'},
                 0x43: {'str': 'SIG', 'minlen': 8,
                        'name': 'UBX-NAV2-SIG'},
                 0x61: {'str': 'EOE', 'minlen': 4,
@@ -11298,6 +11300,9 @@ present in 9-series and higher
         # UBX-NAV2-SIG
         "NAV2-SIG": {"command": send_poll, "opt": [0x29, 0x43],
                      "help": "poll UBX-NAV2-SIG Signal Information"},
+        # UBX-NAV2-SLAS
+        "NAV2-SLAS": {"command": send_poll, "opt": [0x29, 0x42],
+                      "help": "poll UBX-NAV2-SLAS QZSS SLAS info"},
         # UBX-NAV2-STATUS
         "NAV2-STATUS": {"command": send_poll, "opt": [0x29, 0x03],
                         "help": "poll UBX-NAV2-STATUS Receiver Nav Status"},
