@@ -11166,6 +11166,9 @@ present in 9-series and higher
         # UBX-MON-SPAN
         "MON-SPAN": {"command": send_poll, "opt": [0x0a, 0x31],
                      "help": "poll UBX-MON-SPAN Signal characteristics"},
+        # UBX-MON-SPT
+        "MON-SPT": {"command": send_poll, "opt": [0x0a, 0x2f],
+                    "help": "poll UBX-MON-SPT Sensor Production Test"},
         # UBX-MON-SYS
         "MON-SYS": {"command": send_poll, "opt": [0x0a, 0x39],
                     "help": "poll UBX-MON-SYS System state"},
