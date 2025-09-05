@@ -10611,6 +10611,7 @@ present in 9-series and higher
     CFG_TMODE3 = [0x06, 0x71]
     CFG_TP5 = [0x06, 0x31]
     CFG_USB = [0x06, 0x1b]
+    ESF_MEAS = [0x10, 0x02]
     ESF_ALG = [0x10, 0x14]
     ESF_CAL = [0x10, 0x04]
     ESF_INS = [0x10, 0x15]
@@ -11054,6 +11055,10 @@ present in 9-series and higher
         # UBX-ESF-INS
         "ESF-INS": {"command": send_poll, "opt": ESF_INS,
                     "help": "poll UBX-ESF-INS Vehicle dynamics info"},
+        # UBX-ESF-MEAS
+        "ESF-MEAS": {"command": send_poll, "opt": ESF_MEAS,
+                     "help": "poll UBX-ESF-MEAS External Sensor Fusion "
+                     "measurements"},
         # UBX-ESF-RESETALG
         "ESF-RESETALG": {"command": send_poll, "opt": ESF_RESETALG,
                          "help": "poll UBX-ESF-RESETALG reset IMU"},
