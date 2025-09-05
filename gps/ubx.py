@@ -4819,8 +4819,12 @@ Deprecated in protVer 23.01
                       'name': "UBX-ESF-MEAS"},
                0x03: {'str': 'RAW', 'dec': esf_raw, 'minlen': 4,
                       'name': "UBX-ESF-RAW"},
+               0x04: {'str': 'CAL', 'minlen': 12,
+                      'name': "UBX-ESF-CAL"},
                0x10: {'str': 'STATUS', 'dec': esf_status, 'minlen': 16,
                       'name': "UBX-ESF-STATUS"},
+               0x13: {'str': 'RESETALG', 'minlen': 0,
+                      'name': "UBX-ESF-RESETALG"},
                0x14: {'str': 'ALG', 'dec': esf_alg, 'minlen': 16,
                       'name': "UBX-ESF-ALG"},
                0x15: {'str': 'INS', 'dec': esf_ins, 'minlen': 16,
@@ -10608,7 +10612,9 @@ present in 9-series and higher
     CFG_TP5 = [0x06, 0x31]
     CFG_USB = [0x06, 0x1b]
     ESF_ALG = [0x10, 0x14]
+    ESF_CAL = [0x10, 0x04]
     ESF_INS = [0x10, 0x15]
+    ESF_RESETALG = [0x10, 0x13]
     ESF_STATUS = [0x10, 0x10]
     HNR_ATT = [0x28, 0x01]
     HNR_INS = [0x28, 0x02]
@@ -11042,9 +11048,15 @@ present in 9-series and higher
         # UBX-ESF-ALG
         "ESF-ALG": {"command": send_poll, "opt": ESF_ALG,
                     "help": "poll UBX-ESF-ALG IMU alignment information"},
+        # UBX-ESF-CAL
+        "ESF-CAL": {"command": send_poll, "opt": ESF_CAL,
+                    "help": "poll UBX-ESF-CAL IMU calibration information"},
         # UBX-ESF-INS
         "ESF-INS": {"command": send_poll, "opt": ESF_INS,
                     "help": "poll UBX-ESF-INS Vehicle dynamics info"},
+        # UBX-ESF-RESETALG
+        "ESF-RESETALG": {"command": send_poll, "opt": ESF_RESETALG,
+                         "help": "poll UBX-ESF-RESETALG reset IMU"},
         # UBX-ESF-STATUS
         "ESF-STATUS": {"command": send_poll, "opt": ESF_STATUS,
                        "help": "poll UBX-ESF-STATUS External sensor fusion "
