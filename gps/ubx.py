@@ -11322,6 +11322,9 @@ present in 9-series and higher
         # UBX-NAV2-TIMELS
         "NAV2-TIMELS": {"command": send_poll, "opt": [0x29, 0x26],
                         "help": "poll UBX-NAV2-TIMELS Leap Second Info"},
+        # UBX-NAV2-TIMEQZSS
+        "NAV2-TIMEQZSS": {"command": send_poll, "opt": [0x29, 0x27],
+                          "help": "poll UBX-NAV2-TIMEQZSS Time Info"},
         # UBX-NAV2-TIMEUTC
         "NAV2-TIMEUTC": {"command": send_poll, "opt": [0x29, 0x21],
                          "help": "poll UBX-NAV2-TIMEUTC UTC Time Solution"},
