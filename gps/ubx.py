@@ -6484,7 +6484,8 @@ Present in protVer 32
             s += ('\n   gnssId %u svid %3u cno %2u elev %3d azim %3d prRes %6d'
                   ' flags x%x' % u)
             if gps.VERB_DECODE <= self.verbosity:
-                s += ("\n     (%s) flags (%s)"
+                s += ("\n     (%s)"
+                      "\n     flags(%s)"
                       "\n     qualityInd x%x (%s) health (%s)"
                       "\n     orbitSource (%s)" %
                       (index_s(u[0], self.gnss_id),
