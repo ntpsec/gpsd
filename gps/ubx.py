@@ -6262,6 +6262,38 @@ Partial decode."""
         return ('  iTOW %u lon %d lat %d height %d\n'
                 '  hMSL %d hAcc %u vAcc %u' % u)
 
+    def nav_pvat(self, buf):
+        """UBX-NAV-PVAT decode, Nav Pos Att Velocity Time Solution
+
+In ADR products. M9V
+"""
+        m_len = len(buf)
+
+        # FIXME: partial.  Needs checking!
+        u = struct.unpack_from('<LBB'
+                               'HBBBBBBH'
+                               'LlBBBB'
+                               'llll'
+                               'LLllllL'
+                               'llll'
+                               'HHH'
+                               'hH'
+                               'HLLLL',
+                               buf, 0)
+        s = ('  iTOW %u version %u valid x%x\n'
+             '  ymd %u/%2u/%2u hms %2u:%2u:%2u reserved0 x%x reserved1 x%x \n'
+             '  tAcc %u nano %d fixType %u flags x%x flags2 x%x numSV %u\n'
+             '  lon %d lat %d altHAE %d altMSL %d\n'
+             '  hAcc %u vAAcc %u velNED %d %d %d gSpeed %d sAcc %u\n'
+             '  vehRoll %d vehPitch %d vehHeading %d motHeading %d\n'
+             '  accRoll %u accPitch %u accHeading %u\n'
+             '  magDec %d magAcc %u\n'
+             '  errEllipseOrient %u errEllipseMajor %u errEllipseMinor %u\n'
+             '  reserved2 x%x reserved3 x%x' %
+             u)
+
+        return s
+
     nav_pvt_valid = {
         1: "validDate",
         2: "ValidTime",
@@ -7033,6 +7065,8 @@ protVer 34 and up
                       'name': 'UBX-NAV-HPPOSECEF'},
                0x14: {'str': 'HPPOSLLH', 'dec': nav_hpposllh, 'minlen': 36,
                       'name': 'UBX-NAV-HPPOSLLH'},
+               0x17: {'str': 'PVAT', 'dec': nav_pvat, 'minlen': 116,
+                      'name': 'UBX-NAV-PVAT'},
                0x20: {'str': 'TIMEGPS', 'dec': nav_timegps, 'minlen': 16,
                       'name': 'UBX-NAV-TIMEGPS'},
                0x21: {'str': 'TIMEUTC', 'dec': nav_timeutc, 'minlen': 20,
@@ -11220,6 +11254,10 @@ present in 9-series and higher
         # UBX-NAV-POSLLH
         "NAV-POSLLH": {"command": send_poll, "opt": [0x01, 0x02],
                        "help": "poll UBX-NAV-POSLLH LLH position"},
+        # UBX-NAV-PVAT
+        "NAV-PVAT": {"command": send_poll, "opt": [0x01, 0x17],
+                     "help": "poll UBX-NAV-PVAT Navigation Position Velocity "
+                             "Attitude Time Solution"},
         # UBX-NAV-PVT
         "NAV-PVT": {"command": send_poll, "opt": [0x01, 0x07],
                     "help": "poll UBX-NAV-PVT Navigation Position Velocity "
