@@ -6262,6 +6262,45 @@ Partial decode."""
         return ('  iTOW %u lon %d lat %d height %d\n'
                 '  hMSL %d hAcc %u vAcc %u' % u)
 
+    # NAV-PVT and NAV-PVAT
+    nav_pvt_valid = {
+        1: "validDate",
+        2: "ValidTime",
+        4: "fullyResolved",
+        8: "validMag",      # protver 27
+        }
+
+    # NAV-PVT and NAV-PVAT
+    # u-blox TIME ONLY is same as Surveyed
+    nav_pvt_fixType = {
+        0: 'None',
+        1: 'Dead Reckoning',
+        2: '2D',
+        3: '3D',
+        4: 'GPS+DR',
+        5: 'Surveyed',
+        }
+
+    # NAV-PVT and NAV-PVAT
+    nav_pvt_flags = {
+        (1, 1, "gnssFixOK,"),
+        (2, 2, "diffSoln,"),
+        (8, 8, "vehRollValid,"),
+        (0x10, 0x10, "vehPitchValid,"),
+        (0x20, 0x20, "vehHeadingValid,"),
+        (0, 0xc0, "No Carrier Phase solution,"),    # not before protVer 20
+        (0x40, 0xc0, "Carrier Phase float,"),
+        (0x80, 0xc0, "Carrier Phase fixed,"),
+        (0xc0, 0xc0, "Carrier Phase Unk,"),
+        }
+
+    # NAV-PVT and NAV-PVAT
+    nav_pvt_flags2 = {
+        0x20: "confirmedAvai",
+        0x40: "confirmedDate",
+        0x80: "confirmedTime",
+        }
+
     def nav_pvat(self, buf):
         """UBX-NAV-PVAT decode, Nav Pos Att Velocity Time Solution
 
@@ -6281,7 +6320,8 @@ In ADR products. M9V
                                'HLLLL',
                                buf, 0)
         s = ('  iTOW %u version %u valid x%x\n'
-             '  ymd %u/%2u/%2u hms %2u:%2u:%2u reserved0 x%x reserved1 x%x \n'
+             '  ymd %u/%02u/%02u hms %02u:%02u:%02u '
+             'reserved0 x%x reserved1 x%x\n'
              '  tAcc %u nano %d fixType %u flags x%x flags2 x%x numSV %u\n'
              '  lon %d lat %d altHAE %d altMSL %d\n'
              '  hAcc %u vAAcc %u velNED %d %d %d gSpeed %d sAcc %u\n'
@@ -6292,40 +6332,16 @@ In ADR products. M9V
              '  reserved2 x%x reserved3 x%x' %
              u)
 
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n    valid (%s)"
+                  "\n    fixType (%s)"
+                  "\n    flags (%s)"
+                  "\n    flags2 (%s)" %
+                  (flag_s(u[2], self.nav_pvt_valid),
+                   index_s(u[13], self.nav_pvt_fixType),
+                   flagm_s(u[14], self.nav_pvt_flags),
+                   flag_s(u[15], self.nav_pvt_flags2)))
         return s
-
-    nav_pvt_valid = {
-        1: "validDate",
-        2: "ValidTime",
-        4: "fullyResolved",
-        8: "validMag",      # protver 27
-        }
-
-    # u-blox TIME ONLY is same as Surveyed
-    nav_pvt_fixType = {
-        0: 'None',
-        1: 'Dead Reckoning',
-        2: '2D',
-        3: '3D',
-        4: 'GPS+DR',
-        5: 'Surveyed',
-        }
-
-    nav_pvt_flags = {
-        (1, 1, "gnssFixOK,"),
-        (2, 2, "diffSoln,"),
-        (0x20, 0x20, "headVehValid,"),
-        (0, 0xc0, "No Carrier Phase solution,"),    # not before protVer 20
-        (0x40, 0xc0, "Carrier Phase float,"),
-        (0x80, 0xc0, "Carrier Phase fixed,"),
-        (0xc0, 0xc0, "Carrier Phase Unk,"),
-        }
-
-    nav_pvt_flags2 = {
-        0x20: "confirmedAvai",
-        0x40: "confirmedDate",
-        0x80: "confirmedTime",
-        }
 
     nav_pvt_flags3 = {
         0x01: "invalidLlh",
@@ -6358,17 +6374,22 @@ In ADR products. M9V
 
         # flags2 is protver 27
         # flags3 is protver 29
-        u = struct.unpack_from('<LHBBBBBBLlBBBBllllLLlllllLLHHL', buf, 0)
-        s = ('  iTOW %u time %u/%u/%u %02u:%02u:%02u valid x%x\n'
+        u = struct.unpack_from('<LHBBBBBB'
+                               'LlBBB'
+                               'Blll'
+                               'lLL'
+                               'lllll'
+                               'LLHHL', buf, 0)
+        s = ('  iTOW %u time %u/%02u/%02u %02u:%02u:%02u valid x%x\n'
              '  tAcc %u nano %d fixType %u flags x%x flags2 x%x\n'
              '  numSV %u lon %d lat %d height %d\n'
              '  hMSL %d hAcc %u vAcc %u\n'
-             '  velN %d velE %d velD %d gSpeed %d headMot %d\n'
+             '  velNED %d %d %d gSpeed %d headMot %d\n'
              '  sAcc %u headAcc %u pDOP %u flags3 x%x reserved0 x%x' % u)
 
         if 92 <= m_len:
             # version 15
-            u1 = struct.unpack_from('<lhH', buf, 81)
+            u1 = struct.unpack_from('<lhH', buf, 84)
             s += ('\n  headVeh %d magDec %d magAcc %u' % u1)
 
         if gps.VERB_DECODE <= self.verbosity:
