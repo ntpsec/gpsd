@@ -2400,9 +2400,9 @@ class ubx(object):
          "get all CFG-SEC"),
         ("CFG-SEC-CFG_LOCK", 0x10f60009, "L", 1, "",
          "Configuration lockdown"),
-        ("CFG-SEC-CFG_LOCK_UNLOCKGRP1", 0x10f6000a, "U2", 1, "",
+        ("CFG-SEC-CFG_LOCK_UNLOCKGRP1", 0x30f6000a, "U2", 1, "",
          "Configuration lockdown exempted group 1"),
-        ("CFG-SEC-CFG_LOCK_UNLOCKGRP2", 0x10f6000b, "U2", 1, "",
+        ("CFG-SEC-CFG_LOCK_UNLOCKGRP2", 0x30f6000b, "U2", 1, "",
          "Configuration lockdown exempted group 2"),
         ("CFG-SEC-JAMDET_SENSITIVITY_HI", 0x10f60051, "L", 1, "",
          "HIgh sensitivity jam detection"),
@@ -6792,7 +6792,9 @@ Partial decode."""
     def nav_pvat(self, buf):
         """UBX-NAV-PVAT decode, Nav Pos Att Velocity Time Solution
 
-In ADR products. M9V
+protVer 33 and up
+In ADR/MDR products. M9V,
+In HPS products
 """
         m_len = len(buf)
 
@@ -6807,6 +6809,9 @@ In ADR products. M9V
                                'hH'
                                'HLLLL',
                                buf, 0)
+        if 0 != u[1]:
+            return "  Unknown version %u s/b 0" % u[1]
+
         s = ('  iTOW %u version %u valid x%x\n'
              '  ymd %u/%02u/%02u hms %02u:%02u:%02u '
              'reserved0 x%x reserved1 x%x\n'
