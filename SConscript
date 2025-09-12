@@ -1489,7 +1489,7 @@ if not cleaning and not helping:
                 config.env["qt_versioned"] = _qtv
                 break
         if qt_network:
-            announce('Using Qt version %d.' % _qtv)
+            announce('Using Qt version %s.' % _qtv)
         else:
             config.env["qt"] = False
             announce('Turning off Qt support, library not found.')
