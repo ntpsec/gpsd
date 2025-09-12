@@ -1478,11 +1478,23 @@ if not cleaning and not helping:
     # Determine if Qt network libraries are present, and
     # if not, force qt to off
     if config.env["qt"]:
-        qt_net_name = 'Qt%sNetwork' % config.env["qt_versioned"]
-        qt_network = config.CheckPKG(qt_net_name)
-        if not qt_network:
+        if config.env["qt_versioned"]:
+            _qtvs = (config.env["qt_versioned"])
+        else:
+            _qtvs = (6, 5)      # try 6, then 5
+        for _qtv in _qtvs:
+            qt_net_name = 'Qt%sNetwork' % _qtv
+            qt_network = config.CheckPKG(qt_net_name)
+            if qt_network:
+                config.env["qt_versioned"] = _qtv
+                break
+        if qt_network:
+            announce('Using Qt version %d.' % _qtv)
+        else:
             config.env["qt"] = False
             announce('Turning off Qt support, library not found.')
+    else:
+        announce('Skipping  Qt support,')
 
     # If supported by the compiler, enable all warnings except uninitialized
     # and missing-field-initializers, which we can't help triggering because
