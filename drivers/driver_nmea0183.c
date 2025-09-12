@@ -1332,7 +1332,17 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
                 session->newdata.mode = MODE_3D;
             }
         }
-        if (3 > session->nmea.gga_sats_used) {
+        /* the next test works when we only see GPGGA or GNGGA, but
+         * not GPGGA, BDGGA, etc.  As some constellations may see no
+         * sats, and others do.
+         * For some receivers, like the bn-9015, this is the only
+         * way to know fix mode.  It reports lat/lon/alt and no
+         * sats used. */
+        if (3 > session->nmea.gga_sats_used &&
+            'G' == field[0][0] &&
+            ('P' == field[0][1] ||
+             'N' == field[0][1])) {
+            // G[NP]GGA and not enough sats used for a fix.
             session->newdata.mode = MODE_NO_FIX;
         }
     } else {
