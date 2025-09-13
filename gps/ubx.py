@@ -6583,10 +6583,13 @@ protVer 34 and up
     def nav_eell(self, buf):
         """UBX-NAV-EOE decode, Position error ellipse parameters
 
-UBX-NAV-EELL, protVer 19.1 and up, ADR and HPS only
+UBX-NAV-EELL, protVer 19.1 and up, ADR, MDR and HPS only
 """
 
         u = struct.unpack_from('<LBBHLL', buf, 0)
+        if 0 != u[1]:
+            return "  Unknown version %u, s/b 0" % u[1]
+
         return (' iTOW %u version %u reserved0 %u\n'
                 '  errEllipseOrient %u errEllipseMajor %u errEllipseMinor %u' %
                 u)
@@ -6792,9 +6795,13 @@ Partial decode."""
     def nav_pvat(self, buf):
         """UBX-NAV-PVAT decode, Nav Pos Att Velocity Time Solution
 
-protVer 33 and up
-In ADR/MDR products. M9V,
-In HPS products
+Combines UBX-NAV-PVT, UBX-NAV-EELL and UBX-HNR-INS
+
+Present in:
+   protver 30  (ADR/DBD/HPS/LAP/MDR 9-series firmware)
+
+Not present in:
+   u-blox 5, 6, 7 or 8
 """
         m_len = len(buf)
 
@@ -7617,7 +7624,7 @@ protVer 34 and up
                # M8P length = 40, M9P length = 64
                0x3C: {'str': 'RELPOSNED', 'dec': nav_relposned, 'minlen': 40,
                       'name': 'UBX-NAV-RELPOSNED'},
-               # protVer 19.1 and up, ADR only
+               # protVer 19.1 and up, ADR, MDR, HPS only
                0x3d: {'str': 'EELL', 'dec': nav_eell, 'minlen': 16,
                       'name': 'UBX-NAV-EELL'},
                # deprecated in u-blox 6, SFDR only
@@ -10254,6 +10261,11 @@ qErrInvalid added in protVer 32 and up
         # set NAV-VELECEF rate
         self.send_cfg_msg(1, 0x11, able)
 
+    def send_able_nav_eell(self, able, args):
+        """Enable NAV-EELL messages"""
+        # set NAV-EELL rate
+        self.send_cfg_msg(1, 0x3d, able)
+
     def send_able_esf(self, able, args):
         """dis/enable basic ESF messages"""
 
@@ -10339,6 +10351,20 @@ with resetMode set to Hardware reset."
 
         # set UBX-CFG-LOGFILTER
         self.gps_send(6, 0x47, m_data)
+
+    def send_able_nav_pvat(self, able, args):
+        """dis/enable UBX-NAV-PVAT"""
+
+        rate = 1 if able else 0
+        m_data = bytearray([0x1, 0x17, rate])
+        self.gps_send(6, 1, m_data)
+
+    def send_able_nav_pvt(self, able, args):
+        """dis/enable UBX-NAV-PVT"""
+
+        rate = 1 if able else 0
+        m_data = bytearray([0x1, 0x07, rate])
+        self.gps_send(6, 1, m_data)
 
     def send_able_nav_sat(self, able, args):
         """dis/enable UBX-NAV-SAT"""
@@ -11316,6 +11342,15 @@ present in 9-series and higher
         # en/dis able LOG
         "LOG": {"command": send_able_logfilter,
                 "help": "Data Logger"},
+        # en/dis able NAV-EELL message
+        "NAV-EELL": {"command": send_able_nav_eell,
+                     "help": "NAV-EELL error ellipse message"},
+        # en/dis able NAV-PVAT message
+        "NAV-PVAT": {"command": send_able_nav_pvat,
+                     "help": "NAV-PVAT fix message"},
+        # en/dis able NAV-PVT message
+        "NAV-PVT": {"command": send_able_nav_pvt,
+                    "help": "NAV-PVT fix message"},
         # en/dis able NAV-SAT Cmessage
         "NAV-SAT": {"command": send_able_nav_sat,
                     "help": "NAV-SAT Satellite Information message"},
