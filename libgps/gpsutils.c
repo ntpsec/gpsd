@@ -536,6 +536,9 @@ void gps_clear_fix(struct gps_fix_t *fixp)
     fixp->ecef.vz = NAN;
     fixp->ecef.pAcc = NAN;
     fixp->ecef.vAcc = NAN;
+    fixp->errEllipseOrient = NAN;
+    fixp->errEllipseMajor = NAN;
+    fixp->errEllipseMinor = NAN;
     fixp->NED.relPosN = NAN;
     fixp->NED.relPosE = NAN;
     fixp->NED.relPosD = NAN;
@@ -729,6 +732,13 @@ void gps_merge_fix(struct gps_fix_t *to,
         to->ecef.vy = from->ecef.vy;
         to->ecef.vz = from->ecef.vz;
         to->ecef.vAcc = from->ecef.vAcc;
+    }
+    if (0 != isfinite(from->errEllipseOrient) &&
+        0 != isfinite(from->errEllipseMajor) &&
+        0 != isfinite(from->errEllipseMinor)) {
+        to->errEllipseOrient = from->errEllipseOrient;
+        to->errEllipseMajor = from->errEllipseMajor;
+        to->errEllipseMinor = from->errEllipseMinor;
     }
     if (0 != (transfer & NED_SET)) {
         to->NED.relPosN = from->NED.relPosN;

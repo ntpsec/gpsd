@@ -385,6 +385,15 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
                 str_appendf(reply, replylen, ",\"ecefvAcc\":%.2f",
                             gpsdata->fix.ecef.vAcc);
             }
+            if (0 != isfinite(gpsdata->fix.errEllipseOrient) &&
+                0 != isfinite(gpsdata->fix.errEllipseMajor) &&
+                0 != isfinite(gpsdata->fix.errEllipseMinor)) {
+                str_appendf(reply, replylen,
+                    ",\"errEllOr\":%.2f,\"errEllMaj\":%.3f,\"errEllMin\":%.3f",
+                            gpsdata->fix.errEllipseOrient,
+                            gpsdata->fix.errEllipseMajor,
+                            gpsdata->fix.errEllipseMinor);
+            }
             // NED is in meters, so %.3f is millimeter resolution
             if (0 != isfinite(gpsdata->fix.NED.relPosN) &&
                 0 != isfinite(gpsdata->fix.NED.relPosE)) {

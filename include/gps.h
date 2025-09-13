@@ -115,6 +115,7 @@ extern "C" {
  *       Add Teseo LIV4F antenna status and firmware version management
  *       Add sigid2str(), convert sigid to a string.
  *       Add sigid2obs(), convert sigid to a RINEX observation code string.
+ *       gps_fix_t Add: errEllipseOrient, errEllipseMajor, errEllipseMinow
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -299,6 +300,9 @@ struct gps_fix_t {
     double wanglet;             // Wind angle, true, m/s
     double wspeedr;             // Wind speed, relative, m/s
     double wspeedt;             // Wind speed, true, m/s
+    double errEllipseOrient;    // Orientation of Error Ellipse, deg
+    double errEllipseMajor;     // Semi-major axis of Error Ellipse, m
+    double errEllipseMinor;     // Semi-minow axis of Error Ellipse, m
     struct baseline_t base;     // baseline from fixed base
 };
 
