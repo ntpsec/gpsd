@@ -2656,14 +2656,24 @@ static gps_mask_t ubx_msg_nav_eell(struct gps_device_t *session,
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
     version = getub(buf, 4);
+    if (0 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: NAV-EELL unknown version %u s/b 0", version);
+        return 0;
+    }
+    session->newdata.errEllipseOrient = (double)(getleu16(buf, 6) * 1e-2);
+    session->newdata.errEllipseMajor = (double)(getleu32(buf, 8) * 1e-3);
+    session->newdata.errEllipseMinor = (double)(getleu32(buf, 12) * 1e-3);
     errEllipseOrient = getleu16(buf, 6);
     errEllipseMajor = getleu32(buf, 8);
     errEllipseMinor = getleu32(buf, 12);
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX: NAV-EELL: iTOW %lld version %u errEllipseOrient %u "
              "errEllipseMajor %lu errEllipseMinor %lu\n",
-             (long long)session->driver.ubx.iTOW, version, errEllipseOrient,
-             errEllipseMajor, errEllipseMinor);
+             (long long)session->driver.ubx.iTOW, version,
+             errEllipseOrient,
+             errEllipseMajor,
+             errEllipseMinor);
     return 0;
 }
 
@@ -2859,10 +2869,12 @@ static gps_mask_t ubx_msg_nav_posllh(struct gps_device_t *session,
 
 /**
  * Navigation Position Attitude Velocity Time solution message
- * UBX-NAV-PVAT Class 1, ID 7
+ * UBX-NAV-PVAT Class 1, ID 17
+ *
+ * Like UBX-NAV-PVT, plus UBX-HNR-INS
  *
  * Present in:
- *   protver 33  (ADR/MDR firmware, M9V) (HPS firmware)
+ *   protver 30  (ADR/DBD/HPS/LAP/MDR 9-series firmware)
  *
  * Not present in:
  *    u-blox 5, 6, 7 or 8
@@ -2894,7 +2906,7 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
     version = getub(buf, 4);
     if (0 != version) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV-PVAT unknown version %i s/b 0", version);
+                 "UBX: NAV-PVAT unknown version %u s/b 0", version);
         return 0;
     }
     session->driver.ubx.iTOW = getleu32(buf, 0);
@@ -2974,24 +2986,21 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
         mask |= STATUS_SET;
     }
 
-#if 0
     if ((valid & UBX_NAV_PVT_VALID_DATE_TIME) == UBX_NAV_PVT_VALID_DATE_TIME) {
-        unpacked_date.tm_year = (uint16_t)getleu16(buf, 4) - 1900;
-        unpacked_date.tm_mon = (uint8_t)getub(buf, 6) - 1;
-        unpacked_date.tm_mday = (uint8_t)getub(buf, 7);
-        unpacked_date.tm_hour = (uint8_t)getub(buf, 8);
-        unpacked_date.tm_min = (uint8_t)getub(buf, 9);
-        unpacked_date.tm_sec = (uint8_t)getub(buf, 10);
-        unpacked_date.tm_isdst = 0;
-        unpacked_date.tm_wday = 0;
-        unpacked_date.tm_yday = 0;
+        struct tm unpacked_date = {0};
+
+        unpacked_date.tm_year = year - 1900;
+        unpacked_date.tm_mon = month - 1;
+        unpacked_date.tm_mday = day;
+        unpacked_date.tm_hour = hour;
+        unpacked_date.tm_min = min;
+        unpacked_date.tm_sec = sec;
         session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
-        // field 16, nano, can be negative! So normalize
-        session->newdata.time.tv_nsec = getles32(buf, 16);
+        // nano, can be negative! So normalize
+        session->newdata.time.tv_nsec = nano;
         TS_NORM(&session->newdata.time);
         mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
     }
-#endif
 
     if (LATLON_SET == (mask & LATLON_SET)) {
         session->newdata.longitude = 1e-7 * getles32(buf, 28);
@@ -3010,8 +3019,15 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
     velE = 1e-3 * getles32(buf, 56);
     velD = 1e-3 * getles32(buf, 60);
 
-    // gSpeed
+    // Seems to be always valid.
+    session->newdata.NED.velN = velN;
+    session->newdata.NED.velE = velE;
+    session->newdata.NED.velD = velD;
+    mask |= VNED_SET;
+
+    // gSpeed, seems to be always valid.
     session->newdata.speed = 1e-3 * getles32(buf, 64);
+    mask |= SPEED_SET;
     sAcc = 1e-3 * getleu32(buf, 48);
 
     vehRoll = 1e-5 * getles32(buf, 72);
@@ -3019,9 +3035,11 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
     vehHeading = 1e-5 * getles32(buf, 80);
 
     motHeading = 1e-5 * getles32(buf, 84);
-    // u-blox calls this Heading of motion (2-D)
-    // session->newdata.track = 1e-5 * (int32_t)getles32(buf, 64);
-    // mask |= SPEED_SET | TRACK_SET;
+    if (flags & UBX_NAV_PVT_FLAG_HDG_OK) {
+        // u-blox calls this Heading of motion (2-D)
+        session->newdata.track = motHeading;
+        mask |= TRACK_SET;
+    }
 
     accRoll = 1e-3 * getles32(buf, 88);
     accPitch = 1e-3 * getles32(buf, 90);
@@ -3031,6 +3049,9 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
         magDec = (double)(getles16(buf, 94) * 1e-2);
         magAcc = (double)(getleu16(buf, 96) * 1e-2);
     }
+    session->newdata.errEllipseOrient = (double)(getleu16(buf, 98) * 1e-2);
+    session->newdata.errEllipseMajor = (double)(getleu32(buf, 100) * 1e-3);
+    session->newdata.errEllipseMinor = (double)(getleu32(buf, 104) * 1e-3);
 
     // if cycle ender worked, could get rid of this REPORT_IS.
     // mask |= REPORT_IS;
@@ -3043,7 +3064,8 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
          "hAcc %.3f vAcc %.3f valNED %.3f %.3f %.3f speed %.3f sAcc %.3f "
          "vehRPH %.5f %.5f %.5f "
          "track %.2f accRPH %.3f %.3f %.3f "
-         "mode %d status %d used %d magDec %.2f magAcc %.2f\n",
+         "mode %d status %d used %d magDec %.2f magAcc %.2f "
+         "errEllipse %.2f %.3f %.3f\n",
          (long long)session->driver.ubx.iTOW, version,
          // timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
          valid, year, month, day, hour, min, sec, tAcc, nano, fixType,
@@ -3060,7 +3082,10 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
          session->newdata.mode,
          session->newdata.status,
          session->gpsdata.satellites_used,
-         magDec, magAcc);
+         magDec, magAcc,
+         session->newdata.errEllipseOrient,
+         session->newdata.errEllipseMajor,
+         session->newdata.errEllipseMinor);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "UBX: NAV-PVAT: fixType(%s) flags(%s) flags2(%s) "
              "valid(%s)\n",
@@ -3069,13 +3094,6 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
              flags2str(flags2, fpvt_flags2, buf3, sizeof(buf3)),
              flags2str(valid, fpvt_valid, buf4, sizeof(buf4)));
     {
-#ifdef __UNUSED
-        if (flags & UBX_NAV_PVT_FLAG_HDG_OK) {
-            /* u-blox calls this Heading of vehicle (2-D)
-             * why is it different than earlier track? */
-            session->newdata.track = (double)(getles32(buf, 84) * 1e-5);
-        }
-#endif  // __UNUSED
     }
     return mask;
 }
@@ -5158,7 +5176,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-POSUTM\n");
         break;
     case UBX_NAV_PVAT:
-        min_protver = 33;
+        min_protver = 30;
         if (116 > data_len) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "UBX: NAV-PVAT: runt payload len %zd", data_len);
