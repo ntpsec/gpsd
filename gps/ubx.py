@@ -6795,7 +6795,7 @@ Partial decode."""
     def nav_pvat(self, buf):
         """UBX-NAV-PVAT decode, Nav Pos Att Velocity Time Solution
 
-Combines UBX-NAV-PVT, UBX-NAV-EELL and UBX-HNR-INS
+Combines UBX-NAV-PVT, UBX-HNR-ATT, UBX-NAV-EELL, and NAV-TIMEUTC
 
 Present in:
    protver 30  (ADR/DBD/HPS/LAP/MDR 9-series firmware)
@@ -10380,6 +10380,11 @@ with resetMode set to Hardware reset."
         m_data = bytearray([0x1, 0x43, rate])
         self.gps_send(6, 1, m_data)
 
+    def send_able_nav_timeutc(self, able, args):
+        """Enable NAV-TIMEUTC messages"""
+        # set NAV-TIMEUTC rate
+        self.send_cfg_msg(1, 0x21, able)
+
     def send_able_ned(self, able, args):
         """Enable NAV-RELPOSNED and VELNED messages.
 
@@ -11357,6 +11362,9 @@ present in 9-series and higher
         # en/dis able NAV-SIG Cmessage
         "NAV-SIG": {"command": send_able_nav_sig,
                     "help": "NAV-SIG Signal Information message"},
+        # en/dis able NAV-TIMEUTC Cmessage
+        "NAV-TIMEUTC": {"command": send_able_nav_timeutc,
+                    "help": "NAV-TIMEUTC UTC Information message"},
         # en/dis able NED
         "NED": {"command": send_able_ned,
                 "help": "NAV-VELNED and NAV-RELPOSNED"},
