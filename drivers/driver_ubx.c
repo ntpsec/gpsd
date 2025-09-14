@@ -36,6 +36,15 @@
 #include "../include/bits.h"       // For UINT2INT()
 #include "../include/timespec.h"
 
+// UBX-NAV-PVT, UBX-NAV-PVAT flag bits
+#define UBX_NAV_PVT_FLAG_GPS_FIX_OK 0x01
+#define UBX_NAV_PVT_FLAG_DGPS       0x02
+#define UBX_NAV_PVT_FLAG_ROLL_OK    0x08
+#define UBX_NAV_PVT_FLAG_PITCH_OK   0x10
+#define UBX_NAV_PVT_FLAG_HDG_OK     0x20
+#define UBX_NAV_PVT_FLAG_RTK_FLT    0x40
+#define UBX_NAV_PVT_FLAG_RTK_FIX    0x80
+
 /*
  * Some high-precision messages provide data where the main part is a
  * signed 32-bit integer (same as the standard-precision versions),
@@ -238,9 +247,11 @@ static const struct flist_t fhnr_pvt_flags[] = {
 static const struct flist_t fnav_pvt_flags[] = {
     {1, 1, "gnssFixOK"},
     {2, 2, "diffSoln"},
-    // {0, 0x1v, "psmState"},      // ??
-    {0x20, 0x20, "headVehValid"},
-    {0x40, 0xc0, "CarrSolnFLT"},   // protVer less than 20
+    {8, 8, "vehRollValid"},
+    // {0, 0x10, "psmState"},      // ??
+    {0x10, 0x10, "vehPitchValid"},
+    {0x10, 0x10, "vehHeadingValid"},  // aka headVelValid
+    {0x40, 0xc0, "CarrSolnFLT"},
     {0x80, 0xc0, "CarrSolnFIX"},
     {0, 0, NULL},
 };
@@ -2871,7 +2882,7 @@ static gps_mask_t ubx_msg_nav_posllh(struct gps_device_t *session,
  * Navigation Position Attitude Velocity Time solution message
  * UBX-NAV-PVAT Class 1, ID 17
  *
- * Like UBX-NAV-PVT, plus UBX-HNR-INS
+ * Like UBX-NAV-PVT, plus parts of UBX-HNR-ATT, UBX-NAV-EELL, and NAV-TIMEUTC
  *
  * Present in:
  *   protver 30  (ADR/DBD/HPS/LAP/MDR 9-series firmware)
@@ -2925,6 +2936,7 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
     flags2 = getub(buf, 26);
     numSV = getub(buf, 27);
 
+    // u-blox doc admits this may differ from skyview data.
     session->gpsdata.satellites_used = numSV;
 
     switch (fixType) {
@@ -3020,6 +3032,8 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
     velD = 1e-3 * getles32(buf, 60);
 
     // Seems to be always valid.
+    session->newdata.eph = hAcc;
+    session->newdata.epv = vAcc;
     session->newdata.NED.velN = velN;
     session->newdata.NED.velE = velE;
     session->newdata.NED.velD = velD;
@@ -3027,12 +3041,32 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
 
     // gSpeed, seems to be always valid.
     session->newdata.speed = 1e-3 * getles32(buf, 64);
+    sAcc = 1e-3 * getleu32(buf, 68);
+    session->newdata.eps = sAcc;
     mask |= SPEED_SET;
-    sAcc = 1e-3 * getleu32(buf, 48);
 
     vehRoll = 1e-5 * getles32(buf, 72);
     vehPitch = 1e-5 * getles32(buf, 76);
     vehHeading = 1e-5 * getles32(buf, 80);
+
+    // accuracies
+    accRoll = 1e-3 * getles32(buf, 88);
+    accPitch = 1e-3 * getles32(buf, 90);
+    accHeading = 1e-3 * getles32(buf, 92);
+
+    if (0.0 != accRoll) {
+        session->gpsdata.attitude.roll = vehRoll;
+        mask |= ATTITUDE_SET;
+    }
+    if (0.0 != accPitch) {
+        session->gpsdata.attitude.pitch = vehPitch;
+        mask |= ATTITUDE_SET;
+    }
+    if (0.0 != accHeading) {
+        // seems to be true heading
+        session->gpsdata.attitude.heading = vehHeading;
+        mask |= ATTITUDE_SET;
+    }
 
     motHeading = 1e-5 * getles32(buf, 84);
     if (flags & UBX_NAV_PVT_FLAG_HDG_OK) {
@@ -3041,9 +3075,9 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
         mask |= TRACK_SET;
     }
 
-    accRoll = 1e-3 * getles32(buf, 88);
-    accPitch = 1e-3 * getles32(buf, 90);
-    accHeading = 1e-3 * getles32(buf, 92);
+    if (ATTITUDE_SET == (mask & ATTITUDE_SET)) {
+        session->gpsdata.attitude.mtime = session->newdata.time;
+    }
 
     if (valid & UBX_NAV_PVT_VALID_MAG) {
         magDec = (double)(getles16(buf, 94) * 1e-2);
@@ -3087,20 +3121,19 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
          session->newdata.errEllipseMajor,
          session->newdata.errEllipseMinor);
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "UBX: NAV-PVAT: fixType(%s) flags(%s) flags2(%s) "
-             "valid(%s)\n",
+             "UBX: NAV-PVAT: fixType(%s) flags(%s) flags2(%s) valid(%s)\n",
              val2str(fixType, vpvt_fixType),
              flags2str(flags, fnav_pvt_flags, buf2, sizeof(buf2)),
              flags2str(flags2, fpvt_flags2, buf3, sizeof(buf3)),
              flags2str(valid, fpvt_valid, buf4, sizeof(buf4)));
-    {
-    }
     return mask;
 }
 
 /**
  * Navigation Position Velocity Time solution message
  * UBX-NAV-PVT Class 1, ID 7
+ *
+ * Includes part of UBX-NAV-TIMEUTC
  *
  * Present in:
  *   protver 14  (6-series w/ GLONASS, 7-series)

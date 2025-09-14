@@ -262,11 +262,5 @@ typedef enum {
                                      UBX_NAV_PVT_VALID_TIME)
 #define UBX_NAV_PVT_VALID_MAG       0x08
 
-#define UBX_NAV_PVT_FLAG_GPS_FIX_OK 0x01
-#define UBX_NAV_PVT_FLAG_DGPS       0x02
-#define UBX_NAV_PVT_FLAG_HDG_OK     0x20
-#define UBX_NAV_PVT_FLAG_RTK_FLT    0x40
-#define UBX_NAV_PVT_FLAG_RTK_FIX    0x80
-
 #endif // _GPSD_UBX_H
 // vim: set expandtab shiftwidth=4
