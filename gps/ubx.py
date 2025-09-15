@@ -10385,6 +10385,11 @@ with resetMode set to Hardware reset."
         # set NAV-TIMEUTC rate
         self.send_cfg_msg(1, 0x21, able)
 
+    def send_able_nav_velned(self, able, args):
+        """Enable NAV-VELNED messages"""
+        # set NAV-VELNED rate
+        self.send_cfg_msg(1, 0x12, able)
+
     def send_able_ned(self, able, args):
         """Enable NAV-RELPOSNED and VELNED messages.
 
@@ -11364,7 +11369,10 @@ present in 9-series and higher
                     "help": "NAV-SIG Signal Information message"},
         # en/dis able NAV-TIMEUTC Cmessage
         "NAV-TIMEUTC": {"command": send_able_nav_timeutc,
-                    "help": "NAV-TIMEUTC UTC Information message"},
+                        "help": "NAV-TIMEUTC UTC Information message"},
+        # en/dis able NAV-VEELNED Cmessage
+        "NAV-VELNED": {"command": send_able_nav_velned,
+                       "help": "NAV-VEELNED velocity NED message"},
         # en/dis able NED
         "NED": {"command": send_able_ned,
                 "help": "NAV-VELNED and NAV-RELPOSNED"},
