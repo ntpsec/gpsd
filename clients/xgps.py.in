@@ -837,7 +837,7 @@ class IMUView(object):
 
     def update(self, msg):
         """Update the IMU data fields."""
-        markup = ("<span font_desc='monospace %2d'>%s </span>" %
+        markup = ("<span font_desc='monospace %2d'>%%s </span>" %
                   options.infofont)
         for (attrname, widget) in self.imuwidgets:
             if hasattr(msg, attrname):
@@ -948,7 +948,7 @@ class RTKView(object):
 
     def update(self, msg):
         """Update the RTK data fields."""
-        markup = ("<span font_desc='monospace %2d'>%s </span>" %
+        markup = ("<span font_desc='monospace %2d'>%%s </span>" %
                   options.infofont)
         for (attrname, widget) in self.rtkwidgets:
             if hasattr(msg, attrname):
