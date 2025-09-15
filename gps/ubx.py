@@ -3090,8 +3090,7 @@ class ubx(object):
         # NOTE: Not all messages to u-blox GPS are ACKed...
 
         u = struct.unpack_from('<BB', buf, 0)
-        return (' ACK to %s (x%0x2:x%02x)' %
-                (self.name_s(u[0], u[1]), u[0], u[1]))
+        return ' ACK to %s' % self.class_id_s(u[0], u[1])
 
     def ack_nak(self, buf):
         """UBX-ACK-NAK decode"""
@@ -3099,8 +3098,7 @@ class ubx(object):
         # NOTE: Not all messages to u-blox GPS are ACKed...
 
         u = struct.unpack_from('<BB', buf, 0)
-        return (' NAK to %s (x%0x2:x%02x)' %
-                (self.name_s(u[0], u[1]), u[0], u[1]))
+        return ' NAK to %s' % self.class_id_s(u[0], u[1])
 
     # UBX-ACK-
     ack_ids = {0: {'str': 'NAK', 'dec': ack_nak, 'minlen': 2,
@@ -9773,17 +9771,21 @@ qErrInvalid added in protVer 32 and up
     def class_id_s(self, m_class, m_id):
         """Return class and ID numbers as a string."""
 
-        s = 'Class x%02x' % (m_class)
         if (((m_class in self.classes and
               'str' in self.classes[m_class]))):
-            s += ' (%s)' % (self.classes[m_class]['str'])
+            s = '%s-' % (self.classes[m_class]['str'])
+        else:
+            s = '%d-' % m_class
 
-        s += ' ID x%02x' % (m_id)
         if (((m_class in self.classes and
               'ids' in self.classes[m_class] and
               m_id in self.classes[m_class]['ids'] and
               'str' in self.classes[m_class]['ids'][m_id]))):
-            s += ' (%s)' % (self.classes[m_class]['ids'][m_id]['str'])
+            s += '%s' % (self.classes[m_class]['ids'][m_id]['str'])
+        else:
+            s += '%d' % m_id
+
+        s += ' (x%02x:x%02x)' % (m_class, m_id)
 
         return s
 
@@ -10052,9 +10054,9 @@ qErrInvalid added in protVer 32 and up
                                               (m_len, x_payload))
 
                         else:
-                            # unknodn m_id
+                            # unknon m_id
                             s_payload = ("%s: Unknown message type\n" %
-                                         (self.name_s(m_class, m_id)))
+                                         (self.class_id_s(m_class, m_id)))
                             # FIXME: line lenght.
                             s_payload += ("  len %#x, raw %s" %
                                           (m_len, x_payload))
