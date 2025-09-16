@@ -5767,12 +5767,32 @@ u-blox 8, protVer 15 and up
 
         return s
 
+    def mga_sf(self, buf):
+        """UBX-MGA-SF- decode, Sensor Fusion data"""
+        # max 96
+
+        u = struct.unpack_from('<BB', buf, 0)
+        s = ' type %u version %u' % u
+        if 0 == u[0]:
+            # MGA-SF-INI
+            u = struct.unpack_from('<BBH', buf, 2)
+            s += ' nValA %u nValB %u age %u reserved ...' % u
+        elif 16 == u[0]:
+            # MGA-SF-INI2
+            s += ' reserved ...'
+        else:
+            s += '\n unknown type'
+
+        return s
+
     # Braodcam calls this BRM-AST-
     mga_ids = {0x00: {'str': 'GPS', 'minlen': 16, 'name': "UBX-MGA-GPS"},
                0x02: {'str': 'GAL', 'minlen': 12, 'name': "UBX-MGA-GAL"},
                0x03: {'str': 'BDS', 'minlen': 16, 'name': "UBX-MGA-BDS"},
                0x05: {'str': 'QZSS', 'minlen': 12, 'name': "UBX-MGA-QZSS"},
                0x06: {'str': 'GLO', 'minlen': 20, 'name': "UBX-MGA-GLO"},
+               0x10: {'str': 'SF', 'dec': mga_sf, 'minlen': 96,
+                      'name': "UBX-MGA-SF"},
                # Braodcam calls this BRM-AST-LTO
                0x20: {'str': 'ANO', 'dec': mga_ano, 'minlen': 76,
                       'name': "UBX-MGA-ANO"},
@@ -11719,6 +11739,9 @@ present in 9-series and higher
         # UBX-MGA-DBD
         "MGA-DBD": {"command": send_poll, "opt": [0x13, 0x80],
                     "help": "poll UBX-MGA-DBD Poll the Navigation Database"},
+        # UBX-MGA-SF
+        "MGA-SF": {"command": send_poll, "opt": [0x13, 0x10],
+                   "help": "poll UBX-MGA-SD Poll the Sensor Fusion data"},
         # UBX-MON-BATCH
         # Assume 23 is close enough to the proper 23.01
         "MON-BATCH": {"command": send_poll, "opt": [0x0a, 0x32],
