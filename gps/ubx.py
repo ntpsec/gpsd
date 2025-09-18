@@ -10395,30 +10395,6 @@ with resetMode set to Hardware reset."
         # set UBX-CFG-LOGFILTER
         self.gps_send(6, 0x47, m_data)
 
-    def send_able_nav_sat(self, able, args):
-        """dis/enable UBX-NAV-SAT"""
-
-        rate = 1 if able else 0
-        m_data = bytearray([0x1, 0x35, rate])
-        self.gps_send(6, 1, m_data)
-
-    def send_able_nav_sig(self, able, args):
-        """dis/enable UBX-NAV-SIG"""
-
-        rate = 1 if able else 0
-        m_data = bytearray([0x1, 0x43, rate])
-        self.gps_send(6, 1, m_data)
-
-    def send_able_nav_timeutc(self, able, args):
-        """Enable NAV-TIMEUTC messages"""
-        # set NAV-TIMEUTC rate
-        self.send_cfg_msg(1, 0x21, able)
-
-    def send_able_nav_velned(self, able, args):
-        """Enable NAV-VELNED messages"""
-        # set NAV-VELNED rate
-        self.send_cfg_msg(1, 0x12, able)
-
     def send_able_ned(self, able, args):
         """Enable NAV-RELPOSNED and VELNED messages.
 
@@ -10613,12 +10589,6 @@ protver 20+, and HP GNSS, required for RELPOSNED
 
         struct.pack_into('<LL', m_data, 24, seconds, mmeters)
         self.gps_send(6, 0x71, m_data)
-
-    def send_able_tp(self, able, args):
-        """dis/enable UBX-TIM-TP Time Pulse"""
-        rate = 1 if able else 0
-        m_data = bytearray([0xd, 0x1, rate])
-        self.gps_send(6, 1, m_data)
 
     def send_cfg_cfg(self, save_clear, args=[]):
         """UBX-CFG-CFG, save config"""
@@ -11396,17 +11366,17 @@ present in 9-series and higher
         # en/dis able NAV-PVT message
         "NAV-PVT": {"command": send_able, "mid": [0x01, 0x10],
                     "help": "NAV-PVT fix message"},
-        # en/dis able NAV-SAT Cmessage
-        "NAV-SAT": {"command": send_able_nav_sat,
+        # en/dis able NAV-SAT message
+        "NAV-SAT": {"command": send_able, "mid": [0x01, 0x35],
                     "help": "NAV-SAT Satellite Information message"},
-        # en/dis able NAV-SIG Cmessage
-        "NAV-SIG": {"command": send_able_nav_sig,
+        # en/dis able NAV-SIG message
+        "NAV-SIG": {"command": send_able, "mid": [0x01, 0x43],
                     "help": "NAV-SIG Signal Information message"},
-        # en/dis able NAV-TIMEUTC Cmessage
-        "NAV-TIMEUTC": {"command": send_able_nav_timeutc,
+        # en/dis able NAV-TIMEUTC message
+        "NAV-TIMEUTC": {"command": send_able, "mid": [0x01, 0x21],
                         "help": "NAV-TIMEUTC UTC Information message"},
         # en/dis able NAV-VEELNED Cmessage
-        "NAV-VELNED": {"command": send_able_nav_velned,
+        "NAV-VELNED": {"command": send_able, "mid": [0x01, 0x12],
                        "help": "NAV-VEELNED velocity NED message"},
         # en/dis able NED
         "NED": {"command": send_able_ned,
@@ -11427,10 +11397,10 @@ present in 9-series and higher
         "SFRBX": {"command": send_able_sfrbx,
                   "help": "SFRB/SFRBX subframes"},
         # en/dis able TP time pulse message (deprecated)
-        "TIM-TP": {"command": send_able_tp,
+        "TIM-TP": {"command": send_able, "mid": [0x06, 0x01],
                    "help": "TIM-TP Time Pulse message"},
         # en/dis able TP time pulse message
-        "TP": {"command": send_able_tp,
+        "TP": {"command": send_able, "mid": [0x06, 0x01],
                "help": "TP Time Pulse message (Deprecated, use TIM-TP)"},
         # en/dis able TMODE2 Survey-in
         "SURVEYIN": {"command": send_able_tmode2,
