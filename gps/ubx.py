@@ -10182,7 +10182,7 @@ qErrInvalid added in protVer 32 and up
         # args == 0 for off, or > 0 for rate
         self.send_cfg_msg(command['mid'][0], command['mid'][1], able)
 
-    def send_able_cfg_batch(self, able, args):
+    def send_able_cfg_batch(self, able, args, command):
         """dis/enable batching, UBX-CFG-BATCH"""
 
         flags = 0x0d if able else 0x0c
@@ -10190,13 +10190,13 @@ qErrInvalid added in protVer 32 and up
         struct.pack_into('<BBHHBB', m_data, 0, 0, flags, 128, 0, 0, 0)
         self.gps_send(6, 0x93, m_data)
 
-    def send_able_beidou(self, able, args):
+    def send_able_beidou(self, able, args, command):
         """dis/enable BeiDou"""
         # Two frequency GNSS receivers use BeiDou or GLONASS
         # disable, then enable
         self.send_cfg_gnss1(3, able, args)
 
-    def send_able_binary(self, able, args):
+    def send_able_binary(self, able, args, command):
         """dis/enable basic binary messages. -e/-d BINARY"""
 
         # FIXME: does not change UBX-CFG-PRT outProtoMask for current port.
@@ -10302,14 +10302,14 @@ qErrInvalid added in protVer 32 and up
             # UBX-CFG-MSG
             self.gps_send(6, 1, m_data)
 
-    def send_able_ecef(self, able, args):
+    def send_able_ecef(self, able, args, command):
         """Enable ECEF messages"""
         # set NAV-POSECEF rate
         self.send_cfg_msg(1, 1, able)
         # set NAV-VELECEF rate
         self.send_cfg_msg(1, 0x11, able)
 
-    def send_able_esf(self, able, args):
+    def send_able_esf(self, able, args, command):
         """dis/enable basic ESF messages"""
 
         esf_toggle = (
@@ -10330,7 +10330,7 @@ qErrInvalid added in protVer 32 and up
             # UBX-CFG-MSG
             self.gps_send(6, 1, m_data)
 
-    def send_able_gps(self, able, args):
+    def send_able_gps(self, able, args, command):
         """dis/enable GPS/QZSS"""
         # GPS and QZSS both on, or both off, together
         # GPS
@@ -10338,7 +10338,7 @@ qErrInvalid added in protVer 32 and up
         # QZSS
         self.send_cfg_gnss1(5, able, args)
 
-    def send_able_galileo(self, able, args):
+    def send_able_galileo(self, able, args, command):
         """dis/enable GALILEO
 
 "If Galileo is enabled, UBX-CFG-GNSS must be followed by UBX-CFG-RST
@@ -10346,13 +10346,13 @@ with resetMode set to Hardware reset."
 """
         self.send_cfg_gnss1(2, able, args)
 
-    def send_able_glonass(self, able, args):
+    def send_able_glonass(self, able, args, command):
         """dis/enable GLONASS"""
         # Two frequency GPS use BeiDou or GLONASS
         # disable, then enable
         self.send_cfg_gnss1(6, able, args)
 
-    def send_able_hnr(self, able, args):
+    def send_able_hnr(self, able, args, command):
         """dis/enable HNR messages"""
 
         esf_toggle = (
@@ -10371,7 +10371,7 @@ with resetMode set to Hardware reset."
             # UBX-CFG-MSG
             self.gps_send(6, 1, m_data)
 
-    def send_able_logfilter(self, able, args):
+    def send_able_logfilter(self, able, args, command):
         """Enable logging"""
 
         if able:
@@ -10395,7 +10395,7 @@ with resetMode set to Hardware reset."
         # set UBX-CFG-LOGFILTER
         self.gps_send(6, 0x47, m_data)
 
-    def send_able_ned(self, able, args):
+    def send_able_ned(self, able, args, command):
         """Enable NAV-RELPOSNED and VELNED messages.
 
 protver 15+ required for VELNED
@@ -10418,7 +10418,7 @@ protver 20+, and HP GNSS, required for RELPOSNED
         # set NAV-RELPOSNED rate
         self.send_cfg_msg(1, 0x3C, able)
 
-    def send_able_nmea(self, able, args):
+    def send_able_nmea(self, able, args, command):
         """dis/enable basic NMEA messages"""
 
         # try to keep in sync with driver_ubx.c, ubx_cfg_prt()
@@ -10452,7 +10452,7 @@ protver 20+, and HP GNSS, required for RELPOSNED
         m_data = bytearray([0xf0, 0x01, 0])
         self.gps_send(6, 1, m_data)
 
-    def send_able_rtcm3(self, able, args):
+    def send_able_rtcm3(self, able, args, command):
         """dis/enable RTCM3 1005, 1077, 1087, 1230 messages"""
 
         # protVer 20+, High Precision only
@@ -10497,7 +10497,7 @@ protver 20+, and HP GNSS, required for RELPOSNED
         m_data = bytearray([0xf5, 0xfd, rate])
         self.gps_send(6, 1, m_data)
 
-    def send_able_rawx(self, able, args):
+    def send_able_rawx(self, able, args, command):
         """dis/enable UBX-RXM-RAW/RAWXX"""
 
         rate = 1 if able else 0
@@ -10510,7 +10510,7 @@ protver 20+, and HP GNSS, required for RELPOSNED
         m_data = bytearray([0x2, sid, rate])
         self.gps_send(6, 1, m_data)
 
-    def send_able_pps(self, able, args):
+    def send_able_pps(self, able, args, command):
         """dis/enable PPS, using UBX-CFG-TP5"""
 
         # This is actually a shortcut for a regular CFG-TP5 message
@@ -10519,11 +10519,11 @@ protver 20+, and HP GNSS, required for RELPOSNED
 
         self.send_cfg_tp5(tp5_args)
 
-    def send_able_sbas(self, able, args):
+    def send_able_sbas(self, able, args, command):
         """dis/enable SBAS"""
         self.send_cfg_gnss1(1, able, args)
 
-    def send_able_sfrbx(self, able, args):
+    def send_able_sfrbx(self, able, args, command):
         """dis/enable UBX-RXM-SFRB/SFRBX"""
 
         rate = 1 if able else 0
@@ -10536,7 +10536,29 @@ protver 20+, and HP GNSS, required for RELPOSNED
         m_data = bytearray([0x2, sid, rate])
         self.gps_send(6, 1, m_data)
 
-    def send_able_tmode2(self, able, args):
+    def send_able_time(self, able, args, command):
+        """dis/enable NAV-TIME* messages"""
+
+        esf_toggle = (
+            ubx.NAV_TIMEBDS,
+            ubx.NAV_TIMEGAL,
+            ubx.NAV_TIMEGLO,
+            ubx.NAV_TIMEGPS,
+            ubx.NAV_TIMELS,
+            ubx.NAV_TIMENAVIC,
+            ubx.NAV_TIMEQZSS,
+            ubx.NAV_TIMEUTC,
+            )
+
+        m_data = bytearray(3)
+        for (cls, mid) in esf_toggle:
+            m_data[0] = cls
+            m_data[1] = mid
+            m_data[2] = able     # able is rate
+            # UBX-CFG-MSG
+            self.gps_send(6, 1, m_data)
+
+    def send_able_tmode2(self, able, args, command):
         """SURVEYIN, UBX-CFG-TMODE2, set time mode 2 config"""
 
         m_data = bytearray(28)
@@ -10566,7 +10588,7 @@ protver 20+, and HP GNSS, required for RELPOSNED
         struct.pack_into('<LL', m_data, 20, seconds, mmeters)
         self.gps_send(6, 0x3d, m_data)
 
-    def send_able_tmode3(self, able, args):
+    def send_able_tmode3(self, able, args, command):
         """SURVEYIN3, UBX-CFG-TMODE3, set time mode 3 config"""
 
         m_data = bytearray(40)
@@ -11217,6 +11239,14 @@ present in 9-series and higher
     MON_TXBUF = [0x0a, 0x08]
     MON_VER = [0x0a, 0x04]
     NAV_SVIN = [0x01, 0x3b]
+    NAV_TIMEBDS = [0x01, 0x24]
+    NAV_TIMEGAL = [0x01, 0x25]
+    NAV_TIMEGLO = [0x01, 0x23]
+    NAV_TIMEGPS = [0x01, 0x20]
+    NAV_TIMELS = [0x01, 0x26]
+    NAV_TIMENAVIC = [0x01, 0x63]
+    NAV_TIMEQZSS = [0x01, 0x27]
+    NAV_TIMEUTC = [0x01, 0x21]
     TIM_SVIN = [0x0d, 0x04]
 
     def send_poll_esf(self):
@@ -11372,8 +11402,29 @@ present in 9-series and higher
         # en/dis able NAV-SIG message
         "NAV-SIG": {"command": send_able, "mid": [0x01, 0x43],
                     "help": "NAV-SIG Signal Information message"},
+        # en/dis able NAV-TIMEBDS message
+        "NAV-TIMEBDS": {"command": send_able, "mid": NAV_TIMEBDS,
+                        "help": "NAV-TIMEBDS BDS time message"},
+        # en/dis able NAV-TIMEGAL message
+        "NAV-TIMEGAL": {"command": send_able, "mid": NAV_TIMEGAL,
+                        "help": "NAV-TIMEGAL GAL time message"},
+        # en/dis able NAV-TIMEGLO message
+        "NAV-TIMEGLO": {"command": send_able, "mid": NAV_TIMEGLO,
+                        "help": "NAV-TIMEGLO GLO time message"},
+        # en/dis able NAV-TIMEGPS message
+        "NAV-TIMEGPS": {"command": send_able, "mid": NAV_TIMEGPS,
+                        "help": "NAV-TIMEGPS GPS time message"},
+        # en/dis able NAV-TIMELS message
+        "NAV-TIMELS": {"command": send_able, "mid": NAV_TIMELS,
+                        "help": "NAV-TIMELS Leap Second message"},
+        # en/dis able NAV-TIMENAVIC message
+        "NAV-TIMENAVIC": {"command": send_able, "mid": NAV_TIMENAVIC,
+                        "help": "NAV-TIMENAVIC NAVIC time message"},
+        # en/dis able NAV-TIMEQZSS message
+        "NAV-TIMEQZSS": {"command": send_able, "mid": NAV_TIMEQZSS,
+                         "help": "NAV-TIMEQZSS QZSS time message"},
         # en/dis able NAV-TIMEUTC message
-        "NAV-TIMEUTC": {"command": send_able, "mid": [0x01, 0x21],
+        "NAV-TIMEUTC": {"command": send_able, "mid": NAV_TIMEUTC,
                         "help": "NAV-TIMEUTC UTC Information message"},
         # en/dis able NAV-VEELNED Cmessage
         "NAV-VELNED": {"command": send_able, "mid": [0x01, 0x12],
@@ -11399,6 +11450,9 @@ present in 9-series and higher
         # en/dis able TP time pulse message (deprecated)
         "TIM-TP": {"command": send_able, "mid": [0x06, 0x01],
                    "help": "TIM-TP Time Pulse message"},
+        # en/dis able all NAV-TIME* messages
+        "TIME": {"command": send_able_time,
+                 "help": "All NAV-TIME* messages"},
         # en/dis able TP time pulse message
         "TP": {"command": send_able, "mid": [0x06, 0x01],
                "help": "TP Time Pulse message (Deprecated, use TIM-TP)"},
