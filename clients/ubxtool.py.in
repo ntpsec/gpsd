@@ -395,10 +395,11 @@ try:
                 print('%s: disable %s\n' % (PROG_NAME, disable))
             args = disable.split(',')
             disable = args[0].upper()
+            # args[1] is the optional rate, ignored
 
             if disable in gps_model.able_commands:
                 command = gps_model.able_commands[disable]
-                command["command"](gps_model, 0, disable[1:])
+                command["command"](gps_model, 0, disable[1:], command)
             else:
                 sys.stderr.write('%s: disable %s not found\n' %
                                  (PROG_NAME, disable))
@@ -410,10 +411,11 @@ try:
                 print('%s: enable %s\n' % (PROG_NAME, enable))
             args = enable.split(',')
             enable = args[0].upper()
+            # args[1] is the optional rate.
 
             if enable in gps_model.able_commands:
                 command = gps_model.able_commands[enable]
-                command["command"](gps_model, 1, args[1:])
+                command["command"](gps_model, 1, args[1:], command)
             else:
                 sys.stderr.write('%s: enable %s not found\n' %
                                  (PROG_NAME, enable))

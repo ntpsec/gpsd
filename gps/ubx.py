@@ -6648,22 +6648,43 @@ UBX-NAV-EELL, protVer 19.1 and up, ADR, MDR and HPS only
         return s
 
     def nav_hpposecef(self, buf):
-        """UBX-NAV-POSECEF decode, High Precision Position Solution in ECEF"""
+        """UBX-NAV-HPPOSECEF decode, High Precision Position Solution ECEF"""
 
         u = struct.unpack_from('<BBBBLlllbbbbL', buf, 0)
-        return ('  version %u reserved1 %u %u %u iTOW %u\n'
-                '  ecef: X %d Y %d Z %d\n'
-                '  ecefHP: X %d Y %d Z %d\n'
-                '  reserved2 %u pAcc %u' % u)
+        if 0 != u[0]:
+            return "  Unknown version %u, s/b 0" % u[0]
+
+        s = ('  version %u reserved1 %u %u %u iTOW %u\n'
+             '  ecef: X %d Y %d Z %d\n'
+             '  ecefHP: X %d Y %d Z %d\n'
+             '  reserved2 %u pAcc %u' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ('\n    HPecef X %.4f m Y %.4f m Z %.4f m' %
+                  (((u[5] * 100) + u[8]) * 10e-5,
+                   ((u[6] * 100) + u[9]) * 10e-5,
+                   ((u[7] * 100) + u[10]) * 10e-5))
+
+        return s
 
     def nav_hpposllh(self, buf):
-        """UBX-NAV-HPPOSLLH decode, HP Geodetic Position Solution"""
+        """UBX-NAV-HPPOSLLH decode, HP Geodetic Position Solution LLH"""
 
         u = struct.unpack_from('<BBBBLllllbbbbLL', buf, 0)
-        return ('  version %u reserved1 %u %u %u iTOW %u\n'
-                '  lon %d lat %d height %d hMSL %d\n'
-                '  lonHp %d latHp %d heightHp %d hMSLHp %d\n'
-                '  hAcc %u vAcc %u' % u)
+        if 0 != u[0]:
+            return "  Unknown version %u, s/b 0" % u[0]
+
+        s = ('  version %u reserved1 %u %u %u iTOW %u\n'
+             '  lon %d lat %d height %d hMSL %d\n'
+             '  lonHp %d latHp %d heightHp %d hMSLHp %d\n'
+             '  hAcc %u vAcc %u' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ('\n    HPlon %.9f HPlat %.9f'
+                  '\n    HPaltHAE %.4f HPaltMSL %.4f' %
+                  (((u[5] * 100) + u[9]) * 10e-10,
+                   ((u[6] * 100) + u[10]) * 10e-10,
+                   ((u[7] * 100) + u[11]) * 10e-6,
+                   ((u[8] * 100) + u[12]) * 10e-6))
+        return s
 
     def nav_odo(self, buf):
         """UBX-NAV-ODO decode, Odometer Solution"""
@@ -10156,6 +10177,11 @@ qErrInvalid added in protVer 32 and up
                 self.decode_msg(m_all)
                 sys.stdout.flush()
 
+    def send_able(self, able, args, command):
+        """Generic dis-/en-able messages"""
+        # args == 0 for off, or > 0 for rate
+        self.send_cfg_msg(command['mid'][0], command['mid'][1], able)
+
     def send_able_cfg_batch(self, able, args):
         """dis/enable batching, UBX-CFG-BATCH"""
 
@@ -10283,11 +10309,6 @@ qErrInvalid added in protVer 32 and up
         # set NAV-VELECEF rate
         self.send_cfg_msg(1, 0x11, able)
 
-    def send_able_nav_eell(self, able, args):
-        """Enable NAV-EELL messages"""
-        # set NAV-EELL rate
-        self.send_cfg_msg(1, 0x3d, able)
-
     def send_able_esf(self, able, args):
         """dis/enable basic ESF messages"""
 
@@ -10373,20 +10394,6 @@ with resetMode set to Hardware reset."
 
         # set UBX-CFG-LOGFILTER
         self.gps_send(6, 0x47, m_data)
-
-    def send_able_nav_pvat(self, able, args):
-        """dis/enable UBX-NAV-PVAT"""
-
-        rate = 1 if able else 0
-        m_data = bytearray([0x1, 0x17, rate])
-        self.gps_send(6, 1, m_data)
-
-    def send_able_nav_pvt(self, able, args):
-        """dis/enable UBX-NAV-PVT"""
-
-        rate = 1 if able else 0
-        m_data = bytearray([0x1, 0x07, rate])
-        self.gps_send(6, 1, m_data)
 
     def send_able_nav_sat(self, able, args):
         """dis/enable UBX-NAV-SAT"""
@@ -11375,13 +11382,19 @@ present in 9-series and higher
         "LOG": {"command": send_able_logfilter,
                 "help": "Data Logger"},
         # en/dis able NAV-EELL message
-        "NAV-EELL": {"command": send_able_nav_eell,
+        "NAV-EELL": {"command": send_able, "mid": [0x01, 0x3d],
                      "help": "NAV-EELL error ellipse message"},
+        # en/dis able NAV-HPPOSLLH message
+        "NAV-HPPOSECEF": {"command": send_able, "mid": [0x01, 0x13],
+                          "help": "NAV-HPPOSECEF fix message"},
+        # en/dis able NAV-HPPOSLLH message
+        "NAV-HPPOSLLH": {"command": send_able, "mid": [0x01, 0x14],
+                         "help": "NAV-HPPOSLLH fix message"},
         # en/dis able NAV-PVAT message
-        "NAV-PVAT": {"command": send_able_nav_pvat,
+        "NAV-PVAT": {"command": send_able, "mid": [0x01, 0x17],
                      "help": "NAV-PVAT fix message"},
         # en/dis able NAV-PVT message
-        "NAV-PVT": {"command": send_able_nav_pvt,
+        "NAV-PVT": {"command": send_able, "mid": [0x01, 0x10],
                     "help": "NAV-PVT fix message"},
         # en/dis able NAV-SAT Cmessage
         "NAV-SAT": {"command": send_able_nav_sat,
