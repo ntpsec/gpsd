@@ -353,18 +353,20 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
                 str_appendf(reply, replylen, ",\"epc\":%.2f", gpsdata->fix.epc);
             }
             // ECEF is in meters, so %.3f is millimeter resolution
+            // UBX ECEF can be 0.1 mm
             if (0 != isfinite(gpsdata->fix.ecef.x)) {
-                str_appendf(reply, replylen, ",\"ecefx\":%.2f",
+                str_appendf(reply, replylen, ",\"ecefx\":%.4f",
                             gpsdata->fix.ecef.x);
             }
             if (0 != isfinite(gpsdata->fix.ecef.y)) {
-                str_appendf(reply, replylen, ",\"ecefy\":%.2f",
+                str_appendf(reply, replylen, ",\"ecefy\":%.4f",
                             gpsdata->fix.ecef.y);
             }
             if (0 != isfinite(gpsdata->fix.ecef.z)) {
-                str_appendf(reply, replylen, ",\"ecefz\":%.2f",
+                str_appendf(reply, replylen, ",\"ecefz\":%.4f",
                             gpsdata->fix.ecef.z);
             }
+            // UBX ECEFv can be cm
             if (0 != isfinite(gpsdata->fix.ecef.vx)) {
                 str_appendf(reply, replylen, ",\"ecefvx\":%.2f",
                             fix_zero(gpsdata->fix.ecef.vx, 0.005));
@@ -377,12 +379,13 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
                 str_appendf(reply, replylen, ",\"ecefvz\":%.2f",
                             fix_zero(gpsdata->fix.ecef.vz, 0.005));
             }
+            // UBX ECEFp can be 0.1 mm
             if (0 != isfinite(gpsdata->fix.ecef.pAcc)) {
-                str_appendf(reply, replylen, ",\"ecefpAcc\":%.2f",
+                str_appendf(reply, replylen, ",\"ecefpAcc\":%.4f",
                             gpsdata->fix.ecef.pAcc);
             }
             if (0 != isfinite(gpsdata->fix.ecef.vAcc)) {
-                str_appendf(reply, replylen, ",\"ecefvAcc\":%.2f",
+                str_appendf(reply, replylen, ",\"ecefvAcc\":%.4f",
                             gpsdata->fix.ecef.vAcc);
             }
             if (0 != isfinite(gpsdata->fix.errEllipseOrient) &&

@@ -411,7 +411,7 @@ $GPGGA,165245.00,5135.4610320,N,00001.4781840,W,2,11,0.96,7.60,M,45.536,M,,*74
 $GPRMC,165245.00,A,5135.4610320,N,0001.4781840,W,0.0603,314.262,260521,-0.1,W*75
 $GPGSA,A,3,1,8,10,14,21,22,27,32,,,,,1.7,1.0,1.4*3A
 $GPGBS,165245.00,2.475,2.625,2.837,,,,*49
-{"class":"TPV","status":2,"mode":3,"time":"2021-05-26T16:52:45.000Z","leapseconds":18,"ept":0.005,"lat":51.591017200,"lon":-0.024636400,"altHAE":53.1100,"altMSL":7.6030,"alt":7.6030,"epx":2.475,"epy":2.625,"epv":2.837,"track":314.2616,"magtrack":314.1273,"magvar":-0.1,"speed":0.031,"climb":0.033,"eps":5.25,"epc":5.65,"ecefx":3970751.11,"ecefy":-1707.37,"ecefz":4974701.64,"ecefvx":-0.02,"ecefvy":0.00,"ecefvz":0.03,"ecefpAcc":3.54,"ecefvAcc":0.28,"geoidSep":45.536,"eph":2.121,"sep":7.898}
+{"class":"TPV","status":2,"mode":3,"time":"2021-05-26T16:52:45.000Z","leapseconds":18,"ept":0.005,"lat":51.591017200,"lon":-0.024636400,"altHAE":53.1100,"altMSL":7.6030,"alt":7.6030,"epx":2.475,"epy":2.625,"epv":2.837,"track":314.2616,"magtrack":314.1273,"magvar":-0.1,"speed":0.031,"climb":0.033,"eps":5.25,"epc":5.65,"ecefx":3970751.1100,"ecefy":-1707.3700,"ecefz":4974701.6400,"ecefvx":-0.02,"ecefvy":0.00,"ecefvz":0.03,"ecefpAcc":3.5400,"ecefvAcc":0.2800,"geoidSep":45.536,"eph":2.121,"sep":7.898}
 {"class":"ATT","time":"2021-05-26T16:52:45.000Z","pitch":0.000,"yaw":0.00,"roll":0.000}
 {"class":"SKY","time":"2021-05-26T16:52:45.000Z","gdop":1.96,"hdop":0.96,"pdop":1.67,"tdop":1.03,"xdop":0.66,"ydop":0.70,"vdop":1.36}
 {"class":"IMU","msg":"UBX-ESF-MEAS","timeTag":16970610,"gyro_temp":24.81,"gyro_x":-0.09229,"gyro_y":-0.70264,"gyro_z":-0.02368}
@@ -738,7 +738,7 @@ $GPGGA,165246.00,5135.4610140,N,00001.4782440,W,2,11,0.96,7.60,M,45.536,M,,*7C
 $GPRMC,165246.00,A,5135.4610140,N,0001.4782440,W,0.0175,314.262,260521,-0.1,W*7B
 $GPGSA,A,3,1,8,10,14,21,22,27,32,,,,,1.7,1.0,1.4*3A
 $GPGBS,165246.00,2.475,2.625,2.822,,,,*4E
-{"class":"TPV","status":2,"mode":3,"time":"2021-05-26T16:52:46.000Z","leapseconds":18,"ept":0.005,"lat":51.591016900,"lon":-0.024637400,"altHAE":53.1050,"altMSL":7.5980,"alt":7.5980,"epx":2.475,"epy":2.625,"epv":2.822,"track":314.2616,"magtrack":314.1273,"magvar":-0.1,"speed":0.009,"climb":-0.005,"eps":5.25,"epc":5.66,"ecefx":3970751.13,"ecefy":-1707.44,"ecefz":4974701.62,"ecefvx":0.01,"ecefvy":0.01,"ecefvz":0.03,"ecefpAcc":3.52,"ecefvAcc":0.29,"geoidSep":45.536,"eph":2.111,"sep":7.898}
+{"class":"TPV","status":2,"mode":3,"time":"2021-05-26T16:52:46.000Z","leapseconds":18,"ept":0.005,"lat":51.591016900,"lon":-0.024637400,"altHAE":53.1050,"altMSL":7.5980,"alt":7.5980,"epx":2.475,"epy":2.625,"epv":2.822,"track":314.2616,"magtrack":314.1273,"magvar":-0.1,"speed":0.009,"climb":-0.005,"eps":5.25,"epc":5.66,"ecefx":3970751.1300,"ecefy":-1707.4400,"ecefz":4974701.6200,"ecefvx":0.01,"ecefvy":0.01,"ecefvz":0.03,"ecefpAcc":3.5200,"ecefvAcc":0.2900,"geoidSep":45.536,"eph":2.111,"sep":7.898}
 {"class":"SKY","time":"2021-05-26T16:52:46.000Z","gdop":1.96,"hdop":0.96,"pdop":1.67,"tdop":1.03,"xdop":0.66,"ydop":0.70,"vdop":1.36}
 {"class":"IMU","msg":"UBX-ESF-MEAS","timeTag":16971613,"gyro_temp":24.80,"gyro_x":-0.08301,"gyro_y":-0.69434,"gyro_z":-0.02197}
 {"class":"IMU","msg":"UBX-ESF-RAW","timeTag":13862683,"acc_x":0.02344,"acc_y":0.21875,"acc_z":10.02930,"gyro_temp":24.81,"gyro_x":-0.05347,"gyro_y":-0.67847,"gyro_z":0.03027}
