@@ -2717,18 +2717,17 @@ static gps_mask_t ubx_msg_nav_eoe(struct gps_device_t *session,
  * Only with High Precision firmware.
  */
 static gps_mask_t ubx_msg_nav_hpposecef(struct gps_device_t *session,
-                                        unsigned char *buf, size_t data_len)
+                                        unsigned char *buf,
+                                        size_t data_len UNUSED)
 {
     gps_mask_t mask = ECEF_SET;
-    int version;
 
-    if (28 > data_len) {
+    unsigned version = getub(buf, 0);
+    if (0 != version) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV-HPPOSECEF: runt payload len %zd", data_len);
+                 "UBX: NAV-HPPOSECEF unknown version %u s/b 0", version);
         return 0;
     }
-
-    version = getub(buf, 0);
     session->driver.ubx.iTOW = getleu32(buf, 4);
     session->newdata.ecef.x = getles32x100s8d(buf, 8, 20, 1e-4);
     session->newdata.ecef.y = getles32x100s8d(buf, 12, 21, 1e-4);
@@ -2737,8 +2736,8 @@ static gps_mask_t ubx_msg_nav_hpposecef(struct gps_device_t *session,
     session->newdata.ecef.pAcc = getleu32(buf, 24) / (double)10000.0;
     // (long long) cast for 32-bit compat
     GPSD_LOG(LOG_PROG, &session->context->errout,
-        "UBX: NAV-HPPOSECEF: version %d iTOW=%lld ECEF x=%.4f y=%.4f z=%.4f "
-        "pAcc=%.4f\n",
+        "UBX: NAV-HPPOSECEF: version %d iTOW %lld ecef X %.4f Y %.4f Z %.4f "
+        "pAcc %.4f\n",
         version,
         (long long)session->driver.ubx.iTOW,
         session->newdata.ecef.x,
@@ -5186,7 +5185,13 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_NAV_HPPOSECEF:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-HPPOSECEF\n");
-        mask = ubx_msg_nav_hpposecef(session, &buf[UBX_PREFIX_LEN], data_len);
+        if (28 > data_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "UBX: NAV-HPPOSECEF: runt payload len %zd", data_len);
+        } else {
+            mask = ubx_msg_nav_hpposecef(session, &buf[UBX_PREFIX_LEN],
+                                         data_len);
+        }
         break;
     case UBX_NAV_HPPOSLLH:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: NAV-HPPOSLLH\n");
