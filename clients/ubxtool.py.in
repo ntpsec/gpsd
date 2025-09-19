@@ -399,7 +399,7 @@ try:
 
             if disable in gps_model.able_commands:
                 command = gps_model.able_commands[disable]
-                command["command"](gps_model, 0, disable[1:], command)
+                command["pollcmd"](gps_model, 0, disable[1:], command)
             else:
                 sys.stderr.write('%s: disable %s not found\n' %
                                  (PROG_NAME, disable))
@@ -415,7 +415,7 @@ try:
 
             if enable in gps_model.able_commands:
                 command = gps_model.able_commands[enable]
-                command["command"](gps_model, 1, args[1:], command)
+                command["pollcmd"](gps_model, 1, args[1:], command)
             else:
                 sys.stderr.write('%s: enable %s not found\n' %
                                  (PROG_NAME, enable))

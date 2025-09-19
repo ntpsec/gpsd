@@ -11238,6 +11238,15 @@ present in 9-series and higher
     MON_SYS = [0x0a, 0x39]
     MON_TXBUF = [0x0a, 0x08]
     MON_VER = [0x0a, 0x04]
+    NAV_EELL = [0x01, 0x3d]
+    NAV_HPPOSECEF = [0x01, 0x13]
+    NAV_HPPOSLLH = [0x01, 0x14]
+    NAV_POSECEF = [0x01, 0x01]
+    NAV_POSLLH = [0x01, 0x02]
+    NAV_PVAT = [0x01, 0x17]
+    NAV_PVT = [0x01, 0x10]
+    NAV_SAT = [0x01, 0x35]
+    NAV_SIG = [0x01, 0x43]
     NAV_SVIN = [0x01, 0x3b]
     NAV_TIMEBDS = [0x01, 0x24]
     NAV_TIMEGAL = [0x01, 0x25]
@@ -11247,6 +11256,7 @@ present in 9-series and higher
     NAV_TIMENAVIC = [0x01, 0x63]
     NAV_TIMEQZSS = [0x01, 0x27]
     NAV_TIMEUTC = [0x01, 0x21]
+    NAV_VELNED = [0x01, 0x12]
     TIM_SVIN = [0x0d, 0x04]
 
     def send_poll_esf(self):
@@ -11352,112 +11362,118 @@ present in 9-series and higher
 
     able_commands = {
         # en/dis able BATCH
-        "BATCH": {"command": send_able_cfg_batch,
+        "BATCH": {"pollcmd": send_able_cfg_batch,
                   "help": "batching, using CFG-BATCH"},
         # en/dis able BeiDou
-        "BEIDOU": {"command": send_able_beidou,
+        "BEIDOU": {"pollcmd": send_able_beidou,
                    "help": "BEIDOU for B1. BEIDOU,2 for B1 and B2"},
         # en/dis able basic binary messages
-        "BINARY": {"command": send_able_binary,
+        "BINARY": {"pollcmd": send_able_binary,
                    "help": "basic binary messages"},
         # en/dis able ECEF
-        "ECEF": {"command": send_able_ecef,
+        "ECEF": {"pollcmd": send_able_ecef,
                  "help": "ECEF"},
         # en/dis able basic ESF messages
-        "ESF": {"command": send_able_esf,
+        "ESF": {"pollcmd": send_able_esf,
                 "help": "basic ESF messages"},
         # en/dis able GPS
-        "GPS": {"command": send_able_gps,
+        "GPS": {"pollcmd": send_able_gps,
                 "help": "GPS and QZSS L1C/A. GPS,2 for L1C/A and L2C"},
         # en/dis able GALILEO
-        "GALILEO": {"command": send_able_galileo,
+        "GALILEO": {"pollcmd": send_able_galileo,
                     "help": "GALILEO E1. GALILEO,2 for E1 and E5b"},
         # en/dis able GLONASS
-        "GLONASS": {"command": send_able_glonass,
+        "GLONASS": {"pollcmd": send_able_glonass,
                     "help": "GLONASS L1. GLONASS,2 for L1 and L2"},
         # en/dis able HNR messages
-        "HNR": {"command": send_able_hnr,
+        "HNR": {"pollcmd": send_able_hnr,
                 "help": "basic HNR messages"},
         # en/dis able LOG
-        "LOG": {"command": send_able_logfilter,
+        "LOG": {"pollcmd": send_able_logfilter,
                 "help": "Data Logger"},
         # en/dis able NAV-EELL message
-        "NAV-EELL": {"command": send_able, "mid": [0x01, 0x3d],
+        "NAV-EELL": {"pollcmd": send_able, "mid": NAV_EELL,
                      "help": "NAV-EELL error ellipse message"},
-        # en/dis able NAV-HPPOSLLH message
-        "NAV-HPPOSECEF": {"command": send_able, "mid": [0x01, 0x13],
+        # en/dis able NAV-HPPOSECEF message
+        "NAV-HPPOSECEF": {"pollcmd": send_able, "mid": NAV_HPPOSECEF,
                           "help": "NAV-HPPOSECEF fix message"},
         # en/dis able NAV-HPPOSLLH message
-        "NAV-HPPOSLLH": {"command": send_able, "mid": [0x01, 0x14],
+        "NAV-HPPOSLLH": {"pollcmd": send_able, "mid": NAV_HPPOSLLH,
                          "help": "NAV-HPPOSLLH fix message"},
+        # en/dis able NAV-POSECEF message
+        "NAV-POSECEF": {"pollcmd": send_able, "mid": NAV_POSECEF,
+                        "help": "NAV-POSECEF fix message"},
+        # en/dis able NAV-POSLLH message
+        "NAV-POSLLH": {"pollcmd": send_able, "mid": NAV_POSLLH,
+                      "help": "NAV-POSLLH fix message"},
         # en/dis able NAV-PVAT message
-        "NAV-PVAT": {"command": send_able, "mid": [0x01, 0x17],
+        "NAV-PVAT": {"pollcmd": send_able, "mid": NAV_PVAT,
                      "help": "NAV-PVAT fix message"},
         # en/dis able NAV-PVT message
-        "NAV-PVT": {"command": send_able, "mid": [0x01, 0x10],
+        "NAV-PVT": {"pollcmd": send_able, "mid": NAV_PVT,
                     "help": "NAV-PVT fix message"},
         # en/dis able NAV-SAT message
-        "NAV-SAT": {"command": send_able, "mid": [0x01, 0x35],
+        "NAV-SAT": {"pollcmd": send_able, "mid": NAV_SAT,
                     "help": "NAV-SAT Satellite Information message"},
         # en/dis able NAV-SIG message
-        "NAV-SIG": {"command": send_able, "mid": [0x01, 0x43],
+        "NAV-SIG": {"pollcmd": send_able, "mid": NAV_SIG,
                     "help": "NAV-SIG Signal Information message"},
         # en/dis able NAV-TIMEBDS message
-        "NAV-TIMEBDS": {"command": send_able, "mid": NAV_TIMEBDS,
+        "NAV-TIMEBDS": {"pollcmd": send_able, "mid": NAV_TIMEBDS,
                         "help": "NAV-TIMEBDS BDS time message"},
         # en/dis able NAV-TIMEGAL message
-        "NAV-TIMEGAL": {"command": send_able, "mid": NAV_TIMEGAL,
+        "NAV-TIMEGAL": {"pollcmd": send_able, "mid": NAV_TIMEGAL,
                         "help": "NAV-TIMEGAL GAL time message"},
         # en/dis able NAV-TIMEGLO message
-        "NAV-TIMEGLO": {"command": send_able, "mid": NAV_TIMEGLO,
+        "NAV-TIMEGLO": {"pollcmd": send_able, "mid": NAV_TIMEGLO,
                         "help": "NAV-TIMEGLO GLO time message"},
         # en/dis able NAV-TIMEGPS message
-        "NAV-TIMEGPS": {"command": send_able, "mid": NAV_TIMEGPS,
+        "NAV-TIMEGPS": {"pollcmd": send_able, "mid": NAV_TIMEGPS,
                         "help": "NAV-TIMEGPS GPS time message"},
         # en/dis able NAV-TIMELS message
-        "NAV-TIMELS": {"command": send_able, "mid": NAV_TIMELS,
+        "NAV-TIMELS": {"pollcmd": send_able, "mid": NAV_TIMELS,
                         "help": "NAV-TIMELS Leap Second message"},
         # en/dis able NAV-TIMENAVIC message
-        "NAV-TIMENAVIC": {"command": send_able, "mid": NAV_TIMENAVIC,
+        "NAV-TIMENAVIC": {"pollcmd": send_able, "mid": NAV_TIMENAVIC,
                         "help": "NAV-TIMENAVIC NAVIC time message"},
         # en/dis able NAV-TIMEQZSS message
-        "NAV-TIMEQZSS": {"command": send_able, "mid": NAV_TIMEQZSS,
+        "NAV-TIMEQZSS": {"pollcmd": send_able, "mid": NAV_TIMEQZSS,
                          "help": "NAV-TIMEQZSS QZSS time message"},
         # en/dis able NAV-TIMEUTC message
-        "NAV-TIMEUTC": {"command": send_able, "mid": NAV_TIMEUTC,
+        "NAV-TIMEUTC": {"pollcmd": send_able, "mid": NAV_TIMEUTC,
                         "help": "NAV-TIMEUTC UTC Information message"},
         # en/dis able NAV-VEELNED Cmessage
-        "NAV-VELNED": {"command": send_able, "mid": [0x01, 0x12],
+        "NAV-VELNED": {"pollcmd": send_able, "mid": NAV_VELNED,
                        "help": "NAV-VEELNED velocity NED message"},
         # en/dis able NED
-        "NED": {"command": send_able_ned,
+        "NED": {"pollcmd": send_able_ned,
                 "help": "NAV-VELNED and NAV-RELPOSNED"},
         # en/dis able basic NMEA messages
-        "NMEA": {"command": send_able_nmea,
+        "NMEA": {"pollcmd": send_able_nmea,
                  "help": "basic NMEA messages"},
         # en/dis able RAW/RAWX
-        "RAWX": {"command": send_able_rawx,
+        "RAWX": {"pollcmd": send_able_rawx,
                  "help": "RAW/RAWX measurements"},
         # en/dis able PPS
-        "PPS": {"command": send_able_pps,
+        "PPS": {"pollcmd": send_able_pps,
                 "help": "PPS on TIMPULSE"},
         # en/dis able SBAS
-        "SBAS": {"command": send_able_sbas,
+        "SBAS": {"pollcmd": send_able_sbas,
                  "help": "SBAS L1C"},
         # en/dis able SFRB/SFRBX
-        "SFRBX": {"command": send_able_sfrbx,
+        "SFRBX": {"pollcmd": send_able_sfrbx,
                   "help": "SFRB/SFRBX subframes"},
         # en/dis able TP time pulse message (deprecated)
-        "TIM-TP": {"command": send_able, "mid": [0x06, 0x01],
+        "TIM-TP": {"pollcmd": send_able, "mid": [0x06, 0x01],
                    "help": "TIM-TP Time Pulse message"},
         # en/dis able all NAV-TIME* messages
-        "TIME": {"command": send_able_time,
+        "TIME": {"pollcmd": send_able_time,
                  "help": "All NAV-TIME* messages"},
         # en/dis able TP time pulse message
-        "TP": {"command": send_able, "mid": [0x06, 0x01],
+        "TP": {"pollcmd": send_able, "mid": [0x06, 0x01],
                "help": "TP Time Pulse message (Deprecated, use TIM-TP)"},
         # en/dis able TMODE2 Survey-in
-        "SURVEYIN": {"command": send_able_tmode2,
+        "SURVEYIN": {"pollcmd": send_able_tmode2,
                      "help": "Survey-in mode with TMODE2.\n"
                              "                    "
                              " SURVEYIN2[,svinMinDur[,svinAccLimit]]\n"
@@ -11467,7 +11483,7 @@ present in 9-series and higher
                              "Default svinAccLimit 50000",
                      "args": 1},
         # en/dis able TMODE3 Survey-in
-        "SURVEYIN3": {"command": send_able_tmode3,
+        "SURVEYIN3": {"pollcmd": send_able_tmode3,
                       "help": "Survey-in mode with TMODE3.\n"
                               "                    "
                               " SURVEYIN3[,svinMinDur[,svinAccLimit]]\n"
@@ -11477,9 +11493,10 @@ present in 9-series and higher
                               "Default svinAccLimit 500000",
                       "args": 1},
         # en/dis able RTCM3 messages 1005, 1077, 1087, 1230
-        "RTCM3": {"command": send_able_rtcm3,
+        "RTCM3": {"pollcmd": send_able_rtcm3,
                   "help": "required RTCM3 messages. USB port only"},
     }
+    # FIXMEL meerge commands and able_commands.
     commands = {
         # UBX-CFG-RST
         "COLDBOOT": {"command": send_cfg_rst,
