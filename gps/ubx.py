@@ -11391,9 +11391,6 @@ present in 9-series and higher
         # en/dis able LOG
         "LOG": {"pollcmd": send_able_logfilter,
                 "help": "Data Logger"},
-        # en/dis able NAV-EELL message
-        "NAV-EELL": {"pollcmd": send_able, "mid": NAV_EELL,
-                     "help": "NAV-EELL error ellipse message"},
         # en/dis able NAV-HPPOSECEF message
         "NAV-HPPOSECEF": {"pollcmd": send_able, "mid": NAV_HPPOSECEF,
                           "help": "NAV-HPPOSECEF fix message"},
@@ -11496,7 +11493,7 @@ present in 9-series and higher
         "RTCM3": {"pollcmd": send_able_rtcm3,
                   "help": "required RTCM3 messages. USB port only"},
     }
-    # FIXMEL meerge commands and able_commands.
+    # FIXME: merge commands and able_commands.
     commands = {
         # UBX-CFG-RST
         "COLDBOOT": {"command": send_cfg_rst,
@@ -11530,46 +11527,46 @@ present in 9-series and higher
                      "opt": 1},
         # UBX-AID-* removed from ProtVer 34 and up.
         # UBX-AID-ALM
-        "AID-ALM": {"command": send_poll, "opt": [0x0b, 0x30],
+        "AID-ALM": {"command": send_poll, "mid": [0x0b, 0x30],
                     "help": "poll UBX-AID-ALM Poll GPS Aiding Almanac Data"},
         # UBX-AID-AOP
-        "AID-AOP": {"command": send_poll, "opt": [0x0b, 0x33],
+        "AID-AOP": {"command": send_poll, "mid": [0x0b, 0x33],
                     "help": "poll UBX-AID-AOP Poll Poll AssistNow "
                     "Autonomous data"},
         # UBX-AID-DATA
-        "AID-DATA": {"command": send_poll, "opt": [0x0b, 0x10],
+        "AID-DATA": {"command": send_poll, "mid": [0x0b, 0x10],
                      "help": "Poll all GPS Initial Aiding Data"},
         # UBX-AID-EPH
-        "AID-EPH": {"command": send_poll, "opt": [0x0b, 0x31],
+        "AID-EPH": {"command": send_poll, "mid": [0x0b, 0x31],
                     "help": "poll UBX-AID-EPH Poll GPS Aiding Ephemeris Data"},
         # UBX-AID-HUI
-        "AID-HUI": {"command": send_poll, "opt": [0x0b, 0x02],
+        "AID-HUI": {"command": send_poll, "mid": [0x0b, 0x02],
                     "help": "poll UBX-AID-HUI Poll GPS Health, UTC, Iono"},
         # UBX-AID-INI
-        "AID-INI": {"command": send_poll, "opt": [0x0b, 0x01],
+        "AID-INI": {"command": send_poll, "mid": [0x0b, 0x01],
                     "help": "poll UBX-AID-INI Poll Aiding position, time,\n"
                     "                    "
                     "frequency, clock drift"},
         # UBX-CFG-ANT
-        "CFG-ANT": {"command": send_poll, "opt": [0x06, 0x13],
+        "CFG-ANT": {"command": send_poll, "mid": [0x06, 0x13],
                     "help": "poll UBX-CFG-ANT antenna config"},
         # UBX-CFG-BATCH
         # Assume 23 is close enough to the proper 23.01
-        "CFG-BATCH": {"command": send_poll, "opt": [0x06, 0x93],
+        "CFG-BATCH": {"command": send_poll, "mid": [0x06, 0x93],
                       "help": "poll UBX-CFG-BATCH data batching config",
                       "minVer": 23},
         # UBX-CFG-DAT
-        "CFG-DAT": {"command": send_poll, "opt": [0x06, 0x06],
+        "CFG-DAT": {"command": send_poll, "mid": [0x06, 0x06],
                     "help": "poll UBX-CFG-DAT Datum Setting"},
         # UBX-CFG-DGNSS
-        "CFG-DGNSS": {"command": send_poll, "opt": [0x06, 0x70],
+        "CFG-DGNSS": {"command": send_poll, "mid": [0x06, 0x70],
                       "help": "poll UBX-CFG-DGNSS DGNSS configuration"},
         # UBX-CFG-DOSC
-        "CFG-DOSC": {"command": send_poll, "opt": [0x06, 0x61],
+        "CFG-DOSC": {"command": send_poll, "mid": [0x06, 0x61],
                      "help": "poll UBX-CFG-DOSC Disciplined oscillator"
                      "configuration"},
         # UBX-CFG-ESFA
-        "CFG-ESFA": {"command": send_poll, "opt": CFG_ESFA,
+        "CFG-ESFA": {"command": send_poll, "mid": CFG_ESFA,
                      "help": "poll UBX-CFG-ESFA Accelerometer configuration"},
         # UBX-CFG-ESFALG
         "CFG-ESFALG": {"command": send_poll_cfg_esfalg,
@@ -11578,24 +11575,24 @@ present in 9-series and higher
                                "UBX-CFG-ESFALG[,doAutoMntAlg] optional",
                        "args": 0},
         # UBX-CFG-ESFG
-        "CFG-ESFG": {"command": send_poll, "opt": CFG_ESFG,
+        "CFG-ESFG": {"command": send_poll, "mid": CFG_ESFG,
                      "help": "poll UBX-CFG-ESFG Gyro configuration"},
         # UBX-CFG-ESWTF
-        "CFG-ESFWT": {"command": send_poll, "opt": CFG_ESFWT,
+        "CFG-ESFWT": {"command": send_poll, "mid": CFG_ESFWT,
                       "help": "poll UBX-CFG-ESFWY Wheel tick configuration"},
         # UBX-CFG-ESRC
-        "CFG-ESRC": {"command": send_poll, "opt": [0x06, 0x60],
+        "CFG-ESRC": {"command": send_poll, "mid": [0x06, 0x60],
                      "help": "poll UBX-CFG-ESRC External synchronization "
                      "source config"},
         # UBX-CFG-FXN
-        "CFG-FXN": {"command": send_poll, "opt": [0x06, 0x0e],
+        "CFG-FXN": {"command": send_poll, "mid": [0x06, 0x0e],
                     "help": "poll UBX-CFG-FXN FXN Configuration"},
         # UBX-CFG-GEOFENCE
-        "CFG-GEOFENCE": {"command": send_poll, "opt": [0x06, 0x69],
+        "CFG-GEOFENCE": {"command": send_poll, "mid": [0x06, 0x69],
                          "help": "poll UBX-CFG-GEOFENCE Geofencing "
                          "configuration"},
         # UBX-CFG-GNSS
-        "CFG-GNSS": {"command": send_poll, "opt": [0x06, 0x3e],
+        "CFG-GNSS": {"command": send_poll, "mid": [0x06, 0x3e],
                      "help": "poll UBX-CFG-GNSS GNSS config"},
         # UBX-CFG-HNR
         "CFG-HNR": {"command": send_poll_cfg_hnr,
@@ -11610,11 +11607,11 @@ present in 9-series and higher
                     "help": "poll UBX-CFG-INF Information Message "
                             "Configuration"},
         # UBX-CFG-ITFM
-        "CFG-ITFM": {"command": send_poll, "opt": [0x06, 0x39],
+        "CFG-ITFM": {"command": send_poll, "mid": [0x06, 0x39],
                      "help": "poll UBX-CFG-ITFM Jamming/Interference "
                      "Monitor configuration"},
         # UBX-CFG-LOGFILTER
-        "CFG-LOGFILTER": {"command": send_poll, "opt": [0x06, 0x47],
+        "CFG-LOGFILTER": {"command": send_poll, "mid": [0x06, 0x47],
                           "help": "poll UBX-CFG-LOGFILTER "
                           " Data Logger Configuration",
                           "minVer": 14},
@@ -11625,24 +11622,24 @@ present in 9-series and higher
                             "rate is optional and sets rate.",
                     "args": 2},
         # UBX-CFG-NAV5
-        "CFG-NAV5": {"command": send_poll, "opt": [0x06, 0x24],
+        "CFG-NAV5": {"command": send_poll, "mid": [0x06, 0x24],
                      "help": "poll UBX-CFG-NAV5 Nav Engines settings"},
         # UBX-CFG-NAVX5
-        "CFG-NAVX5": {"command": send_poll, "opt": [0x06, 0x23],
+        "CFG-NAVX5": {"command": send_poll, "mid": [0x06, 0x23],
                       "help": "poll UBX-CFG-NAVX5 Nav Expert Settings"},
         # UBX-CFG-NMEA
-        "CFG-NMEA": {"command": send_poll, "opt": [0x06, 0x17],
+        "CFG-NMEA": {"command": send_poll, "mid": [0x06, 0x17],
                      "help": "poll UBX-CFG-NMEA Extended NMEA protocol "
                              "configuration V1"},
         # UBX-CFG-ODO
-        "CFG-ODO": {"command": send_poll, "opt": [0x06, 0x1e],
+        "CFG-ODO": {"command": send_poll, "mid": [0x06, 0x1e],
                     "help": "poll UBX-CFG-ODO Odometer, Low-speed COG "
                             "Engine Settings"},
         # UBX-CFG-PM
-        "CFG-PM": {"command": send_poll, "opt": [0x06, 0x32],
+        "CFG-PM": {"command": send_poll, "mid": [0x06, 0x32],
                    "help": "poll UBX-CFG-PM Power management settings"},
         # UBX-CFG-PM2
-        "CFG-PM2": {"command": send_poll, "opt": [0x06, 0x3b],
+        "CFG-PM2": {"command": send_poll, "mid": [0x06, 0x3b],
                     "help": "poll UBX-CFG-PM2 Extended power management "
                     "settings"},
         # UBX-CFG-PMS
@@ -11665,7 +11662,7 @@ present in 9-series and higher
                              "CFG-RATE[,measRate,[navRate]]",
                      "args": 2},
         # UBX-CFG-RINV
-        "CFG-RINV": {"command": send_poll, "opt": [0x06, 0x34],
+        "CFG-RINV": {"command": send_poll, "mid": [0x06, 0x34],
                      "help": "poll UBX-CFG-RINV Contents of Remote Inventory"},
         # UBX-CFG-RST, see COLDBOOT, WARMBOOT, HOTBOOT
         # UBX-CFG-RXM
@@ -11675,7 +11672,7 @@ present in 9-series and higher
                             "CFG-RXM[,lpMode]",
                     "args": 1},
         # UBX-CFG-SBAS
-        "CFG-SBAS": {"command": send_poll, "opt": [0x06, 0x16],
+        "CFG-SBAS": {"command": send_poll, "mid": [0x06, 0x16],
                      "help": "poll UBX-CFG-SBAS SBAS settings"},
         # UBX-CFG-SLAS
         "CFG-SLAS": {"command": send_cfg_slas,
@@ -11684,23 +11681,23 @@ present in 9-series and higher
                              "CFG-SLAS[,mode]",
                      "args": 1},
         # UBX-CFG-SMGR
-        "CFG-SMGR": {"command": send_poll, "opt": [0x06, 0x62],
+        "CFG-SMGR": {"command": send_poll, "mid": [0x06, 0x62],
                      "help": "poll UBX-CFG-SMGR Synchronization manager "
                      "configuration"},
         # UBX-CFG-TMODE
-        "CFG-TMODE": {"command": send_poll, "opt": [0x06, 0x1d],
+        "CFG-TMODE": {"command": send_poll, "mid": [0x06, 0x1d],
                       "help": "poll UBX-CFG-TMODE time mode settings",
                       "maxVer": 6},
         # UBX-CFG-TMODE2
-        "CFG-TMODE2": {"command": send_poll, "opt": [0x06, 0x3d],
+        "CFG-TMODE2": {"command": send_poll, "mid": [0x06, 0x3d],
                        "help": "poll UBX-CFG-TMODE2 time mode 2 config",
                        "minVer": 14},
         # UBX-CFG-TMODE3
-        "CFG-TMODE3": {"command": send_poll, "opt": [0x06, 0x71],
+        "CFG-TMODE3": {"command": send_poll, "mid": [0x06, 0x71],
                        "help": "poll UBX-CFG-TMODE3 time mode 3 config",
                        "minVer": 20},
         # UBX-CFG-TP
-        "CFG-TP": {"command": send_poll, "opt": [0x06, 0x07],
+        "CFG-TP": {"command": send_poll, "mid": [0x06, 0x07],
                    "help": "poll UBX-CFG-TP TimePulse Parameters."},
         # UBX-CFG-TP5
         "CFG-TP5": {"command": send_cfg_tp5,
@@ -11717,41 +11714,41 @@ present in 9-series and higher
                             ",[pulseLenRadioLock],[userConfigDelay],[flags]",
                     "args": 1},
         # UBX-CFG-USB
-        "CFG-USB": {"command": send_poll, "opt": [0x06, 0x1b],
+        "CFG-USB": {"command": send_poll, "mid": [0x06, 0x1b],
                     "help": "poll UBX-CFG-USB USB config"},
         # UBX-EFS-
         "ESF": {"command": send_poll_esf, "help": "poll ESF-*"},
         # UBX-ESF-ALG
-        "ESF-ALG": {"command": send_poll, "opt": ESF_ALG,
+        "ESF-ALG": {"command": send_poll, "mid": ESF_ALG,
                     "help": "poll UBX-ESF-ALG IMU alignment information"},
         # UBX-ESF-CAL
-        "ESF-CAL": {"command": send_poll, "opt": ESF_CAL,
+        "ESF-CAL": {"command": send_poll, "mid": ESF_CAL,
                     "help": "poll UBX-ESF-CAL IMU calibration information"},
         # UBX-ESF-INS
-        "ESF-INS": {"command": send_poll, "opt": ESF_INS,
+        "ESF-INS": {"command": send_poll, "mid": ESF_INS,
                     "help": "poll UBX-ESF-INS Vehicle dynamics info"},
         # UBX-ESF-MEAS
-        "ESF-MEAS": {"command": send_poll, "opt": ESF_MEAS,
+        "ESF-MEAS": {"command": send_poll, "mid": ESF_MEAS,
                      "help": "poll UBX-ESF-MEAS External Sensor Fusion "
                      "measurements"},
         # UBX-ESF-RESETALG
-        "ESF-RESETALG": {"command": send_poll, "opt": ESF_RESETALG,
+        "ESF-RESETALG": {"command": send_poll, "mid": ESF_RESETALG,
                          "help": "poll UBX-ESF-RESETALG reset IMU"},
         # UBX-ESF-STATUS
-        "ESF-STATUS": {"command": send_poll, "opt": ESF_STATUS,
+        "ESF-STATUS": {"command": send_poll, "mid": ESF_STATUS,
                        "help": "poll UBX-ESF-STATUS External sensor fusion "
                                "status"},
         # UBX-HNR-
         "HNR": {"command": send_poll_hnr,
                 "help": "poll CFG-HNR and HNR-*"},
         # UBX-HNR-ATT
-        "HNR-ATT": {"command": send_poll, "opt": [0x28, 0x01],
+        "HNR-ATT": {"command": send_poll, "mid": [0x28, 0x01],
                     "help": "poll UBX-HNR-ATT Attitude solution"},
         # UBX-HNR-INS
-        "HNR-INS": {"command": send_poll, "opt": [0x28, 0x02],
+        "HNR-INS": {"command": send_poll, "mid": [0x28, 0x02],
                     "help": "poll UBX-HNR-INS Vehicle dynamics information"},
         # UBX-HNR-PVT
-        "HNR-PVT": {"command": send_poll, "opt": [0x28, 0x00],
+        "HNR-PVT": {"command": send_poll, "mid": [0x28, 0x00],
                     "help": "poll UBX-HNR-PVT HNR PVT solution"},
         # UBX-LOG-CREATE
         "LOG-CREATE": {"command": send_poll,
@@ -11759,7 +11756,7 @@ present in 9-series and higher
                        "help": "send UBX-LOG-CREATE",
                        "minVer": 14},
         # UBX-LOG-ERASE
-        "LOG-ERASE": {"command": send_poll, "opt": [0x21, 0x03],
+        "LOG-ERASE": {"command": send_poll, "mid": [0x21, 0x03],
                       "help": "send UBX-LOG-ERASE",
                       "minVer": 14},
         # UBX-LOG-FINDTIME
@@ -11770,7 +11767,7 @@ present in 9-series and higher
                                  "all parameters optional",
                          "args": 6},
         # UBX-LOG-INFO
-        "LOG-INFO": {"command": send_poll, "opt": [0x21, 0x08],
+        "LOG-INFO": {"command": send_poll, "mid": [0x21, 0x08],
                      "help": "poll UBX-LOG-INFO",
                      "minVer": 14},
         # UBX-LOG-RETRIEVE
@@ -11791,294 +11788,299 @@ present in 9-series and higher
                        "minVer": 14,
                        "args": 1},
         # UBX-MGA-DBD
-        "MGA-DBD": {"command": send_poll, "opt": [0x13, 0x80],
+        "MGA-DBD": {"command": send_poll, "mid": [0x13, 0x80],
                     "help": "poll UBX-MGA-DBD Poll the Navigation Database"},
         # UBX-MGA-SF
-        "MGA-SF": {"command": send_poll, "opt": [0x13, 0x10],
+        "MGA-SF": {"command": send_poll, "mid": [0x13, 0x10],
                    "help": "poll UBX-MGA-SD Poll the Sensor Fusion data"},
         # UBX-MON-BATCH
         # Assume 23 is close enough to the proper 23.01
-        "MON-BATCH": {"command": send_poll, "opt": [0x0a, 0x32],
+        "MON-BATCH": {"command": send_poll, "mid": [0x0a, 0x32],
                       "help": "poll UBX-MON-BATCH Data batching "
                       "buffer status",
                       "maxVer": 23.99,
                       "minVer": 23},
         # UBX-MON-COMMS
-        "MON-COMMS": {"command": send_poll, "opt": [0x0a, 0x36],
+        "MON-COMMS": {"command": send_poll, "mid": [0x0a, 0x36],
                       "help": "poll UBX-MON-COMMS Comm port information"},
         # UBX-MON-GNSS
-        "MON-GNSS": {"command": send_poll, "opt": [0x0a, 0x28],
+        "MON-GNSS": {"command": send_poll, "mid": [0x0a, 0x28],
                      "help": "poll UBX-MON-GNSS major GNSS selection"},
         # UBX-MON-HW
-        "MON-HW": {"command": send_poll, "opt": [0x0a, 0x09],
+        "MON-HW": {"command": send_poll, "mid": [0x0a, 0x09],
                    "help": "poll UBX-MON-HW Hardware Status"},
         # UBX-MON-HW2
-        "MON-HW2": {"command": send_poll, "opt": [0x0a, 0x0b],
+        "MON-HW2": {"command": send_poll, "mid": [0x0a, 0x0b],
                     "help": "poll UBX-MON-HW2 Extended Hardware Status"},
         # UBX-MON-HW3
-        "MON-HW3": {"command": send_poll, "opt": [0x0a, 0x37],
+        "MON-HW3": {"command": send_poll, "mid": [0x0a, 0x37],
                     "help": "poll UBX-MON-HW3 HW I/O pin information"},
         # UBX-MON-IO
-        "MON-IO": {"command": send_poll, "opt": [0x0a, 0x02],
+        "MON-IO": {"command": send_poll, "mid": [0x0a, 0x02],
                    "help": "poll UBX-MON-IO I/O Subsystem Status"},
         # UBX-MON-MSGPP
-        "MON-MSGPP": {"command": send_poll, "opt": [0x0a, 0x06],
+        "MON-MSGPP": {"command": send_poll, "mid": [0x0a, 0x06],
                       "help": "poll UBX-MON-MSGPP Message Parese and "
                               "Process Status"},
         # UBX-MON-PATCH
-        "MON-PATCH": {"command": send_poll, "opt": [0x0a, 0x27],
+        "MON-PATCH": {"command": send_poll, "mid": [0x0a, 0x27],
                       "help": "poll UBX-MON-PATCH Info on Installed Patches"},
         # UBX-MON-POST
-        "MON-POST": {"command": send_poll, "opt": [0x0a, 0x3b],
+        "MON-POST": {"command": send_poll, "mid": [0x0a, 0x3b],
                      "help": "poll UBX-MON-POST POST info"},
         # UBX-MON-RF
-        "MON-RF": {"command": send_poll, "opt": [0x0a, 0x38],
+        "MON-RF": {"command": send_poll, "mid": [0x0a, 0x38],
                    "help": "poll UBX-MON-RF RF Information"},
         # UBX-MON-RXBUF
-        "MON-RXBUF": {"command": send_poll, "opt": [0x0a, 0x07],
+        "MON-RXBUF": {"command": send_poll, "mid": [0x0a, 0x07],
                       "help": "poll UBX-MON-RXBUF Receiver Buffer Status"},
         # UBX-MON-SMGR
-        "MON-SMGR": {"command": send_poll, "opt": [0x0a, 0x2e],
+        "MON-SMGR": {"command": send_poll, "mid": [0x0a, 0x2e],
                      "help": "poll UBX-MON-SMGR Synchronization manager "
                      "configuration"},
         # UBX-MON-SPAN
-        "MON-SPAN": {"command": send_poll, "opt": [0x0a, 0x31],
+        "MON-SPAN": {"command": send_poll, "mid": [0x0a, 0x31],
                      "help": "poll UBX-MON-SPAN Signal characteristics"},
         # UBX-MON-SPT
-        "MON-SPT": {"command": send_poll, "opt": [0x0a, 0x2f],
+        "MON-SPT": {"command": send_poll, "mid": [0x0a, 0x2f],
                     "help": "poll UBX-MON-SPT Sensor Production Test"},
         # UBX-MON-SYS
-        "MON-SYS": {"command": send_poll, "opt": [0x0a, 0x39],
+        "MON-SYS": {"command": send_poll, "mid": [0x0a, 0x39],
                     "help": "poll UBX-MON-SYS System state"},
         # UBX-MON-TXBUF
-        "MON-TXBUF": {"command": send_poll, "opt": [0x0a, 0x08],
+        "MON-TXBUF": {"command": send_poll, "mid": [0x0a, 0x08],
                       "help": "poll UBX-MON-TXBUF Transmitter Buffer Status"},
         # UBX-MON-VER
-        "MON-VER": {"command": send_poll, "opt": [0x0a, 0x04],
+        "MON-VER": {"command": send_poll, "mid": [0x0a, 0x04],
                     "help": "poll UBX-MON-VER GPS version"},
         # UBX-NAV-AOPSTATUS
-        "NAV-AOPSTATUS": {"command": send_poll, "opt": [0x01, 0x60],
+        "NAV-AOPSTATUS": {"command": send_poll, "mid": [0x01, 0x60],
                           "help": "poll UBX-NAV-AOPSTATUS AssistNow "
                           "Autonomous Status"},
         # UBX-NAV-ATT
-        "NAV-ATT": {"command": send_poll, "opt": [0x1, 0x5],
+        "NAV-ATT": {"command": send_poll, "mid": [0x1, 0x5],
                     "help": "poll UBX-NAV-ATT Attitude Solution"},
         # UBX-NAV-CLOCK
-        "NAV-CLOCK": {"command": send_poll, "opt": [0x01, 0x22],
-                      "help": "poll UBX-NAV-CLOCK Clock Solution"},
+        "NAV-CLOCK": {"command": send_poll, "mid": [0x01, 0x22],
+                      "pollcmd": send_able,
+                      "help": "UBX-NAV-CLOCK Clock Solution"},
         # UBX-NAV-DGPS
-        "NAV-DGPS": {"command": send_poll, "opt": [0x01, 0x31],
-                     "help": "poll UBX-NAV-DGPS DGPS Data Used for NAV"},
+        "NAV-DGPS": {"command": send_poll, "mid": [0x01, 0x31],
+                     "pollcmd": send_able,
+                     "help": "UBX-NAV-DGPS DGPS Data Used for NAV"},
         # UBX-NAV-DOP
-        "NAV-DOP": {"command": send_poll, "opt": [0x01, 0x04],
-                    "help": "poll UBX-NAV-DOP Dilution of Precision"},
+        "NAV-DOP": {"pollcmd": send_able, "mid": [0x01, 0x04],
+                    "command": send_poll,
+                    "help": "UBX-NAV-DOP Dilution of Precision"},
         # UBX-NAV-EELL
-        "NAV-EELL": {"command": send_poll, "opt": [0x01, 0x3d],
-                     "help": "poll UBX-NAV-EELL Position error ellipse"},
+        # en/dis able NAV-EELL message
+        "NAV-EELL": {"pollcmd": send_able, "mid": NAV_EELL,
+                     "command": send_poll,
+                     "help": "NAV-EELL error ellipse message"},
         # UBX-NAV-GEOFENCE
-        "NAV-GEOFENCE": {"command": send_poll, "opt": [0x01, 0x39],
+        "NAV-GEOFENCE": {"command": send_poll, "mid": [0x01, 0x39],
                          "help": "poll UBX-NAV-GEOFENCE Geofence status"},
         # UBX-NAV-HPPOSECEF
-        "NAV-HPPOSECEF": {"command": send_poll, "opt": [0x01, 0x13],
+        "NAV-HPPOSECEF": {"command": send_poll, "mid": [0x01, 0x13],
                           "help": "poll UBX-NAV-HPPOSECEF ECEF position"},
         # UBX-NAV-HPPOSLLH
-        "NAV-HPPOSLLH": {"command": send_poll, "opt": [0x01, 0x14],
+        "NAV-HPPOSLLH": {"command": send_poll, "mid": [0x01, 0x14],
                          "help": "poll UBX-NAV-HPPOSECEF LLH position"},
         # UBX-NAV-ODO
-        "NAV-ODO": {"command": send_poll, "opt": [0x01, 0x09],
+        "NAV-ODO": {"command": send_poll, "mid": [0x01, 0x09],
                     "help": "poll UBX-NAV-ODO Odometer Solution"},
         # UBX-NAV-ORB
-        "NAV-ORB": {"command": send_poll, "opt": [0x01, 0x34],
+        "NAV-ORB": {"command": send_poll, "mid": [0x01, 0x34],
                     "help": "poll UBX-NAV-ORB GNSS Orbit Database Info"},
-        "NAV-PL": {"command": send_poll, "opt": [0x01, 0x62],
+        "NAV-PL": {"command": send_poll, "mid": [0x01, 0x62],
                    "help": "poll UBX-NAV-PL Protection level info"},
         # UBX-NAV-POSECEF
-        "NAV-POSECEF": {"command": send_poll, "opt": [0x01, 0x01],
+        "NAV-POSECEF": {"command": send_poll, "mid": [0x01, 0x01],
                         "help": "poll UBX-NAV-POSECEF ECEF position"},
         # UBX-NAV-POSLLH
-        "NAV-POSLLH": {"command": send_poll, "opt": [0x01, 0x02],
+        "NAV-POSLLH": {"command": send_poll, "mid": [0x01, 0x02],
                        "help": "poll UBX-NAV-POSLLH LLH position"},
         # UBX-NAV-PVAT
-        "NAV-PVAT": {"command": send_poll, "opt": [0x01, 0x17],
+        "NAV-PVAT": {"command": send_poll, "mid": [0x01, 0x17],
                      "help": "poll UBX-NAV-PVAT Navigation Position Velocity "
                              "Attitude Time Solution"},
         # UBX-NAV-PVT
-        "NAV-PVT": {"command": send_poll, "opt": [0x01, 0x07],
+        "NAV-PVT": {"command": send_poll, "mid": [0x01, 0x07],
                     "help": "poll UBX-NAV-PVT Navigation Position Velocity "
                             "Time Solution"},
         # UBX-NAV-RELPOSNED
         # HP only, 20+, otherwise not ACKed or NACKed
-        "NAV-RELPOSNED": {"command": send_poll, "opt": [0x01, 0x3c],
+        "NAV-RELPOSNED": {"command": send_poll, "mid": [0x01, 0x3c],
                           "help": "poll UBX-NAV-RELPOSNED Relative "
                                   "Positioning Info in NED frame"},
         # UBX-NAV-RESETODO
-        "NAV-RESETODO": {"command": send_poll, "opt": [0x01, 0x10],
+        "NAV-RESETODO": {"command": send_poll, "mid": [0x01, 0x10],
                          "help": "UBX-NAV-RESETODO Reset odometer"},
         # UBX-NAV-SAT
-        "NAV-SAT": {"command": send_poll, "opt": [0x01, 0x35],
+        "NAV-SAT": {"command": send_poll, "mid": [0x01, 0x35],
                     "help": "poll UBX-NAV-SAT Satellite Information"},
         # UBX-NAV-SBAS
-        "NAV-SBAS": {"command": send_poll, "opt": [0x01, 0x32],
+        "NAV-SBAS": {"command": send_poll, "mid": [0x01, 0x32],
                      "help": "poll UBX-NAV-SBAS SBAS Status Data"},
         # UBX-NAV-SIG
-        "NAV-SIG": {"command": send_poll, "opt": [0x01, 0x43],
+        "NAV-SIG": {"command": send_poll, "mid": [0x01, 0x43],
                     "help": "poll UBX-NAV-SIG Signal Information"},
         # UBX-NAV-SLAS
-        "NAV-SLAS": {"command": send_poll, "opt": [0x01, 0x42],
+        "NAV-SLAS": {"command": send_poll, "mid": [0x01, 0x42],
                      "help": "poll UBX-NAV-SLAS QZSS L1S SLAS Status Data"},
         # UBX-NAV-SOL
-        "NAV-SOL": {"command": send_poll, "opt": [0x01, 0x06],
+        "NAV-SOL": {"command": send_poll, "mid": [0x01, 0x06],
                     "help": "poll UBX-NAV-SOL Navigation Solution "
                     "Information"},
         # UBX-NAV-STATUS
-        "NAV-STATUS": {"command": send_poll, "opt": [0x01, 0x03],
+        "NAV-STATUS": {"command": send_poll, "mid": [0x01, 0x03],
                        "help": "poll UBX-NAV-STATUS Receiver Nav Status"},
         # UBX-NAV-SVIN
-        "NAV-SVIN": {"command": send_poll, "opt": [0x01, 0x3b],
+        "NAV-SVIN": {"command": send_poll, "mid": [0x01, 0x3b],
                      "help": "poll UBX-NAV-SVIN Survey-in data",
                      "minver": 20},
         # UBX-NAV-SVINFO
-        "NAV-SVINFO": {"command": send_poll, "opt": [0x01, 0x30],
+        "NAV-SVINFO": {"command": send_poll, "mid": [0x01, 0x30],
                        "help": "poll UBX-NAV-SVINFO Satellite Information"},
         # UBX-NAV-TIMEBDS
-        "NAV-TIMEBDS": {"command": send_poll, "opt": [0x01, 0x24],
+        "NAV-TIMEBDS": {"command": send_poll, "mid": [0x01, 0x24],
                         "help": "poll UBX-NAV-TIMEBDS BDS Time Solution"},
         # UBX-NAV-TIMEGAL
-        "NAV-TIMEGAL": {"command": send_poll, "opt": [0x01, 0x25],
+        "NAV-TIMEGAL": {"command": send_poll, "mid": [0x01, 0x25],
                         "help": "poll UBX-NAV-TIMEGAL Galileo Time Solution"},
         # UBX-NAV-TIMEGLO
-        "NAV-TIMEGLO": {"command": send_poll, "opt": [0x01, 0x23],
+        "NAV-TIMEGLO": {"command": send_poll, "mid": [0x01, 0x23],
                         "help": "poll UBX-NAV-TIMEGLO GLO Time Solution"},
         # UBX-NAV-TIMEGPS
-        "NAV-TIMEGPS": {"command": send_poll, "opt": [0x01, 0x20],
+        "NAV-TIMEGPS": {"command": send_poll, "mid": [0x01, 0x20],
                         "help": "poll UBX-NAV-TIMEGPS GPS Time Solution"},
         # UBX-NAV-TIMELS
-        "NAV-TIMELS": {"command": send_poll, "opt": [0x01, 0x26],
+        "NAV-TIMELS": {"command": send_poll, "mid": [0x01, 0x26],
                        "help": "poll UBX-NAV-TIMELS Leap Second Info"},
         # UBX-NAV-TIMENAVIC
-        "NAV-TIMENAVIC": {"command": send_poll, "opt": [0x01, 0x63],
+        "NAV-TIMENAVIC": {"command": send_poll, "mid": [0x01, 0x63],
                           "help": "poll UBX-NAV-TIMENAVIC Time Solution"},
         # UBX-NAV-TIMEQZSS
-        "NAV-TIMEQZSS": {"command": send_poll, "opt": [0x01, 0x27],
+        "NAV-TIMEQZSS": {"command": send_poll, "mid": [0x01, 0x27],
                          "help": "poll UBX-NAV-TIMEQZSS Time Solution"},
         # UBX-NAV-TIMETRUSTED, protVer 50, X20
-        "NAV-TIMETRUSTED": {"command": send_poll, "opt": [0x01, 0x64],
+        "NAV-TIMETRUSTED": {"command": send_poll, "mid": [0x01, 0x64],
                             "help": "poll UBX-NAV-TIMETRUSTED Tuststed Time"},
         # UBX-NAV-TIMEUTC
-        "NAV-TIMEUTC": {"command": send_poll, "opt": [0x01, 0x21],
+        "NAV-TIMEUTC": {"command": send_poll, "mid": [0x01, 0x21],
                         "help": "poll UBX-NAV-TIMEUTC UTC Time Solution"},
         # UBX-NAV-VELECEF
-        "NAV-VELECEF": {"command": send_poll, "opt": [0x01, 0x11],
+        "NAV-VELECEF": {"command": send_poll, "mid": [0x01, 0x11],
                         "help": "poll UBX-NAV-VELECEF ECEF velocity"},
         # UBX-NAV-VELNED
-        "NAV-VELNED": {"command": send_poll, "opt": [0x01, 0x12],
+        "NAV-VELNED": {"command": send_poll, "mid": [0x01, 0x12],
                        "help": "poll UBX-NAV-VELNED NED velocity"},
 
         # UBX-NAV2-CLOCK
-        "NAV2-CLOCK": {"command": send_poll, "opt": [0x29, 0x22],
+        "NAV2-CLOCK": {"command": send_poll, "mid": [0x29, 0x22],
                        "help": "poll UBX-NAV2-CLOCK Clock Solution"},
         # UBX-NAV2-COV
-        "NAV2-COV": {"command": send_poll, "opt": [0x29, 0x16],
+        "NAV2-COV": {"command": send_poll, "mid": [0x29, 0x16],
                      "help": "poll UBX-NAV2-COV Covariance Matrices"},
         # UBX-NAV2-DOP
-        "NAV2-DOP": {"command": send_poll, "opt": [0x29, 0x04],
+        "NAV2-DOP": {"command": send_poll, "mid": [0x29, 0x04],
                      "help": "poll UBX-NAV2-DOP Dilution of Precision"},
         # UBX-NAV2-POSECEF
-        "NAV2-POSECEF": {"command": send_poll, "opt": [0x29, 0x01],
+        "NAV2-POSECEF": {"command": send_poll, "mid": [0x29, 0x01],
                          "help": "poll UBX-NAV2-POSECEF ECEF position"},
         # UBX-NAV2-POSLLH
-        "NAV2-POSLLH": {"command": send_poll, "opt": [0x29, 0x02],
+        "NAV2-POSLLH": {"command": send_poll, "mid": [0x29, 0x02],
                         "help": "poll UBX-NAV2-POSLLH LLH position"},
         # UBX-NAV2-PVT
-        "NAV2-PVT": {"command": send_poll, "opt": [0x29, 0x07],
+        "NAV2-PVT": {"command": send_poll, "mid": [0x29, 0x07],
                      "help": "poll UBX-NAV2-PVT Navigation Position Velocity "
                      "Time Solution"},
         # UBX-NAV2-SAT
-        "NAV2-SAT": {"command": send_poll, "opt": [0x29, 0x35],
+        "NAV2-SAT": {"command": send_poll, "mid": [0x29, 0x35],
                      "help": "poll UBX-NAV2-SAT Satellite Information"},
         # UBX-NAV2-SBAS
-        "NAV2-SBAS": {"command": send_poll, "opt": [0x29, 0x32],
+        "NAV2-SBAS": {"command": send_poll, "mid": [0x29, 0x32],
                       "help": "poll UBX-NAV2-SBAS SBAS Status Data"},
         # UBX-NAV2-SIG
-        "NAV2-SIG": {"command": send_poll, "opt": [0x29, 0x43],
+        "NAV2-SIG": {"command": send_poll, "mid": [0x29, 0x43],
                      "help": "poll UBX-NAV2-SIG Signal Information"},
         # UBX-NAV2-SLAS
-        "NAV2-SLAS": {"command": send_poll, "opt": [0x29, 0x42],
+        "NAV2-SLAS": {"command": send_poll, "mid": [0x29, 0x42],
                       "help": "poll UBX-NAV2-SLAS QZSS SLAS info"},
         # UBX-NAV2-STATUS
-        "NAV2-STATUS": {"command": send_poll, "opt": [0x29, 0x03],
+        "NAV2-STATUS": {"command": send_poll, "mid": [0x29, 0x03],
                         "help": "poll UBX-NAV2-STATUS Receiver Nav Status"},
         # UBX-NAV2-TIMEBDS
-        "NAV2-TIMEBDS": {"command": send_poll, "opt": [0x29, 0x24],
+        "NAV2-TIMEBDS": {"command": send_poll, "mid": [0x29, 0x24],
                          "help": "poll UBX-NAV2-TIMEBDS BDS Time Solution"},
         # UBX-NAV2-TIMEGAL
-        "NAV2-TIMEGAL": {"command": send_poll, "opt": [0x29, 0x25],
+        "NAV2-TIMEGAL": {"command": send_poll, "mid": [0x29, 0x25],
                          "help": "poll UBX-NAV2-TIMEGAL "
                          "Galileo Time Solution"},
         # UBX-NAV2-TIMEGLO
-        "NAV2-TIMEGLO": {"command": send_poll, "opt": [0x29, 0x23],
+        "NAV2-TIMEGLO": {"command": send_poll, "mid": [0x29, 0x23],
                          "help": "poll UBX-NAV2-TIMEGLO GLO Time Solution"},
         # UBX-NAV2-TIMEGPS
-        "NAV2-TIMEGPS": {"command": send_poll, "opt": [0x29, 0x20],
+        "NAV2-TIMEGPS": {"command": send_poll, "mid": [0x29, 0x20],
                          "help": "poll UBX-NAV2-TIMEGPS GPS Time Solution"},
         # UBX-NAV2-TIMELS
-        "NAV2-TIMELS": {"command": send_poll, "opt": [0x29, 0x26],
+        "NAV2-TIMELS": {"command": send_poll, "mid": [0x29, 0x26],
                         "help": "poll UBX-NAV2-TIMELS Leap Second Info"},
         # UBX-NAV2-TIMEQZSS
-        "NAV2-TIMEQZSS": {"command": send_poll, "opt": [0x29, 0x27],
+        "NAV2-TIMEQZSS": {"command": send_poll, "mid": [0x29, 0x27],
                           "help": "poll UBX-NAV2-TIMEQZSS Time Info"},
         # UBX-NAV2-TIMEUTC
-        "NAV2-TIMEUTC": {"command": send_poll, "opt": [0x29, 0x21],
+        "NAV2-TIMEUTC": {"command": send_poll, "mid": [0x29, 0x21],
                          "help": "poll UBX-NAV2-TIMEUTC UTC Time Solution"},
         # UBX-NAV2-VELECEF
-        "NAV2-VELECEF": {"command": send_poll, "opt": [0x29, 0x11],
+        "NAV2-VELECEF": {"command": send_poll, "mid": [0x29, 0x11],
                          "help": "poll UBX-NAV2-VELECEF ECEF velocity"},
         # UBX-NAV2-VELNED
-        "NAV2-VELNED": {"command": send_poll, "opt": [0x29, 0x12],
+        "NAV2-VELNED": {"command": send_poll, "mid": [0x29, 0x12],
                         "help": "poll UBX-NAV2-VELNED NED velocity"},
 
         # UBX-RXM-IMES
-        "RXM-IMES": {"command": send_poll, "opt": [0x02, 0x61],
+        "RXM-IMES": {"command": send_poll, "mid": [0x02, 0x61],
                      "help": "poll UBX-RXM-IMES Indoor Messaging System "
                      "Information"},
         # UBX-RXM-MEASX
-        "RXM-MEASX": {"command": send_poll, "opt": [0x02, 0x14],
+        "RXM-MEASX": {"command": send_poll, "mid": [0x02, 0x14],
                       "help": "poll UBX-RXM-MEASX Satellite Measurements "
                       " for RRLP"},
         # UBX-RXM-RAWX
-        "RXM-RAWX": {"command": send_poll, "opt": [0x02, 0x15],
+        "RXM-RAWX": {"command": send_poll, "mid": [0x02, 0x15],
                      "help": "poll UBX-RXM-RAWX raw measurement data"},
         # UBX-RXM-SPARTNKEY, protVer 50, X20
-        "RXM-SPARTNKEY": {"command": send_poll, "opt": [0x02, 0x36],
+        "RXM-SPARTNKEY": {"command": send_poll, "mid": [0x02, 0x36],
                           "help": "poll UBX-RXM-SPARTNKEY get SPARTNKEY"},
 
         # UBX-SEC-OSNMA
-        "SEC-OSNMA": {"command": send_poll, "opt": [0x27, 0x0a],
+        "SEC-OSNMA": {"command": send_poll, "mid": [0x27, 0x0a],
                       "help": "poll UBX-SEC-OSNMA GAL OSNMA info"},
         # UBX-SEC-SIG
-        "SEC-SIG": {"command": send_poll, "opt": [0x27, 0x09],
+        "SEC-SIG": {"command": send_poll, "mid": [0x27, 0x09],
                     "help": "poll UBX-SEC-SIG Signal security info"},
         # UBX-SEC-SIGLOG
-        "SEC-SIGLOG": {"command": send_poll, "opt": [0x27, 0x10],
+        "SEC-SIGLOG": {"command": send_poll, "mid": [0x27, 0x10],
                        "help": "poll UBX-SEC-SIGLOG Signal security log"},
         # UBX-SEC-UNIQID
-        "SEC-UNIQID": {"command": send_poll, "opt": [0x27, 0x03],
+        "SEC-UNIQID": {"command": send_poll, "mid": [0x27, 0x03],
                        "help": "poll UBX-SEC-UNIQID Unique chip ID"},
 
         # UBX-TIM-SVIN
-        "TIM-SVIN": {"command": send_poll, "opt": [0x0d, 0x04],
+        "TIM-SVIN": {"command": send_poll, "mid": [0x0d, 0x04],
                      "help": "poll UBX-TIM-SVIN survey in data"},
         # UBX-TIM-TM2
-        "TIM-TM2": {"command": send_poll, "opt": [0x0d, 0x03],
+        "TIM-TM2": {"command": send_poll, "mid": [0x0d, 0x03],
                     "help": "poll UBX-TIM-TM2 time mark data"},
         # UBX-TIM-TP
-        "TIM-TP": {"command": send_poll, "opt": [0x0d, 0x01],
+        "TIM-TP": {"command": send_poll, "mid": [0x0d, 0x01],
                    "help": "poll UBX-TIM-TP time pulse timedata"},
         # UBX-TIM-VRFY
-        "TIM-VRFY": {"command": send_poll, "opt": [0x0d, 0x06],
+        "TIM-VRFY": {"command": send_poll, "mid": [0x0d, 0x06],
                      "help": "poll UBX-TIM-VRFY Sourced Time Verification"},
         # UBX-UPD-SOS
-        "UPD-SOS": {"command": send_poll, "opt": [0x09, 0x14],
+        "UPD-SOS": {"command": send_poll, "mid": [0x09, 0x14],
                     "help": "poll UBX-UPD-SOS Backup File restore Status"},
         # UBX-UPD-SOS
         "UPD-SOS0": {"command": send_poll, "opt": [0x09, 0x14, 0, 0, 0, 0],

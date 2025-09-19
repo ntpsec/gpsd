@@ -297,6 +297,11 @@ if opts['help']:
             print("    %-13s %s" %
                   (item, gps_model.able_commands[item]["help"]))
 
+        for item in sorted(gps_model.commands.keys()):
+            if "ablecmd" in item:
+                print("    %-13s %s" %
+                      (item, gps_model.able_commands[item]["help"]))
+
         print('\nPRESET for -p can be one of:')
         for item in sorted(gps_model.commands.keys()):
             print("    %-13s %s" % (item, gps_model.commands[item]["help"]))
@@ -400,6 +405,10 @@ try:
             if disable in gps_model.able_commands:
                 command = gps_model.able_commands[disable]
                 command["pollcmd"](gps_model, 0, disable[1:], command)
+            elif (disable in gps_model.commands and
+                  "pollcmd" in gps_model.commands[disable]):
+                command = gps_model.commands[disable]
+                command["pollcmd"](gps_model, 0, disable[1:], command)
             else:
                 sys.stderr.write('%s: disable %s not found\n' %
                                  (PROG_NAME, disable))
@@ -412,10 +421,18 @@ try:
             args = enable.split(',')
             enable = args[0].upper()
             # args[1] is the optional rate.
+            if 2 <= len(args):
+                rate = int(args[1])
+            else:
+                rate = 1
 
             if enable in gps_model.able_commands:
                 command = gps_model.able_commands[enable]
-                command["pollcmd"](gps_model, 1, args[1:], command)
+                command["pollcmd"](gps_model, rate, args[1:], command)
+            elif (enable in gps_model.commands and
+                  "pollcmd" in gps_model.commands[enable]):
+                command = gps_model.commands[enable]
+                command["pollcmd"](gps_model, rate, args[1:], command)
             else:
                 sys.stderr.write('%s: enable %s not found\n' %
                                  (PROG_NAME, enable))
@@ -450,6 +467,8 @@ try:
                 elif 'args' in command:
                     # pass on  args, except arg[0]
                     command["command"](gps_model, args[1:])
+                elif 'mid' in command:
+                    command["command"](gps_model, command['mid'])
                 else:
                     command["command"](gps_model)
             else:
