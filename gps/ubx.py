@@ -447,6 +447,8 @@ class ubx(object):
         # CFG-CFB--
         ("CFG-CFB", 0x100cFFFF, "", 0, "",
          "get all CFG-CFB"),
+        ("CFG-CFB-WINDOW_SIZE", 0x400c0007, "I4", 1, "",
+         "Average Window Size for CFB"),
 
         # CFG-GAL-
         ("CFG-GAL", 0x1054FFFF, "", 0, "",
@@ -543,6 +545,10 @@ class ubx(object):
         # M10S, protVer 34.00
         ("CFG-HW-RF_LNA_MODE", 0x20a30057, "E1", 1, "",
          "Mode for internal LNA"),
+        ("CFG-HW-SENS_WOM_MODE", 0x20a30063, "E1", 1, "",
+         "Select Wake-On-Motion mode"),
+        ("CFG-HW-SENS_WOM_THLD", 0x20a30064, "U1", 1, "",
+         "Select Wake-On-Motion threshold"),
         # X20, protVer 50.10
         ("CFG-HW-RF1_LNA_MODE_LOWGAIN", 0x10a3006a, "L", 1, "",
          "Low Gain Mode for internal LNA RF1"),
@@ -1911,7 +1917,7 @@ class ubx(object):
          "Output rate of the NMEA-NAV2-GX-VTG message on port USB"),
         ("CFG-MSGOUT-NMEA_NAV2_ID_VTG_SPI", 0x2091065b, "U1", 1, "",
          "Output rate of the NMEA-NAV2-GX-VTG message on port SPI"),
-        ("CFG-MSGOUT-NMEA_NAV2_ID_GNS_I2C", 0x2091065c, "U1", 1, "",
+        ("CFG-MSGOUT-NMEA_threshold", 0x2091065c, "U1", 1, "",
          "Output rate of the NMEA-NAV2-GX-GNS message on port I2C"),
         ("CFG-MSGOUT-NMEA_NAV2_ID_GNS_UART1", 0x2091065d, "U1", 1, "",
          "Output rate of the NMEA-NAV2-GX-GNS message on port UART1"),
@@ -2876,6 +2882,8 @@ class ubx(object):
          "Flag to indicate if RTCM2X should be an input protocol on USB"),
         ("CFG-USBINPROT-RTCM3X", 0x10770004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an input protocol on USB"),
+        ("CFG-USBINPROT-SPARTN", 0x10770005, "L", 1, "",
+         "Flag to indicate if SPARTN should be an input protocol on USB"),
 
         # CFG-USB-OUTPROT
         ("CFG-USBOUTPROT", 0x1078ffff, "", 0, "",
@@ -7658,7 +7666,7 @@ protVer 34 and up
                0x26: {'str': 'TIMELS', 'dec': nav_timels, 'minlen': 24,
                       'name': 'UBX-NAV-TIMELS'},
                0x27: {'str': 'TIMEQZSS', 'dec': nav_timeqzss, 'minlen': 20,
-                      'name': 'UBX-NAV-QZSS'},
+                      'name': 'UBX-NAV-TIMEQZSS'},
                0x30: {'str': 'SVINFO', 'dec': nav_svinfo, 'minlen': 8,
                       'name': 'UBX-NAV-SVINFO'},
                0x31: {'str': 'DGPS', 'dec': nav_dgps, 'minlen': 16,
