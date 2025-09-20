@@ -293,18 +293,16 @@ if opts['help']:
     parser.print_help()
     if gps.VERB_DECODE <= opts['verbosity']:
         print('\nABLE for -d/--disable and -e/--enable can be one of:')
-        for item in sorted(gps_model.able_commands.keys()):
-            print("    %-13s %s" %
-                  (item, gps_model.able_commands[item]["help"]))
 
         for item in sorted(gps_model.commands.keys()):
-            if "ablecmd" in item:
+            if "ablecmd" in gps_model.commands[item]:
                 print("    %-13s %s" %
-                      (item, gps_model.able_commands[item]["help"]))
+                      (item, gps_model.commands[item]["help"]))
 
         print('\nPRESET for -p can be one of:')
         for item in sorted(gps_model.commands.keys()):
-            print("    %-13s %s" % (item, gps_model.commands[item]["help"]))
+            if "pollcmd" in gps_model.commands[item]:
+                print("    %-13s %s" % (item, gps_model.commands[item]["help"]))
         print('\n')
         if gps.VERB_DECODE < opts['verbosity']:
             print('\nITEM for -g/--getitem, -x/--delitem and -z/--setitem '
@@ -402,13 +400,10 @@ try:
             disable = args[0].upper()
             # args[1] is the optional rate, ignored
 
-            if disable in gps_model.able_commands:
-                command = gps_model.able_commands[disable]
-                command["pollcmd"](gps_model, 0, disable[1:], command)
-            elif (disable in gps_model.commands and
-                  "pollcmd" in gps_model.commands[disable]):
+            if (disable in gps_model.commands and
+                  "ablecmd" in gps_model.commands[disable]):
                 command = gps_model.commands[disable]
-                command["pollcmd"](gps_model, 0, disable[1:], command)
+                command["ablecmd"](gps_model, 0, disable[1:], command)
             else:
                 sys.stderr.write('%s: disable %s not found\n' %
                                  (PROG_NAME, disable))
@@ -426,13 +421,10 @@ try:
             else:
                 rate = 1
 
-            if enable in gps_model.able_commands:
-                command = gps_model.able_commands[enable]
-                command["pollcmd"](gps_model, rate, args[1:], command)
-            elif (enable in gps_model.commands and
-                  "pollcmd" in gps_model.commands[enable]):
+            if (enable in gps_model.commands and
+                "ablecmd" in gps_model.commands[enable]):
                 command = gps_model.commands[enable]
-                command["pollcmd"](gps_model, rate, args[1:], command)
+                command["ablecmd"](gps_model, rate, args[1:], command)
             else:
                 sys.stderr.write('%s: enable %s not found\n' %
                                  (PROG_NAME, enable))
@@ -446,7 +438,8 @@ try:
             args = poll.split(',')
             poll = args[0].upper()
 
-            if poll in gps_model.commands:
+            if (poll in gps_model.commands and
+                  "pollcmd" in gps_model.commands[poll]):
                 command = gps_model.commands[poll]
                 if (('minVer' in command and
                      opts['protver'] < command['minVer'])):
@@ -463,14 +456,14 @@ try:
                            opts['protver']))
 
                 if 'opt' in command:
-                    command["command"](gps_model, command["opt"])
+                    command["pollcmd"](gps_model, command["opt"])
                 elif 'args' in command:
                     # pass on  args, except arg[0]
-                    command["command"](gps_model, args[1:])
+                    command["pollcmd"](gps_model, args[1:])
                 elif 'mid' in command:
-                    command["command"](gps_model, command['mid'])
+                    command["pollcmd"](gps_model, command['mid'])
                 else:
-                    command["command"](gps_model)
+                    command["pollcmd"](gps_model)
             else:
                 sys.stderr.write('%s: poll %s not found\n' %
                                  (PROG_NAME, poll))
