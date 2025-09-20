@@ -444,6 +444,10 @@ class ubx(object):
         ("CFG-BDS-USE_GEO_PRN", 0x10340014, "L", 1, "",
          "Use BDS geostationary sats (PRN 1-5, 59-63)"),
 
+        # CFG-CFB--
+        ("CFG-CFB", 0x100cFFFF, "", 0, "",
+         "get all CFG-CFB"),
+
         # CFG-GAL-
         ("CFG-GAL", 0x1054FFFF, "", 0, "",
          "get all CFG-GAL"),
@@ -2323,6 +2327,10 @@ class ubx(object):
         ("CFG-PM-LIMITPEAKCURR", 0x10d00010, "L", 1, "",
          "Limit peak current"),
 
+        # CFG-PMP--
+        ("CFG-PMP", 0x10b1FFFF, "", 0, "",
+         "get all CFG-PMP"),
+
         # CFG-QZSS-
         ("CFG-QZSS", 0x3037ffff, "", 0, "s",
          "get all CFG-QZSS"),
@@ -2815,6 +2823,10 @@ class ubx(object):
         ("CFG-UART2OUTPROT-RTCM3X", 0x10760004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an output protocol on UART2"),
 
+        # CFG-UNITTEST--
+        ("CFG-UNITTEST", 0x10feFFFF, "", 0, "",
+         "get all CFG-UNITTEST"),
+
         # CFG-USB-
         ("CFG-USB", 0x1065ffff, "", 0, "",
          "get all CFG-USB"),
@@ -2956,9 +2968,11 @@ class ubx(object):
                         0x07: "SFODO",
                         0x08: "SFCORE",
                         0x09: "RTCM",
+                        0x0c: "CFB",
                         0x11: "NAVSPG",
                         0x14: "NAVHPG",
                         0x17: "NAV2",
+                        0x18: "NAVMASK",
                         0x21: "RATE",
                         0x22: "ODO",
                         0x23: "ANA",
@@ -2993,10 +3007,12 @@ class ubx(object):
                         0xa2: "TXREADY",
                         0xa3: "HW",
                         0xa7: "SPARTN",
+                        0xb1: "PMP",
                         0xc7: "RINV",
                         0xd0: "PM",
                         0xde: "LOGFILTER",
                         0xf6: "SEC",
+                        0xfe: "UNITTEST",
                         }
 
     cfg_by_key_kmap = {0: "Z0",
