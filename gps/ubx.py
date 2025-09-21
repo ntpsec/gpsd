@@ -453,15 +453,15 @@ class ubx(object):
          "Average Window Size for CFB"),
 
         # CFG-GAL-
-        ("CFG-GAL", 0x1054FFFF, "", 0, "",
+        ("CFG-GAL", 0x1035FFFF, "", 0, "",
          "get all CFG-GAL"),
-        ("CFG-GAL-USE_OSNMA", 0x10540005, "L", 1, "",
+        ("CFG-GAL-USE_OSNMA", 0x10350005, "L", 1, "",
          "Use GAL Nav Data"),
-        ("CFG-GAL-OSNMA_MINTAGLENGTH", 0x20540007, "u1", 1, "",
+        ("CFG-GAL-OSNMA_MINTAGLENGTH", 0x20350007, "u1", 1, "",
          "Use GAL Nav Data min length"),
-        ("CFG-GAL-OSNMA_TIMESYNC", 0x10540009, "L", 1, "",
+        ("CFG-GAL-OSNMA_TIMESYNC", 0x10350009, "L", 1, "",
          "Use GAL OSNMA time sync"),
-        ("CFG-GAL-OSNMA_INAVPRIM", 0x10540010, "L", 1, "",
+        ("CFG-GAL-OSNMA_INAVPRIM", 0x10350010, "L", 1, "",
          "Use GAL I/NAV as primary source"),
 
         # CFG-GEOFENCE-
@@ -797,14 +797,14 @@ class ubx(object):
          "Output rate of the NMEA-GX-GBS message on port SPI"),
         ("CFG-MSGOUT-NMEA_ID_THS_I2C", 0x209100e2, "U1", 1, "",
          "Output rate of the NMEA-GX-THS message on port I2C"),
-        ("CFG-MSGOUT-NMEA_ID_THS_SPI", 0x209100e3, "U1", 1, "",
-         "Output rate of the NMEA-GX-THS message on port SPI"),
-        ("CFG-MSGOUT-NMEA_ID_THS_UART1", 0x209100e4, "U1", 1, "",
+        ("CFG-MSGOUT-NMEA_ID_THS_UART1", 0x209100e3, "U1", 1, "",
          "Output rate of the NMEA-GX-THS message on port UART1"),
-        ("CFG-MSGOUT-NMEA_ID_THS_UART2", 0x209100e5, "U1", 1, "",
+        ("CFG-MSGOUT-NMEA_ID_THS_UART2", 0x209100e4, "U1", 1, "",
          "Output rate of the NMEA-GX-THS message on port UART2"),
-        ("CFG-MSGOUT-NMEA_ID_THS_USB", 0x209100e6, "U1", 1, "",
+        ("CFG-MSGOUT-NMEA_ID_THS_USB", 0x209100e5, "U1", 1, "",
          "Output rate of the NMEA-GX-THS message on port USB"),
+        ("CFG-MSGOUT-NMEA_ID_THS_SPI", 0x209100e6, "U1", 1, "",
+         "Output rate of the NMEA-GX-THS message on port SPI"),
         ("CFG-MSGOUT-NMEA_ID_VLW_I2C", 0x209100e7, "U1", 1, "",
          "Output rate of the NMEA-GX-VLW message on port I2C"),
         ("CFG-MSGOUT-NMEA_ID_VLW_UART1", 0x209100e8, "U1", 1, "",
@@ -1693,6 +1693,17 @@ class ubx(object):
         ("CFG-MSGOUT-UBX_NAV_SBAS_SPI", 0x2091006e, "U1", 1, "",
          "Output rate of the UBX-NAV-SBAS message on port SPI"),
 
+        ("CFG-MSGOUT-UBX_NAV_DGPS_I2C", 0x20910074, "U1", 1, "",
+         "Output rate of the UBX-NAV-DGPS message on port I2C"),
+        ("CFG-MSGOUT-UBX_NAV_DGPS_UART1", 0x20910075, "U1", 1, "",
+         "Output rate of the UBX_NAV-DGPS port UART1"),
+        ("CFG-MSGOUT-UBX_NAV_DGPS_UART2", 0x20910076, "U1", 1, "",
+         "Output rate of the UBX_NAV-DGPS port UART2"),
+        ("CFG-MSGOUT-UBX_NAV_DGPS_USB", 0x20910077, "U1", 1, "",
+         "Output rate of the UBX_NAV-DGPS port USB"),
+        ("CFG-MSGOUT-UBX_NAV_DGPS_SPI", 0x20910078, "U1", 1, "",
+         "Output rate of the UBX_NAV-DGPS port SPI"),
+
         ("CFG-MSGOUT-UBX_NAV_AOPSTATUS_I2C", 0x20910079, "U1", 1, "",
          "Output rate of the UBX-MON-AOPSTATUS message on port I2C"),
         ("CFG-MSGOUT-UBX_NAV_AOPSTATUS_UART1", 0x2091007a, "U1", 1, "",
@@ -1857,17 +1868,6 @@ class ubx(object):
         ("CFG-MSGOUT-UBX_NAV_PVAT_SPI", 0x2091062e, "U1", 1, "",
          "Output rate of the UBX-NAV-PVAT message on port SPI"),
 
-        ("CFG-MSGOUT-UBX_NAV_DGPS_I2C", 0x20910674, "U1", 1, "",
-         "Output rate of the UBX-NAV-DGPS message on port I2C"),
-        ("CFG-MSGOUT-UBX_NAV_DGPS_UART1", 0x20910675, "U1", 1, "",
-         "Output rate of the UBX_NAV-DGPS port UART1"),
-        ("CFG-MSGOUT-UBX_NAV_DGPS_UART2", 0x20910676, "U1", 1, "",
-         "Output rate of the UBX_NAV-DGPS port UART2"),
-        ("CFG-MSGOUT-UBX_NAV_DGPS_USB", 0x20910678, "U1", 1, "",
-         "Output rate of the UBX_NAV-DGPS port USB"),
-        ("CFG-MSGOUT-UBX_NAV_DGPS_SPI", 0x20910679, "U1", 1, "",
-         "Output rate of the UBX_NAV-DGPS port SPI"),
-
         ("CFG-MSGOUT-UBX_NAV_TIMENAVIC_I2C", 0x209106a2, "U1", 1, "",
          "Output rate of the UBX-NAV-TIMENAVIC message on port I2C"),
         ("CFG-MSGOUT-UBX_NAV_TIMENAVIC_UART1", 0x209106a3, "U1", 1, "",
@@ -1876,7 +1876,7 @@ class ubx(object):
          "Output rate of the UBX_NAV-TIMENAVIC port UART2"),
         ("CFG-MSGOUT-UBX_NAV_TIMENAVIC_USB", 0x209106a5, "U1", 1, "",
          "Output rate of the UBX_NAV-TIMENAVIC port USB"),
-        ("CFG-MSGOUT-UBX_NAV_TIMENAVIC_SPI", 0x209106b6, "U1", 1, "",
+        ("CFG-MSGOUT-UBX_NAV_TIMENAVIC_SPI", 0x209106a6, "U1", 1, "",
          "Output rate of the UBX_NAV-TIMENAVIC port SPI"),
 
         ("CFG-MSGOUT-UBX_NAV_CFB_I2C", 0x209106d4, "U1", 1, "",
@@ -1887,7 +1887,7 @@ class ubx(object):
          "Output rate of the UBX_NAV-CFB port UART2"),
         ("CFG-MSGOUT-UBX_NAV_CFB_USB", 0x209106d7, "U1", 1, "",
          "Output rate of the UBX_NAV-CFB port USB"),
-        ("CFG-MSGOUT-UBX_NAV_CFB_SPI", 0x209106b6, "U1", 1, "",
+        ("CFG-MSGOUT-UBX_NAV_CFB_SPI", 0x209106d8, "U1", 1, "",
          "Output rate of the UBX_NAV-CFB port SPI"),
 
         # CFG-MSGOUT-UBX_NAV2
@@ -2208,7 +2208,7 @@ class ubx(object):
          "Output rate of the UBX-RXM-ALM message on port UART2"),
         ("CFG-MSGOUT-UBX_RXM_ALM_USB", 0x20910176, "U1", 1, "",
          "Output rate of the UBX-RXM-ALM message on port USB"),
-        ("CFG-MSGOUT-UBX_RXM_ALM_SPI", 0x20910178, "U1", 1, "",
+        ("CFG-MSGOUT-UBX_RXM_ALM_SPI", 0x20910177, "U1", 1, "",
          "Output rate of the UBX-RXM-ALM message on port SPI"),
 
         ("CFG-MSGOUT-UBX_RXM_MEASX_I2C", 0x20910204, "U1", 1, "",
@@ -2816,7 +2816,7 @@ class ubx(object):
          "Y coordinate of IMU-to-CRP "),
         ("CFG-SFCORE-IMU2CRP_LA_Z", 0x30080004, "I2", 1, "cm",
          "Z coordinate of IMU-to-CRP "),
-        ("CFG-SFCORE-HNR_RATE", 0x3008001a, "U1", 1, "",
+        ("CFG-SFCORE-HNR_RATE", 0x2008001a, "U1", 1, "",
          "Rate of navigation solution output"),
 
         # CFG-SFIMU-
@@ -2991,7 +2991,7 @@ class ubx(object):
          "For production  testing."),
         ("CFG-SIGNAL-QZSS_L1CB_ENA", 0x10310039, "L", 1, "",
          "QZSS L1C/B"),
-        ("CFG-SIGNAL-PLAN", 0x1031003a, "E1", 1, "",
+        ("CFG-SIGNAL-PLAN", 0x2031003a, "E1", 1, "",
          "SIGNAL PLAN"),
 
         # CFG-SPARTN-
