@@ -145,7 +145,7 @@ body:not([class]) #Menu {
 }
 
 :root {
-	--lite-bg1: url('paper.gif') #fff;
+	--lite-bg1: #fff;
 	--lite-bg2: #eee;
 	--lite-bgh: #ccc;
 	--lite-fg: #000;
