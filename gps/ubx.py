@@ -2168,6 +2168,39 @@ class ubx(object):
          "Output rate of the UBX-NAV2-TIMENAVIC message on port SPI"),
 
         # CFG-MSGOUT-UBX_RXM
+        ("CFG-MSGOUT-UBX_RXM_IMES_I2C", 0x2091015a, "U1", 1, "",
+         "Output rate of the UBX-RXM-IMES message on port I2C"),
+        ("CFG-MSGOUT-UBX_RXM_IMES_UART1", 0x2091015b, "U1", 1, "",
+         "Output rate of the UBX-RXM-IMES message on port UART1"),
+        ("CFG-MSGOUT-UBX_RXM_IMES_UART2", 0x2091015c, "U1", 1, "",
+         "Output rate of the UBX-RXM-IMES message on port UART2"),
+        ("CFG-MSGOUT-UBX_RXM_IMES_USB", 0x2091015d, "U1", 1, "",
+         "Output rate of the UBX-RXM-IMES message on port USB"),
+        ("CFG-MSGOUT-UBX_RXM_IMES_SPI", 0x2091015e, "U1", 1, "",
+         "Output rate of the UBX-RXM-IMES message on port SPI"),
+
+        ("CFG-MSGOUT-UBX_RXM_EPH_I2C", 0x20910169, "U1", 1, "",
+         "Output rate of the UBX-RXM-EPH message on port I2C"),
+        ("CFG-MSGOUT-UBX_RXM_EPH_UART1", 0x2091016a, "U1", 1, "",
+         "Output rate of the UBX-RXM-EPH message on port UART1"),
+        ("CFG-MSGOUT-UBX_RXM_EPH_UART2", 0x2091016b, "U1", 1, "",
+         "Output rate of the UBX-RXM-EPH message on port UART2"),
+        ("CFG-MSGOUT-UBX_RXM_EPH_USB", 0x2091016c, "U1", 1, "",
+         "Output rate of the UBX-RXM-EPH message on port USB"),
+        ("CFG-MSGOUT-UBX_RXM_EPH_SPI", 0x2091016d, "U1", 1, "",
+         "Output rate of the UBX-RXM-EPH message on port SPI"),
+
+        ("CFG-MSGOUT-UBX_RXM_ALM_I2C", 0x20910173, "U1", 1, "",
+         "Output rate of the UBX-RXM-ALM message on port I2C"),
+        ("CFG-MSGOUT-UBX_RXM_ALM_UART1", 0x20910174, "U1", 1, "",
+         "Output rate of the UBX-RXM-ALM message on port UART1"),
+        ("CFG-MSGOUT-UBX_RXM_ALM_UART2", 0x20910175, "U1", 1, "",
+         "Output rate of the UBX-RXM-ALM message on port UART2"),
+        ("CFG-MSGOUT-UBX_RXM_ALM_USB", 0x20910176, "U1", 1, "",
+         "Output rate of the UBX-RXM-ALM message on port USB"),
+        ("CFG-MSGOUT-UBX_RXM_ALM_SPI", 0x20910178, "U1", 1, "",
+         "Output rate of the UBX-RXM-ALM message on port SPI"),
+
         ("CFG-MSGOUT-UBX_RXM_MEASX_I2C", 0x20910204, "U1", 1, "",
          "Output rate of the UBX-RXM-MEASX message on port I2C"),
         ("CFG-MSGOUT-UBX_RXM_MEASX_UART1", 0x20910205, "U1", 1, "",
@@ -2212,6 +2245,17 @@ class ubx(object):
          "Output rate of the UBX-SEC-SIGLOG message on port USB"),
         ("CFG-MSGOUT-UBX_SEC_SIGLOG_SPI", 0x2091068d, "U1", 1, "",
          "Output rate of the UBX-SEC-SIGLOG message on port SPI"),
+
+        ("CFG-MSGOUT-UBX_RXM_COR_I2C", 0x209106b6, "U1", 1, "",
+         "Output rate of the UBX-RXM-COR message on port I2C"),
+        ("CFG-MSGOUT-UBX_RXM_COR_UART1", 0x209106b7, "U1", 1, "",
+         "Output rate of the UBX-RXM-COR message on port UART1"),
+        ("CFG-MSGOUT-UBX_RXM_COR_UART2", 0x209106b8, "U1", 1, "",
+         "Output rate of the UBX-RXM-COR message on port UART2"),
+        ("CFG-MSGOUT-UBX_RXM_COR_USB", 0x209106b9, "U1", 1, "",
+         "Output rate of the UBX-RXM-COR message on port USB"),
+        ("CFG-MSGOUT-UBX_RXM_COR_SPI", 0x209106ba, "U1", 1, "",
+         "Output rate of the UBX-RXM-COR message on port SPI"),
 
         ("CFG-MSGOUT-UBX_SEC_OSNMA_I2C", 0x209106ca, "U1", 1, "",
          "Output rate of the UBX-SEC-OSNMA message on port I2C"),
@@ -3294,7 +3338,8 @@ class ubx(object):
         if "Unk" == group_name:
             group_name = str(group)
 
-        name = "CFG-%s-%u" % (group_name, key & 0xff)
+        # ID within group is 12 bits
+        name = "CFG-%s-%u" % (group_name, key & 0xfff)
         size = (key >> 28) & 0x07
         item = (name, key, self.cfg_by_key_kmap[size], 1, "Unk", "Unknown")
 
