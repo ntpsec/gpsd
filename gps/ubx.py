@@ -457,7 +457,7 @@ class ubx(object):
          "get all CFG-GAL"),
         ("CFG-GAL-USE_OSNMA", 0x10350005, "L", 1, "",
          "Use GAL Nav Data"),
-        ("CFG-GAL-OSNMA_MINTAGLENGTH", 0x20350007, "u1", 1, "",
+        ("CFG-GAL-OSNMA_MINTAGLENGTH", 0x20350007, "U1", 1, "",
          "Use GAL Nav Data min length"),
         ("CFG-GAL-OSNMA_TIMESYNC", 0x10350009, "L", 1, "",
          "Use GAL OSNMA time sync"),
@@ -641,18 +641,25 @@ class ubx(object):
         # CFG-LOGFILTER-
         ("CFG-LOGFILTER", 0x10deffff, "", 0, "",
          "get all CFG-LOGFILTER"),
+        # removed in protVer 35
         ("CFG-LOGFILTER-RECORD_ENA", 0x10de0002, "L", 1, "",
          "Recording enabled"),
+        # removed in protVer 35
         ("CFG-LOGFILTER-ONCE_PER_WAKE_UP_ENA", 0x10de0003, "L", 1, "",
          "Once per wakeup"),
+        # removed in protVer 35
         ("CFG-LOGFILTER-APPLY_ALL_FILTERS", 0x10de0004, "L", 1, "",
          "Apply all filter settings"),
+        # removed in protVer 35
         ("CFG-LOGFILTER-MIN_INTERVAL", 0x30de0005, "U2", 1, "s",
          "Minimum time interval between logged positions"),
+        # removed in protVer 35
         ("CFG-LOGFILTER-TIME_THRS", 0x30de0006, "U2", 1, "s",
          "Time threshold"),
+        # removed in protVer 35
         ("CFG-LOGFILTER-SPEED_THRS", 0x30de0007, "U2", 1, "m/s",
          "Speed threshold"),
+        # removed in protVer 35
         ("CFG-LOGFILTER-POSITION_THRS", 0x40de0008, "U4", 1, "m",
          "Position threshold"),
 
@@ -912,38 +919,6 @@ class ubx(object):
          "Output rate of the NMEA-GX-UTC message on port USB"),
         ("CFG-MSGOUT-NMEA_ID_UTC_SPI", 0x209106d3, "U1", 1, "",
          "Output rate of the NMEA-GX-UTC message on port SPI"),
-
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYP_I2C", 0x209106ec, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYP message on port I2C"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYP_UART1", 0x209106ed, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYP message on port UART1"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYP_UART2", 0x209106ee, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYP message on port UART2"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYP_USB", 0x209106ff, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYP message on port USB"),
-
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYP_SPI", 0x209106f0, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYP message on port SPI"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYS_I2C", 0x209106f1, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYS message on port I2C"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYS_UART1", 0x209106f2, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYS message on port UART1"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYS_UART2", 0x209106f3, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYS message on port UART2"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYS_USB", 0x209106f4, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYS message on port USB"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYS_SPI", 0x209106f5, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYS message on port SPI"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYT_I2C", 0x209106f6, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYT message on port I2C"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYT_UART1", 0x209106f2, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYT message on port UART1"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYT_UART2", 0x209106f8, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYT message on port UART2"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYT_USB", 0x209106f9, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYT message on port USB"),
-        ("CFG-MSGOUT-NMEA_PUBX_ID_POLYT_SPI", 0x209106fa, "U1", 1, "",
-         "Output rate of the NMEA-PUBX_POLYT message on port SPI"),
 
         # CFG-MSGOUT-PUBX
         ("CFG-MSGOUT-PUBX_ID_POLYP_I2C", 0x209100ec, "U1", 1, "",
@@ -2434,32 +2409,32 @@ class ubx(object):
          "get all CFG-NAVHPG"),
         ("CFG-NAVHPG-DGNSSMODE", 0x20140011, "E1", 1, "",
          "Differential corrections mode"),
-        ("CFG-NAVHPG-INIFIX3D", 0x20140013, "L", 1, "",
-         "Initial fix must be 3D"),
         # ??
+        # ("CFG-NAVHPG-INIFIX3D", 0x20140013, "L", 1, "",
+        #  "Initial fix must be 3D"),
         # ("CFG-NAVHPG-FIXMODE", 0x20140011, "E1", 1, "",
         #  "Fix Mode"),
+        # ("CFG-NAVHPG-WKNROLLOVER", 0x30140017, "U2", 1, "",
+        #  "GPS Week Follover Number"),
+        # ("CFG-NAVHPG-UTCSTANDARD", 0x2014001c, "E1", 1, "",
+        #  "UTC Standard used"),
+        # ("CFG-NAVHPG-DYNMODEL", 0x20140021, "E1", 1, "",
+        #  "Dynamic Model"),
+        # ("CFG-NAVHPG-ACKAIDING", 0x10140025, "L", 1, "",
+        #  "ACK Assist Messages"),
+        # ("CFG-NAVHPG-USE_USRDAT", 0x10140061, "L", 1, "",
+        #  "Use user datum"),
+        # ("CFG-NAVHPG-CORR_CONV_OSR", 0x30140062, "X2", 1, "",
+        #  "Convert OSR corrections from one signal to another"),
+        # ("CFG-NAVHPG-USRDAT_FLAT", 0x50140063, "R8", 1, "",
+        #  "User datam flattening"),
+        # ("CFG-NAVHPG-USRDAT_DX", 0x40140064, "R4", 1, "",
+        #  "User datam DX"),
+        # ("CFG-NAVHPG-USRDAT_DY", 0x40140065, "R4", 1, "",
+        #  "User datam DY"),
+        # ("CFG-NAVHPG-USRDAT_DZ", 0x40140066, "R4", 1, "",
+        #  "User datam DZ"),
         # ??
-        ("CFG-NAVHPG-WKNROLLOVER", 0x30140017, "U2", 1, "",
-         "GPS Week Follover Number"),
-        ("CFG-NAVHPG-UTCSTANDARD", 0x2014001c, "E1", 1, "",
-         "UTC Standard used"),
-        ("CFG-NAVHPG-DYNMODEL", 0x20140021, "E1", 1, "",
-         "Dynamic Model"),
-        ("CFG-NAVHPG-ACKAIDING", 0x10140025, "L", 1, "",
-         "ACK Assist Messages"),
-        ("CFG-NAVHPG-USE_USRDAT", 0x10140061, "L", 1, "",
-         "Use user datum"),
-        ("CFG-NAVHPG-CORR_CONV_OSR", 0x30140062, "X2", 1, "",
-         "Convert OSR corrections from one signal to another"),
-        ("CFG-NAVHPG-USRDAT_FLAT", 0x50140063, "R8", 1, "",
-         "User datam flattening"),
-        ("CFG-NAVHPG-USRDAT_DX", 0x40140064, "R4", 1, "",
-         "User datam DX"),
-        ("CFG-NAVHPG-USRDAT_DY", 0x40140065, "R4", 1, "",
-         "User datam DY"),
-        ("CFG-NAVHPG-USRDAT_DZ", 0x40140066, "R4", 1, "",
-         "User datam DZ"),
 
         # CFG-NAVMASK-
         ("CFG-NAVMASK", 0x1018ffff, "", 0, "",
@@ -2661,7 +2636,7 @@ class ubx(object):
         ("CFG-ODO-COGMAXPOSACC", 0x20220022, "U1", 1, "",
          "Maximum acceptable position accuracy for computing low-speed  "
          "filtered course over ground"),
-        ("CFG-ODO-VELLPGAIN", 0x20220031, "U!", 1, "",
+        ("CFG-ODO-VELLPGAIN", 0x20220031, "U1", 1, "",
          "Velocity low-pass filter level"),
         ("CFG-ODO-COGLPGAIN", 0x20220032, "U1", 1, "",
          "Course over ground low-pass filter level (at speed < 8 m/s)"),
@@ -2669,7 +2644,7 @@ class ubx(object):
         # CFG-PM-
         ("CFG-PM", 0x20d0ffff, "", 0, "",
          "get all CFG-PM, receiver power management"),
-        ("CFG-PM-OPERATEMODE", 0x20d00001, "L", 1, "",
+        ("CFG-PM-OPERATEMODE", 0x20d00001, "E1", 1, "",
          "set PSMOO or PSMCT mode"),
         ("CFG-PM-POSUPDATEPERIOD", 0x40d00002, "U4", 1, "",
          "Position update period for PSMOO."),
@@ -2860,7 +2835,7 @@ class ubx(object):
          "IMU pitch angle"),
         ("CFG-SFIMU-IMU_MNTALG_ROLL", 0x3006002f, "I2", 1e-2, "deg",
          "IMU roll angle"),
-        ("CFG-SFIMU-IMU_MNTALG_TOLERANCE", 0x20060030, "U1", 1, "",
+        ("CFG-SFIMU-IMU_MNTALG_TOLERANCE", 0x20060030, "E1", 1, "",
          "User-defined IMU mount alignment angles tolerance level"),
 
         # CFG-SFODO-
@@ -5825,10 +5800,13 @@ Deprecated in protVer 23.01
                }
 
     # UBX-HNR-
-    # only with ADR or UDR products, protVer 19 and up
 
     def hnr_att(self, buf):
-        """UBX-HNR-ATT decode, HNR Attitude solution"""
+        """UBX-HNR-ATT decode, HNR Attitude solution
+
+only with ADR or UDR products, protVer 19 and up
+removed in protVer 35
+"""
 
         # Not before protVet 19.2
         # 32 bytes long in protver 19.2
@@ -5849,7 +5827,11 @@ Deprecated in protVer 23.01
         }
 
     def hnr_ins(self, buf):
-        """UBX-HNR-INS decode, HNR Vehicle dynamics information"""
+        """UBX-HNR-INS decode, HNR Vehicle dynamics information
+
+only with ADR or UDR products, protVer 19 and up
+removed in protVer 35
+"""
 
         # Not before protVet 19.1
         # 36 bytes long in protver 19.1
@@ -5875,7 +5857,10 @@ Deprecated in protVer 23.01
         }
 
     def hnr_pvt(self, buf):
-        """UBX-HNR-PVT decode, High rate output of PVT solution"""
+        """UBX-HNR-PVT decode, High rate output of PVT solution
+
+removed in protVer 35
+"""
         m_len = len(buf)
 
         # Not before protVet 19
@@ -6080,7 +6065,10 @@ Oddly this is polled with UBX-LOG-RETRIEVEBATCH
         }
 
     def log_info(self, buf):
-        """UBX-LOG-INFO decode"""
+        """UBX-LOG-INFO decode
+
+removed in protVer 35
+"""
 
         # u-blox 7+, protVer 14+
         u = struct.unpack_from('<BBHLLLLLLHBBBBBBHBBBBBBBBH', buf, 0)
