@@ -1,6 +1,6 @@
 /* net_ntrip.c -- gather and dispatch DGNSS data from NTRIP broadcasters
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  * See:
@@ -860,7 +860,7 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
     // find mountpoint, searching from right to left
     if (NULL == (slash = strrchr(dup, '/'))) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: can't extract stream from %s\n", dup);
+                 "NTRIP: can't extract mountpoint from url: %s\n", dup);
         return -1;
     }
     *slash = '\0';
