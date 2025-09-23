@@ -2,7 +2,7 @@
  * This is the main sequence of the gpsd daemon. The IO dispatcher, main
  * select loop, and user command handling lives here.
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -273,7 +273,7 @@ static socket_t filesock(char *filename)
 
     if (BAD_SOCKET(sock = socket(AF_UNIX, SOCK_STREAM, 0))) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "Can't create device-control socket. %s(%d)\n",
+                 "filesock() Can't create device-control socket. %s(%d)\n",
                  strerror(errno), errno);
         return -1;
     }
@@ -281,14 +281,14 @@ static socket_t filesock(char *filename)
     addr.sun_family = (sa_family_t)AF_UNIX;
     if (0 > bind(sock, (struct sockaddr *)&addr, (socklen_t)sizeof(addr))) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't bind to local socket %s. %s(%d)\n",
+                 "filesock() can't bind to local socket %s. %s(%d)\n",
                  filename, strerror(errno), errno);
         (void)close(sock);
         return -1;
     }
     if (-1 == listen(sock, QLEN)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't listen on local socket %s %s(%d)\n",
+                 "filesock() can't listen on local socket %s %s(%d)\n",
                  filename, strerror(errno), errno);
         (void)close(sock);
         return -1;
@@ -363,7 +363,8 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     } else if (0 == (port = (in_port_t)atoi(service))) {
         // Could not get port by name or number.
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't get \"%s\" service entry.\n", service);
+                 "passivesock_af() can't get \"%s\" service entry.\n",
+                 service);
         return -1;
     }
     ppe = getprotobyname(tcp_or_udp);
@@ -398,7 +399,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
             if ( -1 == setsockopt(s, IPPROTO_IP, IP_TOS, &dscp,
                                   (socklen_t)sizeof(dscp))) {
                 GPSD_LOG(LOG_WARN, &context.errout,
-                         "Warning: SETSOCKOPT TOS failed\n");
+                         "passivesock_a() SETSOCKOPT TOS failed\n");
             }
         }
 
@@ -438,7 +439,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
             if (-1 == setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &on,
                                  (socklen_t)sizeof(on))) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "Error: SETSOCKOPT IPV6_V6ONLY, %s(%d)\n",
+                         "passivesock_af() SETSOCKOPT IPV6_V6ONLY, %s(%d)\n",
                          strerror(errno), errno);
                 (void)close(s);
                 return -1;
@@ -448,39 +449,40 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
             if (-1 == setsockopt(s, IPPROTO_IPV6, IPV6_TCLASS, &dscp,
                                  (socklen_t)sizeof(dscp))) {
                 GPSD_LOG(LOG_WARN, &context.errout,
-                         "Warning: SETSOCKOPT TOS failed\n");
+                         "passivesock_af() SETSOCKOPT TOS failed\n");
             }
 #endif  // IPV6_TCLASS
         }
         break;
     default:
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "unhandled address family %d\n", af);
+                 "passivesock_af()unhandled address family %d\n", af);
         return -1;
     }
     GPSD_LOG(LOG_IO, &context.errout,
-             "opening %s socket\n", af_str);
+             "passivesock_af()opening %s socket\n", af_str);
 
     if (BAD_SOCKET(s)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't create %s socket\n", af_str);
+                 "passivesock_af()can't create %s socket\n", af_str);
         return -1;
     }
     if (-1 == setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
                          (socklen_t)sizeof(one))) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "Error: SETSOCKOPT SO_REUSEADDR %s(%d)\n",
+                 "passivesock_af() SETSOCKOPT SO_REUSEADDR %s(%d)\n",
                  strerror(errno), errno);
         (void)close(s);
         return -1;
     }
     if (0 > bind(s, &sat.sa, (socklen_t)sin_len)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "Can't bind to %s/%s port %s(%d), %s(%d)\n", af_str,
+                 "passivesock_af() Can't bind to %s/%s port %s(%d), %s(%d)\n",
+                 af_str,
                  proto_str, service, port, strerror(errno), errno);
         if (EADDRINUSE == errno) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "Maybe gpsd is already running!  "
+                     "passivesock_af(): Maybe gpsd is already running!  "
                      "Or systemd has the port?\n");
         }
         /* Make this fatal, users never notice the ERROR, and spend
@@ -490,7 +492,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     if (SOCK_STREAM == type &&
         -1 == listen(s, qlen)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't listen on port %s, %s(%d)\n",
+                 "passivesock_af(): can't listen on port %s, %s(%d)\n",
                  service, strerror(errno), errno);
         (void)close(s);
         return -1;
@@ -2688,18 +2690,20 @@ int main(int argc, char *argv[])
                         "Over long device path %s\n", argv[i]);
                continue;
             }
+            // FIMME: don't stat() if not a decice or file.
+
             /* stat() and chmod() fail if:
              *    not running as root,
              *    does have group access to the file,
              *    and does not have CAP_FOWNER . */
             if (0 != stat(argv[i], &stb)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "stat(%s) failed, errno %s(%d)\n",
+                         "CORE: stat(%s) failed, errno %s(%d)\n",
                          argv[i], strerror(errno), errno);
 
             } else if (0 != chmod(argv[i], stb.st_mode | S_IRGRP | S_IWGRP)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "chmod(%s, g+sw) failed, errno %s(%d)\n",
+                         "CORE: chmod(%s, g+sw) failed, errno %s(%d)\n",
                          argv[i], strerror(errno), errno);
             }
         }
@@ -2716,7 +2720,7 @@ int main(int argc, char *argv[])
         if (0 != setgroups(0, NULL)) {
             // Needs CAP_SETGID?
             GPSD_LOG(LOG_WARN, &context.errout,
-                     "setgroups(0,  NULL) failed, errno %s(%d)\n",
+                     "CORE: setgroups(0,  NULL) failed, errno %s(%d)\n",
                      strerror(errno), errno);
         }
 #ifdef GPSD_GROUP
@@ -2727,7 +2731,7 @@ int main(int argc, char *argv[])
                 if (0 != setgid(grp->gr_gid)) {
                     // Needs CAP_SETGID?
                     GPSD_LOG(LOG_WARN, &context.errout,
-                             "setgid() failed, %s(%d)\n",
+                             "CORE: setgid() failed, %s(%d)\n",
                              strerror(errno), errno);
                 }
             }
@@ -2737,10 +2741,11 @@ int main(int argc, char *argv[])
              0 == stat(argv[optind], &stb)) ||
             0 == stat(PROTO_TTY, &stb)) {
             GPSD_LOG(LOG_PROG, &context.errout,
-                     "changing to group %d\n", stb.st_gid);
+                     "CORE: changing to group %d\n", stb.st_gid);
             if (0 != setgid(stb.st_gid)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "setgid() failed, %s(%d)\n", strerror(errno), errno);
+                         "CORE: setgid() failed, %s(%d)\n",
+                         strerror(errno), errno);
             }
         }
 #endif
@@ -2750,16 +2755,16 @@ int main(int argc, char *argv[])
             if (0 != setuid(pw->pw_uid)) {
                 // Needs CAP_SETUID?
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                            "setuid() failed, %s(%d)\n",
+                            "CORE: setuid() failed, %s(%d)\n",
                             strerror(errno), errno);
             }
         }
     }
     // sometimes getegid() and geteuid() are longs
     GPSD_LOG(LOG_INF, &context.errout,
-             "running with effective group ID %ld\n", (long)getegid());
+             "CORE: running with effective group ID %ld\n", (long)getegid());
     GPSD_LOG(LOG_INF, &context.errout,
-             "running with effective user ID %ld\n", (long)geteuid());
+             "CORE: running with effective user ID %ld\n", (long)geteuid());
 
 #ifdef HAVE_LIBCAP
     do {
@@ -2769,18 +2774,19 @@ int main(int argc, char *argv[])
         cap_t cap = cap_init();
         if (NULL == cap) {
             GPSD_LOG(LOG_ERR, &context.errout,
-                     "cap_init() failed: %s(%d)\n", strerror(errno), errno);
+                     "CORE: cap_init() failed: %s(%d)\n",
+                     strerror(errno), errno);
             break;;
         }
         if (0 != cap_set_proc(cap)) {
             GPSD_LOG(LOG_ERR, &context.errout,
-                     "cap_set_proc() failed: %s(%d)\n",
+                     "CORE: cap_set_proc() failed: %s(%d)\n",
                      strerror(errno), errno);
             break;
         }
         if (0 != cap_free(cap)) {
             GPSD_LOG(LOG_ERR, &context.errout,
-                     "cap_free() failed: %s(%d)\n",
+                     "CORE: cap_free() failed: %s(%d)\n",
                      strerror(errno), errno);
             break;
         }
@@ -2812,7 +2818,7 @@ int main(int argc, char *argv[])
     if (0 < setjmp(restartbuf)) {
         gpsd_terminate(&context);
         in_restart = true;
-        GPSD_LOG(LOG_WARN, &context.errout, "gpsd restarted by SIGHUP\n");
+        GPSD_LOG(LOG_WARN, &context.errout, "CORE: gpsd restarted by SIGHUP\n");
     }
 
     signalled = 0;
@@ -2839,7 +2845,7 @@ int main(int argc, char *argv[])
         for (i = optind; i < argc; i++) {
           if (!gpsd_add_device(argv[i], nowait)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "GPS device %s open failed\n",
+                         "CORE: GPS device %s open failed\n",
                          argv[i]);
             }
         }
@@ -2854,7 +2860,7 @@ int main(int argc, char *argv[])
         bool time_warp;
 
         time_warp = false;
-        GPSD_LOG(LOG_RAW1, &context.errout, "await data\n");
+        GPSD_LOG(LOG_RAW1, &context.errout, "CORE: await data\n");
         (void)clock_gettime(CLOCK_REALTIME, &before);
         await = gpsd_await_data(&rfds, &efds, maxfd, &all_fds, &context.errout,
                                 ts_timeout);
@@ -2862,7 +2868,7 @@ int main(int argc, char *argv[])
         TS_SUB(&delta, &after, &before);
         if ((1 + ts_timeout.tv_sec) <= llabs(delta.tv_sec)) {
             GPSD_LOG(LOG_WARN, &context.errout,
-                     "Let's do the time warp again %lld.  "
+                     "CORE: Let's do the time warp again %lld.  "
                      "It's just a jump to the left\n",
                      (long long)delta.tv_sec);
             time_warp = true;
@@ -2904,7 +2910,8 @@ int main(int argc, char *argv[])
 
                 if (BAD_SOCKET(ssock)) {
                     GPSD_LOG(LOG_ERROR, &context.errout,
-                             "accept: fail: %s(%d)\n", strerror(errno), errno);
+                             "CORE: accept: fail: %s(%d)\n",
+                            strerror(errno), errno);
                 } else {
                     struct subscriber_t *client = NULL;
                     int opts = fcntl(ssock, F_GETFL);
@@ -2913,14 +2920,14 @@ int main(int argc, char *argv[])
 
                     if (0 > opts) {
                         GPSD_LOG(LOG_ERROR, &context.errout,
-                                 "accept: fcntl(F_GETFL): %s(%d)\n",
+                                 "CORE: accept: fcntl(F_GETFL): %s(%d)\n",
                                  strerror(errno), errno);
                     } else {
                         opts = fcntl(ssock, F_SETFL, opts | O_NONBLOCK);
                         if (0 > opts) {
                             // supposedly can never happen.
                             GPSD_LOG(LOG_ERROR, &context.errout,
-                                     "accept: fcntl(F_SETFL): %s(%d)\n",
+                                     "CORE: accept: fcntl(F_SETFL): %s(%d)\n",
                                      strerror(errno), errno);
                         }
                     }
@@ -2930,7 +2937,7 @@ int main(int argc, char *argv[])
                     if (NULL == client) {
                         // cast for 32-bit intptr_t
                         GPSD_LOG(LOG_ERROR, &context.errout,
-                                 "Client %s connect on fd %ld -"
+                                 "CORE: Client %s connect on fd %ld -"
                                  "no subscriber slots available\n", ip,
                                   (long)ssock);
                         (void)close(ssock);
@@ -2939,7 +2946,7 @@ int main(int argc, char *argv[])
                                                 (char *)&linger,
                                                 (int)sizeof(struct linger))) {
                         GPSD_LOG(LOG_ERROR, &context.errout,
-                                 "Error: SETSOCKOPT SO_LINGER. %s(%d)\n",
+                                 "CORE: SETSOCKOPT SO_LINGER. %s(%d)\n",
                                  strerror(errno), errno);
                         (void)close(ssock);
                     } else {
