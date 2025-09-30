@@ -8456,6 +8456,18 @@ protVer 34 and up
 
         return s
 
+    def rxm_spartnkey(self, buf):
+        """UBX-RXM-SPARTNKEY decode, Get dynamic SPAARTN keys
+
+"""
+
+        u = struct.unpack_from('<BBH', buf, 0)
+        s = ' version %u numKeys %u reserved1 %u' % u
+
+        # FIXME: decode keys.
+
+        return s
+
     # decode GPS subframe 5, pages 1 to 24,
     # and subframe 4, pages 2 to 5, and 7 to 10
     def almanac(self, words):
@@ -9821,7 +9833,7 @@ Removed in protVer 32 (u-blox 9 and 10)
                       'name': 'UBX-RXM-RTCM'},
                0x34: {'str': 'COR', 'minlen': 12, 'name': 'UBX-RXM-COR'},
                # protVer 50
-               0x36: {'str': 'SPARTNKEY', 'minlen': 4,
+               0x36: {'str': 'SPARTNKEY', 'dec': rxm_spartnkey,  'minlen': 4,
                       'name': 'UBX-RXM-SPARTNKEY'},
                # Broadcom calls this BRM-ASC-SCLEEP
                0x41: {'str': 'PMREQ', 'dec': rxm_pmreq, 'minlen': 4,
@@ -12172,6 +12184,7 @@ present in 9-series and higher
                       "minVer": 23},
         # UBX-MON-COMMS
         "MON-COMMS": {"pollcmd": send_poll, "mid": [0x0a, 0x36],
+                      "ablecmd": send_able,
                       "help": "poll UBX-MON-COMMS Comm port information"},
         # UBX-MON-GNSS
         "MON-GNSS": {"pollcmd": send_poll, "mid": [0x0a, 0x28],
