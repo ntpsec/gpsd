@@ -8456,12 +8456,56 @@ protVer 34 and up
 
         return s
 
+    rxm_spartn_flags = {
+        0: "Unknown",
+        1: "Not Used",
+        2: "Used",
+        3: "Reserved",
+    }
+
+    rxm_spartn_type = {
+        0: "Orbit",
+        1: "HPAC",
+        2: "GAD",
+        3: "BDS",
+    }
+
+    rxm_spartn_subtype = {
+        0: "GPS",
+        1: "GLO",
+        2: "GAL",
+        3: "BDS",
+    }
+
+    def rxm_spartn(self, buf):
+        """UBX-RXM-SPARTN decode, SPAARTN status
+
+present in protVer 27.5, F9R
+"""
+
+        u = struct.unpack_from('<BBHHH', buf, 0)
+        if 1 != u[0]:
+            return "  Unknown version %u" % u[0]
+
+        s = ' version %u flags x%x subType %u reserved0 x%x msgType %u' % u
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n    flags %s type %s subtype %s" %
+                  (index_s((u[1] >> 1) & 3, self.rxm_spartn_flags),
+                   index_s(u[4], self.rxm_spartn_type),
+                   index_s(u[2], self.rxm_spartn_subtype)))
+
+        return s
+
     def rxm_spartnkey(self, buf):
         """UBX-RXM-SPARTNKEY decode, Get dynamic SPAARTN keys
 
+present in protVer 27.5, F9R
 """
 
         u = struct.unpack_from('<BBH', buf, 0)
+        if 1 != u[0]:
+            return "  Unknown version %u" % u[0]
+
         s = ' version %u numKeys %u reserved1 %u' % u
 
         # FIXME: decode keys.
@@ -9831,8 +9875,11 @@ Removed in protVer 32 (u-blox 9 and 10)
                0x31: {'str': 'EPH', 'minlen': 1, 'name': 'UBX-RXM-EPH'},
                0x32: {'str': 'RTCM', 'dec': rxm_rtcm, 'minlen': 8,
                       'name': 'UBX-RXM-RTCM'},
+               # protVer 27.5. F9P
+               0x33: {'str': 'SPARTN', 'dec': rxm_spartn,  'minlen': 8,
+                      'name': 'UBX-RXM-SPARTN'},
                0x34: {'str': 'COR', 'minlen': 12, 'name': 'UBX-RXM-COR'},
-               # protVer 50
+               # protVer 27.5. F9P
                0x36: {'str': 'SPARTNKEY', 'dec': rxm_spartnkey,  'minlen': 4,
                       'name': 'UBX-RXM-SPARTNKEY'},
                # Broadcom calls this BRM-ASC-SCLEEP
@@ -12461,14 +12508,20 @@ present in 9-series and higher
                      "Information"},
         # UBX-RXM-MEASX
         "RXM-MEASX": {"pollcmd": send_poll, "mid": [0x02, 0x14],
-                      "help": "poll UBX-RXM-MEASX Satellite Measurements "
+                      "ablecmd": send_able,
+                      "help": "UBX-RXM-MEASX Satellite Measurements "
                       " for RRLP"},
         # UBX-RXM-RAWX
         "RXM-RAWX": {"pollcmd": send_poll, "mid": [0x02, 0x15],
-                     "help": "poll UBX-RXM-RAWX raw measurement data"},
-        # UBX-RXM-SPARTNKEY, protVer 50, X20
+                     "ablecmd": send_able,
+                     "help": "UBX-RXM-RAWX raw measurement data"},
+        # UBX-RXM-SPARTN, protVer 27.50, F9P
+        # can't poll
+        "RXM-SPARTN": {"ablecmd": send_able, "mid": [0x02, 0x33],
+                      "help": "UBX-RXM-SPARTN SPARTN status"},
+        # UBX-RXM-SPARTNKEY, protVer 27.50, F9P
         "RXM-SPARTNKEY": {"pollcmd": send_poll, "mid": [0x02, 0x36],
-                          "help": "poll UBX-RXM-SPARTNKEY get SPARTNKEY"},
+                          "help": "UBX-RXM-SPARTNKEY get SPARTNKEY"},
 
         # en/dis able PPS
         "PPS": {"ablecmd": send_able_pps,
