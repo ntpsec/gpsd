@@ -1625,7 +1625,8 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     }
 
     // can we get a full packet from the device/NTRIP/DGPS/tcp/etc.?
-    if (NULL != session->device_type) {
+    if (NULL != session->device_type &&
+        NULL != session->device_type->get_packet) {
         newlen = session->device_type->get_packet(session);
         // coverity[deref_ptr]
         GPSD_LOG(LOG_RAW, &session->context->errout,
@@ -1741,7 +1742,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         if (driver_change) {
             const struct gps_type_t **dp;
 
-            for (dp = gpsd_drivers; *dp; dp++)
+            for (dp = gpsd_drivers; *dp; dp++) {
                 if (session->lexer.type == (*dp)->packet_type) {
                     GPSD_LOG(LOG_PROG, &session->context->errout,
                              "CORE: switching to match packet type %d: %s\n",
@@ -1749,6 +1750,12 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
                     (void)gpsd_switch_driver(session, (*dp)->type_name);
                     break;
                 }
+            }
+            if (NULL == *dp) {
+                GPSD_LOG(LOG_WARN, &session->context->errout,
+                         "CORE: no matching packet type %d\n",
+                         session->lexer.type);
+            }
         }
         session->badcount = 0;
         session->gpsdata.dev.driver_mode =
