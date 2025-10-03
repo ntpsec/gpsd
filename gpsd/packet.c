@@ -588,6 +588,9 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case COMMENT_BODY:
         if ('\n' == c) {
             lexer->state = COMMENT_RECOGNIZED;
+        } else if ('\r' == c ||
+                   '\t' == c) {
+            // allow tabs and CR in comments
         } else if (!isprint(c)) {
             return character_pushback(lexer, GROUND_STATE);
         }
