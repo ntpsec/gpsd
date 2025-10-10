@@ -168,7 +168,7 @@ int gps_shm_read(struct gps_data_t *gpsdata)
             gpsdata->gps_fd = (gps_fd_t)SHM_PSEUDO_FD;
             PRIVATE(gpsdata)->tick = after2;
             if (0 != (gpsdata->set & REPORT_IS)) {
-                gpsdata->set = STATUS_SET;
+                gpsdata->set |= STATUS_SET;
             }
             return (int)sizeof(struct gps_data_t);
         }
