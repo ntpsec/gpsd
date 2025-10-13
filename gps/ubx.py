@@ -6393,7 +6393,8 @@ Ignores newer constellations like NavIC on 9-series and later.
 
     mon_hw_flags = {
         1: "rtcCalib",
-        2: "safeBoot",
+        2: "safeBoot",       # Gen6+
+        0x10: "xtalAbsent",  # Gen9+, protVer 18+
         }
 
     mon_hw_aPower = {
@@ -6428,7 +6429,6 @@ Deprecated. and undocumented, on M10, use MON-H# and MON-RF
         aPower = u[7]
         flags = u[8]
         jammingState = (u[6] >> 2) & 0x03    # 8-series +
-        xtalAbsent = (u[6] >> 4) & 1         # 9-series +
         jamInd = 0
 
         # VP
@@ -6461,9 +6461,8 @@ Deprecated. and undocumented, on M10, use MON-H# and MON-RF
                   "    jamInd %u xtalAbsent (%s)" %
                   (index_s(aStatus, self.mon_rf_antstat),
                    index_s(aPower, self.mon_hw_aPower),
-                   index_s(flags, self.mon_hw_flags),
-                   index_s(jammingState, self.jammingState),
-                   jamInd, 'Yes' if xtalAbsent else 'No'))
+                   index_s(flags & 0x13, self.mon_hw_flags),
+                   index_s(jammingState, self.jammingState)))
         return s
 
     mon_hw2_cfgSource = {
