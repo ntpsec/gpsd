@@ -115,6 +115,9 @@ extern "C" {
  *      add shm_clock_lastsec and shm_pps_lastsec to gps_device_t;
  *      add queue, regression, to gps_device_t
  *      add ALL_PACKET
+ * 3.26.2
+ *      add SPARTN_PACKET
+ *      gps_lexer_t, add type_mask, to mask our bad types, like SPARTN
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -214,9 +217,10 @@ struct gpsd_errout_t {
     const char *label;
 };
 
+// Careful, must match Class Lexer_t  in ./gps/packet.py.in
 struct gps_lexer_t {
     // packet-getter internals
-    int type;
+    int type;                           //  current packet type
 #define BAD_PACKET              -1
 #define COMMENT_PACKET          0
 #define NMEA_PACKET             1
@@ -246,15 +250,17 @@ struct gps_lexer_t {
 #define RTCM2_PACKET            21
 #define RTCM3_PACKET            22
 #define JSON_PACKET             23
+#define SPARTN_PACKET           24
 // end of non GPS type packets, AIVDM is GPS type??
-#define PACKET_TYPES            24      // increment this as necessary
+#define PACKET_TYPES            25      // increment this as necessary
 
 #define TEXTUAL_PACKET_TYPE(n)  ((((n)>=NMEA_PACKET) && ((n)<=MAX_TEXTUAL_TYPE)) || (n)==JSON_PACKET)
 #define GPS_PACKET_TYPE(n)      (((n)>=NMEA_PACKET) && ((n)<=MAX_GPSPACKET_TYPE))
 #define LOSSLESS_PACKET_TYPE(n) (((n)>=RTCM2_PACKET) && ((n)<=RTCM3_PACKET))
-#define PACKET_TYPEMASK(n)      (1 << (n))
-#define GPS_TYPEMASK    (((2<<(MAX_GPSPACKET_TYPE+1))-1) &~ PACKET_TYPEMASK(COMMENT_PACKET))
+#define PACKET_TYPEMASK(n)      (1L << (n))
+#define GPS_TYPEMASK    (((2L<<(MAX_GPSPACKET_TYPE+1))-1) &~ PACKET_TYPEMASK(COMMENT_PACKET))
 
+    long type_mask;                      //  packet types to mask
     unsigned int state;
     size_t length;         // if a message has a length field, this is it.
     unsigned char inbuffer[MAX_PACKET_LENGTH*2+1];
@@ -532,6 +538,8 @@ struct ntrip_stream_t
         FMT_RTCM3_1,
         FMT_RTCM3_2,
         FMT_RTCM3_3,
+        // FMT_SPARTN,        // u-blox SPARTN  UNSUPPORTED!
+        FMT_SPARTN_2,         // u-blox SPARTN
     } format;
     int carrier;
     double latitude;
@@ -598,7 +606,7 @@ struct gps_device_t {
      */
     char msgbuf[MAX_PACKET_LENGTH*4+1]; // command message buffer for sends
     size_t msgbuflen;
-    int observed;                       // which packet type`s have we seen?
+    long observed;                      // which packet type`s have we seen?
     bool cycle_end_reliable;            // does driver signal REPORT_MASK
     int fixcnt;                         // count of fixes from this device
     int last_word_gal;                  // last subframe word from Galileo
@@ -945,6 +953,7 @@ extern ssize_t nmea_send(struct gps_device_t *, const char *, ... );
 extern void nmea_add_checksum(char *);
 
 extern gps_mask_t sirf_parse(struct gps_device_t *, unsigned char *, size_t);
+extern gps_mask_t spartn_parse(struct gps_device_t *);
 extern gps_mask_t evermore_parse(struct gps_device_t *, unsigned char *,
                                  size_t);
 extern gps_mask_t navcom_parse(struct gps_device_t *, unsigned char *, size_t);

@@ -241,6 +241,21 @@
    RTCM3_PAYLOAD,         // gathering payload
    RTCM3_RECOGNIZED,      // RTCM3 packet recognized
 
+   SPARTN_PRE_1,          // getting preamble 1
+   SPARTN_PRE_2,          // getting preamble 2
+   SPARTN_PRE_3,          // getting preamble 3
+   SPARTN_PAYDESC_1,      // getting payload description 1
+   SPARTN_PAYDESC_2,      // getting payload description 2
+   SPARTN_PAYDESC_3,      // getting payload description 3
+   SPARTN_PAYDESC_4,      // getting payload description 4
+   SPARTN_PAYDESC_5,      // getting payload description 5
+   SPARTN_PAYDESC_6,      // getting payload description 6
+   SPARTN_PAYDESC_7,      // getting payload description 7
+   SPARTN_PAYDESC_8,      // getting payload description 8
+   SPARTN_PAYLOAD,        // gathering payload
+   SPARTN_AUTH,           // got payload, getting auth.
+   SPARTN_RECOGNIZED,     // SPARTN packet recognized
+
    JSON_LEADER,           // JSON leading { found
    JSON_STRINGLITERAL,    // start of JSON string literal seen
    JSON_STRING_SOLIDUS,   // backslash in string
