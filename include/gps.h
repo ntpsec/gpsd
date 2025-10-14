@@ -265,6 +265,10 @@ struct gps_fix_t {
 #define ANT_OK 1
 #define ANT_OPEN 2
 #define ANT_SHORT 3
+    int ant_power;          // antenna power status
+#define ANT_PWR_UNK 0
+#define ANT_PWR_OFF 1
+#define ANT_PWR_ON 2
     /* jamming indicator, 0 == None to 255 == real bad
      * Some receivers on report No/Yes, or 0 to 3.  Those are mapped to
      * 0 to 255. -1 is unset */

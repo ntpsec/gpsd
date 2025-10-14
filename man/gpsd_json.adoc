@@ -144,6 +144,9 @@ altMSL is altHAE minus geoidSep.
 2=Short, +
 3=Open.
 
+|antPwr |No |numeric |Antenna Power Status: +
+1=Power off, +
+2=Power on, +
 
 |climb |No |numeric |Climb (positive) or sink (negative) rate, meters
 per second.

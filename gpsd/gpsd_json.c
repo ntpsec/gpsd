@@ -498,6 +498,9 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
     if (ANT_OK < gpsdata->fix.ant_stat){
         str_appendf(reply, replylen, ",\"ant\":%d", gpsdata->fix.ant_stat);
     }
+    if (ANT_PWR_UNK != gpsdata->fix.ant_power){
+        str_appendf(reply, replylen, ",\"antPwr\":%d", gpsdata->fix.ant_power);
+    }
     if (0 < gpsdata->fix.jam){
         str_appendf(reply, replylen, ",\"jam\":%u", gpsdata->fix.jam);
     }

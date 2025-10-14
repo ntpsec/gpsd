@@ -2131,8 +2131,31 @@ static gps_mask_t ubx_msg_mon_hw(struct gps_device_t *session,
         session->newdata.ant_stat = ANT_UNK;
         break;
     }
+    
+    // u-blox 9 outputs antenna power status in MON-HW and MON-RF,
+    // so we add the same switch once in ubx_msg_mon_hw() and twice
+    // in ubx_msg_mon_rf().
+    switch(aPower) {
+    case 0:
+        // Power off
+        session->newdata.ant_power = ANT_PWR_OFF;
+        break;
+    case 1:
+        // Power on
+        session->newdata.ant_power = ANT_PWR_ON;
+        break;
+    case 2:
+        // Power state unknown
+        FALLTHROUGH
+    default:
+        // Unknown values
+        session->newdata.ant_power = ANT_PWR_UNK;
+       break;
+    }
+
     if (0 < jamInd ||
-        ANT_OK <= session->newdata.ant_stat) {
+        ANT_OK <= session->newdata.ant_stat ||
+        ANT_PWR_UNK != session->newdata.ant_power) {
         mask |= REPORT_IS;           // force a new, extra, TPV.
     }
 
@@ -2252,6 +2275,27 @@ static gps_mask_t ubx_msg_mon_rf(struct gps_device_t *session,
                 break;
             }
 
+            // u-blox 9 outputs antenna power status in MON-HW and MON-RF,
+            // so we add the same switch once in ubx_msg_mon_hw() and twice
+            // in ubx_msg_mon_rf().
+            switch(antPower) {
+            case 0:
+                // Power off
+                session->newdata.ant_power = ANT_PWR_OFF;
+                break;
+            case 1:
+                // Power on
+                session->newdata.ant_power = ANT_PWR_ON;
+                break;
+            case 2:
+                // Power state unknown
+                FALLTHROUGH
+            default:
+                // Unknown values
+                session->newdata.ant_power = ANT_PWR_UNK;
+               break;
+            }
+
             // use the highest ant_stat and jamInd
             if ((unsigned)session->newdata.ant_stat < ant_stat) {
                 session->newdata.ant_stat = ant_stat;
@@ -2317,6 +2361,27 @@ static gps_mask_t ubx_msg_mon_rf(struct gps_device_t *session,
                 break;
             }
 
+            // u-blox 9 outputs antenna power status in MON-HW and MON-RF,
+            // so we add the same switch once in ubx_msg_mon_hw() and twice
+            // in ubx_msg_mon_rf().
+            switch(antPower) {
+            case 0:
+                // Power off
+                session->newdata.ant_power = ANT_PWR_OFF;
+                break;
+            case 1:
+                // Power on
+                session->newdata.ant_power = ANT_PWR_ON;
+                break;
+            case 2:
+                // Power state unknown
+                FALLTHROUGH
+            default:
+                // Unknown values
+                session->newdata.ant_power = ANT_PWR_UNK;
+               break;
+            }
+
             // use the highest ant_stat and jamInd
             if ((unsigned)session->newdata.ant_stat < ant_stat) {
                 session->newdata.ant_stat = ant_stat;
@@ -2339,7 +2404,8 @@ static gps_mask_t ubx_msg_mon_rf(struct gps_device_t *session,
         }
     }
     if (0 < session->newdata.jam ||
-        ANT_OK <= session->newdata.ant_stat) {
+        ANT_OK <= session->newdata.ant_stat ||
+        ANT_PWR_UNK != session->newdata.ant_power) {
         mask |= REPORT_IS;           // force a new, extra, TPV.
     }
     return mask;

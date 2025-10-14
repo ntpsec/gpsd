@@ -47,6 +47,8 @@ static int json_tpv_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.real = NAN},
         {"ant",    t_integer, .addr.integer = &gpsdata->fix.ant_stat,
                                  .dflt.integer = 0},
+        {"antPwr",    t_integer, .addr.integer = &gpsdata->fix.ant_power,
+                                 .dflt.integer = 0},
         {"baseS",     t_integer,   .addr.integer = &gpsdata->fix.base.status,
          .dflt.integer = STATUS_UNK},     // aka zero
         {"baseE",     t_real,      .addr.real = &gpsdata->fix.base.east,
