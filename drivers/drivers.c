@@ -1685,6 +1685,28 @@ const struct gps_type_t driver_pps = {
     .control_send   = NULL,             // how to send control strings
     .time_offset     = NULL,            // no method for NTP fudge factor
 };
+
+static const struct gps_type_t driver_spartn = {
+    .type_name     = "SPARTN",          // full name of type
+    .packet_type   = SPARTN_PACKET,     // associated lexer packet type
+    .flags         = DRIVER_NOFLAGS,    // no rollover or other flags
+    .trigger       = NULL,              // no recognition string
+    .channels      = 0,                 // not used
+    .probe_detect  = NULL,              // no probe
+    .get_packet    = NULL,              // use generic packet getter
+    .parse_packet  = spartn_parse,      //
+    .rtcm_writer   = NULL,              // don't send RTCM data
+    .init_query    = NULL,              // non-perturbing initial query
+    .event_hook    = NULL,              // no event hook
+    .speed_switcher= NULL,              // no speed switcher
+    .mode_switcher = NULL,              // no mode switcher
+    .rate_switcher = NULL,              // no sample-rate switcher
+    // cycle not relevant, no rate switch, but can generate log noise
+    .min_cycle.tv_sec  = 10,            // Some NTRIP servers are bursty
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = NULL,             // how to send control strings
+    .time_offset     = NULL,
+};
 // *INDENT-ON*
 
 extern const struct gps_type_t driver_allystar;
@@ -1768,6 +1790,7 @@ static const struct gps_type_t *gpsd_driver_array[] = {
 #ifdef SKYTRAQ_ENABLE
     &driver_skytraq,
 #endif  // SKYTRAQ_ENABLE
+    &driver_spartn,
 #ifdef SUPERSTAR2_ENABLE
     &driver_superstar2,
 #endif  // SUPERSTAR2_ENABLE

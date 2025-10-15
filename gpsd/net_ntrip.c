@@ -98,6 +98,8 @@ static struct ntrip_fmt_s {
     {"RTCM 3.3", FMT_RTCM3_3},
     {"RTCM 3", FMT_RTCM3_0},
     {"RTCM3", FMT_RTCM3_0},
+    // {"SPARTN", FMT_SPARTN},     // u-blox  // UNSUPPORTED!
+    {"SPARTN 2.0", FMT_SPARTN_2},  // u-blox
     {NULL, FMT_UNKNOWN},
 };
 
@@ -570,6 +572,11 @@ static int ntrip_auth_encode(struct ntrip_stream_t *stream)
         ret = -1;
         break;
     }
+#if 0
+    GPSD_LOG(LOG_PROG, errout,
+             "NTRIP: ntrip_auth_encode() auth %s ret %d\n",
+             stream->authStr,  ret);
+#endif
     return ret;
 }
 

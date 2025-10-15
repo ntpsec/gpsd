@@ -22,8 +22,10 @@ No need to handle Garmin USB binary, we know that type by the fact we're
 connected to the Garmin kernel driver.  But we need to be able to tell the
 others apart and distinguish them from baud barf.
 
+Tip of the hat to GitHub semuconsulting/pyspartn for showing how SPARTN works.
+
 PERMISSIONS
-   This file is Copyright 2010 by the GPSD project
+   This file is Copyright by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -419,6 +421,15 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
     return checksum_ok;
 }
 
+// Convert SPARTN TF015 (Embedded Auth Len) to bytes
+static unsigned spartn_auth_len(unsigned index)
+{
+    // 5 to 7 TBD
+    static unsigned id2len[] = {8, 12, 16, 32, 64, 0, 0, 0};
+
+    return id2len[index & 7];
+}
+
 // push back the last character grabbed, setting a specified state
 static bool character_pushback(struct gps_lexer_t *lexer,
                                unsigned int newstate)
@@ -576,6 +587,15 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = ZODIAC_LEADER_1;
             break;
 #endif  // ZODIAC_ENABLE
+        case 's':
+            // SPARTN, 0x73
+            if (0 !=
+               (lexer->type_mask & PACKET_TYPEMASK(SPARTN_PACKET))) {
+                lexer->state = SPARTN_PRE_1;
+                GPSD_LOG(LOG_IO, &lexer->errout, "SPARTN 0x73\n");
+                break;
+            }  // else
+            FALLTHROUGH
         default:
             if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
@@ -592,6 +612,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
                    '\t' == c) {
             // allow tabs and CR in comments
         } else if (!isprint(c)) {
+            GPSD_LOG(LOG_RAW, &lexer->errout, "COMMENT: x%x\n", c);
             return character_pushback(lexer, GROUND_STATE);
         }
         break;
@@ -1250,6 +1271,94 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = SIRF_LEADER_1;
         break;
 #endif  // SKYTRAQ
+    case SPARTN_PRE_1:
+        // message type, 1 bit of length
+        lexer->length = c & 1;
+        lexer->state = SPARTN_PRE_2;
+        break;
+    case SPARTN_PRE_2:
+        // 8 bits of length
+        lexer->length = (lexer->length << 8) + (c & 0xff);
+        lexer->state = SPARTN_PRE_3;
+        break;
+    case SPARTN_PRE_3:
+        // 1 bit of length, 1 bit of eaf, 2 bits CRC type, 4 bits frame CRC
+        lexer->length = (lexer->length << 1) + ((c >> 7) & 1);
+        lexer->state = SPARTN_PAYDESC_1;
+        break;
+    case SPARTN_PAYDESC_1:
+        // 4 bits subtype, 1 bit time tag type,  3 bits time tag
+        lexer->state = SPARTN_PAYDESC_2;
+        GPSD_LOG(LOG_RAW, &lexer->errout,
+                 "SPARTN: PD1 length %zu eaf %u subtype %u  "
+                  "timetagtype %u c[4] x%x\n",
+                  lexer->length, (lexer->inbuffer[3] >> 6) & 1,
+                  (c >> 4) & 0x0f, (c >> 3) & 1,lexer->inbuffer[3]);
+        break;
+    case SPARTN_PAYDESC_2:
+        // 8 bits timetag
+        lexer->state = SPARTN_PAYDESC_3;
+        break;
+    case SPARTN_PAYDESC_3:
+        // 5 bits timetag 3 bits of (tt2 or solution)
+        if (0x08 == (lexer->inbuffer[4] & 0x08)) {
+            // eaf 1 means 2 extra payload description bytes (timetag2)
+            lexer->state = SPARTN_PAYDESC_4;
+        } else {
+            lexer->state = SPARTN_PAYDESC_6;
+        }
+        break;
+    case SPARTN_PAYDESC_4:
+        // 8 bits timetag2
+        lexer->state = SPARTN_PAYDESC_5;
+        break;
+    case SPARTN_PAYDESC_5:
+        // 5 bits timetag2 3 bits of solution proc ID
+        lexer->state = SPARTN_PAYDESC_6;
+        break;
+    case SPARTN_PAYDESC_6:
+        //   4 bits solution ID, 4 bits Solution Proc ID
+        if (0x40 == (lexer->inbuffer[3] & 0x40)) {
+            // eaf 1 means 2 extra payload description bytes
+            lexer->state = SPARTN_PAYDESC_7;
+        } else {
+            lexer->state = SPARTN_PAYLOAD;
+        }
+        // add CRC length, 1, 2, 3, or 4 bytes
+        lexer->length += ((lexer->inbuffer[3] >> 4) & 3) + 1;
+        GPSD_LOG(LOG_RAW, &lexer->errout,
+                 "SPARTN: PD6 length %zu eaf %u timetagtype %u "
+                  "crct %u\n",
+                  lexer->length, (lexer->inbuffer[3] >> 6) & 1,
+                  (lexer->inbuffer[4] >> 3) & 1,
+                  (lexer->inbuffer[3] >> 4) & 3);
+        break;
+    case SPARTN_PAYDESC_7:
+        // 4 bits Enc ID, 4 bits Enc Seq Num
+        lexer->state = SPARTN_PAYDESC_8;
+        break;
+    case SPARTN_PAYDESC_8:
+        // 2 bit Enc Seq Num, 1 bit Auth Ind, 3 Embed Auth Len
+        lexer->state = SPARTN_PAYLOAD;
+        lexer->length += spartn_auth_len(c & 3);
+        GPSD_LOG(LOG_RAW, &lexer->errout,
+                 "SPARTN: PD8 x%02x length %zu eaf %u timetagtype %u "
+                  "eal %u/%u\n",
+                  c, lexer->length, (lexer->inbuffer[3] >> 6) & 1,
+                  (lexer->inbuffer[4] >> 3) & 1,
+                  c & 3, spartn_auth_len(c &  3));
+        break;
+    case SPARTN_PAYLOAD:
+        if (0 == --lexer->length) {
+            // Done with payload, encryption and crc
+            lexer->state = SPARTN_RECOGNIZED;
+        }
+        GPSD_LOG(LOG_RAW, &lexer->errout,
+                 "SPARTN: PAY x%02x length4 %zu eaf %u timetagtype %u\n",
+                  c, lexer->length, (lexer->inbuffer[3] >> 6) & 1,
+                  (lexer->inbuffer[4] >> 3) & 1);
+        break;
+
 #ifdef SUPERSTAR2_ENABLE
     case SUPERSTAR2_LEADER:
         ctmp = c;          // seems a dodgy way to keep state...
@@ -2310,7 +2419,7 @@ void packet_parse(struct gps_lexer_t *lexer)
         if (!nextstate(lexer, c)) {
             continue;
         }
-        GPSD_LOG(LOG_RAW2, &lexer->errout,
+        GPSD_LOG(LOG_RAW, &lexer->errout,
                  "%08ld: character '%c' [%02x], %s -> %s\n",
                  lexer->char_counter, (isprint(c) ? c : '.'), c,
                  state_table[oldstate], state_table[lexer->state]);
@@ -2745,6 +2854,11 @@ void packet_parse(struct gps_lexer_t *lexer)
             break;
 #endif  // SIRF_ENABLE
 
+        case SPARTN_RECOGNIZED:
+            packet_type = SPARTN_PACKET;
+            lexer->state = GROUND_STATE;
+            acc_dis = ACCEPT;
+            break;
 #ifdef SKYTRAQ_ENABLE
         case SKY_RECOGNIZED:
             packet_type = SKY_PACKET;
@@ -3276,7 +3390,7 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
         recvd = read(fd, lexer->inbuffer + lexer->inbuflen,
                      sizeof(lexer->inbuffer) - lexer->inbuflen);
     } else {
-        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+        GPSD_LOG(LOG_IO, &lexer->errout,
                  "PACKET: packet_get1_chunked(fd %d) got enough inbuflen %zu "
                  "offset %zd\n",
                  fd, lexer->inbuflen, lexer->inbufptr - lexer->inbuffer);
@@ -3408,7 +3522,7 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
             }
             if ('\n' != tmp_bufptr[idx]) {
                 // Invalid ending.  The only valid ending is '\n'.
-                GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                GPSD_LOG(LOG_IO, &lexer->errout,
                          "PACKET: NTRIP: packet_get1_chunked(fd %d) "
                          "invalid ending 2, idx %zu x%02x\n",
                          fd, idx, tmp_bufptr[idx]);

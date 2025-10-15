@@ -1,9 +1,11 @@
                         GPSD project news
 
 3.26.2: TBD
-  Improve support for newer signal ids.
+  Improve support for newer signal ids (L1/L2/L5, etc.).
   xgps add signal id names
   gpsrinex, support new signal ids.  Add -g and --gnss options.
+  Initial SPARTN support.  Disabled by default, terrible protocol.
+  Many ubxtool updates for newer u-blox receivers.
 
 3.26.1: 17 May 2025
   Increment libgps version

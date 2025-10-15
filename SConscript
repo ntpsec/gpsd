@@ -1815,8 +1815,6 @@ if env['libgpsmm']:
 
 # gpsd server library
 libgpsd_sources = [
-    "gpsd/bsd_base64.c",
-    "gpsd/crc24q.c",
     "drivers/driver_ais.c",
     "drivers/driver_allystar.c",
     "drivers/driver_casic.c",
@@ -1836,10 +1834,13 @@ libgpsd_sources = [
     "drivers/drivers.c",
     "drivers/driver_sirf.c",
     "drivers/driver_skytraq.c",
+    "drivers/driver_spartn.c",
     "drivers/driver_superstar2.c",
     "drivers/driver_tsip.c",
     "drivers/driver_ubx.c",
     "drivers/driver_zodiac.c",
+    "gpsd/bsd_base64.c",
+    "gpsd/crc24q.c",
     "gpsd/geoid.c",
     "gpsd/gpsd_json.c",
     "gpsd/isgps.c",
