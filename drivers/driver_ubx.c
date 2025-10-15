@@ -621,6 +621,68 @@ bool ubx_write(struct gps_device_t * session,
     return (ok);
 }
 
+/* aPower2ant_power()
+ * convert UBX antenna power flag to gpsd ant_power flag.
+ * Used by UBX-MON-HW, and UBX-MON-RF.
+ *
+ */
+static int aPower2ant_power(unsigned aPower)
+{
+    int ant_power;
+
+    switch(aPower) {
+    case 0:
+        // Power off
+        ant_power = ANT_PWR_OFF;
+        break;
+    case 1:
+        // Power on
+        ant_power = ANT_PWR_ON;
+        break;
+    case 2:
+        // Power state unknown
+        FALLTHROUGH
+    default:
+        // Unknown values
+        ant_power = ANT_PWR_UNK;
+       break;
+    }
+    return ant_power;
+}
+
+/* antStat2ant_stat()
+ * convert UBX antenna status flag to gpsd ant_stat flag.
+ * Used by UBX-MON-HW, and UBX-MON-RF.
+ *
+ */
+static int antStat2ant_status(unsigned antStat)
+{
+    int ant_stat;
+
+    switch (antStat) {
+    case 2:
+        ant_stat = ANT_OK;
+        break;
+    case 3:
+        ant_stat = ANT_SHORT;
+        break;
+    case 4:
+        ant_stat = ANT_OPEN;
+        break;
+    case 0:
+        // Init
+        FALLTHROUGH
+    case 1:
+        // Unknown
+        FALLTHROUGH
+    default:
+        // Dunno...
+        ant_stat = ANT_UNK;
+        break;
+    }
+    return ant_stat;
+}
+
 /* Convert a ubx PRN (single svid) to an NMEA 4.0 (extended)
  * PRN and ubx gnssid, svid
  *
@@ -2109,49 +2171,8 @@ static gps_mask_t ubx_msg_mon_hw(struct gps_device_t *session,
         jamInd = 0;   // WTF?
     }
     session->newdata.jam = jamInd;
-
-    switch (aStatus) {
-    case 2:
-        session->newdata.ant_stat = ANT_OK;
-        break;
-    case 3:
-        session->newdata.ant_stat = ANT_SHORT;
-        break;
-    case 4:
-        session->newdata.ant_stat = ANT_OPEN;
-        break;
-    case 0:
-        // Init
-        FALLTHROUGH
-    case 1:
-        // Unknown
-        FALLTHROUGH
-    default:
-        // Dunno...
-        session->newdata.ant_stat = ANT_UNK;
-        break;
-    }
-    
-    // u-blox 9 outputs antenna power status in MON-HW and MON-RF,
-    // so we add the same switch once in ubx_msg_mon_hw() and twice
-    // in ubx_msg_mon_rf().
-    switch(aPower) {
-    case 0:
-        // Power off
-        session->newdata.ant_power = ANT_PWR_OFF;
-        break;
-    case 1:
-        // Power on
-        session->newdata.ant_power = ANT_PWR_ON;
-        break;
-    case 2:
-        // Power state unknown
-        FALLTHROUGH
-    default:
-        // Unknown values
-        session->newdata.ant_power = ANT_PWR_UNK;
-       break;
-    }
+    session->newdata.ant_stat = antStat2ant_status(aStatus);
+    session->newdata.ant_power = aPower2ant_power(aPower);
 
     if (0 < jamInd ||
         ANT_OK <= session->newdata.ant_stat ||
@@ -2253,53 +2274,15 @@ static gps_mask_t ubx_msg_mon_rf(struct gps_device_t *session,
             unsigned reserved2 = getleu16(buf, 25 + off);
             unsigned ant_stat;
 
-            switch (antStatus) {
-            case 2:
-                ant_stat = ANT_OK;
-                break;
-            case 3:
-                ant_stat = ANT_SHORT;
-                break;
-            case 4:
-                ant_stat = ANT_OPEN;
-                break;
-            case 0:
-                // Init
-                FALLTHROUGH
-            case 1:
-                // Unknown
-                FALLTHROUGH
-            default:
-                // Dunno...
-                ant_stat = ANT_UNK;
-                break;
-            }
-
-            // u-blox 9 outputs antenna power status in MON-HW and MON-RF,
-            // so we add the same switch once in ubx_msg_mon_hw() and twice
-            // in ubx_msg_mon_rf().
-            switch(antPower) {
-            case 0:
-                // Power off
-                session->newdata.ant_power = ANT_PWR_OFF;
-                break;
-            case 1:
-                // Power on
-                session->newdata.ant_power = ANT_PWR_ON;
-                break;
-            case 2:
-                // Power state unknown
-                FALLTHROUGH
-            default:
-                // Unknown values
-                session->newdata.ant_power = ANT_PWR_UNK;
-               break;
-            }
+            ant_stat = antStat2ant_status(antStatus);
 
             // use the highest ant_stat and jamInd
             if ((unsigned)session->newdata.ant_stat < ant_stat) {
                 session->newdata.ant_stat = ant_stat;
             }
+
+            session->newdata.ant_power = aPower2ant_power(antPower);
+
             if ((unsigned)session->newdata.jam < jamInd) {
                 session->newdata.jam = jamInd;
             }
@@ -2339,53 +2322,13 @@ static gps_mask_t ubx_msg_mon_rf(struct gps_device_t *session,
             unsigned magQ = getub(buf, 23 + off);
             unsigned ant_stat;
 
-            switch (antStatus) {
-            case 2:
-                ant_stat = ANT_OK;
-                break;
-            case 3:
-                ant_stat = ANT_SHORT;
-                break;
-            case 4:
-                ant_stat = ANT_OPEN;
-                break;
-            case 0:
-                // Init
-                FALLTHROUGH
-            case 1:
-                // Unknown
-                FALLTHROUGH
-            default:
-                // Dunno...
-                ant_stat = ANT_UNK;
-                break;
-            }
-
-            // u-blox 9 outputs antenna power status in MON-HW and MON-RF,
-            // so we add the same switch once in ubx_msg_mon_hw() and twice
-            // in ubx_msg_mon_rf().
-            switch(antPower) {
-            case 0:
-                // Power off
-                session->newdata.ant_power = ANT_PWR_OFF;
-                break;
-            case 1:
-                // Power on
-                session->newdata.ant_power = ANT_PWR_ON;
-                break;
-            case 2:
-                // Power state unknown
-                FALLTHROUGH
-            default:
-                // Unknown values
-                session->newdata.ant_power = ANT_PWR_UNK;
-               break;
-            }
+            ant_stat = antStat2ant_status(antStatus);
 
             // use the highest ant_stat and jamInd
             if ((unsigned)session->newdata.ant_stat < ant_stat) {
                 session->newdata.ant_stat = ant_stat;
             }
+            session->newdata.ant_power = aPower2ant_power(antPower);
 
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "UBX: MON-RF: blk %u antStatus %u antPower %u "

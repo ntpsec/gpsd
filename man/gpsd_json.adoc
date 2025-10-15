@@ -145,6 +145,7 @@ altMSL is altHAE minus geoidSep.
 3=Open.
 
 |antPwr |No |numeric |Antenna Power Status: +
+0=Unknwon, +
 1=Power off, +
 2=Power on, +
 

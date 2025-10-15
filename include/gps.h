@@ -116,6 +116,7 @@ extern "C" {
  *       Add sigid2str(), convert sigid to a string.
  *       Add sigid2obs(), convert sigid to a RINEX observation code string.
  *       gps_fix_t Add: errEllipseOrient, errEllipseMajor, errEllipseMinow
+ *       gps_fix_t Add: ant_power.
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
