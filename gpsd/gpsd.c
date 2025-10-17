@@ -1425,11 +1425,12 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
                     // no path specified
                     int devcount = 0;
 
-                    for (devp = devices; devp < devices + MAX_DEVICES; devp++)
+                    for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
                         if (allocated_device(devp)) {
                             device = devp;
                             devcount++;
                         }
+                    }
                     if (0 == devcount) {
                         (void)strlcat(reply,
                                       "{\"class\":\"ERROR\",\"message\":"
