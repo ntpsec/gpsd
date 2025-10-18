@@ -589,8 +589,8 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #endif  // ZODIAC_ENABLE
         case 's':
             // SPARTN, 0x73
-            if (0 !=
-               (lexer->type_mask & PACKET_TYPEMASK(SPARTN_PACKET))) {
+            if (0 ==
+                (lexer->type_mask & PACKET_TYPEMASK(SPARTN_PACKET))) {
                 lexer->state = SPARTN_PRE_1;
                 GPSD_LOG(LOG_IO, &lexer->errout, "SPARTN 0x73\n");
                 break;
@@ -2389,6 +2389,8 @@ void lexer_init(struct gps_lexer_t *lexer, struct gpsd_errout_t *errout)
      */
     // set start_time to help out autobaud.
     (void)clock_gettime(CLOCK_REALTIME, &lexer->start_time);
+    // No SPARTN decode by default.
+    lexer->type_mask =  PACKET_TYPEMASK(SPARTN_PACKET);
     packet_reset(lexer);
     lexer->errout = *errout;    // srtucture copy
 }

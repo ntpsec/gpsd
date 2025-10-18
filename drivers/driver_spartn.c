@@ -14,8 +14,6 @@ SPDX-License-Identifier: BSD-2-clause
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
-#include <string.h>
-
 #include "../include/gpsd.h"
 #include "../include/bits.h"
 
@@ -24,18 +22,32 @@ SPDX-License-Identifier: BSD-2-clause
 #define sgrab(width)    (bitcount += width, sbits(buf,  \
                          bitcount - width, width, false))
 
+static const struct vlist_t vspartn_crc_type[] = {
+    {0, "CRC-8-CCITT"},
+    {1, "CRC-16-CCITT"},
+    {2, "CRC-24-Radix-64"},
+    {3, "CRC-32-CCITT"},
+};
+
 static const struct vlist_t vspartn_mtype[] = {
-        {0, "Orbit"},
-        {1, "HPAC"},
-        {2, "GAD"},
-        {3, "BDS"},
+    {0, "Orbit"},
+    {1, "HPAC"},
+    {2, "GAD"},
+    {3, "BDS"},
+    {4, "QZSS"},
 };
 
 static const struct vlist_t vspartn_mstype[] = {
-        {0, "GPS"},
-        {1, "GLO"},
-        {2, "GAL"},
-        {3, "BDS"},
+    {0, "GPS"},
+    {1, "GLO"},
+    {2, "GAL"},
+    {3, "BDS"},
+};
+
+static const struct vlist_t vspartn_m120stype[] = {
+    {0,  "In-house"},
+    {1,  "u-blox"},
+    {2,  "Swift"},
 };
 
 /* stub decoder for SPARTN
@@ -54,12 +66,13 @@ gps_mask_t spartn_parse(struct gps_device_t *session)
     unsigned crc_type;
     unsigned frame_crc;
     unsigned time_tag_type;
-    uint64_t time_tag;
+    unsigned long time_tag;
     unsigned sol_ID;
     unsigned sol_proc_ID;
-    unsigned enc_ID;
-    unsigned enc_seq_num;
-    unsigned eal;
+    unsigned enc_ID = 0;
+    unsigned enc_seq_num = 0;
+    unsigned ai = 0;
+    unsigned eal = 0;
 
     preamble = ugrab(8);
     if (0x73 != preamble) {
@@ -84,8 +97,10 @@ gps_mask_t spartn_parse(struct gps_device_t *session)
     if (1 == eaf) {
         enc_ID = ugrab(4);
         enc_seq_num = ugrab(6);
+        ai = ugrab(3);
         eal = ugrab(3);
     }
+    // payload follows.
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SPARTN: mtype %u msubtype %u len %u eaf %u crct %u fcrc %u "
@@ -93,15 +108,47 @@ gps_mask_t spartn_parse(struct gps_device_t *session)
              msg_type, msg_subtype, pay_length, eaf, crc_type, frame_crc,
              time_tag_type, (unsigned long long)time_tag, sol_ID, sol_proc_ID);
 
-    GPSD_LOG(LOG_IO, &session->context->errout,
-             "SPARTN: mtype %s msubtype %s\n",
-             val2str(msg_type, vspartn_mtype),
-             val2str(msg_type, vspartn_mstype));
+    if (LOG_IO <= session->context->errout.debug) {
+        const char *msg_subtype_s;
+
+        msg_subtype_s = "TBD";
+        switch (msg_type) {
+        case 0:
+            FALLTHROUGH
+        case 1:
+            msg_subtype_s = val2str(msg_subtype, vspartn_mstype);
+            break;
+        case 2:
+            // GAD
+            if (0 == msg_subtype) {
+                msg_subtype_s = "GAD";
+            }
+            break;
+        case 3:
+            // BPAC
+            if (0 == msg_subtype) {
+                msg_subtype_s = "BPAC Polynomial";
+            }
+            break;
+        case 120:
+            // Prorietary
+            msg_subtype_s = val2str(msg_subtype, vspartn_m120stype);
+            break;
+        default:
+            break;
+        }
+
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "SPARTN: mtype %s msubtype %s crct %s\n",
+                 val2str(msg_type, vspartn_mtype),
+                 msg_subtype_s,
+                 val2str(crc_type, vspartn_crc_type));
+    }
 
     if (1 == eaf) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SPARTN: enc_ID %u enc_seq_num %u eal %u\n",
-                 enc_ID, enc_seq_num, eal);
+                 "SPARTN: enc_ID %u enc_seq_num %u ai %u eal %u\n",
+                 enc_ID, enc_seq_num, ai, eal);
     }
 
     return mask;
