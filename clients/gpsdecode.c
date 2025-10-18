@@ -24,6 +24,7 @@ static int verbose = 0;
 static bool scaled = true;
 static bool json = true;
 static bool pseudonmea = false;
+static bool spartn = false;
 static bool split24 = false;
 static bool minlength = false;
 static unsigned int ntypes = 0;
@@ -585,7 +586,7 @@ static void decode(FILE *fpin, FILE *fpout)
     struct gps_policy_t policy;
     size_t minima[PACKET_TYPES + 1];
     char buf[GPS_JSON_RESPONSE_MAX * 4];
-    int i;
+    size_t i;
 
     //This looks like a good idea, but it breaks regression tests
     //(void)strlcpy(session.gpsdata.dev.path, "stdin",
@@ -599,12 +600,17 @@ static void decode(FILE *fpin, FILE *fpout)
     context.readonly = true;
     gpsd_init(&session, &context, NULL);
     gpsd_clear(&session);
+    if (spartn) {
+        // enable SPARTN
+        session.lexer.type_mask &=  ~PACKET_TYPEMASK(SPARTN_PACKET);
+    }
+
     session.gpsdata.gps_fd = fileno(fpin);
     session.gpsdata.dev.baudrate = 38400;     // hack to enable subframes
     (void)strlcpy(session.gpsdata.dev.path,
                   "stdin",
                   sizeof(session.gpsdata.dev.path));
-    for (i = 0; i < (int)(sizeof(minima) / sizeof(minima[0])); i++) {
+    for (i = 0; i < (sizeof(minima) / sizeof(minima[0])); i++) {
         minima[i] = MAX_PACKET_LENGTH + 1;
     }
 
@@ -678,19 +684,20 @@ static void decode(FILE *fpin, FILE *fpout)
     }
 
     if (minlength) {
-        for (i = 0; i < (int)(sizeof(minima) / sizeof(minima[0])); i++) {
+        for (i = 0; i < (sizeof(minima) / sizeof(minima[0])); i++) {
             // dump all minima, ignoring comments
-            if (i != 1 && minima[i] <= MAX_PACKET_LENGTH) {
+            if (1 != i &&
+                MAX_PACKET_LENGTH >= minima[i]) {
                 const struct gps_type_t **dp;
                 char *np = "Unknown";
 
                 for (dp = gpsd_drivers; *dp; dp++) {
-                    if ((i - 1) == (*dp)->packet_type) {
+                    if ((int)(i - 1) == (*dp)->packet_type) {
                         np = (*dp)->type_name;
                         break;
                     }
                 }
-                printf("%s (%d): %u\n", np, i - 1, (unsigned int)minima[i]);
+                printf("%s (%lu): %lu\n", np, i - 1, minima[i]);
             }
         }
     }
@@ -749,12 +756,13 @@ static void usage(void)
 #ifdef HAVE_GETOPT_LONG
           "  --ais              AIS dump format with an ASCII pipe separator.\n"
           "  --debug DEBUG      Set debug level.\n"
-          "  --decode           Decode\n"
-          "  --encode           Encode\n"
+          "  --decode           Decode [default]\n"
+          "  --encode           Encode.  JSON decode/encode\n"
           "  --help             Show this help, then exit\n"
           "  --json             JSON.\n"
           "  --minlength        Minimum length, no JSON.\n"
           "  --nmea             pseudo NMEA\n"
+          "  --spartn           SPARTN enable.\n"
           "  --split24          split24\n"
           "  --types TYPES      Types\n"
           "  --unscaled         Unscaled\n"
@@ -764,8 +772,8 @@ static void usage(void)
           "  -?                 Show this help, then exit\n"
           "  -c                 AIS dump format with an ASCII pipe separator.\n"
           "  -D DEBUG           Set debug level.\n"
-          "  -d                 Decode \n"
-          "  -e                 Encode\n"
+          "  -d                 Decode [default]\n"
+          "  -e                 Encode.  JSON decode/encode\n"
           "  -h                 Show this help, then exit\n"
           "  -j                 JSON.\n"
           "  -m                 Minimum length, no JSON\n"
@@ -775,13 +783,14 @@ static void usage(void)
           "  -u                 Unscaled\n"
           "  -V                 Print version and exit.\n"
           "  -v                 Verbose.\n"
+          "  -z                 SPARTN enable.\n"
           "\n");
     exit(EXIT_FAILURE);
 }
 
 int main(int argc, char **argv)
 {
-    const char *optstring = "?cdehjmnst:uvVD:";
+    const char *optstring = "?cdehjmnst:uvzVD:";
     enum { doencode, dodecode } mode = dodecode;
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
@@ -794,6 +803,7 @@ int main(int argc, char **argv)
         {"minlength", no_argument, NULL, 'm'},
         {"nmea", no_argument, NULL, 'n'},
         {"nojson", no_argument, NULL, 'c'},
+        {"spartn", no_argument, NULL, 'z'},
         {"split24", no_argument, NULL, 's'},
         {"types", required_argument, NULL, 't'},
         {"unscaled", no_argument, NULL, 'u' },
@@ -869,6 +879,11 @@ int main(int argc, char **argv)
 
         case 'v':
             verbose = 1;
+            break;
+
+        case 'z':
+            // Dangerous!
+            spartn = true;
             break;
 
         case 'V':
