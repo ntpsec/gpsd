@@ -357,7 +357,7 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
     gpsd_zero_satellites(&session->gpsdata);
 
     // initialize things for the packet parser
-    packet_reset(&session->lexer);
+    lexer_init(&session->lexer, &session->context->errout);
 }
 
 // temporarily release the GPS device
