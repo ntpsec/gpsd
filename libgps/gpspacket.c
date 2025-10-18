@@ -143,12 +143,15 @@ const size_t fvi_size_buffer = (MAX_PACKET_LENGTH * 2) + 1;
  * Returns NULL on failure. */
 struct gps_lexer_t *ffi_Lexer_init(void) {
     struct gps_lexer_t *result;
+    struct gpsd_errout_t errout = {0};   // pacify Coverity.
 
     result = calloc(1, fvi_size_lexer);
     if (NULL == result) {
         return NULL;
     }
-    packet_reset(result);
+    errout_reset(&errout);      // Do the real initialization of errout
+    lexer_init(result, &errout);
+
     return result;
 }
 
@@ -161,13 +164,15 @@ void ffi_Lexer_fini(struct gps_lexer_t *lexer) {
  * Returns NULL on failure */
 struct gps_device_t *ffi_Device_init(int fd) {
     struct gps_device_t *result;
+    struct gpsd_errout_t errout = {0};   // pacify Coverity.
 
     result = calloc(1, fvi_size_device);
     if (NULL == result) {
         return NULL;
     }
     result->gpsdata.gps_fd = fd;
-    packet_reset(&result->lexer);
+    errout_reset(&errout);      // Do the real initialization of errout
+    lexer_init(&result->lexer, &errout);
     return result;
 }
 
