@@ -141,6 +141,11 @@ const size_t fvi_size_buffer = (MAX_PACKET_LENGTH * 2) + 1;
 
 /* Attempt to allocate and prepare a bare lexer instance for FFI.
  * Returns NULL on failure. */
+/* Deprecated APIs:
+ *
+ * Lexer() FFI interface is unused, and deprecated October 2025.
+ * It will be removed.
+ */
 struct gps_lexer_t *ffi_Lexer_init(void) {
     struct gps_lexer_t *result;
     struct gpsd_errout_t errout = {0};   // pacify Coverity.

@@ -21,6 +21,9 @@ and the message itself.
 
 Deprecated APIs:
 
+Lexer() FFI interface is unused, and deprecated October 2025.
+It will be removed.
+
 The new() function returns a new packet-lexer instance.  Lexer instances
 have two methods:
     get() takes a file handle argument and returns a tuple consisting of

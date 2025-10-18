@@ -6,6 +6,7 @@
   gpsrinex, support new signal ids.  Add -g and --gnss options.
   Initial SPARTN support.  Disabled by default, terrible protocol.
   Many ubxtool updates for newer u-blox receivers.
+  Lexer() FFI interface is unused, and deprecated October 2025.
 
 3.26.1: 17 May 2025
   Increment libgps version
