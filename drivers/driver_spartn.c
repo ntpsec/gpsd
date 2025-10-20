@@ -16,6 +16,7 @@ SPDX-License-Identifier: BSD-2-clause
 
 #include "../include/gpsd.h"
 #include "../include/bits.h"
+#include "../include/crc24q.h"       // for crc24q_check()
 
 #define ugrab(width)    (bitcount += width, ubits(buf, \
                          bitcount - width, width, false))
@@ -73,6 +74,8 @@ gps_mask_t spartn_parse(struct gps_device_t *session)
     unsigned enc_seq_num = 0;
     unsigned ai = 0;
     unsigned eal = 0;
+    unsigned pay_offset;        // offset of payload
+    unsigned pay_length_bytes;
 
     preamble = ugrab(8);
     if (0x73 != preamble) {
@@ -101,6 +104,18 @@ gps_mask_t spartn_parse(struct gps_device_t *session)
         eal = ugrab(3);
     }
     // payload follows.
+    pay_offset = bitcount / 8;  // should be even bytes Prolly 13 or 15.
+    pay_length_bytes = pay_length / 8;  // should be even bytes 1 to 1024.
+
+    // assume, for now, no Embedded Auth data
+
+    // 1 to 4 CRC bytes, usually 3
+    //  CRC is all bytes after the leader 's'.
+    if (crc24q_check(&session->lexer.outbuffer[1],
+                     pay_offset + pay_length_bytes + 3)) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "SPARTN: crc24 fail\n");
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SPARTN: mtype %u msubtype %u len %u eaf %u crct %u fcrc %u "
@@ -151,6 +166,7 @@ gps_mask_t spartn_parse(struct gps_device_t *session)
                  enc_ID, enc_seq_num, ai, eal);
     }
 
+    mask |= SPARTN_SET;
     return mask;
 }
 

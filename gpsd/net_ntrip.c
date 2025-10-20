@@ -98,8 +98,8 @@ static struct ntrip_fmt_s {
     {"RTCM 3.3", FMT_RTCM3_3},
     {"RTCM 3", FMT_RTCM3_0},
     {"RTCM3", FMT_RTCM3_0},
-    // {"SPARTN", FMT_SPARTN},     // u-blox  // UNSUPPORTED!
-    {"SPARTN 2.0", FMT_SPARTN_2},  // u-blox
+    // {"SPARTN", FMT_SPARTN},     // u-blox, SPAARTN v1  // UNSUPPORTED!
+    {"SPARTN 2.0", FMT_SPARTN_2},  // u-blox, SPAARTN v2
     {NULL, FMT_UNKNOWN},
 };
 
@@ -701,6 +701,13 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     GPSD_LOG(LOG_PROG, errout,
              "NTRIP: ntrip_stream_get_parse(fd %d)\n", dsock);
     lexer_init(lexer, &device->context->errout);
+    if (FMT_SPARTN_2 == device->ntrip.stream.format) {
+        // Allow the cursed protocol
+        device->lexer.type_mask &=  ~PACKET_TYPEMASK(SPARTN_PACKET);
+    } else {
+        device->lexer.type_mask |=  PACKET_TYPEMASK(SPARTN_PACKET);
+    }
+
     /* We expect the header comes in as one TCP packet.
      * dsock is still blocking, so get exactly 1024 bytes */
     while (0 >= (read_ret = read(dsock, ibuf, 1024))) {

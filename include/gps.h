@@ -2890,7 +2890,8 @@ struct gps_data_t {
 #define LOG_SET         (1llu<<42)
 #define IMU_SET         (1llu<<43)
 #define EOF_SET         (1llu<<44)
-#define SET_HIGH_BIT    45
+#define SPARTN_SET      (1llu<<45)
+#define SET_HIGH_BIT    46
     gps_mask_t set_pending;     // Deferred set, waiting to be sent.
     timespec_t online;          /* NZ if GPS is on line, 0 if not.
                                  *
@@ -2946,7 +2947,8 @@ struct gps_data_t {
     // pack things never reported together to reduce structure size
 #define UNION_SET       (AIS_SET|ERROR_SET|GST_SET| \
                          LOGMESSAGE_SET|OSCILLATOR_SET|PPS_SET|RAW_SET| \
-                         RTCM2_SET|RTCM3_SET|SUBFRAME_SET|TOFF_SET|VERSION_SET)
+                         RTCM2_SET|RTCM3_SET|SPARTN_SET|SUBFRAME_SET| \
+                         TOFF_SET|VERSION_SET)
 
     struct gst_t gst;
     union {

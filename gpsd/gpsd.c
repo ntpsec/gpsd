@@ -1775,7 +1775,8 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
      * If the device provided an RTCM packet, repeat it to all devices.
      */
     if (0 != (changed & RTCM2_SET) ||
-        0 != (changed & RTCM3_SET)) {
+        0 != (changed & RTCM3_SET) ||
+        0 != (changed & SPARTN_SET)) {
         if (0 != (changed & RTCM2_SET) &&
             RTCM2_MAX < device->lexer.outbuflen) {
             char tmpbuf[500];
@@ -1798,7 +1799,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
             struct gps_device_t *dp;
             for (dp = devices; dp < (devices + MAX_DEVICES); dp++) {
                 if (!allocated_device(dp) ||
-                    0 > device->gpsdata.gps_fd) {
+                    0 > dp->gpsdata.gps_fd) {
                     continue;
                 }
                 if (NULL != dp->device_type &&
@@ -1809,8 +1810,10 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                                      device->lexer.outbuflen);
                     if (0 < ret) {
                         GPSD_LOG(LOG_IO, &context.errout,
-                                 "<= DGPS/NTRIP: %zd bytes of RTCM relayed.\n",
-                                 device->lexer.outbuflen);
+                                 "<= DGPS/NTRIP: %zd bytes of RTCM relayed "
+                                 "to fd %ld.\n",
+                                 device->lexer.outbuflen,
+                                 dp->gpsdata.gps_fd);
                     } else if (0 == ret) {
                         // nothing written, probably read_only
                     } else {
