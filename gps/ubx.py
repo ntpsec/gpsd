@@ -8235,6 +8235,41 @@ Duplicate of UBX-NAV-CLOCK
                        'name': 'UBX-NAV2-TIMENAVIC'},
                 }
 
+    rxm_cor_statusinfo = (
+        (0, 0x1f, "UNk proto,"),
+        (1, 0x1f, "RTCM3,"),
+        (2, 0x1f, "SPARTN,"),
+        (29, 0x1f, "RXM-PMP,"),
+        (30, 0x1f, "RXM-QZSSL6,"),
+        (0, 0x60, "Err Unk,"),
+        (0x20, 0x60, "No Err,"),
+        (0x40, 0x60, "Error,"),
+        (0x80, 0x180, "Unused,"),
+        (0x100, 0x180, "Used,"),
+        # bits 9 to 24, correction Id
+        (0x200000, 0x200000, "msgTypeValid"),
+        )
+
+    def rxm_cor(self, buf):
+        """UBX-RXM-COR decode, Diffeential Correction Status.
+
+Present in some u-blox F9P
+"""
+        u = struct.unpack_from('<BBBBLHH', buf, 0)
+        if 1 != u[0]:
+            return "  Unknown version %u" % u[0]
+
+        s = ("  version %u ebno %u reserved0 x%x reserved1 x%x statusinfo x%x"
+             "\n  msgtype %u msgstype %u" % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ('\n    statusinfo (%s)'
+                  '\n    correctionId %u type (%s) subtype (%s)' %
+                   (flagm_s(u[4], self.rxm_cor_statusinfo),
+                    (u[4] >> 8) & 0x7fff,
+                    index_s(u[5], self.rxm_spartn_type),
+                    index_s(u[6], self.rxm_spartn_subtype)))
+        return s
+
     # used for RTCM3 rate config
     rtcm_ids = {5: {'str': '1005'},
                 0x4a: {'str': '1074'},
@@ -8488,7 +8523,7 @@ present in protVer 27.5, F9R
 
         s = ' version %u flags x%x subType %u reserved0 x%x msgType %u' % u
         if gps.VERB_DECODE <= self.verbosity:
-            s += ("\n    flags %s type %s subtype %s" %
+            s += ("\n    flags (%s) type (%s) subtype (%s)" %
                   (index_s((u[1] >> 1) & 3, self.rxm_spartn_flags),
                    index_s(u[4], self.rxm_spartn_type),
                    index_s(u[2], self.rxm_spartn_subtype)))
@@ -9877,7 +9912,8 @@ Removed in protVer 32 (u-blox 9 and 10)
                # protVer 27.5. F9P
                0x33: {'str': 'SPARTN', 'dec': rxm_spartn,  'minlen': 8,
                       'name': 'UBX-RXM-SPARTN'},
-               0x34: {'str': 'COR', 'minlen': 12, 'name': 'UBX-RXM-COR'},
+               0x34: {'str': 'COR', 'dec': rxm_cor, 'minlen': 12,
+                      'name': 'UBX-RXM-COR'},
                # protVer 27.5. F9P
                0x36: {'str': 'SPARTNKEY', 'dec': rxm_spartnkey,  'minlen': 4,
                       'name': 'UBX-RXM-SPARTNKEY'},
@@ -12501,6 +12537,10 @@ present in 9-series and higher
         # en/dis able RTCM3 messages 1005, 1077, 1087, 1230
         "RTCM3": {"ablecmd": send_able_rtcm3,
                   "help": "required RTCM3 messages. USB port only"},
+        # UBX-RXM-COR
+        "RXM-COR": {"mid": [0x02, 0x34],
+                    "ablecmd": send_able,
+                    "help": "UBX-RXM-COR Diff Correction input status "},
         # UBX-RXM-IMES
         "RXM-IMES": {"pollcmd": send_poll, "mid": [0x02, 0x61],
                      "help": "poll UBX-RXM-IMES Indoor Messaging System "
