@@ -430,6 +430,9 @@ try:
                                  (PROG_NAME, enable))
                 sys.exit(1)
 
+    if opts['set_speed'] is not None:
+        gps_model.send_set_speed(opts['set_speed'])
+
     if opts['poll']:
         for poll in opts['poll']:
             if gps.VERB_QUIET < opts['verbosity']:
@@ -469,10 +472,7 @@ try:
                                  (PROG_NAME, poll))
                 sys.exit(1)
 
-    elif opts['set_speed'] is not None:
-        gps_model.send_set_speed(opts['set_speed'])
-
-    elif opts['command'] is not None:
+    if opts['command'] is not None:
         cmd_list = opts['command'].split(',')
         try:
             cmd_data = [int(v, 16) for v in cmd_list]
@@ -490,7 +490,7 @@ try:
             print('%s: command %s\n' % (PROG_NAME, opts['command']))
         gps_model.gps_send(cmd_data[0], cmd_data[1], payload)
 
-    elif opts['del_item']:
+    if opts['del_item']:
         keys = []
         for name in opts['del_item']:
             item = gps_model.cfg_by_name(name)
@@ -502,7 +502,24 @@ try:
                 sys.exit(1)
         gps_model.send_cfg_valdel(keys)
 
-    elif opts['get_item']:
+    if opts['set_item']:
+        nvs = []
+        for nv in opts['set_item']:
+            parts = nv.split(',')
+            if 1 >= len(parts):
+                sys.stderr.write('%s: ERROR: item %s missing value to set\n' %
+                                 (PROG_NAME, parts[0]))
+                sys.exit(1)
+            item = gps_model.cfg_by_name(parts[0])
+            if item:
+                nvs.append(nv)
+            else:
+                sys.stderr.write('%s: ERROR: item %s unknown\n' %
+                                 (PROG_NAME, parts[0]))
+                sys.exit(1)
+        gps_model.send_cfg_valset(nvs)
+
+    if opts['get_item']:
         keys = []
         layer = None
         position = 0
@@ -533,23 +550,6 @@ try:
                 gps_model.send_cfg_valget(keys, layer, p)
         else:
             gps_model.send_cfg_valget(keys, layer, position)
-
-    elif opts['set_item']:
-        nvs = []
-        for nv in opts['set_item']:
-            parts = nv.split(',')
-            if 1 >= len(parts):
-                sys.stderr.write('%s: ERROR: item %s missing value to set\n' %
-                                 (PROG_NAME, parts[0]))
-                sys.exit(1)
-            item = gps_model.cfg_by_name(parts[0])
-            if item:
-                nvs.append(nv)
-            else:
-                sys.stderr.write('%s: ERROR: item %s unknown\n' %
-                                 (PROG_NAME, parts[0]))
-                sys.exit(1)
-        gps_model.send_cfg_valset(nvs)
 
     exit_code = io_handle.read(gps_model.decode_msg,  # decode function
                                opts['input_wait'],
