@@ -204,13 +204,14 @@ static char *ecef_to_str(double pos, double vel)
                            vel * altfactor, altunits);
         }
     } else {
+        // u-blox F9  HPG is 0.1 mm.  So 14.4f
         if (0 == isfinite(vel)) {
             // have position, no velocity
-            (void)snprintf(buf, sizeof(buf), "% 14.3f %2.2s   n/a       ",
+            (void)snprintf(buf, sizeof(buf), "% 14.4f %2.2s   n/a       ",
                            pos * altfactor, altunits);
         } else {
             // have position, have velocity
-            (void)snprintf(buf, sizeof(buf), "% 14.3f %2.2s % 8.3f %2.2s/s",
+            (void)snprintf(buf, sizeof(buf), "% 14.4f %2.2s % 8.3f %2.2s/s",
                            pos * altfactor, altunits,
                            vel * altfactor, altunits);
         }
