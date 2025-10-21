@@ -4481,6 +4481,75 @@ static gps_mask_t ubx_msg_nav_velned(struct gps_device_t *session,
     return mask;
 }
 
+// UBX-MON-COMMS txErrors
+static const struct flist_t rxm_cor_statusInfo[] = {
+    {0, 0x1f, "UNk proto,"},
+    {1, 0x1f, "RTCM3,"},
+    {2, 0x1f, "SPARTN,"},
+    {29, 0x1f, "RXM-PMP,"},
+    {30, 0x1f, "RXM-QZSSL6,"},
+    {0, 0x60, "Err Unk,"},
+    {0x20, 0x60, "No Err,"},
+    {0x40, 0x60, "Error,"},
+    {0x80, 0x180, "Unused,"},
+    {0x100, 0x180, "Used,"},
+    // bits 9 to 24, correction Id
+    {0x200000, 0x200000, "msgTypeValid"},
+};
+
+static const struct vlist_t rxm_spart_flags[] = {
+    {0, "Unknown"},
+    {1, "Not Used"},
+    {2, "Used"},
+    {3, "Reserved"},
+};
+
+static const struct vlist_t spartn_mtypes[] = {
+    {0, "Orbit"},
+    {1, "HPAC"},
+    {2, "GAD"},
+    {3, "BDS"},
+};
+
+static const struct vlist_t spartn_mstypes[] = {
+    {0, "GPS"},
+    {1, "GLO"},
+    {2, "GAL"},
+    {3, "BDS"},
+};
+
+/**
+ * UBX-RXM-COR -- Differential Correction Input Messages
+ *
+ * Present in ZED-F9P, HPG 1.50, protVer 27.50
+ */
+static gps_mask_t ubx_msg_rxm_cor(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len UNUSED)
+{
+    unsigned version = getub(buf, 0);
+    unsigned ebno = getub(buf, 1);
+    unsigned long statusInfo = getleu32(buf, 4);
+    unsigned msgType = getleu16(buf, 8);
+    unsigned msgsubType = getleu16(buf, 10);
+    char buf2[80];
+
+    if (1 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: RXM-COR, unknown version %u\n", version);
+        return 0;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX: RXM-COR, version %u ebno %u statusInfo x%lx "
+             "msgtype %u msgsubType %u\n", version, ebno, statusInfo,
+             msgType, msgsubType);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+            "UBX: RXM-COR: statusInfo (%s)  msgType (%s) msgsubType (%s)\n",
+            flags2str(statusInfo, rxm_cor_statusInfo, buf2, sizeof(buf2)),
+            val2str(msgType, spartn_mtypes),
+            val2str(msgsubType, spartn_mstypes));
+    return 0;
+}
+
 /*
  * Multi-GNSS Raw measurement Data -- UBX-RXM-RAWX
  * Not in u-blox 5, 6 or 7
@@ -4713,6 +4782,36 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     // do we need freqId or chn?
     return gpsd_interpret_subframe_raw(session, gnssId, sigId,
                                        svId, words, numWords);
+}
+
+/**
+ * UBX-RXM-SPARTN -- Differential Correction Input Messages
+ *
+ * Present in ZED-F9P, HPG 1.50, protVer 27.50
+ */
+static gps_mask_t ubx_msg_rxm_spartn(struct gps_device_t *session,
+                                     unsigned char *buf,
+                                     size_t data_len UNUSED)
+{
+    unsigned version = getub(buf, 0);
+    unsigned flags = getub(buf, 1);
+    unsigned msgsubType = getleu16(buf, 2);
+    unsigned msgType = getleu16(buf, 6);
+
+    if (1 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: RXM-SPARTN, unknown version %u\n", version);
+        return 0;
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX: RXM-SPARTN: version %u flags x%x msgType %u msgsubType %u\n",
+             version, flags, msgType, msgsubType);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+            "UBX: RXM-SPARTN: flags (%s) msgType (%s) msgsubType (%s)\n",
+            val2str((flags >> 1) & 3, rxm_spart_flags),
+            val2str(msgType, spartn_mtypes),
+            val2str(msgsubType, spartn_mstypes));
+    return 0;
 }
 
 /**
@@ -5322,6 +5421,15 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_RXM_ALM:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-ALM\n");
         break;
+    case UBX_RXM_COR:
+        min_protver = 27;
+        if (12 > data_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "UBX: RXM-COR: runt payload len %zd", data_len);
+            return 0;
+        }
+        mask = ubx_msg_rxm_cor(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
     case UBX_RXM_EPH:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX: RXM-EPH\n");
         break;
@@ -5361,6 +5469,15 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             break;
         }
         mask = ubx_msg_rxm_sfrbx(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_RXM_SPARTN:
+        min_protver = 27;
+        if (8 > data_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "UBX: RXM-SPARTN: runt payload len %zd", data_len);
+            return 0;
+        }
+        mask = ubx_msg_rxm_spartn(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_SVSI:
         // Removed in protVer 32 (9-series)
