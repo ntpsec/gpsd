@@ -111,7 +111,10 @@ gps_mask_t spartn_parse(struct gps_device_t *session)
 
     // 1 to 4 CRC bytes, usually 3
     //  CRC is all bytes after the leader 's'.
-    if (crc24q_check(&session->lexer.outbuffer[1],
+    if (3 != crc_type) {
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "SPARTN: unsupported CRC  type %u\n", crc_type);
+    } else if (crc24q_check(&session->lexer.outbuffer[1],
                      pay_offset + pay_length_bytes + 3)) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "SPARTN: crc24 fail\n");
