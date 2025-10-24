@@ -75,7 +75,6 @@ gps_mask_t spartn_parse(struct gps_device_t *session)
     unsigned ai = 0;
     unsigned eal = 0;
     unsigned pay_offset;        // offset of payload
-    unsigned pay_length_bytes;
 
     preamble = ugrab(8);
     if (0x73 != preamble) {
@@ -105,19 +104,26 @@ gps_mask_t spartn_parse(struct gps_device_t *session)
     }
     // payload follows.
     pay_offset = bitcount / 8;  // should be even bytes Prolly 13 or 15.
-    pay_length_bytes = pay_length / 8;  // should be even bytes 1 to 1024.
 
     // assume, for now, no Embedded Auth data
 
     // 1 to 4 CRC bytes, usually 3
     //  CRC is all bytes after the leader 's'.
-    if (3 != crc_type) {
+    if (2 != crc_type) {
+        // we only know crc-24-radix64
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SPARTN: unsupported CRC  type %u\n", crc_type);
-    } else if (crc24q_check(&session->lexer.outbuffer[1],
-                     pay_offset + pay_length_bytes + 3)) {
+    } else if (!crc24q_check(&session->lexer.outbuffer[1],
+                       pay_offset + pay_length + 3)) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "SPARTN: crc24 fail\n");
+                 "SPARTN: crc24 fail %x vs %02x %02x %02x \n "
+                 "SPARTN: pay_offset %x pay-length %02x\n",
+                 crc24q_hash(&session->lexer.outbuffer[1],
+                             pay_offset + pay_length + 3),
+                 session->lexer.outbuffer[pay_offset + pay_length + 1],
+                 session->lexer.outbuffer[pay_offset + pay_length + 2],
+                 session->lexer.outbuffer[pay_offset + pay_length + 3],
+                 pay_offset, pay_length);
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
