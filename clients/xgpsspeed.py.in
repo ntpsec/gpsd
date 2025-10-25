@@ -1009,10 +1009,12 @@ if __name__ == '__main__':
 
     targt = ':'.join([options.host, options.port, options.device])
 
-    if (('DISPLAY' not in os.environ or
-         not os.environ['DISPLAY'])):
-        sys.stderr.write("xgpsspeed: ERROR: DISPLAY not set\n")
-        sys.exit(1)
+    if ((('DISPLAY' not in os.environ or
+          not os.environ['DISPLAY'])) and
+        (('WAYLAND_DISPLAY' not in os.environ or
+         not os.environ['WAYLAND_DISPLAY']))):
+        sys.stderr.write("xgps: WARNIONG: neither WAYLAND_DISPLAY nor "
+                         "DISPLAY set\n")
 
     Main(
         host=options.host,

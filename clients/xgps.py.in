@@ -2216,10 +2216,12 @@ if __name__ == "__main__":
     ltarget = [options.host, options.port, options.device]
     target = ':'.join(ltarget)
 
-    if (('DISPLAY' not in os.environ or
-         not os.environ['DISPLAY'])):
-        sys.stderr.write("xgps: ERROR: DISPLAY not set\n")
-        sys.exit(1)
+    if ((('DISPLAY' not in os.environ or
+          not os.environ['DISPLAY'])) and
+        (('WAYLAND_DISPLAY' not in os.environ or
+         not os.environ['WAYLAND_DISPLAY']))):
+        sys.stderr.write("xgps: WARNIONG: neither WAYLAND_DISPLAY nor "
+                         "DISPLAY set\n")
 
     options.marker = min(MARKER_MAX, max(MARKER_MIN, options.marker))
     options.infofont = min(30, max(10, options.infofont))
