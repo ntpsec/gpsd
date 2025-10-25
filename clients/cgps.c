@@ -248,6 +248,7 @@ static void die(int sig, const char *msg)
 
     switch (sig) {
     case CGPS_QUIT:
+        exit(EXIT_SUCCESS);
         break;
     case GPS_GONE:
         (void)fprintf(stderr, "cgps: GPS hung up.\n");
@@ -267,7 +268,7 @@ static void die(int sig, const char *msg)
     }
 
     // Bye!
-    exit(EXIT_SUCCESS);
+    exit(EXIT_FAILURE);
 }
 
 
