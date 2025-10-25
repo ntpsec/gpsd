@@ -1,5 +1,5 @@
 = cgps(1)
-:date: 11 March 2022
+:date: 25 October 2025
 :keywords: gps, gpsd, cgps
 :manmanual: GPSD Documentation
 :mansource: GPSD Version {gpsdver}
@@ -114,6 +114,7 @@ imperial. The default if no system has been selected defaults to metric.
 
 *0*:: on success.
 *1*:: on failure
+*2*:: failure: terminal too small
 
 == SEE ALSO
 

@@ -128,6 +128,7 @@ static bool rtk_flag = false;
 #define GPS_ERROR       -2      // low-level failure in GPS read
 #define GPS_TIMEOUT     -3      // low-level failure in GPS waiting
 #define CGPS_ERROR      -4      // low-level curses failure
+#define CGPS_SIZE       -5      // terminal too small
 
 /* range test an int,
  * Return: chars + NUL
@@ -262,6 +263,9 @@ static void die(int sig, const char *msg)
     case CGPS_ERROR:
         (void)fprintf(stderr, "cgps: internal error\n");
         break;
+    case CGPS_SIZE:
+        exit(2);
+        break;
     default:
         (void)fprintf(stderr, "cgps: caught signal %d\n", sig);
         break;
@@ -382,12 +386,12 @@ static void windowsetup(void)
 
         // do not block waiting for user input
         if (OK != nodelay(datawin, true)) {
-            die(0, "Fail creating datawin window.");
+            die(CGPS_ERROR, "Fail creating datawin window.");
         }
 
         if (NULL != messages) {
             if (OK != delwin(messages)) {
-                die(0, "Fail delwin(messages)");
+                die(CGPS_ERROR, "Fail delwin(messages)");
             }
             messages = NULL;
         }
@@ -399,7 +403,7 @@ static void windowsetup(void)
 
             if (OK != scrollok(messages, true) ||
                 OK != wsetscrreg(messages, 0, ysize - (window_ysize))) {
-                die(0, "Fail creating message window.");
+                die(CGPS_ERROR, "Fail creating message window.");
             }
         }
 
@@ -433,13 +437,13 @@ static void windowsetup(void)
             OK != mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Roll:") ||
             OK != mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg") ||
             OK != wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0)) {
-            die(0, "Fail mvaddstr(datawin,,,) window.");
+            die(CGPS_ERROR, "Fail mvaddstr(datawin,,,) window.");
         }
         // done with IMU setup
 
         // make it so
         if (OK != refresh()) {
-            die(0, "Fail refresh() window.");
+            die(CGPS_ERROR, "Fail refresh() window.");
         }
         return;
     } // else
@@ -966,7 +970,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
             // Too many sats to show them all, tell the user.
             if (ERR == mvwprintw(satellites, display_sats + 2, 1, "%s",
                                  "More...")) {
-                die(0, "failed to print sat win More");
+                die(CGPS_ERROR, "failed to print sat win More");
             }
         }
     }
@@ -1251,7 +1255,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
         !show_ecefs ||
         !show_more_dops) {
         if (ERR == mvwprintw(datawin, display_sats + 2, 2, "%s", "More...")) {
-            die(0, "failed to print datawin More");
+            die(CGPS_ERROR, "failed to print datawin More");
         }
     }
 
