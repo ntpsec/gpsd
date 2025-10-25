@@ -1,11 +1,12 @@
 /*
  * This is an implementation of the CRC-24Q cyclic redundancy checksum
- * used by Qualcomm, RTCM104V3, and PGP 6.5.1. According to the RTCM104V3
- * standard, it uses the error polynomial
+ * used by Qualcomm, RTCM104V3, PGP 6.5.1 aand SPARTN. According to the
+ * RTCM104V3 standard, it uses the error polynomial
  *
  *    x^24+ x^23+ x^18+ x^17+ x^14+ x^11+ x^10+ x^7+ x^6+ x^5+ x^4+ x^3+ x+1
  *
- * This corresponds to a mask of 0x1864CFB.  For a primer on CRC theory,
+ * This corresponds to a mask of 0x1864CFB.  It is the same as the
+ * algorithm in RFC4880 (OpenPGP Message Format)  For a primer on CRC theory,
  * including detailed discussion of how and why the error polynomial is
  * expressed by this mask, see <http://www.ross.net/crc/>.
  *
@@ -20,10 +21,15 @@
  * This hash should not be considered cryptographically secure, but it
  * is extremely good at detecting noise errors.
  *
- * Note that this version has a seed of 0 wired in.  The RTCM104V3 standard
- * requires this.
+ * Note that this version has a seed of 0 wired in.  The RTCM104V3 standard,
+ * and the SPARTN, staandard requires this.  OpenGPG uses a seed of
+ * 0xB704CE.  By using a seed of 0, A message of all zeros has a  crc
+ * of all zeros.
  *
- * This file is Copyright 2008 by the GPSD project
+ * The simpler code in RFC4880 is easier to understand, but takes 5 times
+ * longer than the one embodied here.
+ *
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -148,7 +154,7 @@ static const int unsigned crc24q[256] = {
  *
  * Return: the 24 bit hash
  */
-unsigned crc24q_hash(unsigned char *data, int len)
+unsigned crc24q_hash(const unsigned char *data, int len)
 {
     int i;
     unsigned crc = 0;
@@ -178,7 +184,7 @@ void crc24q_sign(unsigned char *data, int len)
 #endif  // __UNUSED__
 
 // len includes the data to CRC, and the 3 CRC bytes to check with.
-bool crc24q_check(unsigned char *data, int len)
+bool crc24q_check(const unsigned char *data, int len)
 {
     unsigned crc = crc24q_hash(data, len - 3);
 
