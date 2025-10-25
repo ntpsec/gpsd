@@ -2139,6 +2139,11 @@ if env["timeservice"] or env["gpsdclients"]:
 test_bits = env.Program('tests/test_bits',
                         [libgps_static, 'tests/test_bits.c'],
                         LIBS=[libgps_static])
+test_crc = env.Program('tests/test_crc',
+                       [libgpsd_static, libgps_static,
+                        'tests/test_crc.c'],
+                        LIBS=[libgpsd_static, libgps_static],
+                        parse_flags=gpsdflags)
 test_float = env.Program('tests/test_float', ['tests/test_float.c'])
 test_geoid = env.Program('tests/test_geoid',
                          [libgpsd_static, libgps_static, 'tests/test_geoid.c'],
@@ -2183,6 +2188,7 @@ test_gpsmm = env.Program('tests/test_gpsmm',
                          LIBS=[libgps_static],
                          parse_flags=mathlibs + rtlibs + dbusflags)
 testprogs = [test_bits,
+             test_crc,
              test_float,
              test_geoid,
              test_gpsdclient,
@@ -3053,6 +3059,11 @@ Utility('aivdm-makeregress', [gpsdecode], [
     '    "${SRCDIR}/clients/gpsdecode" -j  <"$${f}" > "$${f}".js.chk; '
     'done', ])
 
+# Regression-test the rcr functions
+crc_regress = Utility('time-crc', [test_crc], [
+    '"${SRCDIR}/tests/test_crc"'
+])
+
 # Regression-test the packet getter.
 packet_regress = UtilityWithHerald(
     'Testing detection of invalid packets...',
@@ -3143,6 +3154,7 @@ testclean = Utility('testclean', [], 'rm -fr %s/tests' % variantdir)
 test_nondaemon = [
     aivdm_regress,
     bits_regress,
+    crc_regress,
     deg_regress,
     describe,
     float_regress,
