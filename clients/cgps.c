@@ -369,7 +369,8 @@ static void windowsetup(void)
 
         if ((IMU_WIDTH - 2) > COLS) {
             // allow 78, cutting of the two rightmost columns is acceptable
-            die(0, "Your terminal not wide enough.  80 columns required.");
+            die(CGPS_SIZE,
+                "Your terminal not wide enough.  80 columns required.");
         }
 
         if (MIN_COMPASS_DATAWIN_YSIZE == ysize) {
@@ -379,7 +380,7 @@ static void windowsetup(void)
             raw_flag = true;
             window_ysize = MIN_COMPASS_DATAWIN_YSIZE;
         } else {
-            die(0, "Your terminal does not have enough rows run cgps.");
+            die(CGPS_SIZE, "Your terminal does not have enough rows run cgps.");
         }
 
         datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
@@ -453,7 +454,8 @@ static void windowsetup(void)
         int row = 1;
 
         if (RTK_WIDTH > COLS) {
-            die(0, "Your terminal not wide enough.  78 columns required.");
+            die(CGPS_SIZE,
+                "Your terminal not wide enough.  78 columns required.");
         }
 
         if (MIN_COMPASS_DATAWIN_YSIZE == ysize) {
@@ -463,7 +465,7 @@ static void windowsetup(void)
             raw_flag = true;
             window_ysize = MIN_COMPASS_DATAWIN_YSIZE;
         } else {
-            die(0, "Your terminal does not have enough rows run cgps.");
+            die(CGPS_SIZE, "Your terminal does not have enough rows run cgps.");
         }
 
         datawin = newwin(window_ysize, RTK_WIDTH, 0, 0);
@@ -518,7 +520,7 @@ static void windowsetup(void)
     }
     if ((DATAWIN_WIDTH + SATELLITES_WIDTH - 2) > COLS) {
         // allow 78, cutting of the two rightmost columns is acceptable
-        die(0, "Your terminal not wide enough.  80 columns required.");
+        die(CGPS_SIZE, "Your terminal not wide enough.  80 columns required.");
     }
 
     // We're a GPS, set up accordingly.
@@ -565,7 +567,7 @@ static void windowsetup(void)
         show_ecefs = false;
         show_more_dops = false;
     } else {
-        die(0, "Your screen is too small to run cgps.");
+        die(CGPS_SIZE, "Your screen is too small to run cgps.");
     }
 
     // compute datawin rows
