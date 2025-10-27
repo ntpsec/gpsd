@@ -6415,8 +6415,8 @@ Present from Antaris (4) to M10
 68 bytes in 6-series
 60 bytes in 8-series and 9-series
 56 bytes in protVer 34 (10-series)
-Deprecated in protVer 29.00 ( M9), use MON-H# and MON-RF
-Deprecated. and undocumented, on M10, use MON-H# and MON-RF
+Deprecated in protVer 29.00 ( M9), use MON-HW2 and MON-RF
+Deprecated. and undocumented, on M10, use MON-HW2 and MON-RF
 """
         m_len = len(buf)
 
@@ -6458,11 +6458,12 @@ Deprecated. and undocumented, on M10, use MON-H# and MON-RF
         if gps.VERB_DECODE <= self.verbosity:
             s += ("\n    aStatus (%s) aPower (%s) flags (%s) "
                   "jammingState (%s)\n"
-                  "    jamInd %u xtalAbsent (%s)" %
+                  "    jamInd %u" %
                   (index_s(aStatus, self.mon_rf_antstat),
                    index_s(aPower, self.mon_hw_aPower),
                    index_s(flags & 0x13, self.mon_hw_flags),
-                   index_s(jammingState, self.jammingState)))
+                   index_s(jammingState, self.jammingState),
+                   jamInd))
         return s
 
     mon_hw2_cfgSource = {
@@ -7057,12 +7058,12 @@ protVer 34 and up
 """
 
         u = struct.unpack_from('<LBBBLLBffffffffffff', buf, 0)
-        return ('  iTOW %u version %u posCovValid %u velCovValid %u '
-                'reserved0 %u %u %u\n'
-                ' posCovNN %f posCovNE  %f posCovND %f\n'
-                ' posCovEE %f posCovED  %f posCovDD %f\n'
-                ' velCovNN %f velCovNE  %f velCovND %f\n'
-                ' velCovEE %f velCovED  %f velCovDD %f\n' % u)
+        return ('  iTOW %u version %u posCovValid %u velCovValid %u\n'
+                '  reserved0 %u %u %u\n'
+                '  posCovNN %f posCovNE  %f posCovND %f\n'
+                '  posCovEE %f posCovED  %f posCovDD %f\n'
+                '  velCovNN %f velCovNE  %f velCovND %f\n'
+                '  velCovEE %f velCovED  %f velCovDD %f\n' % u)
 
     def nav_dgps(self, buf):
         """UBX-NAV-DGPS decode, DGPS Data used for NAV"""
@@ -7725,9 +7726,9 @@ Present in 9 and 10, protVer 29 and up
         """UBX-NAV-SLAS decode, QZSS L1S SLAS Status Data"""
 
         u = struct.unpack_from('<LBBBBllBBBB', buf, 0)
-        s = ('  iTOW %u version %u reserved1 %u %u %u'
-             '  gmsLon %d gmsLon %d gmsCode %u qzssSvId %u'
-             '  serviceFlags x%x cnt %d' % u)
+        s = ('  iTOW %u version %u reserved1 %u %u %u '
+             'gmsLon %d gmsLon %d gmsCode %u\n'
+             '  qzssSvId %u serviceFlags x%x cnt %d' % u)
 
         for i in range(0, u[8]):
             u = struct.unpack_from('<BBLh', buf, 20 + (i * 8))
@@ -12329,6 +12330,10 @@ present in 9-series and higher
         "NAV-CLOCK": {"pollcmd": send_poll, "mid": [0x01, 0x22],
                       "ablecmd": send_able,
                       "help": "UBX-NAV-CLOCK Clock Solution"},
+        # UBX-NAV-COV
+        "NAV-COV": {"pollcmd": send_poll, "mid": [0x01, 0x36],
+                    "ablecmd": send_able,
+                    "help": "UBX-NAV-COV Covariance matrices"},
         # UBX-NAV-DGPS
         "NAV-DGPS": {"pollcmd": send_poll, "mid": [0x01, 0x31],
                      "ablecmd": send_able,
