@@ -7919,7 +7919,7 @@ Present in M8 Timing and FTS only
         """UBX-NAV-TIMEGLO decode"""
 
         u = struct.unpack_from('<LLlhbBL', buf, 0)
-        s = ("  iTOW %d TOD %d fTOD %d Nt %d  N4 %d\n"
+        s = ("  iTOW %d TOD %d fTOD %d Nt %d N4 %d\n"
              "  Valid x%x tAcc %d" % u)
 
         if gps.VERB_DECODE <= self.verbosity:
@@ -8064,7 +8064,7 @@ protVer 34 and up
         """UBX-NAV-TIMEUTC decode"""
 
         u = struct.unpack_from('<LLlHbbbbbB', buf, 0)
-        s = ("  iTOW %u tAcc %u nano %d Time  %4u/%02u/%02u %02u:%02u:%02u\n"
+        s = ("  iTOW %u tAcc %u nano %d Time %4u/%02u/%02u %02u:%02u:%02u\n"
              "  valid x%x" % u)
 
         if gps.VERB_DECODE <= self.verbosity:
@@ -12419,6 +12419,12 @@ present in 9-series and higher
         "NAV-TIMEBDS": {"ablecmd": send_able, "mid": NAV_TIMEBDS,
                         "pollcmd": send_poll,
                         "help": "NAV-TIMEBDS BDS time message"},
+        # poll all NAV-TIME* messages
+        "NAV-TIME": {"mid": [NAV_TIMEBDS, NAV_TIMEGAL, NAV_TIMEGLO,
+                             NAV_TIMEGPS, NAV_TIMELS, NAV_TIMENAVIC,
+                             NAV_TIMEQZSS, NAV_TIMEUTC],
+                     "pollcmd": send_cmds,
+                     "help": "ll NAV-TIME* time messages"},
         # en/dis able NAV-TIMEGAL message
         "NAV-TIMEGAL": {"ablecmd": send_able, "mid": NAV_TIMEGAL,
                         "pollcmd": send_poll,
