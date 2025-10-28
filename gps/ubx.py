@@ -12398,7 +12398,8 @@ present in 9-series and higher
                     "help": "NAV-SAT Satellite Information message"},
         # UBX-NAV-SBAS
         "NAV-SBAS": {"pollcmd": send_poll, "mid": [0x01, 0x32],
-                     "help": "poll UBX-NAV-SBAS SBAS Status Data"},
+                     "ablecmd": send_able,
+                     "help": "UBX-NAV-SBAS SBAS Status Data"},
         # UBX-NAV-SIG
         "NAV-SIG": {"ablecmd": send_able, "mid": NAV_SIG,
                     "pollcmd": send_poll,
@@ -12408,18 +12409,22 @@ present in 9-series and higher
                      "help": "poll UBX-NAV-SLAS QZSS L1S SLAS Status Data"},
         # UBX-NAV-SOL
         "NAV-SOL": {"pollcmd": send_poll, "mid": [0x01, 0x06],
-                    "help": "poll UBX-NAV-SOL Navigation Solution "
+                    "ablecmd": send_able,
+                    "help": "UBX-NAV-SOL Navigation Solution "
                     "Information"},
         # UBX-NAV-STATUS
         "NAV-STATUS": {"pollcmd": send_poll, "mid": [0x01, 0x03],
-                       "help": "poll UBX-NAV-STATUS Receiver Nav Status"},
+                       "ablecmd": send_able,
+                       "help": "UBX-NAV-STATUS Receiver Nav Status"},
         # UBX-NAV-SVIN
         "NAV-SVIN": {"pollcmd": send_poll, "mid": [0x01, 0x3b],
-                     "help": "poll UBX-NAV-SVIN Survey-in data",
+                     "ablecmd": send_able,
+                     "help": "UBX-NAV-SVIN Survey-in data",
                      "minver": 20},
         # UBX-NAV-SVINFO
         "NAV-SVINFO": {"pollcmd": send_poll, "mid": [0x01, 0x30],
-                       "help": "poll UBX-NAV-SVINFO Satellite Information"},
+                       "ablecmd": send_able,
+                       "help": "UBX-NAV-SVINFO Satellite Information"},
         # en/dis able NAV-TIMEBDS message
         "NAV-TIMEBDS": {"ablecmd": send_able, "mid": NAV_TIMEBDS,
                         "pollcmd": send_poll,
@@ -12463,7 +12468,8 @@ present in 9-series and higher
                         "help": "NAV-TIMEUTC UTC Information message"},
         # UBX-NAV-VELECEF
         "NAV-VELECEF": {"pollcmd": send_poll, "mid": [0x01, 0x11],
-                        "help": "poll UBX-NAV-VELECEF ECEF velocity"},
+                        "ablecmd": send_able,
+                        "help": "UBX-NAV-VELECEF ECEF velocity"},
         # UBX-NAV-VELNED
         "NAV-VELNED": {"ablecmd": send_able, "mid": NAV_VELNED,
                        "pollcmd": send_poll,
