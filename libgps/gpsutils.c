@@ -312,7 +312,7 @@ double safe_atof(const char *string)
     bool sign = false, expSign = false;
     double fraction, dblExp, *d;
     const char *p;
-    int c;
+    unsigned char c;
     int exp = 0;                // Exponent read from "EX" field.
     int fracExp = 0;            /* Exponent that derives from the fractional
                                  * part.  Under normal circumstatnces, it is
@@ -337,7 +337,7 @@ double safe_atof(const char *string)
     while (isspace((int)*p)) {
         p += 1;
     }
-    if (isdigit((int)*p)) {
+    if (isdigit((unsigned char)*p)) {
         // ignore
     } else if ('-' == *p) {
         sign = true;
@@ -358,7 +358,7 @@ double safe_atof(const char *string)
     decPt = -1;
     for (mantSize = 0; ; mantSize += 1) {
         c = *p;
-        if (!isdigit((int)c)) {
+        if (!isdigit(c)) {
             if ((c != '.') || (decPt >= 0)) {
                 break;
             }
@@ -434,7 +434,7 @@ double safe_atof(const char *string)
             }
             expSign = false;
         }
-        while (isdigit((int) *p)) {
+        while (isdigit((unsigned char) *p)) {
             exp = exp * 10 + (*p - '0');
             if (1024 < exp) {
                 if (true == expSign) {
