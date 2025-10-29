@@ -1005,7 +1005,7 @@ static  inline void rtrim(char *str)
 
     // Remove trailing whitespace
     while (0 <= end &&
-           isspace(str[end])) {
+           isspace((unsigned char) str[end])) {
         str[end] = '\0';
         end--;
     }
