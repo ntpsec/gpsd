@@ -3,7 +3,7 @@
  *
  * To do: Support for GPGLL, GPGBS, GPZDA, PASHR NMEA sentences.
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -308,8 +308,8 @@ static void nmea_update(void)
                 *s_end++ = ' ';
                 *s_end = '\0';
                 (void)strlcpy(s_end, fields[0], field0_len + 2);
-            } else {
-                // no room for more
+            } else if (3 < (s_end - sentences)) {
+                // no room for more, but room for '...'
                 *--s_end = '.';
                 *--s_end = '.';
                 *--s_end = '.';
