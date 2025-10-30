@@ -115,7 +115,7 @@ extern "C" {
  *      add shm_clock_lastsec and shm_pps_lastsec to gps_device_t;
  *      add queue, regression, to gps_device_t
  *      add ALL_PACKET
- * 3.26.2
+ * 3.27 WIP
  *      add SPARTN_PACKET
  *      gps_lexer_t, add type_mask, to mask our bad types, like SPARTN
  */

@@ -1,6 +1,6 @@
 /* gps.h -- interface of the libgps library
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #ifndef _GPSD_GPS_H_
@@ -117,8 +117,11 @@ extern "C" {
  *       Add sigid2obs(), convert sigid to a RINEX observation code string.
  *       gps_fix_t Add: errEllipseOrient, errEllipseMajor, errEllipseMinow
  *       gps_fix_t Add: ant_power.
+ * 16    Add SPARTN.
  */
-#define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
+
+// API version should match in SConscript
+#define GPSD_API_MAJOR_VERSION  16      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
 
 #define MAXCHANNELS     184     // u-blox 9 tracks 140 signals
