@@ -1,5 +1,8 @@
-/*
- * This file is Copyright 2010 by the GPSD project
+/* gpsdecode: wrap the packet to GPS JSON parts for usage on the
+ *            command line.  Often gpsfake is overkill when you
+ *            just want to see what is in a packet capture.
+ *
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -684,7 +687,7 @@ static void decode(FILE *fpin, FILE *fpout)
     }
 
     if (minlength) {
-        for (i = 0; i < (sizeof(minima) / sizeof(minima[0])); i++) {
+        for (i = 0; i < ROWS(minima); i++) {
             // dump all minima, ignoring comments
             if (1 != i &&
                 MAX_PACKET_LENGTH >= minima[i]) {
@@ -697,7 +700,7 @@ static void decode(FILE *fpin, FILE *fpout)
                         break;
                     }
                 }
-                printf("%s (%lu): %lu\n", np, i - 1, minima[i]);
+                printf("%s (%zu): %zu\n", np, i - 1, minima[i]);
             }
         }
     }
