@@ -1810,10 +1810,10 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                                      device->lexer.outbuflen);
                     if (0 < ret) {
                         GPSD_LOG(LOG_IO, &context.errout,
-                                 "<= DGPS/NTRIP: %zd bytes of RTCM relayed "
-                                 "to fd %ld.\n",
+                                 "<= DGPS/NTRIP: %zd bytes of "
+                                 "RTCM relayed to fd %ld.\n",
                                  device->lexer.outbuflen,
-                                 dp->gpsdata.gps_fd);
+                                 (long)dp->gpsdata.gps_fd);
                     } else if (0 == ret) {
                         // nothing written, probably read_only
                     } else {
