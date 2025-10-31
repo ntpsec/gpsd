@@ -275,17 +275,18 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
 
     for (;;) {
         ssize_t rlen;
-        long long buf_avail;
+        size_t buf_avail;
 
-        if (0 > len) {
+        if (0 > len ||
+            sizeof(buf) < (size_t)len) {
             // Pacify Coverity 498046
+            GPSD_LOG(LOG_ERROR, &device->context->errout,
+                     "NTRIP: on fd %ld len %zd  buf_aavail %zu\n",
+                     (long)fd, len, buf_avail);
+            buf_avail = sizeof(buf);
             len = 0;
         }
         buf_avail = sizeof(buf) - len;
-        if (0 > buf_avail) {
-            // Pacify Coverity 498046
-            buf_avail = 0;
-        }
         memset(&buf[len], 0, buf_avail);
         errno = 0;         // paranoia
         // read, leave room for trailing NUL
