@@ -287,7 +287,7 @@ static void nmea_update(void)
         int ymax, xmax;
         timespec_t now;
         timespec_t ts_diff;
-        size_t field0_len = strnlen(fields[0], NMEA_MAX_FLD);
+        size_t field0_len = strnlen(fields[0], NMEA_MAX);
 
         getmaxyx(nmeawin, ymax, xmax);
         assert(ymax > 0);
