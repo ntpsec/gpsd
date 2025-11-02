@@ -279,7 +279,8 @@ static void nmea_update(void)
     // can be NULL if packet was overlong
     fields = session.nmea.field;
 
-    // why do we care about outbuffer??
+    /* why do we care about outbuffer??
+     * The $ at buffer[0] tells us this is ivalid NMEA. */
     if ((unsigned char)'$' == session.lexer.outbuffer[0] &&
         NULL != fields &&
         NULL != fields[0]) {
@@ -293,7 +294,8 @@ static void nmea_update(void)
         assert(ymax > 0);
         assert(xmax > 0);
 
-        // Add message type to sentence line??
+        /* Add message type to sentence line??
+         * There must be room for it, and not a dulicate. */
         if (NULL == strstr(sentences, fields[0]) &&
             10 < xmax) {
             /* limit to smaller of window width or sentence[]
@@ -301,19 +303,19 @@ static void nmea_update(void)
             size_t max = (size_t)(xmax - 2) < sizeof(sentences) ? \
                          (size_t)(xmax - 2) : sizeof(sentences);
             size_t s_len = strnlen(sentences, max);
-            char *s_end = sentences + s_len;
 
-            if ((s_len + field0_len + 2) < max) {
-                // room for more
-                *s_end++ = ' ';
-                *s_end = '\0';
-                (void)strlcpy(s_end, fields[0], field0_len + 2);
-            } else if (3 < (s_end - sentences)) {
-                // no room for more, but room for '...'
-                *--s_end = '.';
-                *--s_end = '.';
-                *--s_end = '.';
-            }
+            if ((s_len + field0_len + 1) < max) {
+                /* room for more sentance names after this one,
+                 * so add it, and  a trailing space. */
+                (void)strlcat(sentences, fields[0], sizeof(sentences));
+                (void)strlcat(sentences, " ", sizeof(sentences));
+            } else if (3 < s_len) {
+                // no room to add more, change ending to '...'
+                sentences[s_len - 1] = '.';
+                sentences[s_len - 2] = '.';
+                sentences[s_len - 3] = '.';
+            } 
+            // else, no room, nothing to do.
             (void)mvwaddstr(nmeawin, SENTENCELINE, 1, sentences);
         }
 
