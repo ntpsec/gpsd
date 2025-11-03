@@ -4427,6 +4427,7 @@ Deprecated in protVer 23.01
         """UBX-CFG-MSG decode
 
 Deprecated in protVer 23.01
+present in F9P protVer 27.5
 """
         m_len = len(buf)
         if 2 == m_len:
@@ -4444,6 +4445,11 @@ Deprecated in protVer 23.01
         u = struct.unpack_from('<BBBBBBBB', buf, 0)
         s = (' %s Rates %u %u %u %u %u %u' %
              (self.class_id_s(u[0], u[1]), u[2], u[3], u[4], u[5], u[6], u[7]))
+
+        if gps.VERB_DECODE <= self.verbosity:
+            for i in range(0, 6):
+                s += ('\n     port (%s) rate %d' %
+                      (index_s(i, self.cfg_inf_port), u[2 + i]))
         return s
 
     cfg_nmea_filter = {
