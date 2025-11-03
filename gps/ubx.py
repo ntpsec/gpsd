@@ -4271,12 +4271,30 @@ Deprecated in protVer 23.01
         15: "User 3",   # used by u-center
         }
 
+    cfg_inf_port = {
+        0: "I2C",
+        1: "Uart1",
+        2: "Uart2",
+        3: "USB",
+        4: "SPI",
+    }
+
+    cfg_inf_infMsgMask = {
+        1: "Error",
+        2: "Warning",
+        4: "Notice",
+        8: "Test",
+        0x10: "Debug",
+    }
+
     def cfg_inf(self, buf):
         """UBX-CFG-INF decode, Poll configuration for one protocol
 
 Deprecated in protVer 23.01
+Still in M10S, protVer 34.0
 """
 
+        # FIXME: CFG-INF may contain two data blocks. this assumes one.
         m_len = len(buf)
         if 1 == m_len:
             return ("  Poll request: %s" %
@@ -4290,14 +4308,21 @@ Deprecated in protVer 23.01
         s = (" protocolId %u reserved1 %u %u %u\n"
              " infMsgMask %u %u %u %u" % u)
 
-        # newer u-blox have 10 octets, e.g. u-blox 6 w/ protVer 13
+        # newer u-blox  (u-blox 6 w/ protVer 13) have 10 octets,
         if 9 < m_len:
-            u = struct.unpack_from('<BB', buf[8:], 0)
-            s += (" %u %u" % u)
+            ports = 6
+            u1 = struct.unpack_from('<BB', buf[8:], 0)
+            s += (" %u %u" % u1)
+        else:
+            ports = 4
 
         if gps.VERB_DECODE <= self.verbosity:
             s += ('\n   protocolId (%s)' %
                   index_s(buf[0], self.cfg_inf_protid))
+            for i in range(0, ports):
+                s += ('\n     port (%s) (%s)' %
+                      (index_s(i, self.cfg_inf_port),
+                       flag_s(buf[4 + i], self.cfg_inf_infMsgMask)))
 
         return s
 
@@ -10959,6 +10984,23 @@ with resetMode set to Hardware reset."
             # UBX-CFG-MSG
             self.gps_send(6, 1, m_data)
 
+    def send_able_infmsg(self, able, args, command):
+        """dis/enable INFMSG
+
+Undocumented in Gen9, protVer 27.50
+"""
+        if able:
+            mask = 0x1f
+        else:
+            mask = 0
+        # dis/en all UBX-INfMSG
+        m_data = bytearray([0, 0, 0, 0, mask, mask, mask, mask, mask, 0])
+        self.gps_send(6, 2, m_data)
+
+        # dis/en all NMEA-INfMSG
+        m_data[0] = 1
+        self.gps_send(6, 2, m_data)
+
     def send_able_logfilter(self, able, args, command):
         """Enable logging"""
 
@@ -12155,23 +12197,6 @@ present in 9-series and higher
         # CONFIG
         "CONFIG": {"pollcmd": get_config,
                    "help": "Get a lot of receiver config"},
-        # en/dis able GALILEO
-        "GALILEO": {"ablecmd": send_able_galileo,
-                    "help": "GALILEO E1. GALILEO,2 for E1 and E5b"},
-        # en/dis able GLONASS
-        "GLONASS": {"ablecmd": send_able_glonass,
-                    "help": "GLONASS L1. GLONASS,2 for L1 and L2"},
-        # en/dis able GPS
-        "GPS": {"ablecmd": send_able_gps,
-                "help": "GPS and QZSS L1C/A. GPS,2 for L1C/A and L2C"},
-        # en/dis able HNR messages
-        # UBX-HNR-
-        "HNR": {"pollcmd": send_poll_hnr, "ablecmd": send_able_hnr,
-                "help": "basic HNR messages"},
-        # UBX-CFG-RST
-        "HOTBOOT": {"pollcmd": send_cfg_rst,
-                    "help": "UBX-CFG-RST hotboot the GPS",
-                    "opt": 0},
         # en/dis able ECEF
         "ECEF": {"ablecmd": send_able_ecef,
                  "help": "ECEF"},
@@ -12199,6 +12224,23 @@ present in 9-series and higher
         "ESF-STATUS": {"pollcmd": send_poll, "mid": ESF_STATUS,
                        "help": "poll UBX-ESF-STATUS External sensor fusion "
                                "status"},
+        # en/dis able GALILEO
+        "GALILEO": {"ablecmd": send_able_galileo,
+                    "help": "GALILEO E1. GALILEO,2 for E1 and E5b"},
+        # en/dis able GLONASS
+        "GLONASS": {"ablecmd": send_able_glonass,
+                    "help": "GLONASS L1. GLONASS,2 for L1 and L2"},
+        # en/dis able GPS
+        "GPS": {"ablecmd": send_able_gps,
+                "help": "GPS and QZSS L1C/A. GPS,2 for L1C/A and L2C"},
+        # en/dis able HNR messages
+        # UBX-HNR-
+        "HNR": {"pollcmd": send_poll_hnr, "ablecmd": send_able_hnr,
+                "help": "basic HNR messages"},
+        # UBX-CFG-RST
+        "HOTBOOT": {"pollcmd": send_cfg_rst,
+                    "help": "UBX-CFG-RST hotboot the GPS",
+                    "opt": 0},
         # UBX-HNR-ATT
         "HNR-ATT": {"pollcmd": send_poll, "mid": [0x28, 0x01],
                     "help": "poll UBX-HNR-ATT Attitude solution"},
@@ -12208,6 +12250,9 @@ present in 9-series and higher
         # UBX-HNR-PVT
         "HNR-PVT": {"pollcmd": send_poll, "mid": [0x28, 0x00],
                     "help": "poll UBX-HNR-PVT HNR PVT solution"},
+        # en/dis able INFMSG
+        "INFMSG": {"ablecmd": send_able_infmsg,
+                   "help": "enable/disable all INFMSG"},
         # en/dis able LOG
         "LOG": {"ablecmd": send_able_logfilter,
                 "help": "Data Logger"},
