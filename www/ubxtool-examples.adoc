@@ -1,7 +1,7 @@
 = ubxtool examples
 Gary E. Miller <gem@rellim.com>
 :Author: Gary E. Miller
-:Date: 26 July 2025
+:Date: 3 Nov 2025
 :Description: U-blox GNSS receiver configuration examples
 :Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration, sudo
@@ -23,11 +23,29 @@ configuration, but there are often times when users get the itch to
 change settings to see what happens.  Sometimes even for good reasons.
 
 IMPORTANT: Feel free to jump around this document to recipes that
-interest you, but be sure to first read all of, and comply with, the
-section on Initial Setup.
+interest you, but be sure to first read all of this Introduction.  Then
+read,, and comply with, the section on Initial Setup.
 
 Many of the recipes repeat text from other recipes so that recipes can
 stand alone.  Except all recipes require the Initial Setup section.
+
+The u-blox GNSS receviers fall into two broad categories. The "old
+style" receivers are all those before the Gen9 devices. The "new style"
+comprises all those after the Gen9 devices. Gen9 devices sit across
+the transistion. Gen9 still supports many of the Gen8 configuration
+commands, but the differences are explicitly undocumented. Gen9
+also supports, and encourages, the "configuration items" method
+of configuration. From Gen10 onward, only configuration items are
+supported. These allow you to get, set and delete individual settings
+in the receiver. Before continuing with Configuration Items the u-blox
+documentation on Configuration Items, and the ubxtool man page on
+Configuration Items.
+
+Most of the examples will have a section for Gen8 (and earlier) as
+well as for Gen10 (and later).  Gen9 users may use either method, but
+results will vary depending on your firmware level.  For all examples,
+you should know your protocol version (protVer) and keep the official
+u-blox documentation, for your firmware version, close at hand.
 
 == Initial Setup
 
@@ -38,9 +56,9 @@ If cgps is not showing any data, then do not bother to continue reading
 this document.
 
 You also need a copy of the "Interface Description" for your exact
-u-blox device.  The examples here will refer to a lot of messages and
-variables that are defined in that document.  Keep it open while reading
-this document and refer to it often.
+u-blox device and firmware version. The examples here will refer to a
+lot of messages and variables that are defined in that document. Keep it
+open while reading this document and refer to it often.
 
 === Sudo?  Sudon't!
 
@@ -62,8 +80,8 @@ If you must be root, then become, and stay root.  Just sudon't.
 
 === Protocol Version
 
-All the examples below require that you know the protocol version of
-your u-blox receiver.
+Aveiool) the examples below require that you know the protocol version
+of your u-blox receiver.
 
 ----
 $ ubxtool -p MON-VER
@@ -110,8 +128,8 @@ u-blox 8:
 $ export UBXOPTS="-P 15"
 ----
 
-You can use "-P 18 -v 2" if you have a newer u-blox 8, and for a little
-more verbosity.
+You can use "-P 18 -v 2" if you have a newer u-blox 8, and desire a
+little more verbosity.  "-v 2" also enables NMEA display.
 
 ----
 $ export UBXOPTS="-P 18 -v 2"
@@ -129,6 +147,8 @@ starting a new configuration.
 ----
 $ ubxtool -p RESET
 ----
+
+WARNING: This may not clear configuration stored in Flash memory.
 
 After a few seconds the receiver will only be sending NMEA, you will
 want to enable u-blox binary messages, and disable NMEA messages.  Best
@@ -163,25 +183,41 @@ UBX-INF- messages.  More about that in the next section.
 
 == Enabling and Disabling Informational Messages.
 
-Sometimes the receiver will reject a setting with a simple ACK-NAK.
-If you enable the Information Messages (UBX-INF-) then the
-receiver may actually tell you why it rejected your setting.  This
-will save you some agravation, so be sure to enable them all.
+Sometimes the receiver will reject a setting with a simple ACK-NAK. If
+you enable the Information Messages (UBX-INF-) then the receiver may
+actually tell you why it rejected your setting. The receiver may also
+alert you to other conditions like buffer overflow. This will save you
+some agravation, so be sure to enable them all.
 
-Prior to the 9-series, there appears to be no way to enable, or
-disable, the UBX-INF- messages, and only a few issues will generate them.
-
-=== With Configuration Items
-
-If the receiver is a 9-series, or higher, then you can change receiver
-settings using Configuration Items. These allow you to get, set and
-delete individual settings in the receiver. Before continuing this
-section, read the ubxtool man page on Configuration Items.
+== Gen8
 
 To enable all UBX and NMEA messages on all output ports:
 
 ----
-ubxtool -P 29 -z CFG-INFMSG-UBX_I2C,15  \
+export UBXOPTS="-P 15 -v 2"
+ubxtool -e INFMSG
+----
+
+Then to chack that worked:
+
+----
+ubxtool -p CFG-INF  
+----
+
+=== Gen9
+
+If the receiver is Gen9, or higher, then you should change receiver
+settings using Configuration Items. Configuration Items allow you to
+get, set and delete individual settings in the receiver. In the RAM,
+BBR, and flash storage areas. Before continuing this section, read the
+ubxtool man page on Configuration Items, and the u-blox documentation
+for your receiver model.
+
+To enable all UBX and NMEA messages on all output ports:
+
+----
+export UBXOPTS="-P 27 -v 2"
+ubxtool -z CFG-INFMSG-UBX_I2C,15  \
  -z CFG-INFMSG-UBX_UART1,0x0f \
  -z CFG-INFMSG-UBX_UART2,15 \
  -z CFG-INFMSG-UBX_USB,15 \
@@ -194,10 +230,17 @@ ubxtool -P 29 -z CFG-INFMSG-UBX_I2C,15  \
 ----
 
 Note that you can specify the value as a decimal, hexadecimal (0x), or
-binary (0b) number.
+binary (0b) number.  You may want to only enable them on ports that you
+know you will be using.
+
+If you know what port you are conencted to, you may wish to only enable
+that port.
+
+Then read back those configuration items to ensure it worked:
 
 ----
-ubxtool -P 29 -g CFG-INFMSG
+export UBXOPTS="-P 27 -v 2"
+ubxtool -v 1 -g CFG-INFMSG
 [...]
 UBX-CFG-VALGET:
  version 1 layer 0 position 0
@@ -215,7 +258,14 @@ UBX-CFG-VALGET:
 [...]
 ----
 
+There will be a report for the settings in ram (the currect settings),
+and the default settings.  Depending on your receiver, you may also
+get a port on the contents of the BBR and flash storage.
+
 == Enabling and Disabling Periodic Messages.
+
+Depending on your receiver model, and your use case, you will likely
+with to modify the basic gpsd set messages.
 
 Some individual messages, or sets of messages, can be enabled with the
 "-e ABLE". The same messages can be disabled with the "-d ABLE" option.
@@ -239,9 +289,12 @@ $ ubxtool --disable NED
 ----
 
 The advanced user will want to enable and disable messages that are not
-in the limited set of ABLE options.  You can use the preset command
-"-p CFG-MSG,class,ID[,rate]" to poll, or set, the message rate for any
-UBX message.
+in the limited set of ABLE options.
+
+=== Gen8
+
+You can use the preset command "-p CFG-MSG,class,ID[,rate]" to poll, or
+set, the message rate for any UBX message.
 
 To poll the rate at which UBX-NAV-SOL is sent from the receiver:
 
@@ -282,7 +335,6 @@ CFG-MSG is also used to set the rate on NMEA messages.  NMEA messages
 are all Class 0xf0.  Refer to the u-blox documentation for the ID's
 of specific NMEA messages.
 
-
 To enable $GNGNS once every nav solution:
 
 ----
@@ -298,6 +350,100 @@ We finish the example by turning $GNGNS back off:
 $ ubxtool -p CFG-MSG,0xf0,0x0d,0
 ----
 
+=== Gen9
+
+Some Gen9 will accept CFG-MSG commands, like the Gen8, but Gen10
+no longer do, and Configuration Items gice you better control.  The
+cost is that finding the proper Item to use can be tedious.
+
+To poll the rate at which UBX-NAV-TIMELS is sent from the receiver
+you need to know the current port number on the receiver.  There is
+no way that ubxtool can tell you this, so you must either find it from
+you receiver module documentation, or by trial and error.  There is
+no longer a way to poll all ports, or to set the current port, as with
+Gen8.
+
+Knowing the port, you can then find the proper configuration item to
+use from the u-blox documentation, or query the ubxtool database for it.
+
+----
+$ ubxtool -h -v 3 | grep NAV.TIMELS
+    NAV-TIMELS    NAV-TIMELS Leap Second message
+    NAV-TIMELS    NAV-TIMELS Leap Second message
+    CFG-MSGOUT-UBX_NAV_TIMELS_I2C
+        Output rate of the UBX-NAV-TIMELS message on port I2C
+    CFG-MSGOUT-UBX_NAV_TIMELS_SPI
+        Output rate of the UBX-NAV-TIMELS message on port SPI
+    CFG-MSGOUT-UBX_NAV_TIMELS_UART1
+        Output rate of the UBX-NAV-TIMELS message on port UART1
+    CFG-MSGOUT-UBX_NAV_TIMELS_UART2
+        Output rate of the UBX-NAV-TIMELS message on port UART2
+    CFG-MSGOUT-UBX_NAV_TIMELS_USB
+        Output rate of the UBX-NAV-TIMELS message on port USB
+----
+
+Note the "-v 3" to ask ubxtool to output the item database.  Also
+note the [period] between NAV and TIMELS to match both [dash] and
+{underscore.
+
+To poll the output rate of UBX-NAV-TIMELS aon the USB port we do:
+
+----
+$ ubxtool -g CFG-MSGOUT-UBX_NAV_TIMELS_USB -v 2
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-MSGOUT-UBX_NAV_TIMELS_USB/0x20910063 val 255
+      size one byte(2) type U1 scale 1.000000 
+      Output rate of the UBX-NAV-TIMELS message on port USB
+   count 1
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 7 position 0
+  layers (default)
+    item CFG-MSGOUT-UBX_NAV_TIMELS_USB/0x20910063 val 0
+      size one byte(2) type U1 scale 1.000000 
+      Output rate of the UBX-NAV-TIMELS message on port USB
+   count 1
+----
+
+That shows that UBX-NAV-TIMELS is set in ram to output every 255 epochs.
+The default setting is never, and nothing is set in any other layers.
+
+To set a rate of 5 in the bbr layer, and verify the change,  try this:
+
+----
+$ ubxtool -z CFG-MSGOUT-UBX_NAV_TIMELS_USB,10,2 -v 2
+[...]
+$ ubxtool -g CFG-MSGOUT-UBX_NAV_TIMELS_USB -v 2
+[....]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-MSGOUT-UBX_NAV_TIMELS_USB/0x20910063 val 255
+      size one byte(2) type U1 scale 1.000000 
+      Output rate of the UBX-NAV-TIMELS message on port USB
+   count 1
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 1 position 0
+  layers (bbr)
+    item CFG-MSGOUT-UBX_NAV_TIMELS_USB/0x20910063 val 10
+      size one byte(2) type U1 scale 1.000000 
+      Output rate of the UBX-NAV-TIMELS message on port USB
+   count 1
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 7 position 0
+  layers (default)
+    item CFG-MSGOUT-UBX_NAV_TIMELS_USB/0x20910063 val 0
+      size one byte(2) type U1 scale 1.000000 
+      Output rate of the UBX-NAV-TIMELS message on port USB
+   count 1
+----
+
+
 == Dynamic Platform Model
 
 The most common variable mis-configured in a u-blox receiver is the
@@ -309,6 +455,8 @@ airplane, and the smoothing will act perversely on the fix.  Take a
 moment now to read the section on Platform Settings in your u-blox
 documentation.  Different receivers support different models, so no
 generic recommendations are possible.
+
+=== Gen8
 
 Check your current Dynamic Platform Model:
 
@@ -345,19 +493,20 @@ UBX-CFG-NAV5:
          dgpsMask cnoThreshold utc)
 ----
 
-
-=== With Configuration Items
+=== Gen9
 
 If the receiver is a 9-series, or higher, then you can change the model
 using Configuration Items. These allow you to get, set and delete
 individual settings in the receiver. Before continuing this section,
 read the ubxtool man page on Configuration Items.
 
-The CFG-NAVSPG Configuration Item group includes the CFG-NAV5 items
-of interest here.  So take a look at them, in the ram layer:
+There is no way to wild card request Configuration Items, but you can
+get their values by "group". The CFG-NAVSPG Configuration Item group
+includes the CFG-NAV5 items of interest here. So take a look at them, in
+the ram layer:
 
 ----
-# ubxtool -g CFG-NAVSPG,0
+$ ubxtool -g CFG-NAVSPG,0
 [...]
 UBX-CFG-VALGET:
  version 1 layer 0 position 0
@@ -382,7 +531,7 @@ UBX-CFG-VALGET:
     item CFG-NAVSPG-26/0x2011001a val 18
     item CFG-NAVSPG-UTCSTANDARD/0x2011001c val 0
     item CFG-NAVSPG-32/0x20110020 val 100
-    item CFG-NAVSPG-DYNMODEL/0x20110021 val 1
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 0
     item CFG-NAVSPG-34/0x20110022 val 0
     item CFG-NAVSPG-35/0x20110023 val 0
     item CFG-NAVSPG-36/0x20110024 val 1
@@ -423,18 +572,46 @@ UBX-CFG-VALGET:
     item CFG-NAVSPG-USRDAT_FLAT/0x50110063 val 298.257223563
 ----
 
-We can now use CFG-NAVSPG-DYNMODEL to change the model back to
-Pedestrian, and then confirm the setting:
+CFG-NAVSPG-DYNMODEL is set to the default 4 (Automotive). We can now use
+CFG-NAVSPG-DYNMODEL to change the model back to 2 (Stationary), and then
+confirm the setting in all layers:
 
 ----
-$ ubxtool -z CFG-NAVSPG-DYNMODEL,0
+$ ubxtool -z CFG-NAVSPG-DYNMODEL,2
 [...]
-$ ubxtool -g CFG-NAVSPG-DYNMODEL,0
+$ ubxtool -g CFG-NAVSPG-DYNMODEL
 [...]
 UBX-CFG-VALGET:
  version 1 layer 0 position 0
   layers (ram)
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 2
+      size one byte(2) type E1 scale 1.000000 
+      Dynamic platform model
+   count 1
+[....]
+UBX-CFG-VALGET:
+ version 1 layer 1 position 0
+  layers (bbr)
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 2
+      size one byte(2) type E1 scale 1.000000 
+      Dynamic platform model
+   count 1
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 2 position 0
+  layers (flash)
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 2
+      size one byte(2) type E1 scale 1.000000 
+      Dynamic platform model
+   count 1
+[....]
+UBX-CFG-VALGET:
+ version 1 layer 2 position 0
+  layers (flash)
     item CFG-NAVSPG-DYNMODEL/0x20110021 val 0
+      size one byte(2) type E1 scale 1.000000 
+      Dynamic platform model
+   count 1
 ----
 
 == Rate Settings
@@ -446,7 +623,10 @@ it up in fast moving dynamic environments.  Using several measurements
 sets for each fix computation may remove some noise.  No one size
 fits all.
 
-NOTE: Not all u-blox can take measurements faster than 1 Hz.
+NOTE: Not all u-blox can take measurements faster than 1 Hz.  Check your
+documentation.
+
+=== Gen8
 
 The current configuration can be seen this way:
 
@@ -465,24 +645,22 @@ $ ubxtool -p CFG-RATE,100
 $ ubxtool -p CFG-RATE
 [...]
 UBX-CFG-RATE:
- measRate 000 navRate 1 timeRef 1 (GPS)
+ measRate 100 navRate 1 timeRef 1 (GPS)
 ----
 
 The parameter to the RATE command is the number of milliseconds.
 
-=== Rate Settings with Configuration Items
+=== Gen9
 
-If the receiver is a 9-series, then you can change the rate at which
+If the receiver is a Gen9 or later, then you change the rate at which
 the receiver takes measurements and/or computes the navigation solution
-(fix) using Configuration Items.  These allow you to get, set and delete
-individual settings in the receiver. Before continuing this section,
-read the ubxtool man page on Configuration Items.
+(fix) using Configuration Items.
 
 The CFG-NAVSPG Configuration Item group includes the CFG-NAV5 items
 of interest here.  So take a look at them, in the ram layer:
 
 ----
-# ubxtool -g CFG-RATE,0
+$ ubxtool -g CFG-RATE,0
 [...]
 UBX-CFG-VALGET:
  version 1 layer 0 position 0
@@ -528,9 +706,11 @@ proceeding to the following logging specific steps.
 
 For logging, you need:
 
-1. u-blox 7, 8 or 9 GNSS receiver (protocol version greater than, or equal to, 15)
+1. A GNSS receiver with protocol version greater than, or equal to, 15.
 
 2. External SQI flash memory with a valid Flash Information Structure (FIS).
+
+Garden variety receviers, like the NEO-M8N do not have flsh.
 
 By default EVK boards and other commercial products with flash will
 already have a valid FIS.  Added or replaced flash will need to have
@@ -540,7 +720,12 @@ create a new FIS with u-center.
 If you do not meet the above prerequisites, then you can stop reading
 this section now.
 
-The easy way to see if your firmware supports logging is to ask it:
+The UBX-LOG- messages are supported on all generations, up to, and including
+Gen20.  So only the Gen8 messages are used in this example.  Gen9 and
+above also supports the Configuration Item methods, not shown here.
+
+The easy way to see if your firmware supports logging, on all generations
+of receivers, is to ask it:
 
 ----
 $ ubxtool -p LOG-INFO
@@ -737,20 +922,22 @@ proceeding to these batching specific steps.
 
 For batching, you need:
 
-1. u-blox 8 or 9 GNSS receiver (protocol version 23.01 or greater)
+1. u-blox Gen8, Gen9, or Gen10 receiver (protocol version 23.01 or greater).
+Gen20 is not supported.
 
 2. RAM memory
 
 If you do not meet the above prerequisites, then you can stop reading
 now.
 
-The easy way to see if your firmware supports batching is to ask it:
+The easy way to see, on all u-blox models, if your firmware supports
+batching is to ask it:
 
 ----
 $ ubxtool -p MON-BATCH
 ----
 
-If the receiver does not ACK, or NAK, that request, then it does not
+If the receiver does not ACK, NAK, that request, then it does not
 support batching.  Game over, do not bother to continue with this
 example.
 
@@ -772,7 +959,11 @@ UBX-MON-BATCH:
 
 Check your u-blox documentation for what UBX-MON-BATCH just told you.
 
-=== Batching Configuration
+All u-blox models that support the UBX-MON-BATCH and UBX-LOG-NATCH
+messages. Only Gen8 models support the UBX-CFG-BATCH messages. Gen9 and
+Gen10 must use the configuration items method.
+
+=== Batching Configuration Gen8
 
 Be sure you have completed the instructions in the section
 Initial Setup before continuing here.
@@ -794,7 +985,7 @@ UBX-CFG-BATCH:
       flags (enable extraPvt extraOdo)
 
 UBX-ACK-ACK:
-  ACK to Class x06 (CFG) ID x93 (BATCH)
+  ACK to CFG-BATCH (x06:x93)
 
 UBX-MON-BATCH:
    version 0 reserved1 0 0 0 fillLevel 128
@@ -835,6 +1026,11 @@ End batching:
 $ ubxtool -d BATCH
 ----
 
+=== Batching Configuration Gen9
+
+Gen9 configuration is the same as for Gen8, except that you use
+CFG-BATCH configuration items instead od UBX-CFG-BATH.
+
 == Survey-In and RTCM
 
 Sometimes your GNSS antenna is fixed and instead of having your receiver
@@ -857,8 +1053,8 @@ receiver.
 === Survey-In and RTCM Prerequisites
 
 For base mode, you need a u-blox receiver that supports UBX-CFG-TMODE2
-or UBX-CFG-TMODE3. This is usually limited to Time & Frequency Sync, Time
-Sync, or High Precision products.
+(Gen8, Gen9) or UBX-CFG-TMODE3 (Gen9). This is usually limited to Time &
+Frequency Sync, Time Sync, or High Precision products.
 
 Your receiver supports the High Precision messages if it answers the
 UBX-NAV-SVIN message:
@@ -895,9 +1091,9 @@ UBX-TIM-SVIN:
   obs 31 valid 0 active 0
 ----
 
-If your receiver responds to neither request, then you can use Survey-in.
+If your receiver responds to neither request, then you can not use Survey-in.
 
-=== Survey-In Configuration
+=== Survey-In Configuration Gen8
 
 If your receiver responded to UBX-NAV-SVIN, then you start the default
 survey this way:
@@ -978,9 +1174,42 @@ UBX-NAV-PVT:
     carrSoln (None)
 ----
 
+=== Survey-In Configuration Gen9
+
+For Gen19 and later you should use the Configuration Item method. The
+settings are all in the CFG-TMODE gouup.  See the items this way:
+
+----
+$ ubxtool -g CFG-TMODE,0 -v 1
+
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-TMODE-18/0x10030012 val 1
+    item CFG-TMODE-19/0x10030013 val 1
+    item CFG-TMODE-MODE/0x20030001 val 0
+    item CFG-TMODE-POS_TYPE/0x20030002 val 0
+    item CFG-TMODE-ECEF_X_HP/0x20030006 val 0
+    item CFG-TMODE-ECEF_Y_HP/0x20030007 val 0
+    item CFG-TMODE-ECEF_Z_HP/0x20030008 val 0
+    item CFG-TMODE-LAT_HP/0x2003000c val 0
+    item CFG-TMODE-LON_HP/0x2003000d val 0
+    item CFG-TMODE-HEIGHT_HP/0x2003000e val 0
+    item CFG-TMODE-20/0x20030014 val 0
+    item CFG-TMODE-ECEF_X/0x40030003 val 0
+    item CFG-TMODE-ECEF_Y/0x40030004 val 0
+    item CFG-TMODE-ECEF_Z/0x40030005 val 0
+    item CFG-TMODE-LAT/0x40030009 val 0
+    item CFG-TMODE-LON/0x4003000a val 0
+    item CFG-TMODE-HEIGHT/0x4003000b val 0
+    item CFG-TMODE-FIXED_POS_ACC/0x4003000f val 0
+    item CFG-TMODE-SVIN_MIN_DUR/0x40030010 val 0
+    item CFG-TMODE-SVIN_ACC_LIMIT/0x40030011 val 0
+----
+
 === RTCM3 Configuration
 
-This RTCM3 example currently only works on the USB port of a 9-series
+This RTCM3 example currently only works on the USB port of a Gen9
 Time, Frequency and Time, or High Precision device.  It generates a
 LOT of data.
 
@@ -1054,7 +1283,7 @@ handy, or run 12-hour experiments with *gpsprof*, it will be hard for you
 to improve on the defaults.  If you still must fiddle, then read on,
 after completing the above section on Initial Setup.
 
-=== Checking Constellations
+=== Checking Constellations Gen8
 
 First you must understand what your GNSS receiver is capable of.  Find
 this out with the UBX-MON-GNSS message.
@@ -1063,11 +1292,11 @@ this out with the UBX-MON-GNSS message.
 $ ubxtool -p MON-GNSS -v 2
 ----
 
-If your receiver does not return an ACK-ACK message, then it is 7-series
-or earlier, and only receives from GPS satellites.  Owners of 7-series,
-or older receivers can stop reading this section now.
+If your receiver does not return an ACK-ACK message, then it is Gen7 or
+earlier, and only receives from GPS satellites. Owners of those older
+devices can stop reading this section now.
 
-A u-blox 8 may return something like this:
+A Gen8 may return something like this:
 
 ----
 UBX-MON-GNSS:
@@ -1078,9 +1307,9 @@ UBX-MON-GNSS:
      enabled (GPS Glonass)
 ----
 
-That 8 can support GPS, GLONASS, and BeiDou, but only two at a time.
+That Gen8 can support GPS, GLONASS, and BeiDou, but only two at a time.
 
-A u-blox 9 might return something like this:
+A Gen9 might return something like this:
 
 ----
 UBX-MON-GNSS:
@@ -1091,10 +1320,10 @@ UBX-MON-GNSS:
      enabled (GPS Beidou Galileo)
 ----
 
-That 9 can support GPS, GLONASS, BeiDou, and Galileo, and all at the same
-time.  But in that case, GLONASS is turned off.
+That Gen9 can support GPS, GLONASS, BeiDou, and Galileo, and all at the
+same time. But in that case, GLONASS is turned off.
 
-There are more details to see with UBX-CFG-GNSS.  A u-blox 8 might
+There are more details to see with UBX-CFG-GNSS.  A Gen8 might
 show:
 
 ----
@@ -1118,7 +1347,7 @@ That shows 5 constellations, not 2.  Since GPS, SBAS and QZSS all use
 the same frequency and modulation, they were lumped together by MON-GNSS
 as simply GPS.
 
-An L2 capable 9-series may look like this:
+An L2 Gen9-series may look like this:
 
 ----
 UBX-CFG-GNSS:
@@ -1140,17 +1369,17 @@ requirements, SBAS no longer has any value to the user, and is simply
 not supported.  Multiple signals per constellation are shown, and can be
 individually enabled.
 
-=== Checking Constellations using Configuration Items
+=== Checking Constellations Gen9
 
-The 9-series, and later, did not update the UBX-MON-GNSS for the newly
-added constellations.  Support for UBX-CFG-GNSS was dropped entirely.
-So you must use configuration items.
+The Gen9, and later, did not update the UBX-MON-GNSS for the newly added
+constellations. Support for UBX-CFG-GNSS was dropped entirely. So you
+must use configuration items.
 
 To check for enabled costellations and signals, get the SIGNALS group.
 Typical, not default, output from an F9T with L2 disabled and L5 enabled:
 
 ----
-ubxtool -g CFG-SIGNAL
+$ ubxtool -g CFG-SIGNAL
 [...]
 UBX-CFG-VALGET:
  version 1 layer 0 position 0
