@@ -1531,7 +1531,10 @@ static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
 
     if (UBX_NAV_PVT_FLAG_DGPS == (flags & UBX_NAV_PVT_FLAG_DGPS)) {
         // RTK flags not in u-blox 8
-        if (UBX_NAV_PVT_FLAG_RTK_FIX == (flags & UBX_NAV_PVT_FLAG_RTK_FIX)) {
+        if (STATUS_TIME == *status) {
+            // leave it
+        } else if (UBX_NAV_PVT_FLAG_RTK_FIX ==
+                   (flags & UBX_NAV_PVT_FLAG_RTK_FIX)) {
             *status = STATUS_RTK_FIX;
         } else if (UBX_NAV_PVT_FLAG_RTK_FLT ==
                    (flags & UBX_NAV_PVT_FLAG_RTK_FLT)) {
@@ -2995,7 +2998,10 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
     }
 
     if (UBX_NAV_PVT_FLAG_DGPS == (flags & UBX_NAV_PVT_FLAG_DGPS)) {
-        if (UBX_NAV_PVT_FLAG_RTK_FIX == (flags & UBX_NAV_PVT_FLAG_RTK_FIX)) {
+        if (STATUS_TIME == *status) {
+            // leave it
+        } else if (UBX_NAV_PVT_FLAG_RTK_FIX ==
+                   (flags & UBX_NAV_PVT_FLAG_RTK_FIX)) {
             *status = STATUS_RTK_FIX;
         } else if (UBX_NAV_PVT_FLAG_RTK_FLT ==
                    (flags & UBX_NAV_PVT_FLAG_RTK_FLT)) {
@@ -3222,7 +3228,10 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
 
     if (UBX_NAV_PVT_FLAG_DGPS == (flags & UBX_NAV_PVT_FLAG_DGPS)) {
         // RTK flags not before protoVer 20.
-        if (UBX_NAV_PVT_FLAG_RTK_FIX == (flags & UBX_NAV_PVT_FLAG_RTK_FIX)) {
+        if (STATUS_TIME == *status) {
+            // leave it
+        } else if (UBX_NAV_PVT_FLAG_RTK_FIX ==
+                   (flags & UBX_NAV_PVT_FLAG_RTK_FIX)) {
             *status = STATUS_RTK_FIX;
         } else if (UBX_NAV_PVT_FLAG_RTK_FLT ==
                    (flags & UBX_NAV_PVT_FLAG_RTK_FLT)) {
