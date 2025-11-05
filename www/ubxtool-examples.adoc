@@ -1211,6 +1211,53 @@ UBX-CFG-VALGET:
     item CFG-TMODE-SVIN_ACC_LIMIT/0x40030011 val 0
 ----
 
+Before you can start a survey, you must set the minimum duration and
+accuracy limit.  For quick testing w will set 30 seconds, and 10 meters,
+and then verify the changes worked.
+
+----
+$ ubxtool -z CFG-TMODE-SVIN_MIN_DUR,30
+[...]
+UBX-ACK-ACK:
+ ACK to CFG-VALSET (x06:x8a)
+
+$ ubxtool -z CFG-TMODE-SVIN_ACC_LIMIT,1000000
+[...]
+UBX-ACK-ACK:
+ ACK to CFG-VALSET (x06:x8a)
+
+$ ubxtool -g CFG-TMODE,0 -v 1
+[...]
+    item CFG-TMODE-SVIN_MIN_DUR/0x40030010 val 30
+    item CFG-TMODE-SVIN_ACC_LIMIT/0x40030011 val 1000000
+----
+
+When that looks good, enable survey-in mode, and watch it converge on
+the fixed location.
+
+----
+$ ubxtool -z CFG-TMODE-MODE,1
+[...]
+UBX-ACK-ACK:
+ ACK to CFG-VALSET (x06:x8a)
+
+[wait 30 seconds]
+$ ubxtool -p TIM-SVIN | less
+[...]
+UBX-TIM-SVIN:
+  dur 30 meanX -238604863 meanY -392219750 meanZ 441435965 meanV 876668992
+  obs 31 valid 1 active 0 reserved0 x0
+   valid (Valid) active (Inactive)
+
+[...]
+----
+
+
+That shows the survey is complate and the fixed point mode is active.
+Oddly, you can not poll CFG-TMODE-LAT_HP for the calcualted position.
+You just look in TIM-SVIN, or NAV-SVIN.
+
+
 === RTCM3 Configuration
 
 This RTCM3 example currently only works on the USB port of a Gen9
@@ -1248,7 +1295,7 @@ ubxtool: disable RTCM3
 [...]
 ----
 
-=== Exiting Survey-in
+=== Exiting Survey-in Gen8
 
 To restore your receiver to normal mode:
 
@@ -1271,9 +1318,22 @@ UBX-ACK-ACK:
 Or for a Timing product:
 
 ----
-$ ubxtool -d SURVEYIN2
-ubxtool: disable SURVEYIN2
+$ ubxtool -d SURVEYIN
+ubxtool: disable SURVEYIN
 [...]
+----
+
+=== Exiting Survey-in Gen9
+
+To restore your receiver to normal mode:
+
+To return to normal mode:
+
+----
+$ ubxtool -z CFG-TMODE-MODE,0
+[...]
+UBX-ACK-ACK:
+ ACK to CFG-VALSET (x06:x8a)
 ----
 
 == Constellations
@@ -1419,7 +1479,7 @@ UBX-CFG-VALGET:
 You can see that all constellations are enabled, all L1 and L5 signals
 are enabled, and all L2 signals are disabled.
 
-=== Changing Constellations
+=== Changing Constellations Gen8
 
 The Gen8, and some Gen7, are problematic. Many of them can only
 listen to two out of the three possible constellations: GPS, GLONASS
@@ -1460,67 +1520,16 @@ has many other constraints on setting CFG-GNSS, the masochistic will
 need to spend a lot of quality time with the u-blox documentation to
 lean the many ways to shoot themselves in the foot.
 
-While the need for changing what the Gen9 listens for is less, the
-complexity of doing so is increased.  Not only must the constellation
-be selected, but also the signals within the constellation.
-
-Let us disable GLONASS on a ZED-F9P, then enable it, and check the
-results:
-
-----
-$ ubxtool -d GLONASS
-[...]
-$ ubxtool -e GLONASS
-[...]
-$ ubxtool -p CFG-GNSS
-[...]
-UBX-CFG-GNSS:
- msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
-  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
-   GPS L1C/A L2C enabled
-  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
-   Galileo E1 E5b enabled
-  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
-   BeiDou B1I enabled
-  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
-   QZSS L1C/A L2C enabled
-  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110000
-   GLONASS L1 L2
-----
-
-Note that GLONASS is still disabled.  Determining why is left as an
-exercise to the reader.  The receiver must be told to enable both
-frequencies before it complies:
-
-----
-$ ubxtool -e GLONASS,2
-[...]
-$ ubxtool -p CFG-GNSS
-[...]
-UBX-CFG-GNSS:
- msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
-  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
-   GPS L1C/A L2C enabled
-  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
-   Galileo E1 E5b enabled
-  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
-   BeiDou B1I enabled
-  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
-   QZSS L1C/A L2C enabled
-  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110001
-   GLONASS L1 L2 enabled
-----
-
-Another reason to always check your work hen using *ubxtool*.
-
 u-blox recently recommended to a cold boot after changing
-to some configurations of constellations:
+to some configurations of constellations.  Before you reboot, be
+sure your configurations are stored in BBR and/or FLASH.
 
 ----
 $ ubxtool -p COLDBOOT
 ----
 
-=== Changing Constellations with Configuration Items
+=== Changing Constellations Gen9
+
 
 The astute will have noticed that the canned *ubxtool* commands, like
 "-e GLONASS", send one or binary messages that may change a handful
@@ -1601,6 +1610,14 @@ $ ubxtool -P 29 -z CFG-SIGNAL-GPS_L5_ENA,1 \
   -z CFG-SIGNAL-GAL_E5B_ENA,1 \
   -z CFG-SIGNAL-QZSS_L5_ENA,1 \
   -z CFG-SIGNAL-NAVIC_L5_ENA,1
+----
+
+u-blox recently recommended to a cold boot after changing
+to some configurations of constellations.  Before you reboot, be
+sure your configurations are stored in BBR and/or FLASH.
+
+----
+$ ubxtool -p COLDBOOT
 ----
 
 == ADR and UDR
