@@ -10231,11 +10231,18 @@ changed in protVer 34
 
     # UBX-TIM-
     def tim_svin(self, buf):
-        """UBX-TIM-SVIN decode, Survey-in data"""
+        """UBX-TIM-SVIN decode, Survey-in data
 
-        u = struct.unpack_from('<LlllLLBB', buf, 0)
+Present in F9T, protver 29.11 TIM
+"""
+
+        u = struct.unpack_from('<LlllLLBBH', buf, 0)
         s = ('  dur %u meanX %d meanY %d meanZ %d meanV %u\n'
-             '  obs %u valid %u active %u' % u)
+             '  obs %u valid %u active %u reserved0 x%x' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   valid (%s) active (%s)" %
+                  (index_s(u[6], self.nav_svin_valid),
+                   index_s(u[7], self.nav_svin_active)))
         return s
 
     def tim_tm2(self, buf):
@@ -12704,7 +12711,7 @@ present in 9-series and higher
         "TIM-TM2": {"pollcmd": send_poll, "mid": [0x0d, 0x03],
                     "help": "poll UBX-TIM-TM2 time mark data"},
         # UBX-TIM-TP
-        "TIM-TP": {"ablecmd": send_able, "mid": [0x06, 0x01],
+        "TIM-TP": {"ablecmd": send_able, "mid": [0x0d, 0x01],
                    "pollcmd": send_poll,
                    "help": "TIM-TP Time Pulse message"},
         # UBX-TIM-VRFY
