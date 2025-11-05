@@ -5144,13 +5144,15 @@ Deprecated in protVer 13.00
         }
 
     def cfg_tmode3(self, buf):
-        """UBX-CFG-TMODE3 decode, Time Mode Settings 3"""
+        """UBX-CFG-TMODE3 decode, Time Mode Settings 3
 
-        # in M8 HP only, protver 20 to 23
-        # Not in u-blox 7-, HP only
-        # undocumented, but present in ZED-F9T
-        # documented in ZED-F9P, protver 27
-        # deprecated in 23.01
+Not in u-blox 7-, HP only
+in M8 HP only, protver 20 to 23
+undocumented, but present in ZED-F9T
+documented in ZED-F9P, protver 27
+deprecated in 23.01
+"""
+
         u = struct.unpack_from('<BBHlllbbbBLLLLL', buf, 0)
         s = ('  version %u reserved1 %u flags x%x\n'
              '  ecefXOrLat %d ecefYOrLon %d ecefZOrAlt %d\n'
@@ -7844,18 +7846,35 @@ Use UBX-NAV-PVT instead
                    index_s(3 & (u[4] >> 6), self.carrSoln)))
         return s
 
+    nav_svin_active = {
+        0: 'Inactive',
+        1: 'Active',
+        }
+
+    nav_svin_valid = {
+        0: 'Invalid',
+        1: 'Valid',
+        }
+
     def nav_svin(self, buf):
         """UBX-NAV-SVIN decode, Survey-in data
 
+Present in:
+     F9P, protVer 27.50
+     M8 HPG
 Removed in protVer 32.00
 """
 
-        # in M8 HPG only
         u = struct.unpack_from('<BBBBLLlllbbbBLLBB', buf, 0)
-        return ('  version %u reserved1[%u %u %u] iTOW %u dur %u\n'
-                '  meanX %d meanY %d meanZ %d\n'
-                '  meanXHP %d meanYHP %d meanZHP %d reserved2 %u meanAcc %u\n'
-                '  obs %u valid %u active %u' % u)
+        s = ('  version %u reserved1[%u %u %u] iTOW %u dur %u\n'
+             '  meanX %d meanY %d meanZ %d\n'
+             '  meanXHP %d meanYHP %d meanZHP %d reserved2 %u meanAcc %u\n'
+             '  obs %u valid %u active %u' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   valid (%s) active (%s)" %
+                  (index_s(u[15], self.nav_svin_valid),
+                   index_s(u[16], self.nav_svin_active)))
+        return s
 
     nav_svinfo_gflags = {
         0: 'Antaris, Antaris 4',
