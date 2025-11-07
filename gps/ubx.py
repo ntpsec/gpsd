@@ -5329,6 +5329,34 @@ Deprecated in protVer 23.01
             i += 1
         return s
 
+    def item_val2s(self, item, cfg_type, buf):
+        """Create string from item/val"""
+
+        s = ''
+        frmat = cfg_type[1]
+        # flavor = cfg_type[2]  UNUSED
+        v = struct.unpack_from(frmat, buf, 0)
+        s += '\n    item %s/%#x val %s' % (item[0], item[1], v[0])
+        if gps.VERB_DECODE <= self.verbosity:
+            rsize = (item[1] >> 28) & 0x07     # size code
+            if 'L' == item[2]:
+                s += ('\n      size %s(%u) type %s val %s' %
+                      (index_s(rsize, self.cfg_valxxx_size),
+                       rsize, item[2],
+                       index_s(v[0], self.cfg_valget_logic)))
+            else:
+                s += ('\n      size %s(%u) type %s scale %f unit %s' %
+                      (index_s(rsize, self.cfg_valxxx_size),
+                       rsize, item[2], item[3], item[4]))
+            s += ' \n      %s' % item[5]
+
+        return s
+
+    cfg_valget_logic = {
+        0: "Off",
+        1: "On",
+        }
+
     def cfg_valget(self, buf):
         """"UBX-CFG-VALGET decode, Get configuration items"""
         m_len = len(buf)
@@ -5378,16 +5406,8 @@ Deprecated in protVer 23.01
                     s += "\nWARNING: not enough bytes!"
                     break
 
-                frmat = cfg_type[1]
-                # flavor = cfg_type[2]  UNUSED
-                v = struct.unpack_from(frmat, buf, i)
-                s += '\n    item %s/%#x val %s' % (item[0], u[0], v[0])
-                if gps.VERB_DECODE <= self.verbosity:
-                    rsize = (u[0] >> 28) & 0x07
-                    s += ('\n      size %s(%u) type %s scale %f'
-                          ' \n      %s' %
-                          (index_s(rsize, self.cfg_valxxx_size),
-                           rsize, item[2], item[3], item[5]))
+                s += self.item_val2s(item, cfg_type, buf[i:])
+
                 m_len -= size
                 i += size
 
@@ -5423,10 +5443,7 @@ Deprecated in protVer 23.01
 
             size = cfg_type[0]
             # FIXME!  should check for enough bytes to unpack from
-            frmat = cfg_type[1]
-            # flavor = cfg_type[2]  UNUSED
-            v = struct.unpack_from(frmat, buf, i)
-            s += ('\n    item %s/%#x val %s' % (item[0], u[0], v[0]))
+            s += self.item_val2s(item, cfg_type, buf[i:])
             m_len -= size
             i += size
 
@@ -12631,7 +12648,7 @@ present in 9-series and higher
         # en/dis able RTCM3 messages 1005, 1077, 1087, 1230
         "RTCM3": {"ablecmd": send_able_rtcm3,
                   "help": "required RTCM3 messages. USB port only"},
-        # UBX-RXM-COR
+        # UBX-RXM-COR, can not be polled
         "RXM-COR": {"mid": [0x02, 0x34],
                     "ablecmd": send_able,
                     "help": "UBX-RXM-COR Diff Correction input status "},
