@@ -1,7 +1,7 @@
 = ubxtool examples
 Gary E. Miller <gem@rellim.com>
 :Author: Gary E. Miller
-:Date: 4 Nov 2025
+:Date: 6 Nov 2025
 :Description: U-blox GNSS receiver configuration examples
 :Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration, sudo
@@ -15,7 +15,7 @@ include::inc-menu.adoc[]
 // The source highlighter requires rouge to be installed
 
 WARNING: This document assumes you are using gpsd from git head, or
-version 3.26 or higher.  Using older gpsd versions will fail in strange
+version 3.27 or higher.  Using older gpsd versions will fail in strange
 ways.
 
 == Introduction
@@ -96,6 +96,7 @@ examples.
 
 A u-blox 6, assume protocol version 12
 
+[,shell]
 ----
 UBX-MON-VER:
   swVersion 6.02 (36023)
@@ -104,6 +105,7 @@ UBX-MON-VER:
 
 A u-blox 8, protocol version 15
 
+[,shell]
 ----
 UBX-MON-VER:
   swVersion 2.01 (75331)
@@ -114,6 +116,7 @@ UBX-MON-VER:
 
 The shortcut to find the PROTVER for u-blox 8 and up:
 
+[,shell]
 ----
 $ ubxtool -p MON-VER | fgrep PROT
 extension PROTVER=18.00
@@ -128,6 +131,7 @@ is easy to forget, and annoying to type repeatedly, so add it to your
 environment and *ubxtool* will use it.  For example if you have an early
 u-blox 8:
 
+[,shell]
 ----
 $ export UBXOPTS="-P 15"
 ----
@@ -135,6 +139,7 @@ $ export UBXOPTS="-P 15"
 You can use "-P 18 -v 2" if you have a newer u-blox 8, and desire a
 little more verbosity.  "-v 2" also enables NMEA display.
 
+[,shell]
 ----
 $ export UBXOPTS="-P 18 -v 2"
 ----
@@ -148,6 +153,7 @@ picky about competing configuration options, and may fail to warn the
 unwary of conflicts.  Best to always revert to factory defaults before
 starting a new configuration.
 
+[,shell]
 ----
 $ ubxtool -p RESET
 ----
@@ -160,6 +166,7 @@ to do it in that order so the receiver does not go totally silent.  This
 is one place where the "-P", set in UBXOPTS, is critically important, to
 get the correct messages for your firmware.
 
+[,shell]
 ----
 $ ubxtool -e BINARY
 $ ubxtool -d NMEA
@@ -197,6 +204,7 @@ some agravation, so be sure to enable them all.
 
 To enable all UBX and NMEA messages on all output ports:
 
+[,shell]
 ----
 $ export UBXOPTS="-P 15 -v 2"
 $ ubxtool -e INFMSG
@@ -204,6 +212,7 @@ $ ubxtool -e INFMSG
 
 Then to chack that worked:
 
+[,shell]
 ----
 $ ubxtool -p CFG-INF
 ----
@@ -219,6 +228,7 @@ for your receiver model.
 
 To enable all UBX and NMEA messages on all output ports:
 
+[,shell]
 ----
 $ export UBXOPTS="-P 27 -v 2"
 $ ubxtool -z CFG-INFMSG-UBX_I2C,15  \
@@ -242,6 +252,7 @@ that port.
 
 Then read back those configuration items to ensure it worked:
 
+[,shell]
 ----
 $ export UBXOPTS="-P 27 -v 2"
 $ ubxtool -v 1 -g CFG-INFMSG
@@ -275,6 +286,7 @@ Some individual messages, or sets of messages, can be enabled with the
 "-e ABLE". The same messages can be disabled with the "-d ABLE" option.
 The available options for ABLE will be see in the verbose help:
 
+[,shell]
 ----
 $ ubxtool --help -v 2 | less
 ----
@@ -282,12 +294,14 @@ $ ubxtool --help -v 2 | less
 If you wanted to enable the UBX-NAV-VELNED and UBX-NAV-RELPOSNED
 messages:
 
+[,shell]
 ----
 $ ubxtool --enable NED
 ----
 
 When you realize that is not what you wanted, disable them:
 
+[,shell]
 ----
 $ ubxtool --disable NED
 ----
@@ -302,6 +316,7 @@ set, the message rate for any UBX message.
 
 To poll the rate at which UBX-NAV-SOL is sent from the receiver:
 
+[,shell]
 ----
 $ ubxtool -p CFG-MSG,1,6
 UBX-CFG-MSG:
@@ -314,6 +329,7 @@ being output on any of the 6 ports.
 To send UBX-NAV-SOL, on the current port, on every second navigation
 solution, and verify the setting:
 
+[,shell]
 ----
 $ ubxtool -p CFG-MSG,1,6,2
 [...]
@@ -327,6 +343,7 @@ port 3 (USB).
 
 Now we turn it back off, and verify.
 
+[,shell]
 ----
 $ ubxtool -p CFG-MSG,1,6,0
 [...]
@@ -341,6 +358,7 @@ of specific NMEA messages.
 
 To enable $GNGNS once every nav solution:
 
+[,shell]
 ----
 $ ubxtool -p CFG-MSG,0xf0,0x0d,1 -v 2
 ----
@@ -350,6 +368,7 @@ in its output.
 
 We finish the example by turning $GNGNS back off:
 
+[,shell]
 ----
 $ ubxtool -p CFG-MSG,0xf0,0x0d,0
 ----
@@ -370,6 +389,7 @@ Gen8.
 Knowing the port, you can then find the proper configuration item to
 use from the u-blox documentation, or query the *ubxtool* database for it.
 
+[,shell]
 ----
 $ ubxtool -h -v 3 | grep NAV.TIMELS
     NAV-TIMELS    NAV-TIMELS Leap Second message
@@ -392,6 +412,7 @@ note the [period] between NAV and TIMELS to match both [dash] and
 
 To poll the output rate of UBX-NAV-TIMELS aon the USB port we do:
 
+[,shell]
 ----
 $ ubxtool -g CFG-MSGOUT-UBX_NAV_TIMELS_USB -v 2
 [...]
@@ -417,6 +438,7 @@ The default setting is never, and nothing is set in any other layers.
 
 To set a rate of 5 in the bbr layer, and verify the change,  try this:
 
+[,shell]
 ----
 $ ubxtool -z CFG-MSGOUT-UBX_NAV_TIMELS_USB,10,2 -v 2
 [...]
@@ -464,6 +486,7 @@ generic recommendations are possible.
 
 Check your current Dynamic Platform Model:
 
+[,shell]
 ----
 $ ubxtool -p CFG-NAV5
 UBX-CFG-NAV5:
@@ -482,6 +505,7 @@ That shows the receiver is in the default Portable model.
 To change the active model to Automotive (4), and check it again,
 is simply:
 
+[,shell]
 ----
 $ ubxtool -p MODEL,4
 [...]
@@ -509,6 +533,7 @@ get their values by "group". The CFG-NAVSPG Configuration Item group
 includes the CFG-NAV5 items of interest here. So take a look at them, in
 the ram layer:
 
+[,shell]
 ----
 $ ubxtool -g CFG-NAVSPG,0
 [...]
@@ -580,6 +605,7 @@ CFG-NAVSPG-DYNMODEL is set to the default 4 (Automotive). We can now use
 CFG-NAVSPG-DYNMODEL to change the model back to 2 (Stationary), and then
 confirm the setting in all layers:
 
+[,shell]
 ----
 $ ubxtool -z CFG-NAVSPG-DYNMODEL,2
 [...]
@@ -634,6 +660,7 @@ documentation.
 
 The current configuration can be seen this way:
 
+[,shell]
 ----
 $ ubxtool -p CFG-RATE
 [...]
@@ -643,6 +670,7 @@ UBX-CFG-RATE:
 
 To change to a 10 Hz measurement and fix rate, then check your work:
 
+[,shell]
 ----
 $ ubxtool -p CFG-RATE,100
 [...]
@@ -663,6 +691,7 @@ the receiver takes measurements and/or computes the navigation solution
 The CFG-NAVSPG Configuration Item group includes the CFG-NAV5 items
 of interest here.  So take a look at them, in the ram layer:
 
+[,shell]
 ----
 $ ubxtool -g CFG-RATE,0
 [...]
@@ -676,6 +705,7 @@ UBX-CFG-VALGET:
 
 You can change the measurement rate to 0.1 Hz, and check it, this way:
 
+[,shell]
 ----
 $ ubxtool -z CFG-RATE-MEAS,10000,1
 sent:
@@ -731,6 +761,7 @@ above also supports the Configuration Item methods, not shown here.
 The easy way to see if your firmware supports logging, on all generations
 of receivers, is to ask it:
 
+[,shell]
 ----
 $ ubxtool -p LOG-INFO
 ----
@@ -743,6 +774,7 @@ your receiver does not support logging.
 
 Two, the receiver returns something similar to this:
 
+[,shell]
 ----
     UBX-LOG-INFO:
       version 1 reserved1 x0 x0 filestoreCapacity 0 reserved2 x0 x0
@@ -759,6 +791,7 @@ use.  Game over, your receiver does not support logging.
 
 Three, the receiver returns something similar to this:
 
+[,shell]
 ----
     UBX-LOG-INFO:
       version 1 reserved1 x0 x0 filestoreCapacity 487680 reserved2 x9600 x24900
@@ -781,6 +814,7 @@ Initial Setup before continuing here.
 
 Erase any exiting log:
 
+[,shell]
 ----
 $ ubxtool -p LOG-ERASE
 [...]
@@ -793,6 +827,7 @@ UBX-ACK-ACK:
 
 Create new log:
 
+[,shell]
 ----
 $ ubxtool -p LOG-CREATE
 [...]
@@ -807,6 +842,7 @@ UBX-ACK-ACK:
 
 Start logging:
 
+[,shell]
 ----
 $ ubxtool -e LOG
 [...]
@@ -821,6 +857,7 @@ UBX-ACK-ACK:
 
 Wait, then verify that the receiver is logging data:
 
+[,shell]
 ----
 $ ubxtool -p LOG-INFO -v 2
 UBX-LOG-INFO:
@@ -836,6 +873,7 @@ UBX-LOG-INFO:
 
 Add a string:
 
+[,shell]
 ----
 $ ubxtool -p LOG-STRING -v 2
 [...]
@@ -845,6 +883,7 @@ UBX-ACK-ACK:
 
 Wait for a few more fixes to be logged, then turn off logging.
 
+[,shell]
 ----
 $ ubxtool -d LOG -v 2
 [...]
@@ -860,6 +899,7 @@ UBX-ACK-ACK:
 
 Verify that logging is indeed off:
 
+[,shell]
 ----
 $ ubxtool -p LOG-INFO -v 2
 [...]
@@ -876,6 +916,7 @@ UBX-LOG-INFO:
 
 Retrieve log data:
 
+[,shell]
 ----
 $ ubxtool -p LOG-RETRIEVE -v 2
 [...]
@@ -908,6 +949,7 @@ UBX-LOG-RETRIEVEPOS:
 
 Erase and clear existing log, before you can enable log again:
 
+[,shell]
 ----
 $ ubxtool -p LOG-ERASE
 $ ubxtool -p LOG-CREATE
@@ -937,6 +979,7 @@ now.
 The easy way to see, on all u-blox models, if your firmware supports
 batching is to ask it:
 
+[,shell]
 ----
 $ ubxtool -p MON-BATCH
 ----
@@ -948,6 +991,7 @@ example.
 If your receiver does support batching, you will see something
 similar to this:
 
+[,shell]
 ----
 $ ubxtool -p MON-BATCH
 ubxtool: poll MON-BATCH
@@ -974,12 +1018,14 @@ Initial Setup before continuing here.
 
 Enable batching:
 
+[,shell]
 ----
 $ ubxtool -e BATCH
 ----
 
 Wait, then verify:
 
+[,shell]
 ----
 $ ubxtool -p CFG-BATCH -p MON-BATCH -v 2
 [...]
@@ -1000,6 +1046,7 @@ UBX-MON-BATCH:
 Wait a while, for some fixes to be saved in the BATCH.  Then check
 UBX-MON-BATCH and get all the batch entries:
 
+[,shell]
 ----
 $ ubxtool -p LOG-RETRIEVEBATCH -v 2
 [...]
@@ -1026,6 +1073,7 @@ batches fixes.
 
 End batching:
 
+[,shell]
 ----
 $ ubxtool -d BATCH
 ----
@@ -1063,6 +1111,7 @@ Frequency Sync, Time Sync, or High Precision products.
 Your receiver supports the High Precision messages if it answers the
 UBX-NAV-SVIN message:
 
+[,shell]
 ----
 $ ubxtool -p NAV-SVIN -P 27.11
 ubxtool: poll NAV-SVIN
@@ -1082,6 +1131,7 @@ UBX-NAV-SVIN:
 Your receiver supports the Timing messages if it answers the
 UBX-TIM-SVIN message:
 
+[,shell]
 ----
 $ ubxtool -p TIM-SVIN -P 22
 ubxtool: poll TIM-SVIN
@@ -1102,6 +1152,7 @@ If your receiver responds to neither request, then you can not use Survey-in.
 If your receiver responded to UBX-NAV-SVIN, then you start the default
 survey this way:
 
+[,shell]
 ----
 $ ubxtool -e SURVEYIN3 -P 27
 ubxtool: enable SURVEYIN3
@@ -1123,6 +1174,7 @@ SURVEYIN.  You can optionally provide the svinMinDur and svinAccLimit
 variables on the command line.  For example, to survey-in for 60 seconds
 and 20 meters accuracy:
 
+[,shell]
 ----
 $ ubxtool -e SURVEYIN3,60,200000  -v 2 -P 27
 ubxtool: enable SURVEYIN3,60,200000
@@ -1131,6 +1183,7 @@ ubxtool: enable SURVEYIN3,60,200000
 
 To check the progress of your survey:
 
+[,shell]
 ----
 $ ubxtool -p NAV-SVIN -P 27
 ubxtool: poll NAV-SVIN
@@ -1154,6 +1207,7 @@ accuracy requested.
 Your survey is complete when valid is 1.  At that point NAV-PVT will
 show a fixType of 5 to show you it has entered fixed base mode.
 
+[,shell]
 ----
 $ ubxtool -p NAV-SVIN -P 27
 [...]
@@ -1183,6 +1237,7 @@ UBX-NAV-PVT:
 For Gen19 and later you should use the Configuration Item method. The
 settings are all in the CFG-TMODE gouup.  See the items this way:
 
+[,shell]
 ----
 $ ubxtool -g CFG-TMODE,0 -v 1
 
@@ -1212,9 +1267,10 @@ UBX-CFG-VALGET:
 ----
 
 Before you can start a survey, you must set the minimum duration and
-accuracy limit.  For quick testing w will set 30 seconds, and 10 meters,
+accuracy limit.  For quick testing we will set 30 seconds, and 10 meters,
 and then verify the changes worked.
 
+[,shell]
 ----
 $ ubxtool -z CFG-TMODE-SVIN_MIN_DUR,30
 [...]
@@ -1235,6 +1291,7 @@ $ ubxtool -g CFG-TMODE,0 -v 1
 When that looks good, enable survey-in mode, and watch it converge on
 the fixed location.
 
+[,shell]
 ----
 $ ubxtool -z CFG-TMODE-MODE,1
 [...]
@@ -1266,6 +1323,7 @@ LOT of data.
 
 To enable the RTCM 3 output on the USB port:
 
+[,shell]
 ----
 $ ubxtool -e RTCM3 -P 27 -v 2
 ubxtool: enable RTCM3
@@ -1289,6 +1347,7 @@ RTCM3 packet: type 1077
 
 To be able to do anything else, you must disable the RTCM3:
 
+[,shell]
 ----
 $ ubxtool -d RTCM3 -P 27 -v 2
 ubxtool: disable RTCM3
@@ -1299,6 +1358,7 @@ ubxtool: disable RTCM3
 
 To restore your receiver to normal mode:
 
+[,shell]
 ----
 $ ubxtool -d SURVEYIN3
 ubxtool: disable SURVEYIN3
@@ -1317,6 +1377,7 @@ UBX-ACK-ACK:
 
 Or for a Timing product:
 
+[,shell]
 ----
 $ ubxtool -d SURVEYIN
 ubxtool: disable SURVEYIN
@@ -1329,6 +1390,7 @@ To restore your receiver to normal mode:
 
 To return to normal mode:
 
+[,shell]
 ----
 $ ubxtool -z CFG-TMODE-MODE,0
 [...]
@@ -1352,6 +1414,7 @@ after completing the above section on Initial Setup.
 First you must understand what your GNSS receiver is capable of.  Find
 this out with the UBX-MON-GNSS message.
 
+[,shell]
 ----
 $ ubxtool -p MON-GNSS -v 2
 ----
@@ -1362,6 +1425,7 @@ devices can stop reading this section now.
 
 A Gen8 may return something like this:
 
+[,shell]
 ----
 UBX-MON-GNSS:
    version 0 supported 0x7 defaultGnss 0x3 enabled 0x3
@@ -1375,6 +1439,7 @@ That Gen8 can support GPS, GLONASS, and BeiDou, but only two at a time.
 
 A Gen9 might return something like this:
 
+[,shell]
 ----
 UBX-MON-GNSS:
    version 0 supported 0xf defaultGnss 0xf enabled 0xd
@@ -1390,6 +1455,7 @@ same time. But in that case, GLONASS is turned off.
 There are more details to see with UBX-CFG-GNSS.  A Gen8 might
 show:
 
+[,shell]
 ----
 $ ubxtool -p CFG-GNSS -v 2
 [...]
@@ -1414,6 +1480,7 @@ more constellations.
 
 An Gen9 that supports the L2  band may look like this:
 
+[,shell]
 ----
 UBX-CFG-GNSS:
  msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
@@ -1436,13 +1503,14 @@ individually enabled.
 
 === Checking Constellations Gen9
 
-The Gen9, and later, did not update the UBX-MON-GNSS for the newly added
-constellations. Support for UBX-CFG-GNSS was dropped entirely. So you
-must use configuration items.
+The Gen9, and later, did not update the UBX-MON-GNSS for the newly
+added constellations. Support for UBX-CFG-GNSS was eventually dropped
+entirely. So you must use configuration items.
 
 To check for enabled costellations and signals, get the SIGNALS group.
 Typical, not default, output from an F9T with L2 disabled and L5 enabled:
 
+[,shell]
 ----
 $ ubxtool -g CFG-SIGNAL
 [...]
@@ -1493,6 +1561,7 @@ If we first try to enable BeiDou, that will fail, as that would enable
 enable BeiDou, then check.  Always check as u-blox does not reliably report
 errors.
 
+[,shell]
 ----
 $ ubxtool -d GLONASS
 [...]
@@ -1520,10 +1589,11 @@ has many other constraints on setting CFG-GNSS, the masochistic will
 need to spend a lot of quality time with the u-blox documentation to
 lean the many ways to shoot themselves in the foot.
 
-u-blox recently recommended to a cold boot after changing
-to some configurations of constellations.  Before you reboot, be
+u-blox recently recommended to do a cold boot after changing to some
+configurations of constellations for some models. Before you reboot, be
 sure your configurations are stored in BBR and/or FLASH.
 
+[,shell]
 ----
 $ ubxtool -p COLDBOOT
 ----
@@ -1541,6 +1611,7 @@ man page on Configuration Items.
 The CFG-SIGNAL Configuration Item group includes the CFG-GNSS items
 of interest here.  So take a look at them, in the ram layer:
 
+[,shell]
 ----
 $ ubxtool -g CFG-SIGNAL,0
 [...]
@@ -1572,6 +1643,7 @@ test.  Or maybe not, who knows, but we want to enable it to see if
 anything changes.  So we will use the "-z" command to enable it, and
 the "-g" command to check it in layer 0.
 
+[,shell]
 ----
 $ ubxtool -z CFG-SIGNAL-BDS_B2_ENA,1
 [...]
@@ -1583,13 +1655,14 @@ UBX-CFG-VALGET:
     item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 1
 ----
 
-Some receviers, like the F9T, and the F20 HPG, can be picky about what
-signals can be enabled at the same time.  Illegal combinations will
-cause an INFMSG to be sent, if enabled.  Sometimes it is easier to turn off
-all L2 and L5, then enable what you want until your get an ACK-NAK.
+The various receviers, can be picky about what signals can be enabled
+at the same time. In different ways. Illegal combinations may cause an
+INFMSG to be sent, if enabled. Sometimes it is easier to turn off all L2
+and L5, then enable what you want until your get an ACK-NAK.
 
 To disable all L2 and L5 signals at once:
 
+[,shell]
 ----
 $ ubxtool -P 29  -z CFG-SIGNAL-GPS_L2C_ENA,0 \
   -z CFG-SIGNAL-GPS_L5_ENA,0 \
@@ -1604,6 +1677,7 @@ $ ubxtool -P 29  -z CFG-SIGNAL-GPS_L2C_ENA,0 \
 
 Then to turn on all the L5 signals:
 
+[,shell]
 ----
 $ ubxtool -P 29 -z CFG-SIGNAL-GPS_L5_ENA,1 \
   -z CFG-SIGNAL-GAL_E5A_ENA,1 \
@@ -1616,6 +1690,7 @@ u-blox recently recommended to a cold boot after changing
 to some configurations of constellations.  Before you reboot, be
 sure your configurations are stored in BBR and/or FLASH.
 
+[,shell]
 ----
 $ ubxtool -p COLDBOOT
 ----
@@ -1635,6 +1710,7 @@ meet this requirement, then you can skip this section.
 
 A NEO-M8U, with UDR, looks like this:
 
+[,shell]
 ----
 $ ubxtool -p MON-VER
 UBX-MON-VER:
@@ -1657,6 +1733,7 @@ all the nitty gritty details.
 You can poll your receiver for most of the possible UBX-ESF- and UBX-HNR-
 messages this way:
 
+[,shell]
 ----
 $ ubxtool -p ESF -v 2
 [...]
@@ -1739,6 +1816,7 @@ Sadly UBX-ESF-MEAS and UBX-ESF-RAW can not be polled.
 You paid extra for those messages, so you will want to enable then to
 be send periodically.
 
+[,shell]
 ----
 $ ubxtool -e ESF
 $ ubxtool -e HNR
@@ -1748,6 +1826,7 @@ That does not enable UBX-ESF-MEAS and UBX-ESF-RAW as they are a flood
 of raw data, reported in JSON ATT, that is hard to process.  To see
 them, just enable them as you enable any other periodic messages:
 
+[,shell]
 ----
 $ ubxtool -P 19 -p CFG-MSG,0x10,2,1
 $ ubxtool -P 19 -p CFG-MSG,0x10,3,1
@@ -1759,6 +1838,7 @@ can not be changed.
 
 To see the results:
 
+[,shell]
 ----
 $ ubxtool -v 2
 [...]
@@ -1869,6 +1949,7 @@ entering fusion mode.  That requires driving the receiver around in
 a car.  You can partially, but not completely, disable this with the
 doAutoMntAlg flag:
 
+[,shell]
 ----
 $ ubxtool -p CFG-ESFALG,0
 ----
@@ -1885,12 +1966,14 @@ also the message sent when you enable and disable the TIMEPULSE pin by
 means of the PPS option. In particular, -d PPS is actually a shortcut
 for:
 
+[,shell]
 ----
 $ ubxtool -p CFG-TP5,,,,,,,,,0x76
 ----
 
 While -e PPS is a shortcut for:
 
+[,shell]
 ----
 $ ubxtool -p CFG-TP5,,,,,,,,,0x77
 ----
@@ -1899,6 +1982,7 @@ UBX-CFG-TP5 messages can take several forms. For example, to
 poll the current Timepulse configuration for the TIMEPULSE and
 TIMEPULSE2 pins respectively:
 
+[,shell]
 ----
 $ ubxtool -p CFG-TP5,0
 [...]
@@ -1925,12 +2009,14 @@ Let us say you want 1 PPS with 100 ms pulse length in the absence of lock
 and 4 PPS with 25 ms length in the presence of it in the TIMEPULSE pin.
 You can specify this either in period/length form:
 
+[,shell]
 ----
 $ ubxtool -p CFG-TP5,0,,,1000000,250000,100000,25000,,0x77
 ----
 
 or in frequency/duty cycle form:
 
+[,shell]
 ----
 $ ubxtool -p CFG-TP5,0,,,1,4,429496729,429496729,,0x6f
 ----
@@ -1941,6 +2027,7 @@ in which 429496729 represents a 10% duty cycle (as it is simply the
 Duty cycles can also be specified in hexadecimal form. For example,
 if you wanted a 50% duty cycle instead, you could do:
 
+[,shell]
 ----
 $ ubxtool -p CFG-TP5,0,,,1,4,0x80000000,0x80000000,,0x6f
 ----
@@ -1964,6 +2051,7 @@ It is not easy to tell what storage options are available.  There may
 even be none.  You can sometimes tell if your device has flash with
 MON-VER:
 
+[,shell]
 ----
 $ ubxtool -p MON-VER -P 27.12
 [...]
@@ -1984,6 +2072,7 @@ on your device.
 
 If you have no FLASH, then you will see "swVersion ROM CORE":
 
+[,shell]
 ----
 $ ubxtool -p MON-VER -P 18
 [...]
@@ -2004,6 +2093,7 @@ everywhere and see what sticks.
 First we need a data item to store.  The Dynamic Platform Model (dynModel)
 is a common one to change.  See what it is currently:
 
+[,shell]
 ----
 $ ubxtool -p CFG-NAV5  -P 27 -v 2
 UBX-CFG-NAV5:
@@ -2021,6 +2111,7 @@ You can see that dynModel is set to "Portable" (0).  The most common
 default setting.  But you want to use your receiver on your boat, so you
 want to set dynModel to "Sea" (5).  Then verify that worked:
 
+[,shell]
 ----
 $ ubxtool -p MODEL,5  -P 27 -v 2
 connected to tcp://localhost:2947
@@ -2056,6 +2147,7 @@ the last saved configuration or default.  So we want to save the current
 configuration in RAM, as much as possible, to whatever storage we have,
 if possible.  The "-p SAVE" option does that:
 
+[,shell]
 ----
 $ ubxtool -p SAVE  -P 27 -v 2
 [...]
@@ -2090,6 +2182,7 @@ an index..  The layers, as used by UBX-CFG-VALGET, are:
 * 2 -- Flash -- value saved in Flash
 * 7 -- Default -- the firmware default value
 
+[,shell]
 ----
 $ ubxtool -g CFG-NAVSPG-DYNMODEL,0
 [...]
@@ -2122,6 +2215,7 @@ dynModel is not set in BBR or Flash.  We can fix that, by setting
 dynModel to 2 (Stationary).  Here is how to do that in all layers,
 except the default layer.
 
+[,shell]
 ----
 $ ubxtool -z CFG-NAVSPG-DYNMODEL,2
 [...]
@@ -2158,6 +2252,7 @@ simple spectrum analyzer for testing GNSS antennas.
 A scan only takes a few seconds.  To create a file with the scan data
 run this:
 
+[,shell]
 ----
 $ ubxtool -p MON-SPAN -P 27 -v3 -f /dev/ttyACM1 | \
 grep  -E  '^     1[[:digit:]]{9}, [[:digit:]]{1,3}' > ant.dat
@@ -2169,6 +2264,7 @@ command extracts just the data that we need.
 Convert that data into a nice plot with *gnuplot* using this
 plotfile:
 
+[,shell]
 ----
 $ cat ant.plt
 set terminal qt size 600,600
@@ -2184,6 +2280,7 @@ plot 'ant.dat' using 1:2
 
 And plot it to your desktop  this way:
 
+[,shell]
 ----
 $ gnuplot -persist < ant.plt
 ----
