@@ -32,10 +32,10 @@ read,, and comply with, the section on Initial Setup.
 Many of the recipes repeat text from other recipes so that recipes can
 stand alone.  Except all recipes require the Initial Setup section.
 
-The u-blox GNSS receviers fall into two broad categories. The "old
+The u-blox GNSS receivers fall into two broad categories. The "old
 style" receivers are all those before the Gen9 devices. The "new style"
 comprises all those after the Gen9 devices. Gen9 devices sit across
-the transistion. Gen9 still supports many of the Gen8 configuration
+the transition. Gen9 still supports many of the Gen8 configuration
 commands, but the differences are explicitly undocumented. Gen9
 also supports, and encourages, the "configuration items" method
 of configuration. From Gen10 onward, only configuration items are
@@ -52,8 +52,8 @@ u-blox documentation, for your firmware version, close at hand.
 
 == Initial Setup
 
-All the examples here assume that gpsd is running on the local host and
-that cgps is showing current and valid data from the receiver.
+All the examples here assume that *gpsd* is running on the local host
+and that cgps is showing current and valid data from the receiver.
 
 If cgps is not showing any data, then do not bother to continue reading
 this document.
@@ -83,8 +83,8 @@ If you must be root, then become, and stay root.  Just sudon't.
 
 === Protocol Version
 
-Aveiool) the examples below require that you know the protocol version
-of your u-blox receiver.
+The examples below require that you know the protocol version of your
+u-blox receiver.
 
 [,shell]
 ----
@@ -198,9 +198,9 @@ Sometimes the receiver will reject a setting with a simple ACK-NAK. If
 you enable the Information Messages (UBX-INF-) then the receiver may
 actually tell you why it rejected your setting. The receiver may also
 alert you to other conditions like buffer overflow. This will save you
-some agravation, so be sure to enable them all.
+some aggravation, so be sure to enable them all.
 
-== Gen8
+=== Gen8
 
 To enable all UBX and NMEA messages on all output ports:
 
@@ -226,7 +226,8 @@ BBR, and flash storage areas. Before continuing this section, read the
 *ubxtool* man page on Configuration Items, and the u-blox documentation
 for your receiver model.
 
-To enable all UBX and NMEA messages on all output ports:
+To enable all UBX and NMEA messages on all output ports, in the ram, bbr
+and flash layers:
 
 [,shell]
 ----
@@ -247,7 +248,7 @@ Note that you can specify the value as a decimal, hexadecimal (0x), or
 binary (0b) number.  You may want to only enable them on ports that you
 know you will be using.
 
-If you know what port you are conencted to, you may wish to only enable
+If you know what port you are connected to, you may wish to only enable
 that port.
 
 Then read back those configuration items to ensure it worked:
@@ -273,14 +274,14 @@ UBX-CFG-VALGET:
 [...]
 ----
 
-There will be a report for the settings in ram (the currect settings),
+There will be a report for the settings in ram (the current settings),
 and the default settings.  Depending on your receiver, you may also
 get a port on the contents of the BBR and flash storage.
 
 == Enabling and Disabling Periodic Messages.
 
 Depending on your receiver model, and your use case, you will likely
-with to modify the basic gpsd set messages.
+with to modify the basic *gpsd* set messages.
 
 Some individual messages, or sets of messages, can be enabled with the
 "-e ABLE". The same messages can be disabled with the "-d ABLE" option.
@@ -410,7 +411,7 @@ Note the "-v 3" to ask *ubxtool* to output the item database.  Also
 note the [period] between NAV and TIMELS to match both [dash] and
 {underscore.
 
-To poll the output rate of UBX-NAV-TIMELS aon the USB port we do:
+To poll the output rate of UBX-NAV-TIMELS on the USB port we do:
 
 [,shell]
 ----
@@ -472,7 +473,7 @@ UBX-CFG-VALGET:
 
 == Dynamic Platform Model
 
-The most common variable mis-configured in a u-blox receiver is the
+The most common variable misconfigured in a u-blox receiver is the
 Dynamic Platform Model.  The receiver uses noisy measurements of
 satellite signals and attempts to interpret those as single PVT fix.
 By default the receiver assumes the receiver is "Portable" and not
@@ -744,7 +745,7 @@ For logging, you need:
 
 2. External SQI flash memory with a valid Flash Information Structure (FIS).
 
-Garden variety receviers, like the NEO-M8N do not have flsh.
+Garden variety receivers, like the NEO-M8N do not have fliash.
 
 By default EVK boards and other commercial products with flash will
 already have a valid FIS.  Added or replaced flash will need to have
@@ -1310,8 +1311,8 @@ UBX-TIM-SVIN:
 ----
 
 
-That shows the survey is complate and the fixed point mode is active.
-Oddly, you can not poll CFG-TMODE-LAT_HP for the calcualted position.
+That shows the survey is complete and the fixed point mode is active.
+Oddly, you can not poll CFG-TMODE-LAT_HP for the calculated position.
 You just look in TIM-SVIN, or NAV-SVIN.
 
 
@@ -1507,7 +1508,7 @@ The Gen9, and later, did not update the UBX-MON-GNSS for the newly
 added constellations. Support for UBX-CFG-GNSS was eventually dropped
 entirely. So you must use configuration items.
 
-To check for enabled costellations and signals, get the SIGNALS group.
+To check for enabled constellations and signals, get the SIGNALS group.
 Typical, not default, output from an F9T with L2 disabled and L5 enabled:
 
 [,shell]
@@ -1605,7 +1606,7 @@ The astute will have noticed that the canned *ubxtool* commands, like
 "-e GLONASS", send one or binary messages that may change a handful
 or variables at once.  The Gen9 avoids this mess with Configuration
 Items.  These allow you to get, set and delete individual settings in
-the receiver.  before continuing this section, read the *ubxtool*
+the receiver.  Before continuing this section, read the *ubxtool*
 man page on Configuration Items.
 
 The CFG-SIGNAL Configuration Item group includes the CFG-GNSS items
@@ -1729,6 +1730,8 @@ UBX-MON-VER:
 ADR/UDR add two new messages classes: External Sensor Fusion (UBX-ESF-),
 amd High Navigation Rate (UBX-HNR-),  See the u-blox documentation for
 all the nitty gritty details.
+
+=== Gen8
 
 You can poll your receiver for most of the possible UBX-ESF- and UBX-HNR-
 messages this way:
@@ -1954,12 +1957,64 @@ doAutoMntAlg flag:
 $ ubxtool -p CFG-ESFALG,0
 ----
 
+=== Gen9
+
+The receivers still support the UBX-ESF- messages.  See then Gen8 section
+for how to poll for those.  Gen9 does not officially support the UBX-MON-COMMS
+message, and Gen10 removes it completely.  So the presets (-p ESF, -p HNR)
+do not work.  Since ther is no way to determine the "current" port on
+a Gen9 receiver you must use configure the messages that you wish to be
+automatically output with the CFG-MSGOUT configure options group.
+
+If you want to see what UBX-ESF messages you can enable, on the USB
+port, check the *ubxtool* help output:
+
+[,shell]
+----
+$  ubxtool -h -v 3 | grep UBX.ESF.*USB
+    CFG-MSGOUT-UBX_ESF_ALG_USB
+        Output rate of the UBX_ESF_ALG message on port USB
+    CFG-MSGOUT-UBX_ESF_CAL_USB
+        Output rate of the UBX_ESF_CAL message on port USB
+    CFG-MSGOUT-UBX_ESF_INS_USB
+        Output rate of the UBX_ESF_INS message on port USB
+    CFG-MSGOUT-UBX_ESF_MEAS_USB
+        Output rate of the UBX-ESF-MEAS message on port USB
+    CFG-MSGOUT-UBX_ESF_RAW_USB
+        Output rate of the UBX-ESF-RAW message on port USB
+    CFG-MSGOUT-UBX_ESF_STATUS_USB
+        Output rate of the UBX-ESF-STATUS message on port USB
+----
+
+To enable UBX-ESF-MEAS messages on the USB port, in the ram, bbr
+and flash layers.  Then to verify it worked.  Do this:
+
+[,shell]
+----
+$ export UBXOPTS="-P 27 -v 2"
+$ ubxtool -z CFG-MSGOUT-UBX_ESF_MEAS_USB,15 
+[...]
+$ ubxtool g CFG-MSGOUT-UBX_ESF_MEAS_USB
+[...]
+----
+
+
 == Timepulse
-Some U-blox receivers provide one or more pins delivering a Timepulse (TP)
-signal. This signal can be configured in terms of pulse period (or frequency),
-pulse length (or duty cycle) and polarity. It is also possible to define
-different signal behavior depending on whether the receiver is locked to
- GPS time.
+
+Some U-blox receivers provide one or more pins delivering a Timepulse
+(TP) signal. This signal can be configured in terms of pulse period
+(or frequency), pulse length (or duty cycle) and polarity. It is also
+possible to define different signal behavior depending on whether the
+receiver is locked to GPS time.
+
+The period/length is specified in micro seconds.  The
+frequency in Hz, and /duty cycle in fractions (2^32^-1).
+
+Let us say you want 1 PPS with 100 ms pulse length in the absence of lock
+and 4 PPS with 25 ms length in the presence of it in the TIMEPULSE pin.
+You can specify this either in period/length form.
+
+=== Gen8
 
 Timepulse signals are configured using the UBX-CFG-TP5 message. This is
 also the message sent when you enable and disable the TIMEPULSE pin by
@@ -2000,14 +2055,7 @@ UBX-CFG-TP5:
   flags xfe
 ----
 
-=== Timepulse period and length
-Timepulse settings can be specified in two ways: period/length (in
-microseconds) and frequency/duty cycle (in Hz and fractions of 2^32^-1
-respectively).
-
-Let us say you want 1 PPS with 100 ms pulse length in the absence of lock
-and 4 PPS with 25 ms length in the presence of it in the TIMEPULSE pin.
-You can specify this either in period/length form:
+Set them this way in pulse width form:
 
 [,shell]
 ----
@@ -2032,12 +2080,69 @@ if you wanted a 50% duty cycle instead, you could do:
 $ ubxtool -p CFG-TP5,0,,,1,4,0x80000000,0x80000000,,0x6f
 ----
 
+=== Gen9
+
+Gen9 does not support the UBX-CFG-TP5 message So the Gen8 presets (-p  .
+CFG-TP5, -e PPS) do not work                                           .
+
+If you want to see what the CFG-TP configuration items that your
+receiver supports, look at the CFG-TP group in the default layer:
+
+[,shell]
+----
+$ ubxtool -v 1 -g CFG-TP,7
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 7 position 0
+  layers (default)
+    item CFG-TP-TP1_ENA/0x10050007 val 1
+    item CFG-TP-SYNC_GNSS_TP1/0x10050008 val 1
+    item CFG-TP-USE_LOCKED_TP1/0x10050009 val 1
+    item CFG-TP-ALIGN_TO_TOW_TP1/0x1005000a val 1
+    item CFG-TP-POL_TP1/0x1005000b val 1
+    item CFG-TP-TP2_ENA/0x10050012 val 1
+    item CFG-TP-SYNC_GNSS_TP2/0x10050013 val 1
+    item CFG-TP-USE_LOCKED_TP2/0x10050014 val 1
+    item CFG-TP-ALIGN_TO_TOW_TP2/0x10050015 val 1
+    item CFG-TP-POL_TP2/0x10050016 val 1
+    item CFG-TP-MSG_ALWAYS/0x10050037 val 0
+    item CFG-TP-TIMEGRID_TP1/0x2005000c val 4
+    item CFG-TP-TIMEGRID_TP2/0x20050017 val 4
+    item CFG-TP-PULSE_DEF/0x20050023 val 0
+    item CFG-TP-PULSE_LENGTH_DEF/0x20050030 val 1
+    item CFG-TP-DRSTR_TP1/0x20050035 val 3
+    item CFG-TP-DRSTR_TP2/0x20050036 val 3
+    item CFG-TP-ANT_CABLEDELAY/0x30050001 val 50
+    item CFG-TP-PERIOD_TP1/0x40050002 val 1000000
+    item CFG-TP-PERIOD_LOCK_TP1/0x40050003 val 1000000
+    item CFG-TP-LEN_TP1/0x40050004 val 0
+    item CFG-TP-LEN_LOCK_TP1/0x40050005 val 100000
+    item CFG-TP-USER_DELAY_TP1/0x40050006 val 0
+    item CFG-TP-PERIOD_TP2/0x4005000d val 1000000
+    item CFG-TP-PERIOD_LOCK_TP2/0x4005000e val 1000000
+    item CFG-TP-LEN_TP2/0x4005000f val 0
+    item CFG-TP-LEN_LOCK_TP2/0x40050010 val 100000
+    item CFG-TP-USER_DELAY_TP2/0x40050011 val 0
+    item CFG-TP-FREQ_TP1/0x40050024 val 1
+    item CFG-TP-FREQ_LOCK_TP1/0x40050025 val 1
+    item CFG-TP-FREQ_TP2/0x40050026 val 1
+    item CFG-TP-FREQ_LOCK_TP2/0x40050027 val 1
+    item CFG-TP-DUTY_TP1/0x5005002a val 0.0
+    item CFG-TP-DUTY_LOCK_TP1/0x5005002b val 10.0
+    item CFG-TP-DUTY_TP2/0x5005002c val 0.0
+    item CFG-TP-DUTY_LOCK_TP2/0x5005002d val 10.0
+----
+
+Changing "-v 1" to "-v 2" will yield descriptions of most
+of the messages.
+
 == Saving U-blox configuration
 
 Now that you have your GNSS receiver configuration just the way you want
-it, you will want to save it.  Saving is very dependent on your receiver
-configuration.  For now, we'll look at the legacy, pre-9, way of doing
-things.
+it, you will want to save it. Saving is very dependent on your receiver
+configuration. For now, we'll look at the Gen8, way of doing things.
+
+=== Gen8
 
 A u-blox receiver may have any, all, or none of: Battery backed RAM (BBR),
 Flash, Electrically Erasable Programmable ROM (EEPROM) and SPI Flash.
@@ -2164,13 +2269,13 @@ You can now power down your receiver.  Power it back up, and verify
 with "-p CFG-NAV5" that dynModel "Sea" was saved.  Or, most likely, for
 almost all GPS mice, not.
 
-=== With Configuration Items
+=== Gen9
 
 UBX-CFG-CFG, used by "-p SAVE", is deprecated in protocol versions
-greater than, or equal to, 23.01.  It also works differently than before.  So on
-newer receivers you should clear, save, and load configurations with
-Configuration Items.  Before continuing this section, read the *ubxtool*
-man page on Configuration Items.
+greater than, or equal to, 23.01. It also works differently than before.
+So on newer receivers you should clear, save, and load configurations
+with Configuration Items. Before continuing this section, read the
+*ubxtool* man page on Configuration Items.
 
 As always, this example starts with a receiver that has just been reset
 to its default configuration.  Check the value of dynModel in all four
@@ -2248,6 +2353,12 @@ UBX-CFG-VALDEL and UBX-CFG-VALSET.  The bitmap for those is:
 Starting around protocol version 27, in the Gen9 and Gen10 devices, the
 UBX-MON-SPAN message was added.  This allows your receiver to act as a
 simple spectrum analyzer for testing GNSS antennas.
+
+=== Gen8
+
+You are totally out of luck.
+
+=== Gen9
 
 A scan only takes a few seconds.  To create a file with the scan data
 run this:
