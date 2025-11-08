@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 5 May 2024
+:date: 8 November 2025
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -1176,8 +1176,7 @@ transmitters also have (different) id numbers.
 |zcount |real |The reference time of the corrections in the message in
 seconds within the current hour. Note that it is in GPS time, which is
 some seconds ahead of UTC (see the U.S. Naval Observatory's
-ftp://maia.usno.navy.mil/ser7/tai-utc.dat[table of leap second
-corrections]).
+[UTC-TAU] table of leap second corrections).
 
 |seqnum |integer |Sequence number. Only 3 bits wide, wraps after 7.
 
@@ -1733,7 +1732,10 @@ The JavaScript Object Notation (JSON) Data Interchange Format
 
 [[jq]] [jq]: https://github.com/stedolan/jq
 
+[[UTC-TAI]]: https://maia.usno.navy.mil/ser7/tai-utc.dat USNO table of +
+UTC to TAI corrections.
+
 == COPYING
 
-This file is Copyright 2013 by the GPSD project +
+This file is Copyright by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause
