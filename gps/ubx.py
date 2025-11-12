@@ -451,6 +451,8 @@ class ubx(object):
          "Enable Confidence Bound estimation"),
         ("CFG-CFB-WINDOW_SIZE", 0x400c0007, "I4", 1, "",
          "Average Window Size for CFB"),
+        ("CFG-CFB-KEEP_MINIMAL", 0x100c0008, "L", 1, "",
+         "Enable output only minimal Confidence Bound"),
 
         # CFG-GAL-
         ("CFG-GAL", 0x1035FFFF, "", 0, "",
@@ -2260,7 +2262,7 @@ class ubx(object):
          "Output rate of the UBX-RXM-MEASD12 message on port UART2"),
         ("CFG-MSGOUT-UBX_RXM_MEASD12_USB", 0x2091063c, "U1", 1, "",
          "Output rate of the UBX-RXM-MEASD12 message on port USB"),
-        ("CFG-MSGOUT-UBX_RXM_MEASD12_SPI", 0x2091063d, "U1", 1, "", 
+        ("CFG-MSGOUT-UBX_RXM_MEASD12_SPI", 0x2091063d, "U1", 1, "",
         "Output rate of the UBX-RXM-MEASD12 message on port SPI"),
         ("CFG-MSGOUT-UBX_RXM_MEASC12_I2C", 0x2091063e, "U1", 1, "",
          "Output rate of the UBX-RXM-MEASC12 message on port I2C"),
@@ -3276,6 +3278,20 @@ class ubx(object):
          "Four bytes float with scale 1/3"),
         ("CFG-UNITTEST-R8_SCALE3", 0x50fe0f72, "R8", 1, "",
          "Eight bytes float with scale 1/3"),
+        ("CFG-UNITTEST-SAME_AS_ENUM1", 0x20fe0f73, "E1", 1,
+        "", "One byte enumeration with the same values as ENUM1"),
+        ("CFG-UNITTEST-SAME_AS_ENUM2", 0x30fe0f74, "E2", 1, "",
+         "Two byte enumeration with the same values as ENUM2"),
+        ("CFG-UNITTEST-SAME_AS_ENUM4", 0x40fe0f75, "E4", 1, "",
+         "Four byte enumeration with the same values as ENUM4"),
+        ("CFG-UNITTEST-SAME_AS_BITFIELD1", 0x20fe0f76, "X1", 1, "",
+         "One-byte bit field with the same valid values as BITFIELD1"),
+        ("CFG-UNITTEST-SAME_AS_BITFIELD2", 0x30fe0f77, "X2", 1, "",
+         "Two-byte bit field with the same valid values as BITFIELD2"),
+        ("CFG-UNITTEST-SAME_AS_BITFIELD4", 0x40fe0f78, "X4", 1, "",
+         "Four-byte bit field with the same valid values as BITFIELD4"),
+        ("CFG-UNITTEST-SAME_AS_BITFIELD8", 0x50fe0f79, "X8", 1, "",
+         "Eight-byte bit field with the same valid values as BITFIELD8"),
 
         # CFG-USB-
         ("CFG-USB", 0x1065ffff, "", 0, "",

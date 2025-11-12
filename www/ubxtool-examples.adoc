@@ -1410,6 +1410,13 @@ handy, or run 12-hour experiments with *gpsprof*, it will be hard for you
 to improve on the defaults.  If you still must fiddle, then read on,
 after completing the above section on Initial Setup.
 
+Newer receivers also have to worry about the correct band for each constellation.
+You can't always tell the band from the signal name.  A handy reference:
+
+* L1 also includes B1, E1
+* L2 also includes B2I, B3, E5b, E6, L6
+* L5 also includes B2, E5a, L3, NavIC
+
 === Checking Constellations Gen8
 
 First you must understand what your GNSS receiver is capable of.  Find
@@ -2352,7 +2359,19 @@ UBX-CFG-VALDEL and UBX-CFG-VALSET.  The bitmap for those is:
 
 Starting around protocol version 27, in the Gen9 and Gen10 devices, the
 UBX-MON-SPAN message was added.  This allows your receiver to act as a
-simple spectrum analyzer for testing GNSS antennas.
+simple spectrum analyzer for testing GNSS antennas.  It will not tell
+you if your GNSS antenna is properly polarized for any band, but it will
+show you if your it is at least passing the proper bands.
+
+This is a good initial screen to see if your antenna can handle L2
+and/or L5 bands. Paradoxically, cheaper antennas tend to avoid the
+expense of good filters, and may work better than more expensive
+antennas with tight pass bands.
+
+L1 only antennas also need testing. Newer signals use more L1 bandwidth
+(+/- 15.34MHz), and old L1 antennas may have pass bands that are way too
+tight (+/- 6MHz).   Once again, cheaper antennas with sloppier bandpass
+filters may work better than older expensive ones with tight filters.
 
 === Gen8
 
@@ -2406,9 +2425,10 @@ See [[FREQ]] for a list of common GNSS frequencies and bandwidths.
 
 [bibliography]
 
-- [[FREQ]] https://www.rfwireless-world.com/terminology/satellite-communication/gnss-gps-frequency-bands| GNSS and GPS Frequency Bands Explained
+- [[FREQ]] https://www.rfwireless-world.com/terminology/gnss-gps-frequency-bands +
+  GNSS and GPS Frequency Bands Explained
 
-- [[GNUPLOT]] http://gnuplot.info/| gnuplot homepage
+- [[GNUPLOT]] http://gnuplot.infoa/ | gnuplot homepage
 
 == COPYING
 
