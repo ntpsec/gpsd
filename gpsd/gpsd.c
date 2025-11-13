@@ -2906,7 +2906,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < AFCOUNT; i++) {
             if (0 <= msocks[i] &&
                 FD_ISSET(msocks[i], &rfds)) {
-                sockaddr_t fsin = {0};
+                sockaddr_t fsin = {{0}};
 
                 socklen_t alen = (socklen_t)sizeof(fsin);
                 socket_t ssock =
@@ -2977,7 +2977,7 @@ int main(int argc, char *argv[])
         // also be open to new control-socket connections
         if (-1 < csock &&
             FD_ISSET(csock, &rfds)) {
-            sockaddr_t fsin = {0};
+            sockaddr_t fsin = {{0}};
 
             socklen_t alen = (socklen_t)sizeof(fsin);
             socket_t ssock = accept(csock, &fsin.sa, &alen);

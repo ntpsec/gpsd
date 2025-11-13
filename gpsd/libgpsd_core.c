@@ -871,9 +871,9 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
                            const struct gps_data_t * gpsdata,
                            struct dop_t * dop)
 {
-    double prod[4][4] = {0};
-    double inv[4][4] = {0};
-    double satpos[MAXCHANNELS][4] = {0};
+    double prod[4][4] = {{0}};
+    double inv[4][4] = {{0}};
+    double satpos[MAXCHANNELS][4] = {{0}};
     double xdop, ydop, hdop, vdop, pdop, tdop, gdop;
     int i, j, k, n;
 

@@ -728,8 +728,8 @@ int main(int argc, char **argv)
     // else
 
     // lowlevel, or access to the daemon failed, use the low-level facilities
-    fd_set all_fds = {0};
-    fd_set rfds = {0};
+    fd_set all_fds = {{0}};
+    fd_set rfds = {{0}};
 
     /*
      * Unless the user explicitly requested it, always run to end of
