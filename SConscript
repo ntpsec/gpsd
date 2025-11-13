@@ -1481,12 +1481,14 @@ if not cleaning and not helping:
         if config.env["qt_versioned"]:
             _qtvs = (config.env["qt_versioned"])
         else:
-            _qtvs = (6, 5)      # try 6, then 5
+            _qtvs = (6, 5, 4)      # try 6, then 5, then 4
         for _qtv in _qtvs:
-            qt_net_name = 'Qt%sNetwork' % _qtv
+            # Qt4 doesn't include the version in the QtNetwork name
+            qt_net_ver = str(_qtv) if int(_qtv) >= 5 else ''
+            qt_net_name = 'Qt%sNetwork' % qt_net_ver
             qt_network = config.CheckPKG(qt_net_name)
             if qt_network:
-                config.env["qt_versioned"] = _qtv
+                config.env["qt_versioned"] = qt_net_ver
                 break
         if qt_network:
             announce('Using Qt version %s.' % _qtv)

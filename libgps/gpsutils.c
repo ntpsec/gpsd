@@ -876,7 +876,12 @@ timespec_t iso8601_to_timespec(const char *isotime)
     if (1 < sl.size()) {
         usec = sl[1].toInt() / pow(10., (double)sl[1].size());
     }
+// toSecsSinceEpoch wasn't introduced until 5.8
+#if QT_VERSION < QT_VERSION_CHECK(5,8,0)
+    ret.tv_sec = d.toTime_t();
+#else
     ret.tv_sec = d.toSecsSinceEpoch();
+#endif
     ret.tv_nsec = usec * 1e9;
 #else  // USE_QT
     double usec = 0;
