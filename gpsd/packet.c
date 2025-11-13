@@ -3367,8 +3367,8 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
 
     GPSD_LOG(LOG_PROG, &lexer->errout,
              "PACKET: packet_get1_chunked(fd %d) enter inbuflen %zu "
-             "offset %zd remaining %d\n",
-             fd, lexer->inbuflen, lexer->inbufptr - lexer->inbuffer,
+             "offset %d remaining %d\n",
+             fd, lexer->inbuflen, (int) (lexer->inbufptr - lexer->inbuffer),
              lexer->chunk_remaining);
 
     if (sizeof(lexer->inbuffer) < lexer->inbuflen) {
@@ -3394,8 +3394,9 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
     } else {
         GPSD_LOG(LOG_IO, &lexer->errout,
                  "PACKET: packet_get1_chunked(fd %d) got enough inbuflen %zu "
-                 "offset %zd\n",
-                 fd, lexer->inbuflen, lexer->inbufptr - lexer->inbuffer);
+                 "offset %d\n",
+                 fd, lexer->inbuflen,
+                 (int) (lexer->inbufptr - lexer->inbuffer));
     }
 
     if (0 == recvd &&
@@ -3656,10 +3657,10 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
 
     GPSD_LOG(LOG_IO, &lexer->errout,
              "PACKET: NTRIP: packet_get1_chunked(fd %d) to packet_parse() "
-              "inbuflen %zu idx %zu outbuflen %zu remaining %d pbu %zu "
+              "inbuflen %zu idx %zu outbuflen %zu remaining %d pbu %d "
               ">%.200s<\n",
               fd, lexer->inbuflen, idx, lexer->outbuflen,
-              lexer->chunk_remaining, packet_buffered_input(lexer),
+              lexer->chunk_remaining, (int) packet_buffered_input(lexer),
               gps_hexdump(scratchbuf, sizeof(scratchbuf),
                           lexer->inbufptr, lexer->inbuflen));
     taken = lexer->inbuflen;
