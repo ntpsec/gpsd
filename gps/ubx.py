@@ -575,9 +575,6 @@ class ubx(object):
          "Flag to disable timeouting the interface after 1.5 s"),
         ("CFG-I2C-ENABLED", 0x10510003, "L", 1, "",
          "Flag to indicate if the I2C interface should be enabled"),
-        ("CFG-I2C-REMAP", 0x10510004, "L", 1, "",
-         "Enable I2C remapping"),
-
         # M10S, protVer 34.00
         ("CFG-I2C-REMAP", 0x10510004, "L", 1, "",
          "I2C remapping"),
