@@ -91,6 +91,7 @@ GPSD Frequently Asked Questions
   </li>
   <li><a href='#performance'>GPS performance</a>
   <ul>
+    <li><a href='#error'>What do the error estimates mean?</a></li>
     <li><a href='#startup'>Why does getting a fix take so long after powerup?</a></li>
     <li><a href='#timelag'>Why does GPS time lag wall time by 11-15 seconds?</a></li>
     <li><a href='#timelag2'>Why is my GPS time off by exactly one second?</a></li>
@@ -568,6 +569,35 @@ without restrictions.</p>
 sustainability; @TIPLINK@.</p>
 
 <h1 id='performance'>GPS performance</h1>
+
+<h2 id="error">What do the error estimates mean?</h2>
+
+<p><b>Short answer:</b> Nothing.
+
+<p><b>Long answer:</b>
+<p>GNSS vendors almost never quantify their error
+estimates.  Does an error estimate of two meters mean the reported
+position will be within two meters 99% of the time?  50% of the time?
+1% of the time?  Each of those is very different.
+
+<p>Navipidia says it best:
+"<a href="https://gssc.esa.int/navipedia/index.php?title=Positioning_Error"
+>The predicted accuracy</a>, provides the
+expected position accuracy based on a simple statistical description
+of the measurement errors. Its computation does not require the
+measurements, but only its standard deviation and the approximated
+satellites and user location coordinates. Thence, it can be computed
+at any point and at any time with the almanac, without needing the
+measurements."
+
+<p>Note: "without needing the measurements". This says nothing about
+your local conditions, like antenna quality, receiver sensitivity, etc.
+are considered.  "Theoretical" accuracy, not "measured".
+
+<p>The only way to get a good error estimate is to create a
+<code>gpsprof</code> scatterplot from data taken over 12 to 48 hours.
+
+</h2>
 
 <h2 id="startup">Why does getting a fix take so long after powerup?</h2>
 
