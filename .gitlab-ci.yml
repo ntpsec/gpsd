@@ -117,7 +117,7 @@ fedora-latest:
       bluez-libs-devel dbus-devel gcc-c++ ncurses-devel
       python3-setuptools qt5-qtbase-devel scons pps-tools-devel
     - eatmydata .ci-build/build.sh
-  extends: .when_push
+  extends: .when_sched
 
 alma-9:
   allow_failure: true
@@ -136,7 +136,7 @@ alma-9:
       python3-cairo python3-gobject-base ccache
     - eatmydata -- ln -sv scons-3 /usr/bin/scons&&ln -sv python3 /usr/bin/python
     - eatmydata -- .ci-build/build.sh
-  extends: .when_push
+  extends: .when_sched
 
 # to avoid failed builds on MRs/forks where no builder with the
 # tag `freebsd` is available, run this job only if
@@ -213,7 +213,7 @@ scan-build:
 
 # https://www.synopsys.com/blogs/software-security/integrating-coverity-scan-with-gitlab-ci/
 # Check if three variables required for Coverity job are set before running.
-# Otherwise do not even create the job. Also, only run for push events.
+# Otherwise do not even create the job. Also, only run for sched events.
 coverity:
   image: debian:latest
   variables:
@@ -250,7 +250,7 @@ coverity:
       when: never
     - if: $COVERITY_USER_EMAIL =~ "^$"
       when: never
-    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "sched"
       when: always
     - when: never
 
@@ -284,4 +284,4 @@ pages:
   artifacts:
     paths:
       - public
-  extends: .when_sched
+  extends: .when_push
