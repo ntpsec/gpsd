@@ -2758,9 +2758,12 @@ int main(int argc, char *argv[])
         if (pw) {
             if (0 != setuid(pw->pw_uid)) {
                 // Needs CAP_SETUID?
-                GPSD_LOG(LOG_ERROR, &context.errout,
-                            "CORE: setuid() failed, %s(%d)\n",
-                            strerror(errno), errno);
+                // If we're already successfully running as non-root, then
+                // dropping root is neither necessary nor legal.  Treat the
+                // resulting EPERM as just a warning.
+                GPSD_LOG(EPERM == errno ? LOG_WARN : LOG_ERROR, &context.errout,
+                         "CORE: setuid() failed, %s(%d)\n",
+                         strerror(errno), errno);
             }
         }
     }
