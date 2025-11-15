@@ -100,6 +100,7 @@ void closelog(void);
 
 #ifndef HAVE_STRLCAT
 
+#include <stddef.h>  // for size_t
 #include <string.h>
 size_t strlcat(char *dst, const char *src, size_t size);
 
@@ -107,6 +108,7 @@ size_t strlcat(char *dst, const char *src, size_t size);
 
 #ifndef HAVE_STRLCPY
 
+#include <stddef.h>  // for size_t
 #include <string.h>
 size_t strlcpy(char *dst, const char *src, size_t size);
 
