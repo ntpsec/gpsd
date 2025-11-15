@@ -300,6 +300,24 @@ size_t strnlen(const char *s, size_t maxlen)
 
 #endif // !HAVE_STRNLEN
 
+#ifndef HAVE_STPNCPY
+
+#include <string.h>
+
+char *stpncpy(char *dst, const char *src, size_t maxlen) {
+    const size_t srclen = strnlen(src, maxlen);
+    if (srclen < maxlen) {
+        memcpy(dst, src, srclen);
+        memset(dst + srclen, 0, maxlen - srclen);
+        return dst + srclen;
+    } else {
+        memcpy(dst, src, maxlen);
+        return dst + maxlen;
+    }
+}
+
+#endif // !HAVE_STPNCPY
+
 /*
  * Provide sincos() on platforms that don't have it.
  * Getting scons to test for sincos() and pass -Werror not possible.

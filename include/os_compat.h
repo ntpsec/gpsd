@@ -122,6 +122,16 @@ size_t strnlen(const char *s, size_t maxlen);
 
 #endif  // !HAVE_STRNLEN
 
+// Provide stpncpy() on platforms that don't have it
+
+#ifndef HAVE_STPNCPY
+
+#include <stddef.h>  // for size_t
+
+char *stpncpy(char *dst, const char *src, size_t maxlen);
+
+#endif  // !HAVE_STPNCPY
+
 // Provide missing signal numbers for non-POSIX builds
 
 #ifndef SIGHUP
