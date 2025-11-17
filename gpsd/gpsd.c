@@ -2706,8 +2706,11 @@ int main(int argc, char *argv[])
                          argv[i], strerror(errno), errno);
 
             } else if (0 != chmod(argv[i], stb.st_mode | S_IRGRP | S_IWGRP)) {
-                GPSD_LOG(LOG_ERROR, &context.errout,
-                         "CORE: chmod(%s, g+sw) failed, errno %s(%d)\n",
+                // If we successfully opened the terminal as non-root, then
+                // adjusting its permissions is neither necessary nor legal.
+                // Treat the resulting EPERM as just a warning.
+                GPSD_LOG(EPERM == errno ? LOG_WARN : LOG_ERROR, &context.errout,
+                         "CORE: chmod(%s, g+rw) failed, errno %s(%d)\n",
                          argv[i], strerror(errno), errno);
             }
         }
