@@ -184,11 +184,11 @@ class GPSDictionary(configparser.RawConfigParser):
                         pps_accuracy = self.get(dev, "pps_accuracy")
                     if self.has_option(dev, "time_offset"):
                         time_offset = self.get(dev, "time_offset")
-                    if pps_accuracy and time_offset:
+                    if pps_accuracy:
                         ofp.write("<td>%s<br>%s</td>\n"
                                   % (pps_accuracy, time_offset))
                     else:
-                        ofp.write("<td>?<br>\n")
+                        ofp.write("<td>Yes<br>\n")
                 else:
                     ofp.write("<td>No</td>\n")
                 if self.has_option(dev, "notes"):
