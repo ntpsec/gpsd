@@ -1,12 +1,15 @@
                         GPSD project news
 
-3.26.2: TBD
+3.27: 21 Nov 2025
   Improve support for newer signal ids (L1/L2/L5, etc.).
   xgps add signal id names
   gpsrinex, support new signal ids.  Add -g and --gnss options.
-  Initial SPARTN support.  Disabled by default, terrible protocol.
+  Initial SPARTNv2 support.  Disabled by default, terrible protocol.
   Many ubxtool updates for newer u-blox receivers.
+  Update driver_ubx for newer u-blox receivers.
   Lexer() FFI interface is unused, and deprecated October 2025.
+  xgps and xgpsspeed work under Wayland.
+  Add support for Qt6.
 
 3.26.1: 17 May 2025
   Increment libgps version
