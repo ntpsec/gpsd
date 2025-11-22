@@ -65,7 +65,7 @@ not yield much improvement.
 
 The output will consist of one RINEX observation file that is ready to
 be read by your PPP program. The default filename will be in the form:
-_gpsrinexYYYYDDDDHHMM.obs_. You can override this filename with the
+_gpsrinexYYYYjjjDHHMM.obs_. You can override this filename with the
 *-f* option.
 
 Optionally a server, TCP/IP port number and remote device can be given.
@@ -83,7 +83,7 @@ and watches all devices opened by *gpsd*.
 *-F INFILE*, *--filein INFILE*::
   Read GPS JSON from file, not from a live _gpsd_.
 *-g CODES*, *--gnss CODES*::
-  Only output a GNSS system if the RINUEX code is in CODES.
+  Only output a GNSS system if the RINEX code is in CODES.
   C = BeiDou, E = Galileo G = GPS, I = IRNSS, J = QZSS, 
   R = GLONASS, S = SBAS.
 *-i SECS*, *--interval SECS*::
@@ -241,7 +241,8 @@ gpsrinex -F 4h-raw.json
 ----
 
 The RINEX file will be in the current directory with the file name
-like: gpsrinexYYYYjjjHHMMSS.obs
+like: gpsrinexYYYYjjjHHMMSS.obs.  See strftime(1) for how the date
+formatting works
 
 You can now use the JSON  file to generate a polar plot of the used
 satellites:
@@ -272,7 +273,8 @@ ftp://igs.org/pub/data/format/rinex304.pdf
 RINEX 4.02 is here:
 https://files.igs.org/pub/data/format/rinex_4.02.pdf
 
-*gpsd*(8), *gps*(1), *gpsprof*(1), *gpsfake*(1). *ubxtool*(1), *gpsd_json*(5)
+*gpsd*(8), *gps*(1), *gpsprof*(1), *gpsfake*(1). *ubxtool*(1), *gpsd_json*(5),
+*strftime*(1)
 
 == RESOURCES
 
@@ -280,5 +282,5 @@ https://files.igs.org/pub/data/format/rinex_4.02.pdf
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project +
+This file is Copyright by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause

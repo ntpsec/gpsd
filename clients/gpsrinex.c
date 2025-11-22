@@ -1297,7 +1297,7 @@ static void usage(void)
           "short options too.\n"
           "     -D, --debug LVL            Set debug level, default 0\n"
           "     -f FILE, --fileout FILE    Output to filename\n"
-          "                                default: gpsrinexYYYYDDDDHHMM.obs\n"
+          "                                default: gpsrinexYYYYjjjDHHMM.obs\n"
           "     -F INFILE, --filein INFILE Read from INFILE, not gpsd\n"
           "     -g, --gnss                 GNSS to use. Default: CEGIJRS\n"
           "     -h, --help                 print this usage and exit\n"
@@ -1348,7 +1348,7 @@ static void usage(void)
  */
 int main(int argc, char **argv)
 {
-    char tmstr[40];              // time: YYYYDDDMMHH
+    char tmstr[40];              // time: YYYYjjjMMHH
     char tmp_fname[32];          // temp file name, for mkstemp
     int tmp_file_desc;           // temp file descriptor
     struct tm *report_time;
