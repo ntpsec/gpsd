@@ -65,7 +65,7 @@ not yield much improvement.
 
 The output will consist of one RINEX observation file that is ready to
 be read by your PPP program. The default filename will be in the form:
-_gpsrinexYYYYjjjDHHMM.obs_. You can override this filename with the
+_gpsrinexYYYYjjjHHMMSS.obs_. You can override this filename with the
 *-f* option.
 
 Optionally a server, TCP/IP port number and remote device can be given.
