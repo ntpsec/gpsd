@@ -3403,6 +3403,7 @@ if have_tar:
 
 # The chmod copes with the fact that scp will give a
 # replacement the permissions of the *original*...
+# the scp requires -O option as of ssh version 9.0
 upload_release = Utility('upload-release', ['dist'], [
     'rm -f gpsd-*.sig',
     'gpg -b gpsd-${VERSION}.tar.gz',

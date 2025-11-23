@@ -1,5 +1,7 @@
                         GPSD project news
 
+3.27.1~dev: TBD
+
 3.27: 21 Nov 2025
   Improve support for newer signal ids (L1/L2/L5, etc.).
   xgps add signal id names
