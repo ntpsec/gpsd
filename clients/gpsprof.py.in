@@ -541,9 +541,9 @@ class spaceplot(plotter):
                                   stat_lon_r.sigma ** 2 +
                                   stat_alt_r.sigma ** 2)
 
-        fmt_lab11a = ('hep = %.3f meters\\n'
-                      'sep = %.3f meters\\n'
-                      'mrse = %.3f meters\\n'
+        fmt_lab11a = ('hep = %.4f meters\\n'
+                      'sep = %.4f meters\\n'
+                      'mrse = %.4f meters\\n'
                       ) % (calc_hep, calc_sep, calc_mrse)
 
         if 0.0 > self.centroid[0]:
@@ -577,8 +577,8 @@ class spaceplot(plotter):
                 'set size ratio -1 0.95,0.7\n'
                 # leave room at bottom for computed variables
                 'set origin 0.025,0.30\n'
-                'set format x "%.3f"\n'
-                'set format y "%.3f"\n'
+                'set format x "%.4f"\n'
+                'set format y "%.4f"\n'
                 'set key left at screen 0.6,0.30 vertical\n'
                 'set key noautotitle\n'
                 'set style line 2 pt 1\n'
@@ -598,10 +598,10 @@ class spaceplot(plotter):
 
         fmt += ('set label 11 at screen 0.01, screen 0.30 '
                 '"RCC 261-00\\n'
-                'cep = %.3f meters\\n'
-                '2drms = %.3f meters\\n%s'
-                '2d max = %.3f meters\\n'
-                '3d max = %.3f meters"\n'
+                'cep = %.4f meters\\n'
+                '2drms = %.4f meters\\n%s'
+                '2d max = %.4f meters\\n'
+                '3d max = %.4f meters"\n'
                 ) % (calc_cep, calc_2drms, fmt_lab11a, cep100_meters,
                      dist_3d_max)
 
@@ -684,30 +684,30 @@ class spaceplot(plotter):
         if not math.isnan(stat_alt.mean):
             fmt += ('set ytics nomirror\n'
                     'set y2tics\n'
-                    'set format y2 "%.3f"\n')
-            fmt += (('set y2label "AltHAE from %.3f meters"\n') %
+                    'set format y2 "%.4f"\n')
+            fmt += (('set y2label "AltHAE from %.4f meters"\n') %
                     (stat_alt.mean))
 
             # add ep(50)s
 
             altitude_x = cep100_meters * 1.2
             fmt += ('$EPData << EOD\n'
-                    '%.3f %.3f\n'
-                    '%.3f %.3f\n'
+                    '%.4f %.4f\n'
+                    '%.4f %.4f\n'
                     'EOD\n'
                     ) % (altitude_x, alt_ep,
                          altitude_x, -alt_ep)
 
             fmt += ('$EP95Data << EOD\n'
-                    '%.3f %.3f\n'
-                    '%.3f %.3f\n'
+                    '%.4f %.4f\n'
+                    '%.4f %.4f\n'
                     'EOD\n'
                     ) % (altitude_x, alt_ep95,
                          altitude_x, -alt_ep95)
 
             fmt += ('$EP99Data << EOD\n'
-                    '%.3f %.3f\n'
-                    '%.3f %.3f\n'
+                    '%.4f %.4f\n'
+                    '%.4f %.4f\n'
                     'EOD\n'
                     ) % (altitude_x, alt_ep99,
                          altitude_x, -alt_ep99)
@@ -716,15 +716,15 @@ class spaceplot(plotter):
 
         # setup now done, plot it!
         fmt += ('plot $LLData using 1:2 with %s ls 3 title "%d GPS fixes" '
-                ', cx(t,cep),cy(t,cep) ls 1 title "CEP (50%%) = %.3f meters"'
-                ', cx(t,cep95),cy(t,cep95) title "CEP (95%%) = %.3f meters"'
-                ', cx(t,cep99),cy(t,cep99) title "CEP (99%%) = %.3f meters"'
+                ', cx(t,cep),cy(t,cep) ls 1 title "CEP (50%%) = %.4f meters"'
+                ', cx(t,cep95),cy(t,cep95) title "CEP (95%%) = %.4f meters"'
+                ', cx(t,cep99),cy(t,cep99) title "CEP (99%%) = %.4f meters"'
                 ) % (plot_style, len(self.fixes),
                      cep_meters, cep95_meters, cep99_meters)
 
         if not math.isnan(stat_alt.mean):
             # add plot of altitude
-            fmt += (', $ALTData using ( %.3f ):( $1 - %.3f ) '
+            fmt += (', $ALTData using ( %.4f ):( $1 - %.4f ) '
                     'axes x1y2 with points ls 2 lc "green"'
                     ' title " %d AltHAE fixes"'
                     ) % (cep100_meters * 1.1, stat_alt.mean, len(alt_fixes))
@@ -732,17 +732,17 @@ class spaceplot(plotter):
             # altitude EPs
             fmt += (', $EPData using 1:2 '
                     'axes x1y2 with points ls 5 lc "dark-green"'
-                    ' title " EP(50%%) = %.3f meters"'
+                    ' title " EP(50%%) = %.4f meters"'
                     ) % (alt_ep)
 
             fmt += (', $EP95Data using 1:2 '
                     'axes x1y2 with points ls 5 lc "blue"'
-                    ' title " EP(95%%) = %.3f meters"'
+                    ' title " EP(95%%) = %.4f meters"'
                     ) % (alt_ep95)
 
             fmt += (', $EP99Data using 1:2 '
                     'axes x1y2 with points ls 5 lc "red"'
-                    ' title " EP(99%%) = %.3f meters"'
+                    ' title " EP(99%%) = %.4f meters"'
                     ) % (alt_ep99)
 
         fmt += self.header()
