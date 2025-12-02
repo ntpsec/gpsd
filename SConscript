@@ -203,6 +203,7 @@ doc_files = [
     'www/example2.py.txt',
     'NEWS',
     'README.adoc',
+    'SECURITY.md',
     'SUPPORT.adoc',
 ]
 
