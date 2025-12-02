@@ -26,7 +26,7 @@
 SUBSYSTEM!="gnss", GOTO="gpsd_tty_rules"
 
 ACTION=="add", SUBSYSTEM=="gnss", GROUP="@GROUP@", @UDEVCOMMAND@
-ACTION=="remove", SUBSYSTEM=="gnss", @UDEVCOMMAND@
+ACTION=="remove", SUBSYSTEM=="gnss", @UDEVCOMMAND_REMOVE@
 
 # SUBSYSTEM "tty"
 # The rules in this section only apply to subsystem "tty".
@@ -78,7 +78,7 @@ ATTRS{idVendor}=="0557", ATTRS{idProduct}=="2008", SYMLINK+="gps%n", @UDEVCOMMAN
 # [linux module: pl2303]
 # rule disabled because it matches way too many generic serial converters
 # and creates more harm than good
-#ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", SYMLINK+="gps%n", TAG+="systemd", ENV{SYSTEMD_WANTS}="gpsdctl@%k.service"
+#ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", SYMLINK+="gps%n", TAG+="systemd", ENV{SYSTEMD_WANTS}+="gpsdctl@%k.service"
 
 # PS-360 OEM (GPS sold with MS Street and Trips 2005) [linux module: pl2303]
 ATTRS{idVendor}=="067b", ATTRS{idProduct}=="aaa0", SYMLINK+="gps%n", @UDEVCOMMAND@
@@ -123,6 +123,6 @@ ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", SYMLINK+="gps%n", @UDEVCOMMAN
 # Telit wireless solutions (tested with HE910G) [linux module: cdc_acm]
 ATTRS{interface}=="Telit Wireless Module Port", ATTRS{bInterfaceNumber}=="06", SYMLINK+="gps%n", @UDEVCOMMAND@
 
-ACTION=="remove", @UDEVCOMMAND@
+ACTION=="remove", @UDEVCOMMAND_REMOVE@
 
 LABEL="gpsd_rules_end"

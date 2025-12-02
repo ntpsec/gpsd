@@ -2290,9 +2290,11 @@ env.Command(target="libgps/ais_json.i", source="libgps/jsongen.py",
 
 
 if env['systemd']:
-    udevcommand = 'TAG+="systemd", ENV{SYSTEMD_WANTS}="gpsdctl@%k.service"'
+    udevcommand = 'TAG+="systemd", ENV{SYSTEMD_WANTS}+="gpsdctl@%k.service"'
+    udevcommand_remove = 'TAG+="systemd", ENV{SYSTEMD_WANTS}-="gpsdctl@%k.service"'
 else:
     udevcommand = 'RUN+="%s/gpsd.hotplug"' % (env['udevdir'], )
+    udevcommand_remove = ''
 
 # FIXME: why do this every time scons is called?
 # $variantdir may not exist when this is run.
@@ -2362,6 +2364,7 @@ substmap = (
     ('@TIPLINK@',    tiplink),
     ('@TIPWIDGET@',  tipwidget),
     ('@UDEVCOMMAND@', udevcommand),
+    ('@UDEVCOMMAND_REMOVE@', udevcommand_remove),
     ('@USERMAIL@',   usermail),
     ('@VERSION@',    gpsd_version),
     ('@WEBSITE@',    website),
