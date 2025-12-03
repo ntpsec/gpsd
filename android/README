@@ -1,6 +1,13 @@
 GPSd on Android/AOSP:
 ---------------------
 
+The files in this directory are not an official part of gpsd, and have
+never been  part of any gpsd release.  They are not maintained and
+may be dangerous to your system.  They are here only for your amusement,
+and in the hope someone wishes to maintain them.
+
+As of December 2025, gpsd version 3.27, this no longer buillds.
+
 The files in this path, as well as the Android.bp in the path below,
 are used for building the GPSd client as a platform library for AOSP.
 
