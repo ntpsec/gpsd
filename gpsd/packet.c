@@ -1497,19 +1497,20 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = NAVCOM_ID;
         break;
     case NAVCOM_ID:
-        /* Length LSB
-         * Navcom length includes command ID, length bytes. and checksum.
-         * So for more than just the payload length.
-         * Minimum 4 bytes */
-        if (4 > c) {
-            return character_pushback(lexer, GROUND_STATE);
-        }
+        // Length LSB
         lexer->length = c;
         lexer->state = NAVCOM_LENGTH_1;
         break;
     case NAVCOM_LENGTH_1:
-        // Length USB.  Navcom allows payload length up to 65,531
+        /* Length USB.  Navcom allows payload length up to 32767 - 4
+         * Navcom length includes command ID, length bytes. and checksum.
+         * More than just the payload length.
+         * Minimum 4 bytes */
         lexer->length += (c << 8);
+        if (4 >lexer->length ) {
+            // too short
+            return character_pushback(lexer, GROUND_STATE);
+        }
         // don't count ID, length and checksum  in payload length
         lexer->length -= 4;
         if (MAX_PACKET_LENGTH < lexer->length) {
