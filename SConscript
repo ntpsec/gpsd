@@ -2570,6 +2570,7 @@ webpages_x_list = ('../www/*.css',
                    '../www/*.js',
                    '../www/*.png',
                    '../www/*.svg',
+                   '../www/70-persistent-usb-gps.rules',
                    '../www/performance/*png',
                    '../www/performance/*txt',
                    )

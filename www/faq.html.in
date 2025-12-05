@@ -858,7 +858,7 @@ with the -f [FRAMING] option.</p>
 <h2 id='conflict'>Why does GPSD open non-GPS USB devices?</h2>
 
 <p>Most USB devices have a defined <a
-href="https://www.usb.org/developers/defined_class">device class</a> -
+href="https://www.usb.org/sites/default/files/usbccs10.pdf">device class</a> -
 mass storage, video, hub, and human interface device are three of the
 more common ones.  Using GPSD will never interfere with such devices,
 nor will they interfere with GPSD.</p>
