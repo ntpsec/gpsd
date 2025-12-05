@@ -514,14 +514,6 @@ by Holux that may result in <code>gpsd</code> bricking your GPS.  See this
 <a href="upstream-bugs.html#bluetooth">bug warning</a> for a description
 of the problem.</p>
 
-<p>If you have an Android phone, it is possible to access its onboard
-GPS by pairing it as a Bluetooth device.  Directions from <a
-href="https://bvargo.net/blog/2010/10/17/bluetooth-blues-getting-linux-pc-use-gps-android-d/"
->Vargoville</a> (Dead link Mar 2021). There is also a <a
-href="https://www.appszoom.com/android_applications/tools/gps-tether_blgt.html"
->GPS Tether</a> (Dead link Mar 2021) app designed to work with GPSD, but it
-seems to be in early alpha.</p>
-
 <p>The <a href="https://sourceforge.net/projects/gpsdproxy/">GPSDproxy
 project</a> is a small program which reads GPS data from a running
 gpsd process and forwards it to a remote server via an UDP

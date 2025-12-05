@@ -2428,7 +2428,7 @@ See [[FREQ]] for a list of common GNSS frequencies and bandwidths.
 - [[FREQ]] https://www.rfwireless-world.com/terminology/gnss-gps-frequency-bands +
   GNSS and GPS Frequency Bands Explained
 
-- [[GNUPLOT]] http://gnuplot.infoa/ | gnuplot homepage
+- [[GNUPLOT]] http://gnuplot.info/ | gnuplot homepage
 
 == COPYING
 
