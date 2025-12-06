@@ -2361,7 +2361,7 @@ Starting around protocol version 27, in the Gen9 and Gen10 devices, the
 UBX-MON-SPAN message was added.  This allows your receiver to act as a
 simple spectrum analyzer for testing GNSS antennas.  It will not tell
 you if your GNSS antenna is properly polarized for any band, but it will
-show you if your it is at least passing the proper bands.
+show you if your antenna is at least passing the proper bands.
 
 This is a good initial screen to see if your antenna can handle L2
 and/or L5 bands. Paradoxically, cheaper antennas tend to avoid the
@@ -2373,11 +2373,27 @@ L1 only antennas also need testing. Newer signals use more L1 bandwidth
 tight (+/- 6MHz).   Once again, cheaper antennas with sloppier bandpass
 filters may work better than older expensive ones with tight filters.
 
+It is common to ask, what is the spectrum analyzer to measure when there
+is no signal source to the antenna under test? The answer is simple,
+just ask and the universe will provide. GNSS signals, until singnals
+like L1C came around, were designed to be covert. The received signal on
+the ground from a GNSS satellite is actually less than the noise floor,
+and looks like noise. You can't find it unless you know how to look
+for it. GNSS receivers use special techniques, like Gold Codes, to dig
+the signals out from the noise. But we don't care about the modulation
+when doing simple antenna gain and pass through testing. The natural
+background noise provides the test input to the antenna under test.
+
 === Gen8
 
 You are totally out of luck.
 
 === Gen9
+
+Testinf shows that u-blox receivers witch in different bandpass
+filtering depending on the signals (constellations) to be received. To
+get the best test of your antenna, be sure to enable all the signals of
+interest to you. Then you can scan your antenna response.
 
 A scan only takes a few seconds.  To create a file with the scan data
 run this:
@@ -2387,6 +2403,11 @@ run this:
 $ ubxtool -p MON-SPAN -P 27 -v3 -f /dev/ttyACM1 | \
 grep  -E  '^     1[[:digit:]]{9}, [[:digit:]]{1,3}' > ant.dat
 ----
+
+Assuming, of course that your receiver is connected to /dev/ttyACM1,
+the port speed is set correctly, and *gpsd* is not running.  If
+you prefer, you can also perform the test with *gpsd* running, by
+omitting the "-f /dev/ttyXXX".
 
 The *ubxtool* command runs the MON-SPAN procedure.  The *grep*
 command extracts just the data that we need.
