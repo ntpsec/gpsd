@@ -899,7 +899,7 @@ struct gps_device_t {
             NTRIP_CONN_INPROGRESS,     // connection in progress
         } conn_state;   // connection state for multi stage connect
         bool works; // marks a working connection, so we try to reconnect once
-        bool sourcetable_parse; // have we read the sourcetable header?
+        bool sourcetable_parsed; // have we read the sourcetable header?
     } ntrip;
     // State of a DGPSIP connection
     struct {

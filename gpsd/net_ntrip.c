@@ -300,7 +300,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             if (EINTR == errno) {
                 continue;
             }
-            if (device->ntrip.sourcetable_parse &&
+            if (device->ntrip.sourcetable_parsed &&
                 EAGAIN == errno) {
                 // not found a match, but there is no more data
                 return 0;
@@ -332,7 +332,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
 
         line[rlen] = '\0';      // pacify coverity that this is NUL terminated
 
-        if (!device->ntrip.sourcetable_parse) {
+        if (!device->ntrip.sourcetable_parsed) {
             /* For ntrip v1 the very first line s/b:
              *     "SOURCETABLE 200 OK\r\n"
              * For ntrip v2, the header should contain:
@@ -341,10 +341,10 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
 
             if (str_starts_with(line, NTRIP_SOURCETABLE)) {
                 // parse SOURCETABLE, NTRIP 1.0
-                device->ntrip.sourcetable_parse = true;
+                device->ntrip.sourcetable_parsed = true;
             } else if (NULL != strstr(line, NTRIP_SOURCETABLE2)) {
                 // parse sourcetable, NTRIP 2.0
-                device->ntrip.sourcetable_parse = true;
+                device->ntrip.sourcetable_parsed = true;
             } else {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "NTRIP: Unexpected reply: %s.\n",
@@ -1090,7 +1090,7 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
         // strlcpy() ensures dup is NUL terminated.
         device->servicetype = SERVICE_NTRIP;
         device->ntrip.works = false;
-        device->ntrip.sourcetable_parse = false;
+        device->ntrip.sourcetable_parsed = false;
         device->ntrip.stream.set = false;
         device->gpsdata.gps_fd = PLACEHOLDING_FD;
 
