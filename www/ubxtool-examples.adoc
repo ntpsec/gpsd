@@ -2433,7 +2433,7 @@ And plot it to your desktop  this way:
 
 [,shell]
 ----
-$ gnuplot -persist < ant.plt
+$ gnuplot --persist < ant.plt
 ----
 
 You can then save the plot from the *gnuplot* menu as an SVG, PDF or image.

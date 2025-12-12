@@ -1,6 +1,6 @@
 = gpsprof(1)
 :author: Eric S. Raymond
-:date: 25 February 2021
+:date: 11 December 2025
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, gpsprof, gpspipe
 :manmanual: GPSD Documentation
@@ -180,7 +180,7 @@ To display the graph, use *gnuplot(1)* . Thus, for example, to display the
 default spatial scatter plot on your x11 display, do this:
 
 ----
-gpsprof | gnuplot -persist
+gpsprof | gnuplot -p
 ----
 
 To generate an image file:
