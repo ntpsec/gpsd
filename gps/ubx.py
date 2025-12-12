@@ -5488,8 +5488,8 @@ Deprecated in protVer 23.01
         0x09: {'str': 'CFG', 'dec': cfg_cfg, 'minlen': 12,
                'name': 'UBX-CFG-CFG', 'depver': 28.0},
         # Antaris 4, deprecated in u-blox 5/6, gone in 7
-        0x0e: {'str': 'FXM', 'dec': cfg_fxn, 'minlen': 36,
-               'name': 'UBX-CFG-FXM'},
+        0x0e: {'str': 'FXN', 'dec': cfg_fxn, 'minlen': 36,
+               'name': 'UBX-CFG-FXN'},
         # u-blox 5, 6, 7, 8
         0x11: {'str': 'RXM', 'dec': cfg_rxm, 'minlen': 2,
                'name': 'UBX-CFG-RXM'},
@@ -5524,8 +5524,9 @@ Deprecated in protVer 23.01
         # Broadcom calls this BRM-STP-CONFIG2
         0x24: {'str': 'NAV5', 'dec': cfg_nav5, 'minlen': 36,
                'name': 'UBX-CFG-NAV5', 'depver': 23.01},
-        # in u-blox 6. SFDR only. Not in u-blox 5- or 7+
+        # in u-blox 6. SFDR/ADR only. LEA-6R. Not in u-blox 5- or 7+
         0x29: {'str': 'ESFGWT', 'minlen': 44, 'name': 'UBX-CFG-ESFGWT'},
+        0x2f: {'str': 'ESFLA', 'minlen': 47, 'name': 'UBX-CFG-ESFLA'},
         # in u-blox 6+, Not u-blox 5-
         0x31: {'str': 'TP5', 'dec': cfg_tp5, 'minlen': 1,
                'name': 'UBX-CFG-TP5', 'depver': 27.0},
@@ -5548,6 +5549,7 @@ Deprecated in protVer 23.01
         # Broadcom calls this BRM-STP-ME_SETTINGS
         0x3e: {'str': 'GNSS', 'dec': cfg_gnss, 'minlen': 4,
                'name': 'UBX-CFG-GNSS', 'depver': 23.01},
+        0x3f: {'str': 'IMES', 'name': 'UBX-CFG-IMES'},
         # u-blox F9 MDR/TIM, set only, partially undocumented.
         0x41: {'str': 'OTP', 'minlen': 12, 'name': 'UBX-CFG-OTP'},
         # in u-blox 7+  Not in u-blox 6-
@@ -7060,6 +7062,7 @@ Deprecated in protVer 29.00
                       'name': 'UBX-MON-SPAN'},
                0x32: {'str': 'BATCH', 'dec': mon_batch, 'minlen': 12,
                       'name': 'UBX-MON-BATCH'},
+               0x35: {'str': 'PMP', 'minlen': 4, 'name': 'UBX-MON-PMP'},
                0x36: {'str': 'COMMS', 'dec': mon_comms, 'minlen': 8,
                       'name': 'UBX-MON-COMMS'},
                0x37: {'str': 'HW3', 'dec': mon_hw3, 'minlen': 22,
@@ -7072,6 +7075,9 @@ Deprecated in protVer 29.00
                # protVer 50, X20
                0x3b: {'str': 'POST', 'dec': mon_post, 'minlen': 12,
                       'name': 'UBX-MON-POST'},
+               0x3d: {'str': 'INST', 'minlen': 12, 'name': 'UBX-MON-INST'},
+               0x40: {'str': 'RCVRSTAT', 'minlen': 84,
+                      'name': 'UBX-MON-RCVRSTAT'},
                }
 
     def nav_aopstatus(self, buf):
@@ -8210,6 +8216,7 @@ protVer 34 and up
                       'name': 'UBX-NAV-TIMELS'},
                0x27: {'str': 'TIMEQZSS', 'dec': nav_timeqzss, 'minlen': 20,
                       'name': 'UBX-NAV-TIMEQZSS'},
+               0x28: {'str': 'NMI', 'minlen': 16,  'name': 'UBX-NAV-NMI'},
                0x30: {'str': 'SVINFO', 'dec': nav_svinfo, 'minlen': 8,
                       'name': 'UBX-NAV-SVINFO'},
                0x31: {'str': 'DGPS', 'dec': nav_dgps, 'minlen': 16,
@@ -8227,6 +8234,7 @@ protVer 34 and up
                       'name': 'UBX-NAV-GEOFENCE'},
                0x3B: {'str': 'SVIN', 'dec': nav_svin, 'minlen': 40,
                       'name': 'UBX-NAV-SVIN'},
+               0x3a: {'str': 'DGNSS', 'minlen': 16,  'name': 'UBX-NAV-DGNSS'},
                # M8P length = 40, M9P length = 64
                0x3C: {'str': 'RELPOSNED', 'dec': nav_relposned, 'minlen': 40,
                       'name': 'UBX-NAV-RELPOSNED'},
@@ -8240,6 +8248,7 @@ protVer 34 and up
                       'name': 'UBX-NAV-SLAS'},
                0x43: {'str': 'SIG', 'dec': nav_sig, 'minlen': 8,
                       'name': 'UBX-NAV-SIG'},
+               0x50: {'str': 'IMES', 'minlen': 4 ,'name': 'UBX-NAV-IMES'},
                0x60: {'str': 'AOPSTATUS', 'dec': nav_aopstatus, 'minlen': 16,
                       'name': 'UBX-NAV-AOPSTATUS'},
                # Broadcom calls this BRM-PVT-EOE
@@ -8253,6 +8262,7 @@ protVer 34 and up
                # protVer 50, X20
                0x64: {'str': 'TIMETRUSTED', 'dec': nav_timetrusted,
                       'minlen': 40, 'name': 'UBX-NAV-TIMETRUSTED'},
+               0x65: {'str': 'CFB', 'minlen': 40, 'name': 'UBX-NAV-CFB'},
                }
 
     def nav2_clock(self, buf):
@@ -8266,24 +8276,30 @@ Duplicate of UBX-NAV-CLOCK
     # F9T
     nav2_ids = {0x01: {'str': 'POSECEF', 'minlen': 20,
                        'name': 'UBX-NAV2-POSECEF'},
-                0x02: {'str': 'POSLLH',  'minlen': 20,
+                0x02: {'str': 'POSLLH', 'minlen': 20,
                        'name': 'UBX-NAV2-POSLLH'},
-                0x03: {'str': 'STATUS',  'minlen': 16,
+                0x03: {'str': 'STATUS', 'minlen': 16,
                        'name': 'UBX-NAV2-STATUS'},
                 0x04: {'str': 'DOP', 'minlen': 18,
                        'name': 'UBX-NAV2-DOP'},
-                0x07: {'str': 'PVT',  'minlen': 92,
+                0x07: {'str': 'PVT', 'minlen': 92,
                        'name': 'UBX-NAV2-PVT'},
+                0x09: {'str': 'ODO','minlen': 20,
+                       'name': 'UBX-NAV2-ODO'},
                 0x11: {'str': 'VELECEF',  'minlen': 20,
                        'name': 'UBX-NAV2-VELECEF'},
                 0x12: {'str': 'VELNED', 'minlen': 36,
                        'name': 'UBX-NAV2-VELNED'},
+                0x17: {'str': 'PVAT', 'minlen': 116,
+                       'name': 'UBX-NAV2-PVAT'},
                 0x20: {'str': 'TIMEGPS', 'minlen': 16,
                        'name': 'UBX-NAV2-TIMEGPS'},
                 0x21: {'str': 'TIMEUTC',  'minlen': 20,
                        'name': 'UBX-NAV2-TIMEUTC'},
                 0x22: {'str': 'CLOCK', 'dec': nav2_clock, 'minlen': 20,
                        'name': "UBX-NAV2-CLOCK"},
+                0x23: {'str': 'TIMEGLO', 'minlen': 20,
+                       'name': 'UBX-NAV2-TIMEGLO'},
                 0x24: {'str': 'TIMEBDS', 'minlen': 20,
                        'name': 'UBX-NAV2-TIMEBDS'},
                 0x25: {'str': 'TIMEGAL', 'minlen': 20,
@@ -8298,6 +8314,10 @@ Duplicate of UBX-NAV-CLOCK
                        'name': 'UBX-NAV2-SAT'},
                 0x36: {'str': 'COV', 'minlen': 64,
                        'name': 'UBX-NAV2-COV'},
+                0x3b: {'str': 'SVIN', 'minlen': 28,
+                       'name': 'UBX-NAV2-SVIN'},
+                0x3d: {'str': 'EELL', 'minlen': 16,
+                       'name': 'UBX-NAV2-EELL'},
                 0x42: {'str': 'SLAS', 'minlen': 20,
                        'name': 'UBX-NAV2-SLAS'},
                 0x43: {'str': 'SIG', 'minlen': 8,
@@ -9974,6 +9994,7 @@ Removed in protVer 32 (u-blox 9 and 10)
                       'name': 'UBX-RXM-MEASX'},
                0x15: {'str': 'RAWX', 'dec': rxm_rawx, 'minlen': 16,
                       'name': 'UBX-RXM-RAWX'},
+               0x16: {'str': 'MEASX2', 'minlen': 44, 'name': 'UBX-RXM-MEASX2'},
                0x20: {'str': 'SVSI', 'dec': rxm_svsi, 'minlen': 8,
                       'name': 'UBX-RXM-SVSI'},
                # deprecated in u-blox 6, 7, raw option only
@@ -9999,7 +10020,17 @@ Removed in protVer 32 (u-blox 9 and 10)
                       'name': 'UBX-RXM-IMES'},
                # NEO-D9S, 24 to 528 bytes
                0x72: {'str': 'PMP', 'minlen': 24, 'name': 'UBX-RXM-PMP'},
+               0x73: {'str': 'QZSSL6', 'minlen': 264,
+                      'name': 'UBX-RXM-QZSSL6'},
                0x74: {'str': 'TM', 'minlen': 8, 'name': 'UBX-RXM-TM'},
+               0x80: {'str': 'MEASD12', 'minlen': 0,
+                      'name': 'UBX-RXM-MEASD12'},
+               0x82: {'str': 'MEASC12', 'minlen': 0,
+                      'name': 'UBX-RXM-MEASC12'},
+               0x84: {'str': 'MEAS20', 'minlen': 0,
+                      'name': 'UBX-RXM-MEAS20'},
+               0x86: {'str': 'MEAS50', 'minlen': 0,
+                      'name': 'UBX-RXM-MEAS50'},
                }
 
     # UBX-SEC-
