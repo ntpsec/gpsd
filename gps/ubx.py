@@ -4407,6 +4407,11 @@ Deprecated in protVer 23.01
         6: "Airborne with <1g Acceleration",
         7: "Airborne with <2g Acceleration",
         8: "Airborne with <4g Acceleration",
+        9: "Wrist-worn watch",
+        10: "Motorbike",
+        11: "Robotic lawn mower",
+        12: "Electric kick scooter",
+        13: "Rail vehicles",
         }
 
     cfg_nav5_fix = {
@@ -9962,6 +9967,13 @@ from protVer 27.31 and up, buf[2] is sigId, no longer reserved.
 
         return s
 
+    cfg_svsi_svFlag = {
+        0x10: 'Healthy',
+        0x20: 'Ephemeris valid',
+        0x40: 'Almanac valid',
+        0x80: 'SV n/a',
+        }
+
     def rxm_svsi(self, buf):
         """UBX-RXM-SVSI decode, SV Status Info
 
@@ -9980,6 +9992,11 @@ Removed in protVer 32 (u-blox 9 and 10)
             s += '\n  svid %3d svFlag %#x azim %3d elev % 3d age %3d' % u
             m_len -= 6
             i += 1
+            if gps.VERB_DECODE <= self.verbosity:
+                s += ('\n      ura (%u) svFlag (%s)'
+                      '\n      almAge (%d) ephAge (%d)' %
+                      (u[1] & 0x0f,  flag_s(u[1], self.cfg_svsi_svFlag),
+                       ((u[4] >> 4) & 0x0f) - 4, (u[4] & 0x0f) - 4))
 
         return s
 
@@ -12692,11 +12709,31 @@ present in 9-series and higher
         "RXM-IMES": {"pollcmd": send_poll, "mid": [0x02, 0x61],
                      "help": "poll UBX-RXM-IMES Indoor Messaging System "
                      "Information"},
+        # UBX-RXM-MEAS20
+        "RXM-MEAS20": {"pollcmd": send_poll, "mid": [0x02, 0x84],
+                       "ablecmd": send_able,
+                       "help": "UBX-RXM-MEAS20 Satellite Measurements"
+                       " CloudLocate "},
+        # UBX-RXM-MEAS50
+        "RXM-MEAS50": {"pollcmd": send_poll, "mid": [0x02, 0x86],
+                       "ablecmd": send_able,
+                       "help": "UBX-RXM-MEAS50 Satellite Measurements"
+                       " CloudLocate "},
+        # UBX-RXM-MEASD12
+        "RXM-MEASD12": {"pollcmd": send_poll, "mid": [0x02, 0x82],
+                        "ablecmd": send_able,
+                        "help": "UBX-RXM-MEASD12 Satellite Measurements"
+                        " CloudLocate "},
         # UBX-RXM-MEASX
         "RXM-MEASX": {"pollcmd": send_poll, "mid": [0x02, 0x14],
                       "ablecmd": send_able,
                       "help": "UBX-RXM-MEASX Satellite Measurements "
                       " for RRLP"},
+        # UBX-RXM-MEASX2
+        "RXM-MEASX2": {"pollcmd": send_poll, "mid": [0x02, 0x16],
+                       "ablecmd": send_able,
+                       "help": "UBX-RXM-MEASX2 Satellite Measurements "
+                       " for RRLP"},
         # UBX-RXM-RAWX
         "RXM-RAWX": {"pollcmd": send_poll, "mid": [0x02, 0x15],
                      "ablecmd": send_able,
@@ -12708,6 +12745,14 @@ present in 9-series and higher
         # UBX-RXM-SPARTNKEY, protVer 27.50, F9P
         "RXM-SPARTNKEY": {"pollcmd": send_poll, "mid": [0x02, 0x36],
                           "help": "UBX-RXM-SPARTNKEY get SPARTNKEY"},
+        # UBX-RXM-SVSI
+        "RXM-SVSI": {"pollcmd": send_poll, "mid": [0x02, 0x20],
+                     "ablecmd": send_able,
+                     "help": "UBX-RXM-SVSI SV status info"},
+        # UBX-RXM-TM
+        "RXM-TM": {"pollcmd": send_poll, "mid": [0x02, 0x74],
+                   "ablecmd": send_able,
+                   "help": "UBX-RXM-TM time info"},
 
         # en/dis able PPS
         "PPS": {"ablecmd": send_able_pps,
@@ -12781,7 +12826,7 @@ present in 9-series and higher
                      "help": "UBX-UPD-SOS Create Backup File in Flash"},
         # UBX-UPD-SOS
         "UPD-SOS1": {"pollcmd": send_poll, "opt": [0x09, 0x14, 1, 0, 0, 0],
-                     "help": "UBX-UPD-SOS Create Clear File in Flash"},
+                     "help": "UBX-UPD-SOS Clear File in Flash"},
         # UBX-CFG-RST
         "WARMBOOT": {"pollcmd": send_cfg_rst,
                      "help": "UBX-CFG-RST warmboot the GPS",
