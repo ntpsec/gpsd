@@ -112,7 +112,7 @@ class GPSDictionary(configparser.RawConfigParser):
                     rowcolor = "#FFFFE0"
                 elif self.get(dev, "packaging") == "handset":
                     rowcolor = "#00FFFF"
-                elif self.get(dev, "packaging") == "hansdfree":
+                elif self.get(dev, "packaging") == "handsfree":
                     rowcolor = "#008B8B"
 
                 ofp.write("<tr itemscope itemtype='http://schema.org/Product'"
