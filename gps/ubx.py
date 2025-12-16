@@ -12624,65 +12624,85 @@ present in 9-series and higher
 
         # UBX-NAV2-CLOCK
         "NAV2-CLOCK": {"pollcmd": send_poll, "mid": [0x29, 0x22],
+                       "ablecmd": send_able,
                        "help": "poll UBX-NAV2-CLOCK Clock Solution"},
         # UBX-NAV2-COV
         "NAV2-COV": {"pollcmd": send_poll, "mid": [0x29, 0x16],
+                     "ablecmd": send_able,
                      "help": "poll UBX-NAV2-COV Covariance Matrices"},
         # UBX-NAV2-DOP
         "NAV2-DOP": {"pollcmd": send_poll, "mid": [0x29, 0x04],
+                     "ablecmd": send_able,
                      "help": "poll UBX-NAV2-DOP Dilution of Precision"},
         # UBX-NAV2-POSECEF
         "NAV2-POSECEF": {"pollcmd": send_poll, "mid": [0x29, 0x01],
+                         "ablecmd": send_able,
                          "help": "poll UBX-NAV2-POSECEF ECEF position"},
         # UBX-NAV2-POSLLH
         "NAV2-POSLLH": {"pollcmd": send_poll, "mid": [0x29, 0x02],
+                        "ablecmd": send_able,
                         "help": "poll UBX-NAV2-POSLLH LLH position"},
         # UBX-NAV2-PVT
         "NAV2-PVT": {"pollcmd": send_poll, "mid": [0x29, 0x07],
+                     "ablecmd": send_able,
                      "help": "poll UBX-NAV2-PVT Navigation Position Velocity "
                      "Time Solution"},
         # UBX-NAV2-SAT
         "NAV2-SAT": {"pollcmd": send_poll, "mid": [0x29, 0x35],
+                     "ablecmd": send_able,
                      "help": "poll UBX-NAV2-SAT Satellite Information"},
         # UBX-NAV2-SBAS
         "NAV2-SBAS": {"pollcmd": send_poll, "mid": [0x29, 0x32],
+                     "ablecmd": send_able,
                       "help": "poll UBX-NAV2-SBAS SBAS Status Data"},
         # UBX-NAV2-SIG
         "NAV2-SIG": {"pollcmd": send_poll, "mid": [0x29, 0x43],
+                     "ablecmd": send_able,
                      "help": "poll UBX-NAV2-SIG Signal Information"},
         # UBX-NAV2-SLAS
         "NAV2-SLAS": {"pollcmd": send_poll, "mid": [0x29, 0x42],
+                      "ablecmd": send_able,
                       "help": "poll UBX-NAV2-SLAS QZSS SLAS info"},
         # UBX-NAV2-STATUS
         "NAV2-STATUS": {"pollcmd": send_poll, "mid": [0x29, 0x03],
+                        "ablecmd": send_able,
                         "help": "poll UBX-NAV2-STATUS Receiver Nav Status"},
         # UBX-NAV2-TIMEBDS
         "NAV2-TIMEBDS": {"pollcmd": send_poll, "mid": [0x29, 0x24],
+                         "ablecmd": send_able,
                          "help": "poll UBX-NAV2-TIMEBDS BDS Time Solution"},
         # UBX-NAV2-TIMEGAL
         "NAV2-TIMEGAL": {"pollcmd": send_poll, "mid": [0x29, 0x25],
+                         "ablecmd": send_able,
                          "help": "poll UBX-NAV2-TIMEGAL "
                          "Galileo Time Solution"},
         # UBX-NAV2-TIMEGLO
         "NAV2-TIMEGLO": {"pollcmd": send_poll, "mid": [0x29, 0x23],
+                         "ablecmd": send_able,
                          "help": "poll UBX-NAV2-TIMEGLO GLO Time Solution"},
         # UBX-NAV2-TIMEGPS
         "NAV2-TIMEGPS": {"pollcmd": send_poll, "mid": [0x29, 0x20],
+                         "ablecmd": send_able,
                          "help": "poll UBX-NAV2-TIMEGPS GPS Time Solution"},
         # UBX-NAV2-TIMELS
         "NAV2-TIMELS": {"pollcmd": send_poll, "mid": [0x29, 0x26],
+                        "ablecmd": send_able,
                         "help": "poll UBX-NAV2-TIMELS Leap Second Info"},
         # UBX-NAV2-TIMEQZSS
         "NAV2-TIMEQZSS": {"pollcmd": send_poll, "mid": [0x29, 0x27],
+                          "ablecmd": send_able,
                           "help": "poll UBX-NAV2-TIMEQZSS Time Info"},
         # UBX-NAV2-TIMEUTC
         "NAV2-TIMEUTC": {"pollcmd": send_poll, "mid": [0x29, 0x21],
+                         "ablecmd": send_able,
                          "help": "poll UBX-NAV2-TIMEUTC UTC Time Solution"},
         # UBX-NAV2-VELECEF
         "NAV2-VELECEF": {"pollcmd": send_poll, "mid": [0x29, 0x11],
+                         "ablecmd": send_able,
                          "help": "poll UBX-NAV2-VELECEF ECEF velocity"},
         # UBX-NAV2-VELNED
         "NAV2-VELNED": {"pollcmd": send_poll, "mid": [0x29, 0x12],
+                        "ablecmd": send_able,
                         "help": "poll UBX-NAV2-VELNED NED velocity"},
 
         # en/dis able NED
@@ -12701,10 +12721,18 @@ present in 9-series and higher
         # en/dis able RTCM3 messages 1005, 1077, 1087, 1230
         "RTCM3": {"ablecmd": send_able_rtcm3,
                   "help": "required RTCM3 messages. USB port only"},
+        # UBX-RXM-ALM
+        "RXM-ALM": {"pollcmd": send_poll, "mid": [0x02, 0x30],
+                    "ablecmd": send_able,
+                    "help": "UBX-RXM-ALM Satellite Almanac"},
         # UBX-RXM-COR, can not be polled
         "RXM-COR": {"mid": [0x02, 0x34],
                     "ablecmd": send_able,
                     "help": "UBX-RXM-COR Diff Correction input status "},
+        # UBX-RXM-EPH
+        "RXM-EPH": {"pollcmd": send_poll, "mid": [0x02, 0x31],
+                    "ablecmd": send_able,
+                    "help": "UBX-RXM-EPH Satellite Ephemeris"},
         # UBX-RXM-IMES
         "RXM-IMES": {"pollcmd": send_poll, "mid": [0x02, 0x61],
                      "help": "poll UBX-RXM-IMES Indoor Messaging System "
