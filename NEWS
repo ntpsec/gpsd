@@ -1,6 +1,10 @@
                         GPSD project news
 
-3.27.1~dev: TBD
+3.27.1: 17-Dec-2025
+  Fixes for two CVE.  Parsing failures on malicious packets.
+      CVE-2025-67268 - Heap-based Out-of-bounds Write, NMEA2000
+      CVE-2025-67269 - Integer Underflow, NovAtel
+  Some ubxtool updates.
 
 3.27: 21 Nov 2025
   Improve support for newer signal ids (L1/L2/L5, etc.).
