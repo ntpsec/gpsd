@@ -1,5 +1,7 @@
                         GPSD project news
 
+3.27.2!dev: TBD
+
 3.27.1: 17-Dec-2025
   Fixes for two CVE.  Parsing failures on malicious packets.
       CVE-2025-67268 - Heap-based Out-of-bounds Write, NMEA2000
