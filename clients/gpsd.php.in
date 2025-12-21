@@ -102,8 +102,12 @@ if (isset($_GET['imgdata']) && $op == 'view'){
         for($tries = 0; $tries < 100; $tries++){
                 $resp = @fread($sock, 10000); # SKY can be pretty big
                 if (preg_match('/{"class":"SKY".+}/i', $resp, $m)){
+                    // grab the longest response here in case you have a receiver that gives
+                    // multiple SKY responses, only one of which have no satellite information
+                    if (strlen($m[0]) > strlen($skyresp)) {
                         $skyresp = $m[0];
                         $have_sky = true;
+                    }
                 }
                 elseif (preg_match('/{"class":"TPV".+}/i', $resp, $m)){
                         $tpvresp = $m[0];
