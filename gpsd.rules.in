@@ -26,7 +26,6 @@
 SUBSYSTEM!="gnss", GOTO="gpsd_tty_rules"
 
 ACTION=="add", SUBSYSTEM=="gnss", GROUP="@GROUP@", @UDEVCOMMAND@
-ACTION=="remove", SUBSYSTEM=="gnss", @UDEVCOMMAND_REMOVE@
 
 # SUBSYSTEM "tty"
 # The rules in this section only apply to subsystem "tty".
@@ -122,7 +121,5 @@ ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", SYMLINK+="gps%n", @UDEVCOMMAN
 
 # Telit wireless solutions (tested with HE910G) [linux module: cdc_acm]
 ATTRS{interface}=="Telit Wireless Module Port", ATTRS{bInterfaceNumber}=="06", SYMLINK+="gps%n", @UDEVCOMMAND@
-
-ACTION=="remove", @UDEVCOMMAND_REMOVE@
 
 LABEL="gpsd_rules_end"
