@@ -1,6 +1,7 @@
                         GPSD project news
 
-3.27.2!dev: TBD
+3.27.2!dev: 23 Dec 2025
+  Fix a gpsd.rules warning.  The warning drew complaint, nothing more.
 
 3.27.1: 17-Dec-2025
   Fixes for two CVE.  Parsing failures on malicious packets.
