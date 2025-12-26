@@ -1892,9 +1892,8 @@ frame * {
 
         label = Gtk.Label(label="port")
         grid_layout.attach(label, 0, 2, 1, 1)
-        port = Gtk.SpinButton.new_with_range(1, 65535, 1)
-        port.set_numeric(True)
-        port.set_value(int(self.daemon.port))
+        port = Gtk.Entry()
+        port.set_text(self.daemon.port)
         grid_layout.attach(port, 1, 2, 1, 1)
 
         label = Gtk.Label(label="device")
@@ -1906,7 +1905,7 @@ frame * {
         def do_connect(_):
             lister = [
                 host.get_text(),
-                port.get_value_as_int(),
+                port.get_text(),
                 device.get_text()
             ]
             try:
