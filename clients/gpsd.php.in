@@ -602,13 +602,12 @@ function write_html($resp) {
     font-family: verdana, sans-serif;
 }
 
-body.light {
-    background-color: #fdf6e3;
-    color: #657b83;
+:root {
+    color-scheme: light dark;
 }
-body.dark {
-    background-color: #002b36;
-    color: #839496;
+body {
+    background-color: light-dark(#fdf6e3, black);
+    color: light-dark(#657b83, white);
 }
 
 td:nth-child(1) {
