@@ -230,7 +230,7 @@ except OSError:
     pass  # May already exist
 
 # API (JSON) version, should match include/gps.h
-api_version_major = 0
+api_version_major = 3
 api_version_minor = 16
 
 # client library version
