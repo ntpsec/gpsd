@@ -1,6 +1,6 @@
                         GPSD project news
 
-3.27.3~dev: TBD
+3.27.4~dev: TBD
 
 3.27.3: 29-Dec-2025
   Fix API major value.  3 not 0.
