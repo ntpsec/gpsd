@@ -122,7 +122,7 @@ extern "C" {
 
 // API version should match in SConscript
 #define GPSD_API_MAJOR_VERSION  16      // bump on incompatible changes
-#define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
+#define GPSD_API_MINOR_VERSION  1       // bump on compatible changes
 
 #define MAXCHANNELS     184     // u-blox 9 tracks 140 signals
 #define MAXUSERDEVS     4       // max devices per user
