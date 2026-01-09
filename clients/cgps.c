@@ -840,16 +840,29 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
      * fix.  */
 
     if (0 != (VERSION_SET & gpsdata->set)) {
+        bool wait = false;
+
         // got version, check it
         if (0 != strcmp(gpsdata->version.release, VERSION)) {
             // expected API version not available
             (void)fprintf(stderr,
-                          "cgps: WARNING gpsd server release %s, expected %s, "
-                          "API: %d.%d",
+                          "cgps: WARNING gpsd server release %s, "
+                          "expected %s\n\r",
                           gpsdata->version.release,
-                          VERSION,
+                          VERSION);
+            wait = true;
+        }
+        if (GPSD_API_MAJOR_VERSION != gpsdata->version.proto_major ||
+            GPSD_API_MINOR_VERSION != gpsdata->version.proto_minor) {
+            (void)fprintf(stderr,
+                           "cgps: WARNING: API %d.%u expected %d.%d\n\r",
                           gpsdata->version.proto_major,
-                          gpsdata->version.proto_minor);
+                          gpsdata->version.proto_minor,
+                          GPSD_API_MAJOR_VERSION,
+                          GPSD_API_MINOR_VERSION);
+            wait = true;
+        }
+        if (wait) {
             sleep(4);
         }
     }
