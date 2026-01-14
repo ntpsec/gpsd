@@ -1,6 +1,6 @@
 /* net_gnss_dispatch.c -- common interface to a number of Network GNSS services
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -16,10 +16,40 @@
 #include "../include/gpsd.h"
 #include "../include/strfuncs.h"
 
+#define NETGNSS_TCP     "tcp://"
+#define NETGNSS_UDP     "udp://"
 #define NETGNSS_DGPSIP  "dgpsip://"
 #define NETGNSS_NTRIP   "ntrip://"
+#define NETGNSS_GPSD    "gpsd://"
 
-// is given string a valid URI for GNSS/DGPS service?
+// is given string a valid URI for network/service? Is so, which one?
+net_link_type netgnss_uri_type(char *name)
+{
+    if (str_starts_with(name, NETGNSS_DGPSIP)) {
+        return NET_DGPSIP;
+    }
+
+    if (str_starts_with(name, NETGNSS_GPSD)) {
+        return NET_GPSD;
+    }
+
+    if (str_starts_with(name, NETGNSS_NTRIP)) {
+        return NET_NTRIP;
+    }
+
+    if (str_starts_with(name, NETGNSS_TCP)) {
+        return NET_TCP;
+    }
+
+    if (str_starts_with(name, NETGNSS_UDP)) {
+        return NET_UDP;
+    }
+
+    return NET_LOCAL;
+}
+
+// is given string a valid URI for DGPS/NTRIP service?
+// FIXME: replace with netgnss_uri_type()
 bool netgnss_uri_check(char *name)
 {
     return

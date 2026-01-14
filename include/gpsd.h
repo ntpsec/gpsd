@@ -301,7 +301,8 @@ struct gps_lexer_t {
     unsigned char stashbuffer[MAX_PACKET_LENGTH];
     size_t stashbuflen;
 #endif  // STASH_ENABLE
-    bool chunked;             // true if NTRIP/1.1 and the HTTP stream is chunked.
+    // chunked: true if NTRIP/1.1 and the HTTP stream is chunked.
+    bool chunked;
     int chunk_remaining;      // Bytes remaining before end of this chunk.
 };
 
@@ -512,6 +513,16 @@ typedef enum {SERVICE_UNKNOWN = 0,
               SERVICE_DGPSIP,        // dgpsip://
               SERVICE_NTRIP,         // ntrip://
 } servicetype_t;
+
+// Type of net link, it any
+typedef enum {NET_UNKNOWN = 0,
+              NET_DGPSIP,            // dgpsip://,
+              NET_GPSD,              // gpsd://,
+              NET_LOCAL,             // local device or file
+              NET_NTRIP,             // ntrip://,
+              NET_TCP,               // tcp://,
+              NET_UDP,               // udp://,
+} net_link_type;
 
 /*
  * Private state information about an NTRIP stream.
@@ -961,6 +972,7 @@ extern gps_mask_t garmin_ser_parse(struct gps_device_t *);
 extern gps_mask_t garmintxt_parse(struct gps_device_t *);
 extern gps_mask_t aivdm_parse(struct gps_device_t *);
 
+extern net_link_type netgnss_uri_type(char *);
 extern bool netgnss_uri_check(char *);
 extern gps_fd_t netgnss_uri_open(struct gps_device_t *, char *);
 extern void netgnss_report(struct gps_context_t *,
