@@ -1,6 +1,8 @@
                         GPSD project news
 
-3.27.5~dev: TBD
+3.27.6~dev: TBD
+
+3.27.5: 14 Jan 2026
   Correctly bump API Version to 16.1
   cgps checks for matching API version.
 
