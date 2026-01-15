@@ -52,9 +52,14 @@ net_link_type netgnss_uri_type(char *name)
 // FIXME: replace with netgnss_uri_type()
 bool netgnss_uri_check(char *name)
 {
-    return
-        str_starts_with(name, NETGNSS_NTRIP) ||
-        str_starts_with(name, NETGNSS_DGPSIP);
+    switch (netgnss_uri_type(name)) {
+    case NET_DGPSIP:
+        FALLTHROUGH
+    case NET_NTRIP:
+        return true;
+    default:
+        return false;
+    }
 }
 
 
@@ -64,23 +69,18 @@ gps_fd_t netgnss_uri_open(struct gps_device_t *dev, char *netgnss_service)
     GPSD_LOG(LOG_IO, &dev->context->errout,
              "DGNSS/NTRIP: netgnss_uri_open(%s)\n", netgnss_service);
 
-    if (str_starts_with(netgnss_service, NETGNSS_NTRIP)) {
+    switch (netgnss_uri_type(netgnss_service)) {
+    case NET_DGPSIP:
+        return dgpsip_open(dev, netgnss_service + sizeof(NETGNSS_DGPSIP) - 1);
+    case NET_NTRIP:
         // could be initial open, or reopen, or...
         return ntrip_open(dev, netgnss_service + sizeof(NETGNSS_NTRIP) - 1);
+    default:
+        GPSD_LOG(LOG_ERROR, &dev->context->errout,
+                 "DGNSS/NTRIP: Unknown/unspecified protocol for service %s\n",
+                 netgnss_service);
+        return -1;
     }
-
-    if (str_starts_with(netgnss_service, NETGNSS_DGPSIP)) {
-        return dgpsip_open(dev, netgnss_service + sizeof(NETGNSS_DGPSIP) - 1);
-    }
-
-#ifndef REQUIRE_DGNSS_PROTO
-    return dgpsip_open(dev, netgnss_service);
-#else
-    GPSD_LOG(LOG_ERROR, &dev->context.errout,
-             "DGNSS/NTRIP: Unknown or unspecified protocol for service %s\n",
-             netgnss_service);
-    return -1;
-#endif
 }
 
 // may be time to ship a usage report to the DGNSS service
