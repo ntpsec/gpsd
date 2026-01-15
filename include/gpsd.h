@@ -682,12 +682,11 @@ struct gps_device_t {
     } nmea;
     /*
      * The rest of this structure is driver-specific private storage.
-     * Only put a driver's scratch storage in here if it is never
-     * implemented on the same device that supports any mode already
-     * in this union; otherwise bad things might happen after a device
-     * mode switch.
+     * This used to be a union, but bad things, very bad things, could
+     * happen on driver switches.  In 2026 we care less about RAM
+     * than we did decades ago.
      */
-    union {
+    struct {
 #ifdef GEOSTAR_ENABLE
         struct {
             unsigned int physical_port;
