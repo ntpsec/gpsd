@@ -2697,10 +2697,13 @@ int main(int argc, char *argv[])
             // FIMME: don't stat() if not a decice or file.
 
             /* stat() and chmod() fail if:
-             *    not running as root,
+             *    not running as root;
              *    does have group access to the file,
-             *    and does not have CAP_FOWNER . */
-            if (0 != stat(argv[i], &stb)) {
+             *      and does not have CAP_FOWNER;
+             *    sometimes if file is a URI. */
+            if (NET_LOCAL != netgnss_uri_type(argv[i])) {
+                // don't confuse stat().
+            } else if (0 != stat(argv[i], &stb)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
                          "CORE: stat(%s) failed, errno %s(%d)\n",
                          argv[i], strerror(errno), errno);
