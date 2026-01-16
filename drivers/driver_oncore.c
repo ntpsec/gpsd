@@ -169,13 +169,19 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     gps_mask_t mask;
     unsigned char flags;
     double lat, lon, alt;
-    float speed, track, dop;
+    double speed, track, dop;
     unsigned int i, j, st, nsv;
     int Bbused;
     struct tm unpacked_date = {0};
     char ts_buf[TIMESPEC_LEN];
+    unsigned char dop_type;
+    unsigned char num_sats_vis, num_sats_trk;
 
     if (76 != data_len) {
+        // This may be incorrect for 6 Channel models
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore NAVSOL: runt payload len %zd",
+                 data_len);
         return 0;
     }
 
@@ -239,14 +245,30 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     lat = getbes32(buf, 15) / 3600000.0;
     lon = getbes32(buf, 19) / 3600000.0;
     alt = getbes32(buf, 23) / 100.0;
-    speed = getbeu16(buf, 31) / 100.0f;
-    track = getbeu16(buf, 33) / 10.0f;
-    dop = getbeu16(buf, 35) / 10.0f;
+    speed = getbeu16(buf, 31) / 100.0;
+    track = getbeu16(buf, 33) / 10.0;
+    dop = getbeu16(buf, 35) / 10.0;       // PDOP or HDOP ??
+    dop_type = getub(buf, 37);
 
+    /* Motorola Oncore, Chipset: R5122U1115m can report num_sats_vis == 13
+     * but only data on 12 */
+    num_sats_vis = getub(buf, 38);
+    num_sats_trk = getub(buf, 39);
+
+    // doptype: 0 == 3D == PDOP, 1 == 2D == HDOP
+    if (0.1 > dop) {
+        // n/a
+    } else if (0 == dop_type) {
+        session->gpsdata.dop.pdop = dop;
+    } else {
+        session->gpsdata.dop.hdop = dop;
+    }
+    mask |= DOP_SET;
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "oncore NAVSOL - %lf %lf %.2lfm | %.2fm/s %.1fdeg dop=%.1f\n",
+             "oncore NAVSOL - %lf %lf %.2lfm | %.2fm/s %.1fdeg dop=%.1f "
+             "vis %u trk %u\n",
              lat, lon, alt, speed, track,
-             (float)dop);
+             dop, num_sats_vis, num_sats_trk);
 
     if (MODE_2D <= session->newdata.mode) {
         session->newdata.latitude = lat;
@@ -264,18 +286,21 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     // Merge the satellite information from the Bb message.
     Bbused = 0;
     nsv = 0;
-    for (i = st = 0; i < 8; i++) {
-        int sv, mode, sn, status;
-        unsigned int off;
 
-        off = 40 + 4 * i;
-        sv = (int)getub(buf, off);
-        mode = (int)getub(buf, off + 1);
-        sn = (int)getub(buf, off + 2);
-        status = (int)getub(buf, off + 3);
+    if (ONCORE_VISIBLE_CH < session->driver.oncore.visible) {
+       // do NOT overrun session->driver.oncore.PRN[j], etc.
+       session->driver.oncore.visible = ONCORE_VISIBLE_CH;
+    }
+    // always 8, one for each reeeiver channel.  6 channel receivers??
+    for (i = st = 0; i < 8; i++) {
+        unsigned off = 40 + 4 * i;
+        int sv = getub(buf, off);
+        unsigned mode = getub(buf, off + 1);
+        unsigned sn = getub(buf, off + 2);
+        unsigned status = getub(buf, off + 3);
 
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "%2d %2d %2d %3d %02x\n", i, sv, mode, sn, status);
+                 "%2u %2d %2u %3u %02x\n", i, sv, mode, sn, status);
 
         if (sn) {
             session->gpsdata.skyview[st].PRN = (short)sv;
@@ -309,7 +334,7 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
             st++;
         }
     }
-    for (j = 0; (int)j < session->driver.oncore.visible; j++)
+    for (j = 0; (int)j < session->driver.oncore.visible; j++) {
         if (!(Bbused & (1 << j))) {
             session->gpsdata.skyview[st].PRN =
                 (short)session->driver.oncore.PRN[j];
@@ -319,6 +344,7 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
                 (double)session->driver.oncore.azimuth[j];
             st++;
         }
+    }
     session->gpsdata.skyview_time = session->newdata.time;
     session->gpsdata.satellites_used = (int)nsv;
     session->gpsdata.satellites_visible = (int)st;
@@ -358,6 +384,9 @@ oncore_msg_utc_offset(struct gps_device_t *session, unsigned char *buf,
     int utc_offset;
 
     if (8 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore UTCTIME: runt payload len %zd",
+                 data_len);
         return 0;
     }
 
@@ -387,6 +416,9 @@ oncore_msg_pos_hold_mode(struct gps_device_t *session, unsigned char *buf,
     int pos_hold_mode;
 
     if (8 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore pos hold mode: runt payload len %zd",
+                 data_len);
         return 0;
     }
 
@@ -409,6 +441,9 @@ oncore_msg_pps_offset(struct gps_device_t *session, unsigned char *buf,
     int pps_offset_ns;
 
     if (11 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore PPS offset: runt payload len %zd",
+                 data_len);
         return 0;
     }
 
@@ -430,6 +465,9 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
     unsigned int i, nchan;
 
     if (92 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore SVINFO: runt payload len %zd",
+                 data_len);
         return 0;
     }
 
@@ -439,7 +477,7 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "oncore SVINFO - %d satellites:\n", nchan);
     // Then we clamp the value to not read outside the table.
-    if (12 < nchan) {
+    if (ONCORE_VISIBLE_CH < nchan) {
         nchan = 12;
     }
     session->driver.oncore.visible = (int)nchan;
@@ -477,6 +515,9 @@ static gps_mask_t oncore_msg_time_mode(struct gps_device_t *session UNUSED,
     int time_mode;
 
     if (8 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore time mode: runt payload len %zd",
+                 data_len);
         return 0;
     }
 
@@ -497,6 +538,9 @@ static gps_mask_t oncore_msg_time_raim(struct gps_device_t *session UNUSED,
     int sawtooth_ns;
 
     if (69 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore PPS sawtooth: runt payload len %zd",
+                 data_len);
         return 0;
     }
 

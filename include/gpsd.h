@@ -826,6 +826,7 @@ struct gps_device_t {
 #endif  // NAVCOM_ENABLE
 #ifdef ONCORE_ENABLE
         struct {
+            // FIXME? Why does oncode need its own PRN, elevation and azimuth?
 #define ONCORE_VISIBLE_CH 12
             int visible;
             int PRN[ONCORE_VISIBLE_CH];         // PRNs of satellite
