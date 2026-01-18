@@ -37,8 +37,9 @@ $testmode = 1; # leave this set to 1
 # their JS locally.
 
 # this script shouldn't take more than a few seconds to run
-set_time_limit(3);
-ini_set('max_execution_time', 3);
+# some GNSS receivers only output SKY every 5 epochs.
+set_time_limit(6);
+ini_set('max_execution_time', 6);
 
 if (!file_exists("gpsd_config.inc"))
         write_config();
