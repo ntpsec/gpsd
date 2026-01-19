@@ -57,6 +57,7 @@
 #include <limits.h>
 #include <math.h>
 #include <pthread.h>            // pacifies OpenBSD's compiler
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -143,6 +144,14 @@ static int get_edge_rfc2783(struct inner_context_t *,
 #endif  // defined(HAVE_SYS_TIMEPPS_H)
 
 static pthread_mutex_t ppslast_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// Signal used to interrupt blocking ioctl(TIOCMIWAIT)
+#define PPS_THREAD_SIGNAL SIGUSR1
+
+static void pps_thread_signal_handler(int signum UNUSED)
+{
+    // nothing to do, just interrupt the ioctl()
+}
 
 /*
  * Version of strerror_r() which explicitly ignores the return value.
@@ -708,6 +717,13 @@ static void *gpsd_ppsmonitor(void *arg)
     char ts_str1[TIMESPEC_LEN], ts_str2[TIMESPEC_LEN];
     struct inner_context_t inner_context = *((struct inner_context_t *)arg);
     volatile struct pps_thread_t *thread_context = inner_context.pps_thread;
+    struct sigaction sa;
+
+    /* Install signal handler to allow interruption of ioctl(TIOCMIWAIT) */
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = pps_thread_signal_handler;
+    sigaction(PPS_THREAD_SIGNAL, &sa, NULL);
+
     /* the GPS time and system clock timme, to the nSec,
      * when the last fix received
      * using a double would cause loss of precision */
@@ -1334,13 +1350,18 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
     pps_thread->log_hook(pps_thread, THREAD_PROG, "PPS:%s thread %s\n",
                          pps_thread->devicename,
                          (retval==0) ? "launched" : "FAILED");
-    /* The monitor thread may not run immediately, particularly on a single-
-     * core machine, so we need to wait for it to acknowledge its copying
-     * of the inner_context struct before proceeding.
-     */
-    while (inner_context.pps_thread) {
-        (void)nanosleep(&start_delay, NULL);
+    if (retval == 0) {
+        pps_thread->thread_id = pt;
 
+        /* The monitor thread may not run immediately, particularly on a single-
+        * core machine, so we need to wait for it to acknowledge its copying
+        * of the inner_context struct before proceeding.
+        */
+        while (inner_context.pps_thread) {
+            (void)nanosleep(&start_delay, NULL);
+        }
+    } else {
+        pps_thread->thread_id = pthread_self();
     }
 }
 
@@ -1348,6 +1369,12 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
 void pps_thread_deactivate(volatile struct pps_thread_t *pps_thread)
 {
     pps_thread->report_hook = NULL;
+    if (pps_thread->thread_id != pthread_self()) {
+        // Send signal to interrupt ioctl(TIOCMIWAIT)
+        pthread_kill(pps_thread->thread_id, PPS_THREAD_SIGNAL);
+        // Detach so thread resources are freed when it exits
+        pthread_detach(pps_thread->thread_id);
+    }
 }
 
 // thread-safe update of last fix time - only way we pass data in
