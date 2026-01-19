@@ -465,58 +465,69 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
 }
 
 /* Connect to NTRIP caster
+ * Request sourcetable or mountpoint from NTRIP caster
+ * (non-blocking if possible)
  *
  * Warning: Blocking.  if the host is unresponsive, this will hang forever.
  *
  * Return: fntrip_stream_get_parseile descriptor of connection
  *         negative number on failure
  */
-static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
-                                  struct gpsd_errout_t *errout)
+static int ntrip_stream_req(const struct ntrip_stream_t *stream,
+                            struct gpsd_errout_t *errout,
+                            int gps_fd,
+                            const bool sourcetable_parsed)
 {
-    int dsock;
     ssize_t r, blen;
     char buf[BUFSIZ];
     char outbuf[BUFSIZ];
 
     // open blocking
-    dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
-    if (0 > dsock) {
+    gps_fd = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
+    if (0 > gps_fd) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: ntrip_stream_req_probe(%s) connect error %s(%d)\n",
-                 stream->url, netlib_errstr(dsock), dsock);
+                 "NTRIP: ntrip_stream_req(%s) connect error %s(%d)\n",
+                 stream->url, netlib_errstr(gps_fd), gps_fd);
         return -1;
     }
     blen = snprintf(buf, sizeof(buf),
-                    "GET / HTTP/1.1\r\n"
+                    "GET /%s HTTP/1.1\r\n"
                     "Ntrip-Version: Ntrip/2.0\r\n"
                     "User-Agent: NTRIP gpsd/%s\r\n"
                     "Host: %s\r\n"
+                    "Accept: rtk/rtcm, dgps/rtcm\r\n"
+                    "%s"
                     "Connection: close\r\n"
-                    "\r\n", VERSION, stream->host);
+                    "\r\n",
+                    sourcetable_parsed ? stream->mountpoint : "",
+                    VERSION, stream->host,
+                    sourcetable_parsed ? stream->authStr : "");
+
     if (1 > blen) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: ntrip_stream_req_probe(%s) snprintf() fail\n",
+                 "NTRIP: ntrip_stream_req(%s %s) snprintf() fail\n",
+                 sourcetable_parsed ? "get" : "probe",
                  stream->url);
         return -1;
     }
 
     GPSD_LOG(LOG_IO, errout,
-             "NTRIP: ntrip_stream_req_probe(%s) fd %d sending >%s<\n",
-             stream->url, dsock,
+             "NTRIP: ntrip_stream_req(%s %s) fd %d sending >%s<\n",
+             sourcetable_parsed ? "get" : "probe",
+             stream->url, gps_fd,
              gps_visibilize(outbuf, sizeof(outbuf), buf, blen));
 
-    r = write(dsock, buf, blen);
+    r = write(gps_fd, buf, blen);
     if (blen != r) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream write error %s(%d) on fd %d "
                  "during probe request %zd\n",
-                 strerror(errno), errno, dsock, r);
-        (void)close(dsock);
+                 strerror(errno), errno, gps_fd, r);
+        (void)close(gps_fd);
         return -1;
     }
     // coverity[leaked_handle] This is an intentional allocation
-    return dsock;
+    return gps_fd;
 }
 
 /* ntrip_auth_encode() - compute the HTTP auth string, if required.
@@ -1103,11 +1114,12 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
             return -1;
         }
 
-        ret = ntrip_stream_req_probe(&device->ntrip.stream,
-                                     &device->context->errout);
+        ret = ntrip_stream_req(&device->ntrip.stream,
+                               &device->context->errout,
+                               0, false);
         // cast for 32-bit intptr_t
         GPSD_LOG(LOG_PROG, &device->context->errout,
-                 "NTRIP: ntrip_stream_req_probe(%s) ret %ld\n",
+                 "NTRIP: ntrip_stream_req(%s) ret %ld\n",
                  device->ntrip.stream.url, (long)ret);
         if (-1 == ret) {
             device->gpsdata.gps_fd = PLACEHOLDING_FD;
