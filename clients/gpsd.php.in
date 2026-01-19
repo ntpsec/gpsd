@@ -100,16 +100,20 @@ if (isset($_GET['imgdata']) && $op == 'view'){
         // Start the loop to start reading from gpsd.
         usleep(1000);
         for($tries = 0; $tries < 100; $tries++){
+                # FIXME: should be a timeout on the fread
                 $resp = @fread($sock, 10000); # SKY can be pretty big
+                # FIXME: this only sinds the first SKY and TPV in the
+                # $resp, there may be several copies.
                 if (preg_match('/{"class":"SKY".+}/i', $resp, $m)){
-                    // grab the longest response here in case you have a receiver that gives
-                    // multiple SKY responses, only one of which have no satellite information
+                    # grab the longest response here in case you have a
+                    # receiver that gives multiple SKY responses, only one
+                    # of which have no satellite information
                     if (strlen($m[0]) > strlen($skyresp)) {
                         $skyresp = $m[0];
                         $have_sky = true;
                     }
                 }
-                elseif (preg_match('/{"class":"TPV".+}/i', $resp, $m)){
+                if (preg_match('/{"class":"TPV".+}/i', $resp, $m)){
                         $tpvresp = $m[0];
                         $have_tpv = true;
                 }
