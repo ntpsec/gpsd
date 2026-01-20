@@ -14,7 +14,7 @@
 global $head, $blurb, $title, $showmap, $autorefresh, $footer, $gmap_key;
 global $server, $advertise, $port, $open, $swap_ew, $testmode;
 global $colors;
-$testmode = 1; # leave this set to 1
+$testmode = 1;  # leave this set to 1
 
 # Public script parameters:
 #   host: host name or address where GPSd runs. Default: from config file
@@ -27,13 +27,7 @@ $testmode = 1; # leave this set to 1
 
 # To draw the skyview, make sure that GD is installed and configured with PHP
 
-# If you're running PHP with the Suhosin patch (like the Debian PHP5 package),
-# it may be necessary to increase the value of the
-# suhosin.get.max_value_length parameter to 2048. The imgdata parameter used
-# for displaying the skyview is longer than the default 512 allowed by Suhosin.
-# Debian has the config file at /etc/php5/conf.d/suhosin.ini.
-
-# If you use the OPenLayers code you will likely want to server
+# If you use the OPenLayers code you will likely want to serve
 # their JS locally.
 
 # this script shouldn't take more than a few seconds to run
@@ -71,61 +65,51 @@ $resp = <<<EOF
 EOF;
 
 
+if (isset($_GET['host']))
+        if (!preg_match('/[^a-zA-Z0-9\.-]/', $_GET['host']))
+                $server = $_GET['host'];
 
-# if we're passing in a query, let's unpack and use it
-$op = isset($_GET['op']) ? $_GET['op'] : '';
-if (isset($_GET['imgdata']) && $op == 'view'){
-    $resp = base64_decode($_GET['imgdata']);
-    if ($resp){
-        gen_image($resp);
-        exit(0);
+if (isset($_GET['port']))
+        if (!preg_match('/\D/', $_GET['port']) &&
+            ($port > 0) && ($port < 65536))
+                $port = $_GET['port'];
+
+if ($testmode){
+    $have_sky = false;
+    $have_tpv = false;
+    $skyresp = "";
+    $tpvresp = "";
+    $sock = @fsockopen($server, $port, $errno, $errstr, 2);
+    @fwrite($sock, "?WATCH={\"enable\":true,\"json\":true}\n");
+    // Start the loop to start reading from gpsd.
+    usleep(1000);
+    for($tries = 0; $tries < 100; $tries++){
+            # FIXME: should be a timeout on the fread
+            $resp = @fread($sock, 10000); # SKY can be pretty big
+            # FIXME: this only sinds the first SKY and TPV in the
+            # $resp, there may be several copies.
+            if (preg_match('/{"class":"SKY".+}/i', $resp, $m)){
+                # grab the longest response here in case you have a
+                # receiver that gives multiple SKY responses, only one
+                # of which have no satellite information
+                if (strlen($m[0]) > strlen($skyresp)) {
+                    $skyresp = $m[0];
+                    $have_sky = true;
+                }
+            }
+            if (preg_match('/{"class":"TPV".+}/i', $resp, $m)){
+                    $tpvresp = $m[0];
+                    $have_tpv = true;
+            }
+            if ($have_sky && $have_tpv) {
+                    break;
+            }
     }
-} else {
-    if (isset($_GET['host']))
-            if (!preg_match('/[^a-zA-Z0-9\.-]/', $_GET['host']))
-                    $server = $_GET['host'];
-
-    if (isset($_GET['port']))
-            if (!preg_match('/\D/', $_GET['port']) &&
-                ($port > 0) && ($port < 65536))
-                    $port = $_GET['port'];
-
-    if ($testmode){
-        $have_sky = false;
-        $have_tpv = false;
-        $skyresp = "";
-        $tpvresp = "";
-        $sock = @fsockopen($server, $port, $errno, $errstr, 2);
-        @fwrite($sock, "?WATCH={\"enable\":true,\"json\":true}\n");
-        // Start the loop to start reading from gpsd.
-        usleep(1000);
-        for($tries = 0; $tries < 100; $tries++){
-                # FIXME: should be a timeout on the fread
-                $resp = @fread($sock, 10000); # SKY can be pretty big
-                # FIXME: this only sinds the first SKY and TPV in the
-                # $resp, there may be several copies.
-                if (preg_match('/{"class":"SKY".+}/i', $resp, $m)){
-                    # grab the longest response here in case you have a
-                    # receiver that gives multiple SKY responses, only one
-                    # of which have no satellite information
-                    if (strlen($m[0]) > strlen($skyresp)) {
-                        $skyresp = $m[0];
-                        $have_sky = true;
-                    }
-                }
-                if (preg_match('/{"class":"TPV".+}/i', $resp, $m)){
-                        $tpvresp = $m[0];
-                        $have_tpv = true;
-                }
-                if ($have_sky && $have_tpv) {
-                        break;
-                }
-        }
-        @fclose($sock);
-        if (!$resp)
-            $resp = '{"class":"ERROR","message":"no response from GPS daemon"}';
-    }
+    @fclose($sock);
+    if (!$resp)
+        $resp = '{"class":"ERROR","message":"no response from GPS daemon"}';
 }
+
 # fake a partial ?POLL response
 $resp = '{"class":"POLL","tpv":[' . $tpvresp . '],"sky":[' . $skyresp . ']}';
 
@@ -168,12 +152,15 @@ function field_str($arr, $key, $unit, $errkey = '', $errunit = '') {
 }
 
 
-if ($op == 'view')
-        gen_image($resp);
-else if ($op == 'json')
+$op = isset($_GET['op']) ? $_GET['op'] : '';
+if ($op == 'view') {
+        header("Content-type: image/png");
+        print(gen_image($resp));
+} else if ($op == 'json') {
         write_json($resp);
-else
+} else {
         write_html($resp);
+}
 
 exit(0);
 
@@ -452,6 +439,8 @@ function skyview($im, $sz, $C){
         }
 }
 
+# Take the gpsd json, and make a nice png skyview
+# return as a png string
 function gen_image($resp){
         $sz = 600;
         if (isset($_GET['sz']) && ($_GET['sz'] == 'small'))
@@ -477,13 +466,18 @@ function gen_image($resp){
             }
         }
 
-        header("Content-type: image/png");
+        # PHP can send a PNG out the http stream, or to a file, but
+        # not to a simple string.  Thus the ob_start() dance
+        ob_start();
         imagePNG($im);
+        $img = ob_get_contents();
+        ob_end_clean();
         imageDestroy($im);
+        return $img;
 }
 
 function dfix($x, $y, $z){
-        if ($x < 0){
+        if ($x < 0) {
                 $x = sprintf("%f %s", -1 * $x, $z);
         } else {
                 $x = sprintf("%f %s", $x, $y);
@@ -545,7 +539,6 @@ function write_html($resp) {
         $lon = (float)$GPS['tpv'][0]['lon'];
 
         $x = $server; $y = $port;
-        $imgdata = base64_encode($resp);
         $server = $x; $port = $y;
 
         if ($autorefresh > 0)
@@ -636,14 +629,15 @@ EOF;
         if (0 == strlen($advertise))
                 $advertise = $server;
 
-        if ($testmode && !$sock)
+        if ($testmode && !$sock) {
                 $part_sky = "";
-        else
+        } else {
+                $img =  base64_encode(gen_image($resp));
                 $part_sky = <<<EOF
 <!-- -->
 
 <div style="width:600px;float:right;margin:0 0 1ex 1em;">
-<img src="?op=view&amp;imgdata={$imgdata}"
+<img src="data:image/png;base64,{$img}"
 width="600" height="600" alt="Skyview">
 <br style="clear:both">
 <p class="caption">A filled shape means the satellite was used in
@@ -661,8 +655,9 @@ Squares are GLONASS satellites.<br>
 {$map_code}
 </div>
 EOF;
+        }
 
-        if ($open)
+        if ($open) {
             $part3 = <<<EOF
 <!-- -->
 
@@ -677,15 +672,16 @@ Use a different server:<br>
 <br>
 </div>
 EOF;
-        else
+        } else {
             $part3 = '';
+        }
 
-        if ($testmode && !$sock)
+        if ($testmode && !$sock) {
             $part_tpv_sky = <<<EOF
 <div style="clear:both">The gpsd instance that this page monitors is
 not running.</div>
 EOF;
-        else {
+        } else {
             $fix = $GPS['tpv'][0];
             $sky = $GPS['sky'][0];
             $sats = Array();
