@@ -1,6 +1,6 @@
 = gpscsv(1)
 :author: Gary E. Miller
-:date: 28 July 2021
+:date: 20 January 2025
 :email: gem@rellim.com.
 :keywords: gps, gpsd, gpscsv, csv
 :manmanual: GPSD Documentation
@@ -32,8 +32,9 @@ input from a specified *gpsd* and reports to standard output. The program
 runs until the *gpsd* dies, "*-n COUNT*" messages are processed,
 "*-x SECONDS*" have passed, or it is interrupted by ^C or other means.
 
-*gpscsv* can only collect data that your *gpsd* is already sending.  Use
-*gpspipe* to see what JSON message classes it is sending.
+*gpscsv* can only collect data that your *gpsd* is already sending.
+*Use gpspipe* to see what JSON message classes it is sending.  See the
+*"gpsd_json*(6) man age for field definitions.
 
 One good use of *gpscsv* is to create CSV files for use with the gnuplot
 program.
@@ -116,7 +117,7 @@ the *gps*(1) man page
 
 == EXAMPLES
 
-Some basic standalone examples:
+Some basic standalone examples.  Note: your data will look different!
 
 Grab three cycles of TPV data:
 
@@ -132,27 +133,23 @@ Grab one set of satellite data:
 
 ----
 $ gpscsv -c SAT -n 1
-time,gnssid,svid,PRN,az,el,ss,used,health
-2021-07-28T22:37:46.000Z,0,8,8,311.0,28.0,33.0,True,1
-2021-07-28T22:37:46.000Z,0,10,10,290.0,74.0,50.0,True,1
-2021-07-28T22:37:46.000Z,0,15,15,45.0,18.0,31.0,False,1
-2021-07-28T22:37:46.000Z,0,16,16,244.0,7.0,23.0,True,1
-2021-07-28T22:37:46.000Z,0,18,18,109.0,43.0,37.0,True,1
-2021-07-28T22:37:46.000Z,0,23,23,49.0,62.0,38.0,True,1
-2021-07-28T22:37:46.000Z,0,24,24,87.0,16.0,28.0,True,1
-2021-07-28T22:37:46.000Z,0,27,27,280.0,52.0,42.0,True,1
-2021-07-28T22:37:46.000Z,0,32,32,188.0,32.0,42.0,True,1
-2021-07-28T22:37:46.000Z,5,3,195,305.0,6.0,13.0,False,1
-2021-07-28T22:37:46.000Z,6,2,66,38.0,8.0,21.0,False,1
-2021-07-28T22:37:46.000Z,6,3,67,34.0,60.0,32.0,True,1
-2021-07-28T22:37:46.000Z,6,4,68,226.0,63.0,34.0,True,1
-2021-07-28T22:37:46.000Z,6,5,69,220.0,12.0,32.0,True,1
-2021-07-28T22:37:46.000Z,6,11,75,-999,4.0,0.0,False,2
-2021-07-28T22:37:46.000Z,6,12,76,47.0,0.0,0.0,False,1
-2021-07-28T22:37:46.000Z,6,17,81,142.0,8.0,31.0,True,1
-2021-07-28T22:37:46.000Z,6,18,82,138.0,57.0,40.0,True,1
-2021-07-28T22:37:46.000Z,6,19,83,333.0,70.0,29.0,True,1
-2021-07-28T22:37:46.000Z,6,20,84,323.0,10.0,0.0,False,1
+time,gnssid,svid,PRN,sigid,az,el,ss,used,health
+2026-01-20T22:16:26.000Z,0,4,4,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,6,6,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,7,7,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,8,8,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,10,10,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,12,12,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,13,13,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,16,16,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,21,21,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,22,22,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,28,28,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,31,31,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,0,32,32,,0.0,-999,0.0,False,1
+2026-01-20T22:16:26.000Z,1,131,44,,173.0,39.0,0.0,False,1
+2026-01-20T22:16:26.000Z,1,135,48,,185.0,39.0,0.0,False,1
+2026-01-20T22:16:26.000Z,1,138,51,,160.0,37.0,0.0,False,2
 ----
 
 === Plot Examples
