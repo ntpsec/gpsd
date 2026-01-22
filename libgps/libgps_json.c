@@ -9,7 +9,7 @@ representations to libgps structures.
 
 PERMISSIONS
    Written by Eric S. Raymond, 2009
-   This file is Copyright 2009 by the GPSD project
+   This file is Copyright by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -21,6 +21,7 @@ PERMISSIONS
 
 #include "../include/gpsd_config.h"   // must be before all includes
 
+#include <assert.h>                  // for assert()  :-(
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -610,6 +611,9 @@ static int json_devicelist_read(const char *buf, struct gps_data_t *gpsdata,
         return status;
     }
 
+    // json.c should ensure this never happens
+    assert(MAXUSERDEVS >= gpsdata->devices.ndevices);
+
     (void)clock_gettime(CLOCK_REALTIME, &gpsdata->devices.time);
     return 0;
 }
@@ -790,7 +794,12 @@ int json_oscillator_read(const char *buf, struct gps_data_t *gpsdata,
 #define PASS(n) (((n) == 0) || ((n) == JSON_ERR_BADATTR))
 #define FILTER(n) ((n) == JSON_ERR_BADATTR ? 0 : n)
 
-// the only entry point - unpack a JSON object into gpsdata_t substructures
+/* the only entry point - unpack a JSON object into gpsdata_t substructures
+ *
+ * Returns: 0 if OK
+ *          -1 on unknown
+ *         JSON_ERR_xx code
+ */
 int libgps_json_unpack(const char *buf,
                        struct gps_data_t *gpsdata, const char **end)
 {

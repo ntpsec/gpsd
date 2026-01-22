@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <stdio.h>         // for #define BUFSIZ 8192
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -92,8 +92,16 @@ int main(int argc, char *argv[])
 	while (NULL != fgets(buf, sizeof(buf), stdin)) {
 	    if ('{'  == buf[0] ||
                 isalpha( (int) buf[0])) {
-		gps_unpack(buf, &gpsdata);
+                int errcode;
+
+		errcode = gps_unpack(buf, &gpsdata);
 		libgps_dump_state(&gpsdata);
+                if (0 != errcode) {
+                    (void)fprintf(stderr,
+                                  "test_libgps: batchmode failed  %d\n",
+                                 errcode);
+                    exit(EXIT_FAILURE);
+                }
 	    }
 	}
     } else if (0 != (err = gps_open(source.server, source.port, &collect))) {

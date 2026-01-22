@@ -1,6 +1,6 @@
 /* libgps_sock.c -- client interface library for the gpsd daemon
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -409,12 +409,16 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
 }
 
 /* unpack a gpsd response into a status structure, buf must be writeable.
- * gps_unpack() currently returns 0 in all cases, but should it ever need to
- * return an error status, it must be < 0.
+ *
+ * Returns 0  if OK
+ *         -1 on JSON unpack error
+ *         allow ofr future negative error codes.
+ *
  */
 int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
 {
     char vbuf[GPS_JSON_COMMAND_MAX];
+
     libgps_debug_trace(DEBUG_CALLS, "libgps: gps_unpack(%s)\n",
                         gps_visibilize(vbuf, sizeof(vbuf),
                                        buf, strnlen(buf, sizeof(vbuf))));
@@ -426,15 +430,18 @@ int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
         while (NULL != next &&
                NULL != *next &&
                '\0' != next[0][0]) {
+            int errcode;
+
             libgps_debug_trace(DEBUG_CALLS,
                                "libgps: gps_unpack() segment parse '%s'\n",
                                gps_visibilize(vbuf, sizeof(vbuf), *next,
                                               strnlen(*next, sizeof(vbuf))));
-            if (-1 == libgps_json_unpack(*next, gpsdata, next)) {
-                break;
-            }
+            errcode = libgps_json_unpack(*next, gpsdata, next);
             if (1 <= libgps_debuglevel) {
                 libgps_dump_state(gpsdata);
+            }
+            if (0 !=  errcode) {
+                return -1;
             }
         }
     }
