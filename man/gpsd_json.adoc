@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 8 November 2025
+:date: 23 January 2026
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -596,7 +596,7 @@ assert ATT_IS.
 Here's an example:
 
 ----
-{"class":"ATT","time":1270938096.843,
+{"class":"ATT","time":"2010-06-04T10:31:00.289Z",
     "heading":14223.00,"mag_st":"N",
     "pitch":169.00,"pitch_st":"N", "roll":-43.00,"roll_st":"N",
     "dip":13641.000,"mag_x":2454.000}
