@@ -172,7 +172,7 @@ typedef struct __attribute__((__packed__))
 } cpo_sat_data;
 
 /* Garmin D800_Pvt_Datetype_Type
- * packet type:  GARMIN_PKTID_PVT_DATA   52
+ * packet type:  GARMIN_PKTID_PVT_DATA   51
  * This is the data format of the position data from the garmin USB */
 typedef struct __attribute__((__packed__))
 {
@@ -271,7 +271,7 @@ static inline uint32_t get_int32(const uint8_t * buf)
            ((uint32_t)(0xFF & buf[2]) << 16) |
            ((uint32_t)(0xFF & buf[3]) << 24);
 }
-#endif /* HAVE_LIBUSB */
+#endif  // HAVE_LIBUSB
 
 // convert radians to degrees
 static inline double radtodeg(double rad)
@@ -318,6 +318,13 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
         GPSD_LOG(LOG_PROG, &session->context->errout, "Garmin: NAK\n");
         break;
     case GARMIN_PKTID_L001_COMMAND_DATA:
+        // A010
+        if (2 > pkt_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "Garmin: %02x-: runt payload %d",
+                     pkt_id, pkt_len);
+            return 0;
+        }
         prod_id = get_uint16((uint8_t *) buf);
         switch (prod_id) {
         case CMND_ABORT:
@@ -346,6 +353,12 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
                  "Garmin: Appl, Product Data req\n");
         break;
     case GARMIN_PKTID_PRODUCT_DATA:
+        if (4 > pkt_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "Garmin: %02x-: runt payload %d",
+                     pkt_id, pkt_len);
+            return 0;
+        }
         prod_id = get_uint16((uint8_t *) buf);
         ver = get_uint16((uint8_t *) & buf[2]);
         maj_ver = (int)(ver / 100);
@@ -366,6 +379,13 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
                  session->subtype);
         break;
     case GARMIN_PKTID_PVT_DATA:
+        // 0x33 (51)
+        if (64 > pkt_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "Garmin: %02x-: runt payload %d",
+                     pkt_id, pkt_len);
+            return 0;
+        }
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "Garmin: PVT Data (51) Sz: %d\n", pkt_len);
 
@@ -423,7 +443,7 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
         session->newdata.epv = GPSD_LEF32(pvt->epv) *
                                    (GPSD_CONFIDENCE / CEP50_SIGMA);
 
-        /* meters/sec */
+        // meters/sec
         session->newdata.NED.velN = GPSD_LEF32(pvt->lat_vel);
         session->newdata.NED.velE = GPSD_LEF32(pvt->lon_vel);
         session->newdata.NED.velD = -GPSD_LEF32(pvt->alt_vel);
@@ -522,6 +542,7 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
                  session->newdata.status);
         break;
     case GARMIN_PKTID_RMD_DATA:
+        FALLTHROUGH
     case GARMIN_PKTID_RMD41_DATA:
         rmd = (cpo_rcv_data *) buf;
         GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -566,12 +587,12 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
             }
 
             if ((int)sats->svid <= 32) {
-                /* GPS 1-32 */
+                // GPS 1-32
                 session->gpsdata.skyview[j].PRN = (short)sats->svid;
                 session->gpsdata.skyview[j].svid = (short)sats->svid;
                 session->gpsdata.skyview[j].gnssid = GNSSID_GPS;
             } else {
-                /* SBAS 33-64 */
+                // SBAS 33-64
                 session->gpsdata.skyview[j].PRN = (short)sats->svid;
                 session->gpsdata.skyview[j].svid = (short)sats->svid + 87;
                 session->gpsdata.skyview[j].gnssid = GNSSID_SBAS;
@@ -1031,7 +1052,7 @@ gps_mask_t garmin_ser_parse(struct gps_device_t *session)
 {
     unsigned char *buf = session->lexer.outbuffer;
     size_t len = session->lexer.outbuflen;
-    unsigned char data_buf[MAX_BUFFER_SIZE];
+    unsigned char data_buf[300];  // Max Garmin payload is 255
     unsigned char c;
     int i = 0;
     size_t n = 0;
@@ -1088,6 +1109,8 @@ gps_mask_t garmin_ser_parse(struct gps_device_t *session)
         }
     }
     data_index = 0;
+    // we are never really sure of garmin packet sizes, prevent another CVE
+    memset(data_buf, 0, sizeof(data_buf));
     for (i = 0; i < 256; i++) {
 
         if ((int)pkt_len == data_index) {
@@ -1103,6 +1126,7 @@ gps_mask_t garmin_ser_parse(struct gps_device_t *session)
         }
         c = buf[n + i];
         if (got_dle) {
+            // handle DLE stuffing
             got_dle = 0;
             if ('\x10' != c) {
                 Send_NAK();
@@ -1160,7 +1184,7 @@ gps_mask_t garmin_ser_parse(struct gps_device_t *session)
         return 0;
     }
 
-    /* debug */
+    // debug
     for (i = 0; i < data_index; i++) {
         GPSD_LOG(LOG_RAW, &session->context->errout,
                  "Garmin: Char %#02x\n", data_buf[i]);
@@ -1302,6 +1326,6 @@ const struct gps_type_t driver_garmin_ser_binary =
 };
 // *INDENT-ON*
 
-#endif /* GARMIN_ENABLE */
+#endif  // GARMIN_ENABLE
 
 // vim: set expandtab shiftwidth=4
