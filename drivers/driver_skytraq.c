@@ -3,7 +3,7 @@
  *
  * SkyTraq is Big Endian
  *
- * This file is Copyright 2016 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -49,7 +49,7 @@ static unsigned char versionprobe[] = {
  *         negative on error
  */
 static ssize_t sky_write(struct gps_device_t *session, char *msg,
-                         size_t data_len)
+                         const size_t data_len)
 {
     uint8_t chk;
     uint16_t len;
@@ -187,7 +187,7 @@ static void PRN2_gnssId_svId(short PRN, uint8_t *gnssId, uint8_t *svId)
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_62(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned sid;
     unsigned u[23];
@@ -203,6 +203,11 @@ static gps_mask_t sky_msg_62(struct gps_device_t *session,
     switch (sid) {
     case  0x80:
         // SBAS status
+        if (8 < len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "Skytraq 0x62/80: bad len %zu\n", len);
+            return 0;
+        }
         for (i = 0; i < 6; i++) {
             u[i] = getub(buf, i + 2);
         }
@@ -221,6 +226,11 @@ static gps_mask_t sky_msg_62(struct gps_device_t *session,
         break;
     case  0x82:
         // SBAS advanced status
+        if (46 < len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "Skytraq 0x62/82: bad len %zu\n", len);
+            return 0;
+        }
         for (i = 0; i < 22; i++) {
             u[i] = getub(buf, i + 2);
         }
@@ -246,7 +256,7 @@ static gps_mask_t sky_msg_62(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_63(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned sid;
 
@@ -270,7 +280,7 @@ static gps_mask_t sky_msg_63(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_64(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned sid;
     unsigned u[13];
@@ -295,6 +305,11 @@ static gps_mask_t sky_msg_64(struct gps_device_t *session,
         break;
     case  0x81:
         // Extended NMEA Message Interval
+        if (14 > len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "Skytraq 0x64/81: bad len %zu\n", len);
+            return 0;
+        }
         for (i = 0; i < 12; i++) {
             u[i] = getub(buf, i + 2);
         }
@@ -328,6 +343,11 @@ static gps_mask_t sky_msg_64(struct gps_device_t *session,
         break;
     case  0x8a:
         // GPS UTC Reference time
+        if (7 > len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "Skytraq 0x64/8a: bad len %zu\n", len);
+            return 0;
+        }
         u[0] = getub(buf, 2);
         u[1] = getbeu16(buf, 3);
         u[2] = getub(buf, 5);
@@ -387,7 +407,7 @@ static gps_mask_t sky_msg_64(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_65(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned sid;
     unsigned u[13];
@@ -425,7 +445,7 @@ static gps_mask_t sky_msg_65(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_6A(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned sid;
     unsigned u[13];
@@ -445,12 +465,12 @@ static gps_mask_t sky_msg_6A(struct gps_device_t *session,
         u[1] = getub(buf, 3);                // RTK function
         u[2] = getbeu32(buf, 4);             // saved survey length
         u[3] = getbeu32(buf, 8);             // standard deviation
-        d[0] = getled64((char *)buf, 12);    // latitude
-        d[1] = getled64((char *)buf, 20);    // longitude
-        d[3] = getlef32((char *)buf, 28);    // altitude (HAE or MSL?)
+        d[0] = getled64((const char *)buf, 12);    // latitude
+        d[1] = getled64((const char *)buf, 20);    // longitude
+        d[3] = getlef32((const char *)buf, 28);    // altitude (HAE or MSL?)
         u[4] = getub(buf, 32);               // runtime function
         u[5] = getbeu32(buf, 33);            // run-time survey length
-        d[4] = getlef32((char *)buf, 37);    // baseline length constant
+        d[4] = getlef32((const char *)buf, 37);    // baseline length constant
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "Skytraq 0x6A/83: mode %u func %u len %u sdev %u lat %.8f "
                  "lon %.8f alt %.4f func %u len %u len %.4f\n",
@@ -481,7 +501,7 @@ static gps_mask_t sky_msg_6A(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_7A(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned sid, ssid;
     unsigned u[16];
@@ -499,6 +519,11 @@ static gps_mask_t sky_msg_7A(struct gps_device_t *session,
     switch ((sid << 8) | ssid) {
     case 0x0e80:
         // Moving base software version
+        if (16 > len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "Skytraq 0x7A/0E/80: bad len %zu\n", len);
+            return 0;
+        }
         for (i = 0; i < 13; i++) {
             u[i] = getub(buf, i + 3);
         }
@@ -548,7 +573,7 @@ static gps_mask_t sky_msg_7A(struct gps_device_t *session,
  *             Phoenix
  */
 static gps_mask_t sky_msg_80(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned kver_x;  // kernel version
     unsigned kver_y;  // kernel version
@@ -592,7 +617,7 @@ static gps_mask_t sky_msg_80(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_81(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned type, crc;
 
@@ -616,7 +641,7 @@ static gps_mask_t sky_msg_81(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_86(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned rate;
 
@@ -639,7 +664,7 @@ static gps_mask_t sky_msg_86(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_89(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned i;
     uint8_t u[7];
@@ -667,7 +692,7 @@ static gps_mask_t sky_msg_89(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_8A(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned i;
     uint8_t u[15];
@@ -697,7 +722,7 @@ static gps_mask_t sky_msg_8A(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_8B(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     uint8_t u[5];
     double d[3];
@@ -731,7 +756,7 @@ static gps_mask_t sky_msg_8B(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_93(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned mode;
 
@@ -762,7 +787,7 @@ static gps_mask_t sky_msg_93(struct gps_device_t *session,
  * and adapted by Thatcher Chamberlin (j.thatcher.c@gmail.com)
  */
 static gps_mask_t sky_msg_A8(struct gps_device_t *session,
-                   unsigned char *buf, size_t len)
+                   const unsigned char *buf, const size_t len)
 {
     unsigned char  navmode; // Navigation fix mode (0: No fix, 1: 2D, 2: 3D, 3: 3D+DGNSS
     unsigned short week;    // GNSS week number
@@ -861,7 +886,7 @@ static gps_mask_t sky_msg_A8(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_AE(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned datum;
 
@@ -884,7 +909,7 @@ static gps_mask_t sky_msg_AE(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_AF(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned mode, pdop, hdop, gdop;
 
@@ -911,7 +936,7 @@ static gps_mask_t sky_msg_AF(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_B0(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned select, elevation, cnr;
 
@@ -937,7 +962,7 @@ static gps_mask_t sky_msg_B0(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_B4(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned status, pspeed, pcnt, uspeed, ucnt, udist;
 
@@ -967,7 +992,7 @@ static gps_mask_t sky_msg_B4(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_B9(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned mode;
 
@@ -990,7 +1015,7 @@ static gps_mask_t sky_msg_B9(struct gps_device_t *session,
  * Present in Phoenix
  */
 static gps_mask_t sky_msg_BB(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     int delay;
 
@@ -1013,7 +1038,7 @@ static gps_mask_t sky_msg_BB(struct gps_device_t *session,
  * 10 bytes
  */
 static gps_mask_t sky_msg_DC(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned iod;   // Issue of data 0 - 255
     unsigned wn;    // week number 0 - 65535
@@ -1048,18 +1073,26 @@ static gps_mask_t sky_msg_DC(struct gps_device_t *session,
  *
  */
 static gps_mask_t sky_msg_DD(struct gps_device_t *session,
-                             unsigned char *buf, size_t len UNUSED)
+                             const unsigned char *buf, const size_t len)
 {
-    unsigned iod;   // Issue of data 0 - 255
-    unsigned nmeas; // number of measurements
     unsigned i;     // generic loop variable
 
-    iod = (unsigned)getub(buf, 1);
-    nmeas = (unsigned)getub(buf, 2);
+    // buf[0] os the message ID
+    // Issue of data 0 - 255
+    unsigned iod = (unsigned)getub(buf, 1);
+    // number of measurements
+    unsigned nmeas = (unsigned)getub(buf, 2);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "Skytraq 0xDD: iod=%u, nmeas=%u\n",
-             iod, nmeas);
+             "Skytraq 0xDD: iod %u, nmeas %u len %zd\n",
+             iod, nmeas, len);
+
+    if (len < (3 + (nmeas * 23))) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "Skytraq 0xDD: bad len %zd, s/b %d\n",
+                 len, 3 + (nmeas & 23));
+        return 0;
+    }
 
     // check IOD?
     session->gpsdata.raw.mtime = session->gpsdata.skyview_time;
@@ -1175,13 +1208,18 @@ static gps_mask_t sky_msg_DD(struct gps_device_t *session,
  * max payload: 3 + (Num_sats * 10) = 483 bytes
  */
 static gps_mask_t sky_msg_DE(struct gps_device_t *session,
-                             unsigned char *buf, size_t len UNUSED)
+                             const unsigned char *buf, const size_t len)
 {
     int st, nsv;
     unsigned i;
     unsigned iod;   // Issue of data 0 - 255
     unsigned nsvs;  // number of SVs in this packet
 
+    if (3 > len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq 0xDE: bad len %zu\n", len);
+        return 0;
+    }
     iod = (unsigned)getub(buf, 1);
     nsvs = (unsigned)getub(buf, 2);
     // too many sats?
@@ -1189,6 +1227,11 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
         return 0;
     }
 
+    if (len < (3 + (nsvs * 10))) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq 0xDE: bad len %zu\n", len);
+        return 0;
+    }
     gpsd_zero_satellites(&session->gpsdata);
     for (i = st = nsv =  0; i < nsvs; i++) {
         int off = 3 + (10 * i);  // offset into buffer of start of this sat
@@ -1259,7 +1302,7 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
  * 81 bytes
  */
 static gps_mask_t sky_msg_DF(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     unsigned short navstat;
     unsigned iod;           // Issue of data 0 - 255
@@ -1350,7 +1393,7 @@ static gps_mask_t sky_msg_DF(struct gps_device_t *session,
  *
  */
 static gps_mask_t sky_msg_E0(struct gps_device_t *session,
-                             unsigned char *buf, size_t len UNUSED)
+                             const unsigned char *buf, const size_t len)
 {
     int i;
     unsigned prn;   // GPS sat PRN
@@ -1386,7 +1429,7 @@ static gps_mask_t sky_msg_E0(struct gps_device_t *session,
  *
  */
 static gps_mask_t sky_msg_E2(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     int i;
     unsigned prn;   // BeidouPS sat PRN 206-214
@@ -1424,7 +1467,7 @@ static gps_mask_t sky_msg_E2(struct gps_device_t *session,
  *
  */
 static gps_mask_t sky_msg_E3(struct gps_device_t *session,
-                             unsigned char *buf, size_t len)
+                             const unsigned char *buf, const size_t len)
 {
     int i;
     unsigned prn;   // BeidouPS sat PRN 201-205
@@ -1453,8 +1496,8 @@ static gps_mask_t sky_msg_E3(struct gps_device_t *session,
 }
 
 
-static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
-                            size_t len)
+static gps_mask_t sky_parse(struct gps_device_t * session,
+                            unsigned char *buf, size_t len)
 {
     gps_mask_t mask = 0;
 
@@ -1590,7 +1633,9 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
 
     case 0xDD:
         // 221
-        mask = sky_msg_DD(session, buf, len);
+        if (3 <= len) {
+            mask = sky_msg_DD(session, buf, len);
+        }
         break;
 
     case 0xDE:
