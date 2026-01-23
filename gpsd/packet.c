@@ -317,6 +317,21 @@ static size_t oncore_payload_cksum_length(unsigned char id1, unsigned char id2)
         l = 9;
         break;
 
+    // G...
+    case ONCTYPE('G','d'):
+        // position hold or survey
+        l = 8;
+        break;
+    case ONCTYPE('G','e'):
+        // T-RAIM enable
+        l = 8;
+        break;
+    // H...
+    case ONCTYPE('H','a'):
+        // position/status/data
+        l = 154;
+        break;
+
     // S...
     case ONCTYPE('S','z'):
         // system power-on failure

@@ -1,6 +1,7 @@
                         GPSD project news
 
 3.27.6~dev: TBD
+   Ass support, and regression, for Oncore M12
 
 3.27.5: 14 Jan 2026
   Correctly bump API Version to 16.1

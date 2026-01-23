@@ -1,5 +1,8 @@
 /*
- * This file is Copyright 2010 by the GPSD project
+ * Oncore Driver
+ * formerly Motorola
+ *
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -13,20 +16,22 @@
 #include "../include/bits.h"
 #include "../include/timespec.h"
 
-static char enableEa[] = { 'E', 'a', 1 };
-static char enableBb[] = { 'B', 'b', 1 };
-static char getfirmware[] = { 'C', 'j' };
+static char enableEa[] = {'E', 'a', 1};
+static char enableHa[] = {'H', 'a', 1};
+static char enableBb[] = {'B', 'b', 1};
+static char getfirmware[] = {'C', 'j'};
 /*static char enableEn[] =
-    { 'E', 'n', 1, 0, 100, 100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };*/
+    {'E', 'n', 1, 0, 100, 100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};*/
 // static char enableAt2[]       = { 'A', 't', 2, };*/
 static unsigned char pollAs[] =
-    { 'A', 's', 0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff,
-    0xff, 0xff, 0xff
+    {'A', 's', 0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff,
+     0xff, 0xff, 0xff
 };
-static unsigned char pollAt[] = { 'A', 't', 0xff };
-static unsigned char pollAw[] = { 'A', 'w', 0xff };
-static unsigned char pollAy[] = { 'A', 'y', 0xff, 0xff, 0xff, 0xff };
-static unsigned char pollBo[] = { 'B', 'o', 0x01 };
+static unsigned char pollAt[] = {'A', 't', 0xff};
+static unsigned char pollGd[] = {'G', 'd', 0xff};
+static unsigned char pollAw[] = {'A', 'w', 0xff};
+static unsigned char pollAy[] = {'A', 'y', 0xff, 0xff, 0xff, 0xff};
+static unsigned char pollBo[] = {'B', 'o', 0x01};
 static unsigned char pollEn[] = {
     'E', 'n', 0xff, 0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
@@ -40,11 +45,13 @@ static unsigned char pollEn[] = {
 static gps_mask_t oncore_parse_input(struct gps_device_t *);
 static gps_mask_t oncore_dispatch(struct gps_device_t *, unsigned char *,
                                   size_t);
-static gps_mask_t oncore_msg_navsol(struct gps_device_t *, unsigned char *,
+static gps_mask_t oncore_msg_navsol_8ch(struct gps_device_t *, unsigned char *,
+                                    size_t);
+static gps_mask_t oncore_msg_navsol_12ch(struct gps_device_t *, unsigned char *,
                                     size_t);
 static gps_mask_t oncore_msg_utc_offset(struct gps_device_t *,
                                         unsigned char *, size_t);
-static gps_mask_t oncore_msg_pos_hold_mode(struct gps_device_t *,
+static gps_mask_t oncore_msg_pos_hold_mode_8ch(struct gps_device_t *,
                                            unsigned char *, size_t);
 static gps_mask_t oncore_msg_pps_offset(struct gps_device_t *, unsigned char *,
                                         size_t);
@@ -68,8 +75,8 @@ static void oncore_event_hook(struct gps_device_t *, event_t);
  *
  * @@Ea - Position/Status/Data Message
 
-@@EamdyyhmsffffaaaaoooohhhhmmmmvvhhddtntimsdimsdimsdimsdimsdimsdimsdimsdsC
-<CR><LF>
+    @@EamdyyhmsffffaaaaoooohhhhmmmmvvhhddtntimsdimsdimsdimsdimsdimsdimsdimsdsC
+    <CR><LF>
 
  *
  *      Date
@@ -163,8 +170,8 @@ static void oncore_event_hook(struct gps_device_t *, event_t);
  *
  */
 static gps_mask_t
-oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
-                  size_t data_len)
+oncore_msg_navsol_8ch(struct gps_device_t *session, unsigned char *buf,
+                      size_t data_len)
 {
     gps_mask_t mask;
     unsigned char flags;
@@ -374,6 +381,350 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     return mask;
 }
 
+/*
+ * Decode the navigation solution message
+ *
+ * @@Ha - Position/Status/Data Message
+
+    @@HamdyyhmsffffaaaaoooohhhhmmmmaaaaoooohhhhmmmmVVvvhddttimsiddimsidd
+    imsiddimsiddimsiddimsiddimsiddimsiddimsiddimsiddimsiddimsiddssrrccoooo
+    TTushmvvvvvvC<CR><LF>
+
+ *
+ *      Date
+ *       m         - month                       1 .. 12
+ *       d         - day                         1 .. 31
+ *       yy        - year                        1980 .. 2079
+ *
+ *      Time
+ *       h         - hours                       0 .. 23
+ *       m         - minutes                     0 .. 59
+ *       s         - seconds                     0 .. 60
+ *       ffff      - fractional second           0 .. 999,999,999
+ *                 (0.0 .. 0.999999999)
+ *
+ *      Position
+ *       aaaa      - latitude in mas             -324,000,000 .. 324,000,000
+ *                 (-90 degrees .. 90 degrees)
+ *
+ *       oooo      - longitude in mas            -648,000,000 .. 648,000,000
+ *                 (-180 degrees .. 180 degrees)
+ *
+ *       hhhh       - ellipsoid height in cm     -100,000 .. 1,800,000
+ *                 (-1000.00 .. 18,000.00m)*
+ *
+ *       mmmm  - not used                        0
+ *
+ *      Velocity
+ *       VV        - 3D velocity in cm/s            0 .. 51,400 (0..514.00 m/s)*
+ *       vv        - 2D velocity in cm/s            0 .. 51,400 (0..514.00 m/s)*
+ *       hh        - heading                     0 .. 3599 (0.0..359.9 degrees)
+ *
+ *                 (true north res 0.1 degrees)
+ *
+ *      Geometry
+ *       dd        - current DOP (0.1 res)       0 .. 999 (0.0 to 99.9 DOP)
+ *             (0 = not computable, position-hold, or    position propagate)
+ *
+ *      Satellite visibility and tracking status
+ *       n         - num of visible sats         0 .. 12
+ *       t         - num of satellites tracked   0 .. 12
+ *
+ *      For each of 12 receiver channels
+ *       i         - sat ID                      0 .. 37
+ *       m         - channel tracking mode       0 .. 8
+ *                 0 = code search    5 = message sync detect
+ *                 1 = code acquire   6 = satellite time avail.
+ *                 2 = AGC set        7 = ephemeris acquire
+ *                 3 = prep acquire   8 = avail for position
+ *                 4 = bit sync detect
+ *
+ *       s         - carrier to noise density ratio
+ *                 (C/No)                        0 .. 255 db-Hz
+ *       I         - IODE: Issue of Data, Ephemeris
+ *                                               0 .. 255
+ *
+ *       dd        - channel status flag
+ *                 Each bit represents one of the following:
+ *                 (msb)   Bit  15: reserved
+ *                         Bit  14: reserved
+ *                         Bit  13: reserved
+ *                         Bit  12: Narrow-band search mode (TX oncore timing)
+ *                         Bit  11: Channel used for time solution
+ *                         Bit  10: using for position fix
+ *                         Bit   9: Invalid data
+ *                         Bit   8: parity error
+ *                         Bit   7: using for position fix
+ *                         Bit   6: satellite momentum alert flag
+ *                         Bit   5: satellite anti-spoof flag set
+ *                         Bit   4: satellite reported unhealthy
+ *              (lsnibble) Bit 3-0: Satellite accuracy per
+ *                                  Para 20.3.3.3.1.3 ICD-GPS-200
+ *
+ *      End of channel dependent data
+ *       ss         - receiver status flag
+ *
+ *                 Each bit represents one of the following:
+ *                 (msb)   Bit 15-13: Fix status
+ *                                000    0: Reserved
+ *                                001    1: Reserved
+ *                                010    2: Bad geometry
+ *                                011    3: Acquiring satellites
+ *                                100    4: Position hold mode
+ *                                101    5: Propagate mode
+ *                                110    6: 2D Fix
+ *                                111    7: 3D Fix
+ *                         Bit    12: Reserved
+ *                         Bit    11: Reserved
+ *                         Bit    10: Narrow band tracking mode
+ *                         Bit     9: Fast Acquisition position
+ *                         Bit     8: Filter reset to raw GPS solution
+ *                         Bit     7: Cold Start (no almanac)
+ *                         Bit     6: Differential fix
+ *                         Bit     5: Position lock
+ *                         Bit     4: Autosurvey mode
+ *                         Bit     3: insufficient visible satellites (< 3)
+ *                         Bit   2-1: Antenna sense (00 OK, 01 OC, 10 UC, 11 NV)
+ *                 (lsb)   Bit     0: code location 1=INTERNAL 0=EXTERNAL
+ *
+ *	 rr        - reserved
+ *
+ * 	 cc        - clock bias in ns
+ *
+ * 	 oooo     - oscillator offset in Hz
+ *
+ * 	 TT        - oscillator temperature in half degrees C
+ *
+ *       u         - Time mode/UTC parameters
+ *                 (msb)   Bit 7: UTC-time mode enabled (0 is GPS mode)
+ *                         Bit 6: UTC offset decoded
+ *                 (lsb)   Bits 5-0 Present UTC-offset value -32...+31 seconds
+ *
+ *      GMT offset
+ *       s	   - signed byte of GMT offset (0x00 positive, 0xFF negative)
+ *       h         - hour of GMT offset
+ *       m         - minute of GMT offset
+ *
+ *       vvvvvv    - ID tag 6 characters (0x20 to 0x7e)
+ *
+ *       C  - checksum
+ *       Message length: 154 bytes
+ *
+ */
+static gps_mask_t
+oncore_msg_navsol_12ch(struct gps_device_t *session, unsigned char *buf,
+                       size_t data_len)
+{
+    gps_mask_t mask;
+    unsigned int flags;
+    unsigned char fix_status;
+    double lat, lon, alt;
+    double speed, track, dop;
+    unsigned int i, j, st, nsv;
+    int Bbused;
+    struct tm unpacked_date = {0};
+    char ts_buf[TIMESPEC_LEN];
+    unsigned char num_sats_vis, num_sats_trk;
+
+    if (154 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore NAVSOL 12ch: runt payload len %zd",
+                 data_len);
+        return 0;
+    }
+
+    mask = ONLINE_SET;
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "oncore NAVSOL 12ch - navigation data\n");
+
+    flags = (unsigned int)getbeu16(buf, 129);
+    fix_status = (flags & 0xE000) >> 13;
+
+    if (7 == fix_status) {
+        session->newdata.status = STATUS_GPS;
+        session->newdata.mode = MODE_3D;
+    } else if (6 == fix_status) {
+        session->newdata.status = STATUS_GPS;
+        session->newdata.mode = MODE_2D;
+    } else if ((4 == fix_status) &&
+               ONCORE_POS_HOLD_MODE_ON ==
+               session->driver.oncore.pos_hold_mode) {
+        /* To be a good time solution for a fixed surveyed position,
+         * the poshold/acquiring flag (0x08) must be accompanied by
+         * the device being in position hold-mode.  The device is
+         * also reporting acquiring (0x08) when it has no fix.
+         * Therefore the pos_hold_mode check above.
+         */
+        session->newdata.status = STATUS_TIME;
+        session->newdata.mode = MODE_3D;
+    } else {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore NAVSOL 12ch no fix - flags 0x%02x fix_status "
+                 "%d\n", flags, fix_status);
+        session->newdata.mode = MODE_NO_FIX;
+        session->newdata.status = STATUS_UNK;
+    }
+    mask |= MODE_SET | STATUS_SET;
+
+    /* Unless we have seen non-zero utc offset data, the time is GPS time
+     * and not UTC time.  Even if time mode (Aw) message already says UTC.
+     * Do not use the time.
+     */
+    if (LEAP_SECOND_VALID == (session->context->valid & LEAP_SECOND_VALID)) {
+        unsigned int nsec;
+        unpacked_date.tm_mon = (int)getub(buf, 4) - 1;
+        unpacked_date.tm_mday = (int)getub(buf, 5);
+        unpacked_date.tm_year = (int)getbeu16(buf, 6) - 1900;
+        unpacked_date.tm_hour = (int)getub(buf, 8);
+        unpacked_date.tm_min = (int)getub(buf, 9);
+        unpacked_date.tm_sec = (int)getub(buf, 10);
+        unpacked_date.tm_isdst = 0;
+        unpacked_date.tm_wday = unpacked_date.tm_yday = 0;
+        nsec = (unsigned int) getbeu32(buf, 11);
+
+        session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
+        session->newdata.time.tv_nsec = nsec;
+        mask |= TIME_SET;
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "oncore NAVSOL 12ch - time: "
+                 "%04d-%02d-%02d %02d:%02d:%02d.%09d\n",
+                 unpacked_date.tm_year + 1900, unpacked_date.tm_mon + 1,
+                 unpacked_date.tm_mday, unpacked_date.tm_hour,
+                 unpacked_date.tm_min, unpacked_date.tm_sec, nsec);
+    }
+
+    lat = getbes32(buf, 31) / 3600000.0;
+    lon = getbes32(buf, 35) / 3600000.0;
+    alt = getbes32(buf, 39) / 100.0;
+    speed = getbeu16(buf, 47) / 100.0;
+    // skip 2D speed
+    track = getbeu16(buf, 51) / 10.0;
+    dop = getbeu16(buf, 53) / 10.0;       // PDOP or HDOP ??
+
+    /* Motorola Oncore, Chipset: R5122U1115m can report num_sats_vis == 13
+     * but only data on 12 */
+    num_sats_vis = getub(buf, 55);
+    num_sats_trk = getub(buf, 56);
+
+    if (0.1 > dop) {
+        // n/a
+    } else if (MODE_2D == session->newdata.mode) {
+        session->gpsdata.dop.pdop = dop;
+    } else {
+        session->gpsdata.dop.hdop = dop;
+    }
+    mask |= DOP_SET;
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "oncore NAVSOL 12ch - %lf %lf %.2lfm | %.2fm/s %.1fdeg dop=%.1f "
+             "vis %u trk %u\n",
+             lat, lon, alt, speed, track,
+             dop, num_sats_vis, num_sats_trk);
+
+    if (MODE_2D <= session->newdata.mode) {
+        session->newdata.latitude = lat;
+        session->newdata.longitude = lon;
+        session->newdata.speed = speed;
+        session->newdata.track = track;
+        mask |= LATLON_SET | SPEED_SET | TRACK_SET;
+    }
+    if (MODE_3D <= session->newdata.mode) {
+        session->newdata.altHAE = alt;  // is WGS84
+        mask |= ALTITUDE_SET;
+    }
+
+    gpsd_zero_satellites(&session->gpsdata);
+    // Merge the satellite information from the Bb message.
+    Bbused = 0;
+    nsv = 0;
+
+    if (ONCORE_VISIBLE_CH < session->driver.oncore.visible) {
+       // do NOT overrun session->driver.oncore.PRN[j], etc.
+       session->driver.oncore.visible = ONCORE_VISIBLE_CH;
+    }
+    // always 12, one for each reeeiver channel.
+    for (i = st = 0; i < 12; i++) {
+        unsigned off = 57 + 6 * i;
+        int sv = getub(buf, off);
+        unsigned mode = getub(buf, off + 1);
+        unsigned sn = getub(buf, off + 2);
+        unsigned iode = getub(buf, off + 3);
+        unsigned int status = getbeu16(buf, off + 4);
+
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "%2u %2d %2u %3u %3u %02x\n", i, sv, mode, sn, iode, status);
+
+        if (sn) {
+            session->gpsdata.skyview[st].PRN = (short)sv;
+            session->gpsdata.skyview[st].ss = (double)sn;
+            for (j = 0; (int)j < session->driver.oncore.visible; j++) {
+                if (session->driver.oncore.PRN[j] == sv) {
+                    session->gpsdata.skyview[st].elevation =
+                        (double)session->driver.oncore.elevation[j];
+                    session->gpsdata.skyview[st].azimuth =
+                        (double)session->driver.oncore.azimuth[j];
+                    Bbused |= 1 << j;
+                    break;
+                }
+            }
+            // bit 7 of the status word: sat used for position
+            session->gpsdata.skyview[st].used = false;
+            if (status & (1<<7)) {
+                session->gpsdata.skyview[st].used = true;
+                nsv++;
+            }
+            // bit 11 of the status word: using for time solution
+            if (status & (1<<11)) {
+                mask |= NTPTIME_IS | GOODTIME_IS;
+            }
+            /*
+             * The GOODTIME_IS mask bit exists distinctly from TIME_SET exactly
+             * so an OnCore running in time-service mode (and other GPS clocks)
+             * can signal that it's returning time even though no position fixes
+             * have been available.
+             */
+            st++;
+        }
+    }
+    for (j = 0; (int)j < session->driver.oncore.visible; j++) {
+        if (!(Bbused & (1 << j))) {
+            session->gpsdata.skyview[st].PRN =
+                (short)session->driver.oncore.PRN[j];
+            session->gpsdata.skyview[st].elevation =
+                (double)session->driver.oncore.elevation[j];
+            session->gpsdata.skyview[st].azimuth =
+                (double)session->driver.oncore.azimuth[j];
+            st++;
+        }
+    }
+    session->gpsdata.skyview_time = session->newdata.time;
+    session->gpsdata.satellites_used = (int)nsv;
+    session->gpsdata.satellites_visible = (int)st;
+
+    mask |= SATELLITE_SET | USED_IS;
+
+    /* Some messages can only be polled.  As they are not so
+     * important, would be enough to poll e.g. one message per cycle.
+     */
+    (void)oncore_control_send(session, (char *)pollAs, sizeof(pollAs));
+    (void)oncore_control_send(session, (char *)pollGd, sizeof(pollGd));
+    (void)oncore_control_send(session, (char *)pollAw, sizeof(pollAw));
+    (void)oncore_control_send(session, (char *)pollAy, sizeof(pollAy));
+    (void)oncore_control_send(session, (char *)pollBo, sizeof(pollBo));
+    (void)oncore_control_send(session, (char *)pollEn, sizeof(pollEn));
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NAVSOL: time=%s lat=%.2f lon=%.2f altMSL=%.2f speed=%.2f "
+             "track=%.2f mode=%d status=%d visible=%d used=%d\n",
+             timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+             session->newdata.latitude,
+             session->newdata.longitude, session->newdata.altHAE,
+             session->newdata.speed, session->newdata.track,
+             session->newdata.mode, session->newdata.status,
+             session->gpsdata.satellites_used,
+             session->gpsdata.satellites_visible);
+    return mask;
+}
+
 /**
  * GPS Leap Seconds = UTC offset
  */
@@ -403,15 +754,15 @@ oncore_msg_utc_offset(struct gps_device_t *session, unsigned char *buf,
 }
 
 /**
- * Pos hold mode
+ * Pos hold mode for 8ch oncore
  *
  * @@AtmC<CR><LF>
  *
  *       m         - mode, 0=off, 1=on, 2=surveying
  */
 static gps_mask_t
-oncore_msg_pos_hold_mode(struct gps_device_t *session, unsigned char *buf,
-                         size_t data_len)
+oncore_msg_pos_hold_mode_8ch(struct gps_device_t *session, unsigned char *buf,
+                             size_t data_len)
 {
     int pos_hold_mode;
 
@@ -425,6 +776,40 @@ oncore_msg_pos_hold_mode(struct gps_device_t *session, unsigned char *buf,
     pos_hold_mode = (int)getub(buf, 4);
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "oncore pos hold mode: %d\n", pos_hold_mode);
+
+    // Add 1 to distinguish an unknown (not set) value from mode off.
+    session->driver.oncore.pos_hold_mode = pos_hold_mode + 1;
+    return 0;
+}
+
+/**
+ * Pos hold mode for 12ch oncore
+ *
+ * @@GdmC<CR><LF>
+ *
+ *       m         - mode, 0=off, 1=on, 2=2d positioning 3=surveying
+ */
+static gps_mask_t
+oncore_msg_pos_hold_mode_12ch(struct gps_device_t *session, unsigned char *buf,
+                              size_t data_len)
+{
+    int pos_hold_mode;
+
+    if (8 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "oncore pos hold mode: runt payload len %zd",
+                 data_len);
+        return 0;
+    }
+
+    pos_hold_mode = (int)getub(buf, 4);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "oncore 12ch pos hold mode: %d\n", pos_hold_mode);
+
+    if (pos_hold_mode > 1) {
+	    pos_hold_mode--;
+    }
 
     // Add 1 to distinguish an unknown (not set) value from mode off.
     session->driver.oncore.pos_hold_mode = pos_hold_mode + 1;
@@ -581,7 +966,9 @@ gps_mask_t oncore_dispatch(struct gps_device_t * session, unsigned char *buf,
 
     // we may need to dump the raw packet
     GPSD_LOG(LOG_RAW, &session->context->errout,
-             "raw Oncore packet type 0x%04x\n", type);
+             "raw Oncore packet type 0x%04x (%c%c)\n", type,
+	     ((buf[2] > 0x20 && buf[2] < 0x7F) ? buf[2] : '.'),
+	     ((buf[3] > 0x20 && buf[3] < 0x7F) ? buf[3] : '.'));
 
     session->cycle_end_reliable = true;
 
@@ -589,7 +976,11 @@ gps_mask_t oncore_dispatch(struct gps_device_t * session, unsigned char *buf,
     case ONCTYPE('B', 'b'):
         return oncore_msg_svinfo(session, buf, len);
     case ONCTYPE('E', 'a'):
-        return oncore_msg_navsol(session, buf, len) | (CLEAR_IS | REPORT_IS);
+        return oncore_msg_navsol_8ch(session, buf, len) |
+                                     (CLEAR_IS | REPORT_IS);
+    case ONCTYPE('H', 'a'):
+        return oncore_msg_navsol_12ch(session, buf, len) |
+                                      (CLEAR_IS | REPORT_IS);
     case ONCTYPE('E', 'n'):
         return oncore_msg_time_raim(session, buf, len);
     case ONCTYPE('C', 'j'):
@@ -599,7 +990,9 @@ gps_mask_t oncore_dispatch(struct gps_device_t * session, unsigned char *buf,
     case ONCTYPE('A', 's'):
         return 0;               // position hold position
     case ONCTYPE('A', 't'):
-        return oncore_msg_pos_hold_mode(session, buf, len);
+        return oncore_msg_pos_hold_mode_8ch(session, buf, len);
+    case ONCTYPE('G', 'd'):
+        return oncore_msg_pos_hold_mode_12ch(session, buf, len);
     case ONCTYPE('A', 'w'):
         return oncore_msg_time_mode(session, buf, len);
     case ONCTYPE('A', 'y'):
@@ -670,6 +1063,7 @@ static void oncore_event_hook(struct gps_device_t *session, event_t event)
      */
     if (event == EVENT_IDENTIFIED ||
         event == EVENT_REACTIVATE) {
+        (void)oncore_control_send(session, enableHa, sizeof(enableHa));
         (void)oncore_control_send(session, enableEa, sizeof(enableEa));
         (void)oncore_control_send(session, enableBb, sizeof(enableBb));
         // (void)oncore_control_send(session, enableEn, sizeof(enableEn));
