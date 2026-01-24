@@ -1150,6 +1150,12 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
     tp->seqnum = msg->w2.sqnum;         // 0 to 7
     tp->stathlth = msg->w2.stathlth;
 
+    if (31 < tp->length) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "RTCM2: tp->tplength too long %dd\n",
+                 tp->length);
+        return;
+    }
     // clear rtk struct
     memset(&tp->rtk, 0, sizeof(tp->rtk));
 
@@ -1518,11 +1524,19 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
             int i = 0, j = 0;
 
             tp->ref_sta.ar = (m->words[0].byte0 >> 6) & 1;
+            // sf, serial flag.  serial number to follow?
             sf = (m->words[0].byte0 >> 5) & 1;
-            // nad is 0 to 31
+            // nad, number of characters for antenna description, is 0 to 31
             nad = m->words[0].byte0 & 0x1f;
 
+            if (sizeof(tbuf) < ((size_t)len * 3)) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "RTCM2: len too long, len %d nad %d\n",
+                         len, nad);
+                break;
+            }
             // crazy packing...  move to simple array first
+            memset(tbuf, 0, sizeof(tbuf));   // avoid a CVE
             for (i = 0; i < len; i++) {
                 tbuf[j++] = m->words[i].byte0;
                 tbuf[j++] = m->words[i].byte1;
