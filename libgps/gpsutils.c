@@ -283,6 +283,8 @@ const char *val2str(unsigned long val, const struct vlist_t *vlist)
  * present.  The "E" may actually be an "e".  E and X
  * may both be omitted (but not just one).
  *
+ * This code appears to e from early BSD.
+ *
  * returns NaN if:
  *    *string is zero length,
  *    the first non-white space is not negative sign ('-'), positive sign ('_')
@@ -332,6 +334,8 @@ double safe_atof(const char *string)
     /*
      * Strip off leading blanks and check for a sign.
      */
+
+    // FIXME: JSON is UTF-8, but isspace() islocale dependent...
 
     p = string;
     while (isspace((int)*p)) {
@@ -439,8 +443,14 @@ double safe_atof(const char *string)
             if (1024 < exp) {
                 if (true == expSign) {
                     // exponent underflow!
+                    if (sign) {
+                        return -0.0;
+                    }
                     return 0.0;
                 } // else  exponent overflow!
+                if (sign) {
+                    return -INFINITY;
+                }
                 return INFINITY;
             }
             p += 1;

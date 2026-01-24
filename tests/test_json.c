@@ -1,6 +1,6 @@
 /* json.c - unit test for JSON parsing into fixed-extent structures
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -866,38 +866,56 @@ static void jsontest(int i)
 
     //  CHeck safe_atof() since JSON depends on it.
     case 33: // Check safe_atof(), exponent too large
-        d =  safe_atof("2e1024");
-        if ((2^1024) == d) {
-            (void)fprintf(stderr, "2^1024 == safe_atof(\"2e1024\") failed\n");
+        d =  safe_atof("2e512");
+        if (isfinite(d) ||
+            signbit(d)) {
+            (void)fprintf(stderr, "safe_atof(\"2e512\") = %f s/b inf\n", d);
             exit(EXIT_FAILURE);
         }
         break;
 
-    case 34: // Check safe_atof(), exponent too large
-        d =  safe_atof("2e-1024");    // exponent too large
-        if (isnan(d)) {
-            (void)fprintf(stderr, "NAN == safe_atof(\"-2e1024\") failed\n");
+    case 34: // Check safe_atof(), exponent too large negative
+        d =  safe_atof("2e-512");    // underflow to zero
+        if (0.0 != d ||
+            signbit(d)) {
+            (void)fprintf(stderr, "safe_atof(\"2e-512\") = %f s/b 0.0\n", d);
             exit(EXIT_FAILURE);
         }
         break;
 
     case 35: // Check safe_atof(), exponent too large
-        d =  safe_atof("2e1025");    // exponent too large
-        if (!isinf(d)) {
-            (void)fprintf(stderr, "INFINITY == safe_atof(\"2e1025\") failed\n");
+        d =  safe_atof("-2e512");    // exponent too large
+        if (isfinite(d) ||
+            !signbit(d) ||
+            0.0 < d) {
+            (void)fprintf(stderr,
+                          "safe_atof(\"-2e512\") = %f s/b -inf, signbit %d "
+                          "isfinite %d\n",
+                          d, signbit(d), isfinite(d));
             exit(EXIT_FAILURE);
         }
         break;
 
-    case 36: // Check safe_atof(), exponent too large
-        d =  safe_atof("2e-1025");    // exponent too large
-        if (0.0 != d) {
-            (void)fprintf(stderr, "0.0 == safe_atof(\"2e-1025\") failed\n");
+    case 36: // Check safe_atof(), exponent too negative large
+        d =  safe_atof("2e-512");    // underflow to zero
+        if (0.0 != d ||
+            signbit(d)) {
+            (void)fprintf(stderr, "safe_atof(\"2e-512\") = %f s/b 0.0\n", d);
             exit(EXIT_FAILURE);
         }
         break;
 
-#define MAXTEST 36
+    case 37: // Check safe_atof(), exponent too negative large
+        d =  safe_atof("-2e-512");    // underflow to negative  zero
+        if (0.0 != d ||
+            !signbit(d)) {
+            (void)fprintf(stderr, "safe_atof(\"-2e-512\") = %f s/b -0.0\n",
+                          d);
+            exit(EXIT_FAILURE);
+        }
+        break;
+
+#define MAXTEST 37
 
     default:
         (void)fputs("Unknown test number\n", stderr);
