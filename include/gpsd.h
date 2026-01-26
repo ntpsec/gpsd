@@ -550,6 +550,7 @@ struct ntrip_stream_t
         FMT_RTCM3_1,
         FMT_RTCM3_2,
         FMT_RTCM3_3,
+        FMT_RTCM3_4,
         // FMT_SPARTN,        // u-blox SPARTN  UNSUPPORTED!
         FMT_SPARTN_2,         // u-blox SPARTN
     } format;

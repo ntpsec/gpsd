@@ -96,6 +96,7 @@ static struct ntrip_fmt_s {
     {"RTCM3.2", FMT_RTCM3_2},       // for http://sapos.geonord-od.de:2101/
     {"RTCM32", FMT_RTCM3_2},
     {"RTCM 3.3", FMT_RTCM3_3},
+    {"RTCM 3.4", FMT_RTCM3_4},
     {"RTCM 3", FMT_RTCM3_0},
     {"RTCM3", FMT_RTCM3_0},
     // {"SPARTN", FMT_SPARTN},     // u-blox, SPAARTN v1  // UNSUPPORTED!
