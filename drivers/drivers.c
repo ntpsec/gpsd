@@ -1,5 +1,5 @@
 /*
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -1303,7 +1303,7 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
                          int debug)
 {
 #ifdef __UNUSED_DEBUG__
-    char *sixbits[64] = {
+    static char *sixbits[64] = {
         "000000", "000001", "000010", "000011", "000100",
         "000101", "000110", "000111", "001000", "001001",
         "001010", "001011", "001100", "001101", "001110",
@@ -1429,8 +1429,10 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
         pad = field[6][0] - '0';  // number of padding bits ASCII encoded
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "nfrags=%d, ifrag=%d, decoded_frags=%d, data=%s, pad=%d\n",
-             nfrags, ifrag, ais_context->decoded_frags, data, pad);
+             "nfrags %d ifrag %d decoded_frags %d data %s pad %d "
+             "bitlen %zu datalen %zu\n",
+             nfrags, ifrag, ais_context->decoded_frags, data, pad,
+             ais_context->bitlen, strnlen((char *)data, 256));
 
     // assemble the binary data
 
@@ -1451,8 +1453,10 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
         ais_context->bitlen = 0;
     }
 
-    // wacky 6-bit encoding, shades of FIELDATA
-    // Max 256 is a guess, to pacify Codacy
+    /* wacky 6-bit encoding, shades of FIELDATA
+     * Max 256 data chars is a guess, to pacify Codacy
+     * IEC61993.pdf implies 84.
+     * Max bitlen is likely 1008, max see is 776 */
     for (cp = data; cp < data + strnlen((char *)data, 256); cp++) {
         unsigned char ch;
         ch = *cp;
@@ -1464,20 +1468,33 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
         GPSD_LOG(LOG_RAW, &session->context->errout,
                  "%c: %s\n", *cp, sixbits[ch]);
 #endif  // __UNUSED_DEBUG__
+        if (sizeof(ais_context->bits) <=
+            (ais_context->bitlen + 6)) {
+            // FIXME?  Maybe move above the previsou for() ??
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "overlong AIVDM payload ignored.\n");
+            (void)memset(ais_context->bits, '\0',
+                         sizeof(ais_context->bits));
+            ais_context->bitlen = 0;
+            return false;
+        }
         for (i = 5; i >= 0; i--) {
             if ((ch >> i) & 0x01) {
                 ais_context->bits[ais_context->bitlen / 8] |=
                     (1 << (7 - ais_context->bitlen % 8));
             }
             ais_context->bitlen++;
-            if (ais_context->bitlen > sizeof(ais_context->bits)) {
-                GPSD_LOG(LOG_INF, &session->context->errout,
-                         "overlong AIVDM payload truncated.\n");
-                return false;
-            }
         }
     }
     ais_context->bitlen -= pad;
+    if (ais_context->bitlen >= sizeof(ais_context->bits)) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "invalid bitlen AIVDM payload ignored.\n");
+        (void)memset(ais_context->bits, '\0',
+                     sizeof(ais_context->bits));
+        ais_context->bitlen = 0;
+        return false;
+    }
 
     // time to pass buffered-up data to where it's actually processed?
     if (ifrag == nfrags) {

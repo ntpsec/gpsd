@@ -392,6 +392,7 @@ struct ais_type24_queue_t {
 struct aivdm_context_t {
     // hold context for decoding AIDVM packet sequences
     int decoded_frags;     // for tracking AIDVM parts in a multipart sequence
+    // I think IEC61993 says 1008 is max bits.
     unsigned char bits[2048];
     size_t bitlen;         // how many valid bits
     struct ais_type24_queue_t type24_queue;
