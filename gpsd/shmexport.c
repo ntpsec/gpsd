@@ -40,10 +40,12 @@ static void shm_cleanup(void)
         return;
     }
     /* mark SHM to be destroyed on exit
-     * Since we dropped root, this fails, silently. */
+     * Since we dropped root, this fails. */
     if (-1 == shmctl(shmid_for_atexit, IPC_RMID, NULL)) {
-        fprintf(stderr, "SHM: shmctl(%d) for IPC_RMID failed, %s(%d)\n",
-                shmid_for_atexit, strerror(errno), errno);
+        /* let it fail silently
+         * fprintf(stderr, "SHM: shmctl(%d) for IPC_RMID failed, %s(%d)\n",
+         *        shmid_for_atexit, strerror(errno), errno);
+         */
     }
 }
 

@@ -564,7 +564,6 @@ class SubprogramInstance(object):
                 continue
             time.sleep(0.01)
 
-
 class DaemonError(SubprogramError):
 
     """Class DaemonError."""
@@ -574,6 +573,17 @@ class DaemonInstance(SubprogramInstance):
     """Control a gpsd instance."""
 
     ERROR = DaemonError
+    shmkey = None
+
+    def __del__(self):
+        """DemonInstance descructor"""
+
+        # try to get rid of the shmkey
+        if self.shmkey:
+            result = subprocess.run(["ipcrm", "-M", self.shmkey],
+                                     capture_output=True, text=True)
+            if 0 != result.returncode:
+                print(result)
 
     def __init__(self, control_socket=None):
         """Init class DaemonInstance."""
@@ -594,8 +604,8 @@ class DaemonInstance(SubprogramInstance):
                 % (port, self.control_socket, options))
         # Derive a unique SHM key from the port # to avoid collisions.
         # Use 'Gp' as the prefix to avoid colliding with 'GPSD'.
-        shmkey = '0x4770%.04X' % int(port)
-        env = {'GPSD_SHM_KEY': shmkey}
+        self.shmkey = '0x4770%.04X' % int(port)
+        env = {'GPSD_SHM_KEY': self.shmkey}
         self.spawn_sub('gpsd', opts, background, prefix, env)
 
     def wait_ready(self):
