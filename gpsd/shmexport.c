@@ -10,7 +10,7 @@ notifications.  But both client and daemon will avoid all the marshalling and
 unmarshalling overhead.
 
 PERMISSIONS
-   This file is Copyright 2010 by the GPSD project
+   This file is Copyright by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -39,8 +39,8 @@ static void shm_cleanup(void)
         // nothing to do
         return;
     }
-    // mark SHM to be destroyed on exit
-    // Since we dropped root, this fails, silently.
+    /* mark SHM to be destroyed on exit
+     * Since we dropped root, this fails, silently. */
     if (-1 == shmctl(shmid_for_atexit, IPC_RMID, NULL)) {
         fprintf(stderr, "SHM: shmctl(%d) for IPC_RMID failed, %s(%d)\n",
                 shmid_for_atexit, strerror(errno), errno);
@@ -84,9 +84,9 @@ bool shm_acquire(struct gps_context_t *context)
         return false;
     }
 
-    /* Tried to do IPC_RMID, but in spite of what the man page says, it destroyed
-     * the segment right away.  Also, pending IPC_RMID is Linux only.
-     * So try an atexit(). */
+    /* Tried to do IPC_RMID, but in spite of what the man page says, it
+     * destroyed the segment right away.  Also, pending IPC_RMID is Linux
+     * only. So try an atexit(). */
     shmid_for_atexit = shmid;
     if (0 != atexit(shm_cleanup)) {
         GPSD_LOG(LOG_ERROR, &context->errout,
@@ -114,7 +114,8 @@ void shm_release(struct gps_context_t *context)
     *          context->shmid, context->shmexport);
     */
 
-    // detach from segment, it we were last user, it should be deleted.
+    /* detach from segment, it we were last user, it should be deleted.
+     * at least on those OS that IPC_RIMID works, which is none. */
     if (NULL != context->shmexport) {
         if (-1 == shmdt(context->shmexport)) {
             GPSD_LOG(LOG_WARN, &context->errout,
