@@ -412,7 +412,7 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
  *
  * Returns 0  if OK
  *         -1 on JSON unpack error
- *         allow ofr future negative error codes.
+ *         allow for future negative error codes.
  *
  */
 int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
@@ -440,7 +440,7 @@ int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
             if (1 <= libgps_debuglevel) {
                 libgps_dump_state(gpsdata);
             }
-            if (0 !=  errcode) {
+            if (0 != errcode) {
                 return -1;
             }
         }

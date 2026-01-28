@@ -98,8 +98,8 @@ int main(int argc, char *argv[])
 		libgps_dump_state(&gpsdata);
                 if (0 != errcode) {
                     (void)fprintf(stderr,
-                                  "test_libgps: batchmode failed  %d\n",
-                                 errcode);
+                                  "test_libgps: batchmode failed %d\n",
+                                  errcode);
                     exit(EXIT_FAILURE);
                 }
 	    }
