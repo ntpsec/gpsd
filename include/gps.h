@@ -118,15 +118,21 @@ extern "C" {
  *       gps_fix_t Add: errEllipseOrient, errEllipseMajor, errEllipseMinow
  *       gps_fix_t Add: ant_power.
  * 16    Add SPARTN.
+ *       MAXUSERDEVS is setable
  */
 
 // API version should match in SConscript
-#define GPSD_API_MAJOR_VERSION  16      // bump on incompatible changes
-#define GPSD_API_MINOR_VERSION  1       // bump on compatible changes
+#define GPSD_API_MAJOR_VERSION  16       // bump on incompatible changes
+#define GPSD_API_MINOR_VERSION  1        // bump on compatible changes
 
-#define MAXCHANNELS     184     // u-blox 9 tracks 140 signals
-#define MAXUSERDEVS     4       // max devices per user
-#define GPS_PATH_MAX    128     // for names like /dev/serial/by-id/...
+#define MAXCHANNELS     184              // u-blox 9 tracks 140 signals
+#ifdef MAX_DEVICES
+    #define MAXUSERDEVS     MAX_DEVICES  // max devices per user
+#else
+    // for standalone use (without scons)
+    #define MAXUSERDEVS     6            // max devices per user
+#endif
+#define GPS_PATH_MAX    128              // for names like /dev/serial/by-id/...
 
 #define GPS_JSON_COMMAND_MAX    80
 // u-blox 9 can make really long JSON in "RAW" messages
