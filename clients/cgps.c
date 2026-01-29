@@ -226,8 +226,9 @@ static char *ecef_to_str(double pos, double vel)
  *
  * never returns, it exits.
  */
-static void die(int sig, const char *msg)
+static void die(int sig, const char *msg, ...)
 {
+
     if (!isendwin()) {
         // Move the cursor to the bottom left corner.
         (void)mvcur(0, COLS - 1, LINES - 1, 0);
@@ -240,7 +241,16 @@ static void die(int sig, const char *msg)
     }
     if (NULL != msg &&
         '\0' != msg[0]) {
-        fputs(msg, stderr);
+        va_list ap;
+        int len;
+
+        va_start(ap, msg);
+        len = vfprintf(stderr, msg, ap);
+        va_end(ap);
+        if (1 > len) {
+            // uh, oh
+            fputs("format error\n", stderr);
+        }
         fputs("\n", stderr);
     }
 
@@ -1766,13 +1776,16 @@ int main(int argc, char *argv[])
                 die(GPS_TIMEOUT, "cgps: timeout contacting gpsd\n");
             }
         } else {
+            int ret;
             wait_clicks = 0;
             errno = 0;
             *message = '\0';
-            if (-1 == gps_read(&gpsdata, message, sizeof(message))) {
+
+            ret = gps_read(&gpsdata, message, sizeof(message));
+            if (0 > ret) {
                 // reconnect?
                 die(errno == 0 ? GPS_GONE : GPS_ERROR,
-                    "cgps: socket error 4\n");
+                    "cgps: gps_read() failed %d\n", ret);
             }
             // Here's where updates go now that things are established.
             if (imu_flag) {
