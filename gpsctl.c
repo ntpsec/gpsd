@@ -1,6 +1,6 @@
 /* gpsctl.c -- tweak the control settings on a GPS
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -525,7 +525,7 @@ int main(int argc, char **argv)
                         exit(EXIT_FAILURE);
                 }
                 errno = 0;
-                if (-1 == gps_read(&gpsdata, NULL, 0)) {
+                if (0 > gps_read(&gpsdata, NULL, 0)) {
                     GPSD_LOG(LOG_ERROR, &context.errout,
                             "data read failed.\n");
                     (void)gps_close(&gpsdata);

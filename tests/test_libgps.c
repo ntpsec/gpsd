@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 			"test_libgps: gps send error: %d, %s\n",
 			errno, gps_errstr(errno));
 	}
-	if (-1 == gps_read(&collect, NULL, 0)) {
+	if (0 > gps_read(&collect, NULL, 0)) {
 	  (void)fprintf(stderr,
 			"test_libgps: gps read error: %d, %s\n",
 			errno, gps_errstr(errno));

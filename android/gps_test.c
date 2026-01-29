@@ -1,5 +1,5 @@
 /*
- * This file is Copyright 2019 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -42,7 +42,7 @@ int main (int argc, char **argv) {
 
         if (gps_waiting (&gps_data, 2000000)) {
             errno = 0;
-            if (gps_read (&gps_data, NULL, 0) != -1) {
+            if (0 <= gps_read (&gps_data, NULL, 0)) {
                 if (gps_data.status >= 1 && gps_data.fix.mode >= 2){
                     printf("\nHave a fix: ");
                     if (gps_data.fix.mode == 2)
