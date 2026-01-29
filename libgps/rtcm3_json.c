@@ -204,7 +204,7 @@ int json_rtcm3_read(const char *buf,
     const struct json_attr_t json_rtcm1230[] = {
         RTCM3_HEADER
         {"station_id", t_uinteger, .addr.uinteger = &R1230.station_id},
-        {"bi",         t_ubyte,    .addr.ubyte = &R1230.bias_indicator},
+        {"ind",        t_ubyte,    .addr.ubyte = &R1230.bias_indicator},
         {"sm",         t_ubyte,    .addr.ubyte = &R1230.signals_mask},
         {"l1ca",       t_integer,  .addr.integer = &R1230.l1_ca_bias,
                                    .dflt.integer = 0},
@@ -226,6 +226,9 @@ int json_rtcm3_read(const char *buf,
                          .addr.array.arr.strings.storelen = sizeof(stringstore),
                           .addr.array.count = &stringcount,
                           .addr.array.maxlen = NITEMS(stringptrs)},
+        // ignore unknown keys
+        {"", t_ignore},
+
         {NULL},
     };
 
@@ -259,6 +262,7 @@ int json_rtcm3_read(const char *buf,
     } else if (strstr(buf, "\"type\":1230,") != NULL) {
         status = json_read_object(buf, json_rtcm1230, endptr);
     } else {
+        // a type we don't decode yet, grabe just the header.
         int n;
         status = json_read_object(buf, json_rtcm3_fallback, endptr);
         for (n = 0; n < NITEMS(rtcm3->rtcmtypes.data); n++) {
