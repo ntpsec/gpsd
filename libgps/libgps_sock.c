@@ -437,6 +437,9 @@ int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
                                gps_visibilize(vbuf, sizeof(vbuf), *next,
                                               strnlen(*next, sizeof(vbuf))));
             errcode = libgps_json_unpack(*next, gpsdata, next);
+            libgps_debug_trace(DEBUG_CALLS,
+                               "libgps: libgps_json_unpack() = %d\n",
+                               errcode);
             if (1 <= libgps_debuglevel) {
                 libgps_dump_state(gpsdata);
             }
