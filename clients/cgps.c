@@ -1785,7 +1785,7 @@ int main(int argc, char *argv[])
             if (0 > ret) {
                 // reconnect?
                 die(errno == 0 ? GPS_GONE : GPS_ERROR,
-                    "cgps: gps_read() failed %d\n", ret);
+                    "cgps: gps_read() failed %d errno %d\n", ret, errno);
             }
             // Here's where updates go now that things are established.
             if (imu_flag) {
