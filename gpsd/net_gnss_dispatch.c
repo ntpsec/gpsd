@@ -16,11 +16,12 @@
 #include "../include/gpsd.h"
 #include "../include/strfuncs.h"
 
-#define NETGNSS_TCP     "tcp://"
-#define NETGNSS_UDP     "udp://"
-#define NETGNSS_DGPSIP  "dgpsip://"
-#define NETGNSS_NTRIP   "ntrip://"
-#define NETGNSS_GPSD    "gpsd://"
+#define NETGNSS_TCP       "tcp://"
+#define NETGNSS_UDP       "udp://"
+#define NETGNSS_DGPSIP    "dgpsip://"
+#define NETGNSS_NTRIP     "ntrip://"
+#define NETGNSS_GPSD      "gpsd://"
+#define NETGNSS_NMEA2000  "nmea2000://"
 
 // is given string a valid URI for network/service? Is so, which one?
 net_link_type netgnss_uri_type(char *name)
@@ -43,6 +44,10 @@ net_link_type netgnss_uri_type(char *name)
 
     if (str_starts_with(name, NETGNSS_UDP)) {
         return NET_UDP;
+    }
+
+    if (str_starts_with(name, NETGNSS_NMEA2000)) {
+        return NET_NMEA2000;
     }
 
     return NET_LOCAL;

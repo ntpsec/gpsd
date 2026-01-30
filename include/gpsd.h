@@ -523,6 +523,7 @@ typedef enum {NET_UNKNOWN = 0,
               NET_NTRIP,             // ntrip://,
               NET_TCP,               // tcp://,
               NET_UDP,               // udp://,
+              NET_NMEA2000,          // nmea2000://,
 } net_link_type;
 
 /*
