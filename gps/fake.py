@@ -583,7 +583,7 @@ class DaemonInstance(SubprogramInstance):
             result = subprocess.run(["ipcrm", "-M", self.shmkey],
                                      capture_output=True, text=True)
             if 0 != result.returncode:
-                print(result)
+                sys.stderr.write(result.stderr)
 
     def __init__(self, control_socket=None):
         """Init class DaemonInstance."""
