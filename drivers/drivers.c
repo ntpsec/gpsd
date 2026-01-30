@@ -1320,10 +1320,13 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
     };
 #endif  // __UNUSED_DEBUG__
     int nfrags, ifrag, nfields = 0;
-    unsigned char *field[NMEA_MAX*2];
-    unsigned char fieldcopy[NMEA_MAX*2+1];
+    /* maximum ength of IEC 61162 message is 79 chars
+     * we will copy fields here, NUL separated */
+    unsigned char fieldcopy[200];
+    /* pointer to fields in fieldcopy, so only 80 fields possible
+     * if buf is all commas, then there as many fields as chars. */
+    unsigned char *field[200];
     unsigned char *data, *cp;
-    const unsigned  char *cp1;
     int pad;
     struct aivdm_context_t *ais_context;
     int i;
@@ -1340,30 +1343,34 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
     memset(ais, 0, sizeof(*ais));
 
     // discard overlong sentences
-    if (strnlen((char *)buf, buflen) > (sizeof(fieldcopy) - 1)) {
+    if (buflen > (sizeof(fieldcopy) - 1)) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "overlong AIVDM packet.\n");
         return false;
     }
 
-    // discard sentences with high-half characters in them, they're corrupted
-    for (cp1 = buf; *cp1; cp1++) {
-        if (!isascii(*cp1)) {
+    // avoid reoccuring CVE here
+    memset(fieldcopy, 0, sizeof(fieldcopy));
+    memset(field, 0, sizeof(field));
+
+    // extract packet fields
+    field[nfields++] = fieldcopy;
+    for (i = 0; i < (int)buflen; i++) {
+        unsigned char c = buf[i];
+
+        if (!isascii(c)) {
+            /* discard sentences with high-half characters in them,
+             * they're corrupted. */
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "corrupted AIVDM packet.\n");
             return false;
         }
-    }
-
-    // extract packet fields
-    (void)strlcpy((char *)fieldcopy, (char *)buf, sizeof(fieldcopy));
-    field[nfields++] = buf;
-    for (cp = fieldcopy; cp < fieldcopy + buflen; cp++) {
-        if (((unsigned char)',' == *cp) ||
-            ((unsigned char)'*' == *cp)) {
-            *cp = '\0';
-            field[nfields++] = cp + 1;
+        if (((unsigned char)',' == c) ||
+            ((unsigned char)'*' == c)) {
+            c = '\0';
+            field[nfields++] = &fieldcopy[i] + 1;
         }
+        fieldcopy[i] = c;
     }
 #ifdef __UNDEF_DEBUG_
     for(int nf = 0; nf < nfields; nf++) {
