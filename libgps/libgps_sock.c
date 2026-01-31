@@ -418,6 +418,7 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
 int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
 {
     char vbuf[GPS_JSON_COMMAND_MAX];
+    int ret = 0;
 
     libgps_debug_trace(DEBUG_CALLS, "libgps: gps_unpack(%s)\n",
                         gps_visibilize(vbuf, sizeof(vbuf),
@@ -438,13 +439,15 @@ int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
                                               strnlen(*next, sizeof(vbuf))));
             errcode = libgps_json_unpack(*next, gpsdata, next);
             libgps_debug_trace(DEBUG_CALLS,
-                               "libgps: libgps_json_unpack() = %d\n",
+                               "libgps: cpg_unpack() libgps_json_unpack() "
+                               " = %d\n",
                                errcode);
             if (1 <= libgps_debuglevel) {
                 libgps_dump_state(gpsdata);
             }
             if (0 != errcode) {
-                return -1;
+                ret = -1;
+                break;
             }
         }
     }
@@ -455,7 +458,7 @@ int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
                         (unsigned long)gpsdata->set,
                         gps_maskdump(gpsdata->set));
 #endif  // USE_QT
-    return 0;
+    return ret;
 }
 
 // return the contents of the client data buffer
