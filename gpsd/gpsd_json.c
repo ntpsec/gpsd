@@ -2423,7 +2423,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
     case 1230:
         // bias_indicator is undocumented...
         str_appendf(buf, buflen,
-                    "\"station_id\":%u,\"ind\":\"%u\"",
+                    "\"station_id\":%u,\"ind\":%u",
                     rtcm->rtcmtypes.rtcm3_1230.station_id,
                     rtcm->rtcmtypes.rtcm3_1230.bias_indicator);
         // actual mask order is undocumented...

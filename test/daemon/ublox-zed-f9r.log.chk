@@ -82,7 +82,7 @@ $GPGSV,20,20,77,86,07,347,00*40
 {"class":"SKY","time":"2019-04-12T23:14:08.000Z","gdop":1.63,"hdop":0.82,"pdop":1.42,"tdop":0.80,"xdop":0.34,"ydop":0.74,"vdop":1.17,"uSat":12}
 {"class":"RTCM3","type":1008,"length":20,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":""}
 {"class":"RTCM3","type":1033,"length":44,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":"","receiver":"LEICA GR30","firmware":"4.80"}
-{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":"0","l1_ca":65086}
+{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":0,"l1_ca":65086}
 {"class":"RTCM3","type":1075,"length":303,"station_id":41,"gnssid":0,"subtype":"MSM5","tow":515667000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1057237621891137536,"MaskSig":1078067712,"MaskCell":64407719887,"NSat":9,"NSig":4,"NCell":36}
 {"class":"RTCM3","type":1085,"length":262,"station_id":41,"gnssid":6,"subtype":"MSM5","tow":813355368,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":2019613744224534528,"MaskSig":1098907648,"MaskCell":133431295,"NSat":9,"NSig":3,"NCell":27}
 {"class":"RTCM3","type":1095,"length":387,"station_id":41,"gnssid":2,"subtype":"MSM5","tow":515667000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1508752054925918208,"MaskSig":1073881600,"MaskCell":1099511627775,"NSat":10,"NSig":4,"NCell":40}
@@ -540,7 +540,7 @@ $GPGBS,231413.00,5.250,12.150,0.100,,,,*73
 {"class":"SKY","time":"2025-04-11T23:14:13.000Z","gdop":1.71,"hdop":0.88,"pdop":1.51,"tdop":0.81,"xdop":0.35,"ydop":0.81,"vdop":1.22,"uSat":12}
 {"class":"RTCM3","type":1008,"length":20,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":""}
 {"class":"RTCM3","type":1033,"length":44,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":"","receiver":"LEICA GR30","firmware":"4.80"}
-{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":"0","l1_ca":65086}
+{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":0,"l1_ca":65086}
 {"class":"RTCM3","type":1075,"length":303,"station_id":41,"gnssid":0,"subtype":"MSM5","tow":515672000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1057237621891137536,"MaskSig":1078067712,"MaskCell":64407719887,"NSat":9,"NSig":4,"NCell":36}
 {"class":"RTCM3","type":1085,"length":262,"station_id":41,"gnssid":6,"subtype":"MSM5","tow":813360368,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":2019613744224534528,"MaskSig":1098907648,"MaskCell":133431295,"NSat":9,"NSig":3,"NCell":27}
 {"class":"RTCM3","type":1095,"length":387,"station_id":41,"gnssid":2,"subtype":"MSM5","tow":515672000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1508752054925918208,"MaskSig":1073881600,"MaskCell":1099511627775,"NSat":10,"NSig":4,"NCell":40}
@@ -1079,7 +1079,7 @@ $GPGBS,231418.00,5.250,12.150,0.100,,,,*78
 {"class":"RTCM3","type":1125,"length":372,"station_id":41,"gnssid":3,"subtype":"MSM5","tow":515662000,"sync":"0","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":612509946264682496,"MaskSig":1090781698,"MaskCell":1016906383224699,"NSat":10,"NSig":5,"NCell":50}
 {"class":"RTCM3","type":1008,"length":20,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":""}
 {"class":"RTCM3","type":1033,"length":44,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":"","receiver":"LEICA GR30","firmware":"4.80"}
-{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":"0","l1_ca":65086}
+{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":0,"l1_ca":65086}
 {"class":"RTCM3","type":1075,"length":303,"station_id":41,"gnssid":0,"subtype":"MSM5","tow":515677000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1057237621891137536,"MaskSig":1078067712,"MaskCell":64407719887,"NSat":9,"NSig":4,"NCell":36}
 {"class":"RTCM3","type":1085,"length":262,"station_id":41,"gnssid":6,"subtype":"MSM5","tow":813365368,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":2019613744224534528,"MaskSig":1098907648,"MaskCell":133431295,"NSat":9,"NSig":3,"NCell":27}
 {"class":"RTCM3","type":1095,"length":387,"station_id":41,"gnssid":2,"subtype":"MSM5","tow":515677000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1508752054925918208,"MaskSig":1073881600,"MaskCell":1099511627775,"NSat":10,"NSig":4,"NCell":40}
@@ -1546,7 +1546,7 @@ $GPGBS,231423.00,5.250,12.150,0.100,,,,*70
 {"class":"SKY","time":"2025-04-11T23:14:23.000Z","gdop":1.65,"hdop":0.88,"pdop":1.45,"tdop":0.79,"xdop":0.35,"ydop":0.81,"vdop":1.15,"uSat":12}
 {"class":"RTCM3","type":1008,"length":20,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":""}
 {"class":"RTCM3","type":1033,"length":44,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":"","receiver":"LEICA GR30","firmware":"4.80"}
-{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":"0","l1_ca":65086}
+{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":0,"l1_ca":65086}
 {"class":"RTCM3","type":1075,"length":303,"station_id":41,"gnssid":0,"subtype":"MSM5","tow":515682000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1057237621891137536,"MaskSig":1078067712,"MaskCell":64407719887,"NSat":9,"NSig":4,"NCell":36}
 {"class":"RTCM3","type":1085,"length":262,"station_id":41,"gnssid":6,"subtype":"MSM5","tow":813370368,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":2019613744224534528,"MaskSig":1098907648,"MaskCell":133431295,"NSat":9,"NSig":3,"NCell":27}
 {"class":"RTCM3","type":1095,"length":387,"station_id":41,"gnssid":2,"subtype":"MSM5","tow":515682000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1508752054925918208,"MaskSig":1073881600,"MaskCell":1099511627775,"NSat":10,"NSig":4,"NCell":40}
@@ -2017,7 +2017,7 @@ $GPGBS,231428.00,5.250,12.150,0.100,,,,*7B
 {"class":"RTCM3","type":1125,"length":364,"station_id":41,"gnssid":3,"subtype":"MSM5","tow":515672000,"sync":"0","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":612509946264682496,"MaskSig":1090781698,"MaskCell":1016906383159163,"NSat":10,"NSig":5,"NCell":50}
 {"class":"RTCM3","type":1008,"length":20,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":""}
 {"class":"RTCM3","type":1033,"length":44,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":"","receiver":"LEICA GR30","firmware":"4.80"}
-{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":"0","l1_ca":65086}
+{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":0,"l1_ca":65086}
 {"class":"RTCM3","type":1075,"length":303,"station_id":41,"gnssid":0,"subtype":"MSM5","tow":515687000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1057237621891137536,"MaskSig":1078067712,"MaskCell":64407719887,"NSat":9,"NSig":4,"NCell":36}
 {"class":"RTCM3","type":1085,"length":262,"station_id":41,"gnssid":6,"subtype":"MSM5","tow":813375368,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":2019613744224534528,"MaskSig":1098907648,"MaskCell":133431295,"NSat":9,"NSig":3,"NCell":27}
 {"class":"RTCM3","type":1095,"length":387,"station_id":41,"gnssid":2,"subtype":"MSM5","tow":515687000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1508752054925918208,"MaskSig":1073881600,"MaskCell":1099511627775,"NSat":10,"NSig":4,"NCell":40}
@@ -2488,7 +2488,7 @@ $GPGBS,231433.00,5.400,12.600,0.100,,,,*70
 {"class":"SKY","time":"2025-04-11T23:14:33.000Z","gdop":1.72,"hdop":0.92,"pdop":1.52,"tdop":0.82,"xdop":0.36,"ydop":0.84,"vdop":1.21,"uSat":12}
 {"class":"RTCM3","type":1008,"length":20,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":""}
 {"class":"RTCM3","type":1033,"length":44,"station_id":41,"desc":"GPPNULLANTENNA","setup_id":0,"serial":"","receiver":"LEICA GR30","firmware":"4.80"}
-{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":"0","l1_ca":65086}
+{"class":"RTCM3","type":1230,"length":12,"station_id":41,"ind":0,"l1_ca":65086}
 {"class":"RTCM3","type":1075,"length":303,"station_id":41,"gnssid":0,"subtype":"MSM5","tow":515692000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1057237621891137536,"MaskSig":1078067712,"MaskCell":64407719887,"NSat":9,"NSig":4,"NCell":36}
 {"class":"RTCM3","type":1085,"length":262,"station_id":41,"gnssid":6,"subtype":"MSM5","tow":813380368,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":2019613744224534528,"MaskSig":1098907648,"MaskCell":133431295,"NSat":9,"NSig":3,"NCell":27}
 {"class":"RTCM3","type":1095,"length":387,"station_id":41,"gnssid":2,"subtype":"MSM5","tow":515692000,"sync":"1","IODS":0,"steering":1,"extclk":0,"smoothing":0,"interval":1,"MaskSat":1508752054925918208,"MaskSig":1073881600,"MaskCell":1099511627775,"NSat":10,"NSig":4,"NCell":40}
