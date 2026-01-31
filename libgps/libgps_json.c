@@ -62,8 +62,8 @@ static int json_tpv_read(const char *buf, struct gps_data_t *gpsdata,
          .dflt.real = NAN},
         {"baseC",     t_real,      .addr.real = &gpsdata->fix.base.course,
          .dflt.real = NAN},
-        {"climb",  t_real,    .addr.real = &gpsdata->fix.climb,
-                                 .dflt.real = NAN},
+        {"climb",     t_real,      .addr.real = &gpsdata->fix.climb,
+                                   .dflt.real = NAN},
         {"datum",  t_string,  .addr.string = gpsdata->fix.datum,
                                  .len = sizeof(gpsdata->fix.datum)},
         {"device", t_string,  .addr.string = gpsdata->dev.path,
@@ -787,12 +787,15 @@ int json_oscillator_read(const char *buf, struct gps_data_t *gpsdata,
     return status;
 }
 
-// Test for JSON read status values that should be treated as a go-ahead
-// for further processing.  JSON_BADATTR - to allow JSON attributes unknown
-// to this version of the library, for forward compatibility, is an obvious
-// thing to go here.
-#define PASS(n) (((n) == 0) || ((n) == JSON_ERR_BADATTR))
-#define FILTER(n) ((n) == JSON_ERR_BADATTR ? 0 : n)
+/* Test for JSON read status values that should be treated as a go-ahead
+ * for further processing.  JSON_BADATTR - to allow JSON attributes unknown
+ * to this version of the library, for forward compatibility, is an obvious
+ * thing to go here.
+ * Until microjson is fixed to allow t_array as t_ignore, mask that too.
+ */
+#define FILTER(n) (((n) == JSON_ERR_BADATTR ||   \
+                    (n) == JSON_ERR_NOARRAY) ? 0 : n)
+#define PASS(n) (0 == FILTER(n))
 
 /* the only entry point - unpack a JSON object into gpsdata_t substructures
  *
