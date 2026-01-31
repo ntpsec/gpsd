@@ -519,15 +519,14 @@ void libgps_dump_state(struct gps_data_t *collect)
         (void)fprintf(debugfp, "CLIMB: climb: %lf\n", collect->fix.climb);
     }
     if (STATUS_SET & collect->set) {
-        // FIXME! add missing status values.  range check status!
-        const char *status_values[] = { "NO_FIX", "FIX", "DGPS_FIX" };
         (void)fprintf(debugfp, "STATUS: status: %d (%s)\n",
-                      collect->fix.status, status_values[collect->fix.status]);
+                      collect->fix.status,
+                      val2str(collect->fix.status, vstatus_str));
     }
     if (MODE_SET & collect->set) {
-        const char *mode_values[] = { "", "NO_FIX", "MODE_2D", "MODE_3D" };
         (void)fprintf(debugfp, "MODE: mode: %d (%s)\n",
-                      collect->fix.mode, mode_values[collect->fix.mode]);
+                      collect->fix.mode,
+                      val2str(collect->fix.mode, vmode_str));
     }
     if (DOP_SET & collect->set) {
         (void)fprintf(debugfp,
