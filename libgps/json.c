@@ -191,11 +191,12 @@ static int json_internal_read_object(const char *cp,
 {
     enum
     { init, await_attr, in_attr, await_value, in_val_string,
-        in_escape, in_val_token, post_val, post_element
+        in_escape, in_val_token, post_val, post_element, in_ignore_array
     } state = 0;
     char *statenames[] = {
         "init", "await_attr", "in_attr", "await_value", "in_val_string",
         "in_escape", "in_val_token", "post_val", "post_element",
+        "in_ignore_array"
     };
     char attrbuf[JSON_ATTR_MAX + 1], *pattr = NULL;
     char valbuf[JSON_VAL_MAX + 1], *pval = NULL;
@@ -375,6 +376,13 @@ static int json_internal_read_object(const char *cp,
                 continue;
             }
             if (*cp == '[') {
+                if (cursor->type == t_ignore) {
+                    /* skip to terminating }, not being fooled by
+                     * sub arrays, quoted ], etc.
+                     * FUXME:  someday  */
+                    state = in_ignore_array;;
+                    break;
+                }
                 if (cursor->type != t_array) {
                     json_debug_trace(1,"json: %s",
                                       "Saw [ when not expecting array.\n");
@@ -404,6 +412,12 @@ static int json_internal_read_object(const char *cp,
                 state = in_val_token;
                 pval = valbuf;
                 *pval++ = *cp;
+            }
+            break;
+        case in_ignore_array:
+            if (*cp == '\0' || *cp == ']') {
+                // FIXME: does not handle sub arrays, quoted ], etc.
+                state = post_val;
             }
             break;
         case in_val_string:
