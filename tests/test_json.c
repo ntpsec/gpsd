@@ -477,6 +477,20 @@ static const struct json_attr_t json_attrs_25[] = {
 
 
 char str32[] = "\f\n\r\t\v";
+
+// Case 38: Ignore an array
+
+static char *json_str38 =
+    "{\"class\":\"RTCM3\",\"constellations\":[\"GPS\",\"GLONASS\"],"
+    "\"mode\":3}";
+
+static const struct json_attr_t json_attrs_38[] = {
+    {"class", t_check, .dflt.check = "RTCM3"},
+    {"mode", t_integer, .addr.integer = &i25, .dflt.integer = -9},
+    {"", t_ignore},
+    {NULL},
+};
+
 // *INDENT-ON*
 
 static void jsontest(int i)
@@ -915,7 +929,13 @@ static void jsontest(int i)
         }
         break;
 
-#define MAXTEST 37
+    case 38:
+        status = json_read_object(json_str38, json_attrs_38, NULL);
+        assert_int("mode", "t_integer", i25, 3);
+        assert_int("return", "t_integer", status, 0);
+        break;
+
+#define MAXTEST 38
 
     default:
         (void)fputs("Unknown test number\n", stderr);
