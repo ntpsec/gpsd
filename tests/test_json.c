@@ -491,6 +491,13 @@ static const struct json_attr_t json_attrs_38[] = {
     {NULL},
 };
 
+// Case 39: Ignore an array, with ] inquotes
+
+static char *json_str39 =
+    "{\"class\":\"RTCM3\",\"constellations\":[\"GPS\",\"GL]ONASS\"],"
+    "\"mode\":3}";
+
+
 // *INDENT-ON*
 
 static void jsontest(int i)
@@ -935,7 +942,13 @@ static void jsontest(int i)
         assert_int("return", "t_integer", status, 0);
         break;
 
-#define MAXTEST 38
+    case 39:
+        status = json_read_object(json_str39, json_attrs_38, NULL);
+        assert_int("mode", "t_integer", i25, 3);
+        assert_int("return", "t_integer", status, 0);
+        break;
+
+#define MAXTEST 39
 
     default:
         (void)fputs("Unknown test number\n", stderr);

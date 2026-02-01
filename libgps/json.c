@@ -377,10 +377,11 @@ static int json_internal_read_object(const char *cp,
             }
             if (*cp == '[') {
                 if (cursor->type == t_ignore) {
-                    /* skip to terminating }, not being fooled by
-                     * sub arrays, quoted ], etc.
-                     * FUXME:  someday  */
+                    /* skip to terminating ], not being fooled by
+                     * sub arrays, etc.
+                     * FIXME:  someday  */
                     state = in_ignore_array;;
+                    value_quoted = false;
                     break;
                 }
                 if (cursor->type != t_array) {
@@ -415,9 +416,19 @@ static int json_internal_read_object(const char *cp,
             }
             break;
         case in_ignore_array:
-            if (*cp == '\0' || *cp == ']') {
-                // FIXME: does not handle sub arrays, quoted ], etc.
-                state = post_val;
+            if (*cp == '"') {
+                if (value_quoted == false) {
+                    // now in quotes
+                    value_quoted = true;
+                } else {
+                    value_quoted = false;
+                }
+            } else if (*cp == ']') {
+                // FIXME: does not handle sub arrays, etc.
+                if (value_quoted == false) {
+                    state = post_val;
+                }
+                // else in quotes, ignore it.
             }
             break;
         case in_val_string:
