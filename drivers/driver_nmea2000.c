@@ -1201,7 +1201,7 @@ static gps_mask_t hnd_129810(unsigned char *bu, int len, PGN *pgn,
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "NMEA2000: AIS 24B from %09u matches a 24A.\n",
                             ais->mmsi);
-                /* prevent false match if a 24B is repeated */
+                // prevent false match if a 24B is repeated
                 session->driver.aivdm.context[0].type24_queue.ships[i].mmsi = 0;
 #if NMEA2000_DEBUG_AIS
                 printf("AIS: MMSI:  %09u\n", ais->mmsi);
@@ -1214,7 +1214,7 @@ static gps_mask_t hnd_129810(unsigned char *bu, int len, PGN *pgn,
                        ais->type24.dim.to_stern,
                        ais->type24.dim.to_port,
                        ais->type24.dim.to_starboard);
-#endif /* of #if NMEA2000_DEBUG_AIS */
+#endif  // of #if NMEA2000_DEBUG_AIS
 
                 decode_ais_channel_info(bu, len, 264, session);
                 ais->type24.part = both;
@@ -1230,7 +1230,7 @@ static gps_mask_t hnd_129810(unsigned char *bu, int len, PGN *pgn,
                ais->type24.dim.to_stern,
                ais->type24.dim.to_port,
                ais->type24.dim.to_starboard);
-#endif /* of #if NMEA2000_DEBUG_AIS */
+#endif  // of #if NMEA2000_DEBUG_AIS
         decode_ais_channel_info(bu, len, 264, session);
         ais->type24.part = part_b;
         return ONLINE_SET | AIS_SET;
@@ -1606,7 +1606,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
             }
             (void)fprintf(logFile, "\n");
         }
-#endif /* of if LOG_FILE */
+#endif  // of if LOG_FILE
         session->driver.nmea2000.can_msgcnt += 1;
         source_pgn = (frame->can_id >> 8) & 0x1ffff;
         source_prio = (frame->can_id >> 26) & 0x7;
@@ -1690,7 +1690,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
                              session->driver.nmea2000.unit,
                              frame->data[1],
                              source_pgn);
-#endif /* of #if NMEA2000_FAST_DEBUG */
+#endif  // of #if NMEA2000_FAST_DEBUG
                     session->lexer.inbuflen = 0;
                     session->driver.nmea2000.idx += 1;
                     for (l2 = 2; l2 < 8; l2++) {
@@ -1719,11 +1719,12 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
                                  session->driver.nmea2000.unit,
                                  (unsigned int)session->driver.nmea2000.fast_packet_len,
                                  source_pgn);
-#endif /* of #if  NMEA2000_FAST_DEBUG */
+#endif  // of #if  NMEA2000_FAST_DEBUG
                         session->driver.nmea2000.workpgn = (void *) work;
                         session->lexer.outbuflen =
                             session->driver.nmea2000.fast_packet_len;
-                        for (l2 = 0; l2 < (unsigned int)session->lexer.outbuflen;
+                        for (l2 = 0;
+                             l2 < (unsigned int)session->lexer.outbuflen;
                              l2++) {
                             session->lexer.outbuffer[l2] =
                                 session->lexer.inbuffer[l2];
@@ -1843,7 +1844,8 @@ int nmea2000_open(struct gps_device_t *session)
 
     if (unit_ptr != NULL) {
         unit_number = atoi(unit_ptr);
-        if ((unit_number < 0) || (unit_number > (NMEA2000_UNITS-1))) {
+        if ((unit_number < 0) ||
+            (unit_number > (NMEA2000_UNITS - 1))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "NMEA2000 open: Unit number out of range.\n");
             return -1;
@@ -1888,7 +1890,7 @@ int nmea2000_open(struct gps_device_t *session)
         }
     }
 
-    /* Create the socket */
+    // Create the socket
     sock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
     if (BAD_SOCKET(sock)) {
@@ -1905,10 +1907,10 @@ int nmea2000_open(struct gps_device_t *session)
         return -1;
     }
 
-    /* Locate the interface you wish to use */
+    // Locate the interface you wish to use
     strlcpy(ifr.ifr_name, interface_name, sizeof(ifr.ifr_name));
-    status = ioctl(sock, SIOCGIFINDEX, &ifr); /* ifr.ifr_ifindex gets filled
-                                               * with that device's index */
+    status = ioctl(sock, SIOCGIFINDEX, &ifr);  /* ifr.ifr_ifindex gets filled
+                                                * with that device's index */
 
     if (status != 0) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -1917,7 +1919,7 @@ int nmea2000_open(struct gps_device_t *session)
         return -1;
     }
 
-    /* Select that CAN interface, and bind the socket to it. */
+    // Select that CAN interface, and bind the socket to it.
     addr.can_family = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
     status = bind(sock, (struct sockaddr*)&addr, sizeof(addr) );
@@ -1981,35 +1983,35 @@ void nmea2000_close(struct gps_device_t *session)
     }
 }
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 const struct gps_type_t driver_nmea2000 = {
-    .type_name      = "NMEA2000",       /* full name of type */
-    .packet_type    = NMEA2000_PACKET,  /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = NULL,             /* detect their main sentence */
-    .channels       = 12,               /* not an actual GPS at all */
+    .type_name      = "NMEA2000",       // full name of type
+    .packet_type    = NMEA2000_PACKET,  // associated lexer packet type
+    .flags          = DRIVER_STICKY,    // remember this
+    .trigger        = NULL,             // detect their main sentence
+    .channels       = 12,               // not an actual GPS at all
     .probe_detect   = NULL,
-    .get_packet     = nmea2000_get,     /* how to get a packet */
-    .parse_packet   = nmea2000_parse_input,     /* how to interpret a packet */
-    .rtcm_writer    = NULL,             /* Don't send RTCM to this */
-    .init_query     = NULL,             /* non-perturbing query */
+    .get_packet     = nmea2000_get,     // how to get a packet
+    .parse_packet   = nmea2000_parse_input,     // how to interpret a packet
+    .rtcm_writer    = NULL,             // Don't send RTCM to this
+    .init_query     = NULL,             // non-perturbing query
     .event_hook     = NULL,
-    .speed_switcher = NULL,             /* no speed switcher */
-    .mode_switcher  = NULL,             /* no mode switcher */
-    .rate_switcher  = NULL,             /* no rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = NULL,             /* how to send control strings */
+    .speed_switcher = NULL,             // no speed switcher
+    .mode_switcher  = NULL,             // no mode switcher
+    .rate_switcher  = NULL,             // no rate switcher
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = NULL,             // how to send control strings
     .time_offset     = NULL,
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 
-/* end */
+// end
 
-#else   /* of  defined(NMEA2000_ENABLE) */
+#else   // of  defined(NMEA2000_ENABLE)
 /* dummy variable to some old linkers do not complain about empty
  * object file */
 int nmea2000_dummy = 1;
-#endif /* of  defined(NMEA2000_ENABLE) */
+#endif  // of  defined(NMEA2000_ENABLE)
 
 // vim: set expandtab shiftwidth=4
