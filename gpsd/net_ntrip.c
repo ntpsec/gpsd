@@ -484,7 +484,9 @@ static int ntrip_stream_req(const struct ntrip_stream_t *stream,
     char outbuf[BUFSIZ];
 
     // open blocking
-    gps_fd = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
+    gps_fd = netlib_connectsock1(AF_UNSPEC, stream->host, stream->port,
+                                 "tcp", 0, false, NULL, 0);
+
     if (0 > gps_fd) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: ntrip_stream_req(%s) connect error %s(%d)\n",
@@ -522,8 +524,9 @@ static int ntrip_stream_req(const struct ntrip_stream_t *stream,
     if (blen != r) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream write error %s(%d) on fd %d "
-                 "during probe request %zd\n",
-                 strerror(errno), errno, gps_fd, r);
+                 "during %s request %zd\n",
+                 strerror(errno), errno, gps_fd,
+                 sourcetable_parsed ? "get" : "probe", r);
         (void)close(gps_fd);
         return -1;
     }
@@ -608,7 +611,8 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
     ssize_t cnt, cnt1;
 
     // open blocking
-    dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
+    dsock = netlib_connectsock1(AF_UNSPEC, stream->host, stream->port,
+                                "tcp", 0, false, NULL, 0);
     if (BAD_SOCKET(dsock)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream connect error %ss(%d)\n",
@@ -1014,7 +1018,7 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
 
     GPSD_LOG(LOG_PROG, errout,
              "NTRIP: ntrip_parse_url(%s) credentials %s host %s port %s "
-             "moutpoint %s\n", fullurl,
+             "mountpoint %s\n", fullurl,
              stream->credentials,
              stream->host,
              stream->port,
