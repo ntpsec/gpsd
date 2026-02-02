@@ -29,11 +29,12 @@ static char *control_socket = DEFAULT_GPSD_SOCKET;
 static char *gpsd_options = "";
 
 // pass a command to gpsd; start the daemon if not already running
-static int gpsd_control(const char *action, const char *device)
+static ssize_t gpsd_control(const char *action, const char *device)
 {
     int connect = -1;
     char buf[512];
-    int status;
+    ssize_t status;
+    ssize_t status1;
     int len;
 
     // limit string to pacify coverity
@@ -55,7 +56,7 @@ static int gpsd_control(const char *action, const char *device)
         }
     }
     if (0 > connect) {
-        syslog(LOG_ERR, "can't reach gpsd");
+        syslog(LOG_ERR, "can't reach gpsd control socket");
         return -1;
     }
     /*
@@ -83,20 +84,34 @@ static int gpsd_control(const char *action, const char *device)
         }
         len = snprintf(buf, sizeof(buf), "+%s\r\n", device);
         if (3 < len) {
-            status = (int)write(connect, buf, len);
-            // FIXME: return never checked
-            // Flawfinder: ignore
-            ignore_return(read(connect, buf, 12));
+            status = write(connect, buf, len);
+            if (0 > status) {
+                syslog(LOG_ERR, "Could not write gpsd control socket");
+            }
+            status1 = read(connect, buf, 12);
+            if (0 > status1) {
+                syslog(LOG_ERR, "Could not read gpsd control socket");
+            } else {
+                int rlen = (12 < status1) ? 12 : (int)status1;
+                syslog(LOG_ERR, "gpsd returned %.*s", rlen, buf);
+            }
         } else {
             status = -1;
         }
     } else if (0 == strcmp(action, "remove")) {
         len = snprintf(buf, sizeof(buf), "-%s\r\n", device);
         if (3 < len) {
-            status = (int)write(connect, buf, len);
-            // FIXME: return never checked
-            // Flawfinder: ignore
-            ignore_return(read(connect, buf, 12));
+            status = write(connect, buf, len);
+            if (0 > status) {
+                syslog(LOG_ERR, "Could not write gpsd control socket");
+            }
+            status1 = read(connect, buf, 12);
+            if (0 > status1) {
+                syslog(LOG_ERR, "Could not read  gpsd control socket");
+            } else {
+                int rlen = (12 < status1) ? 12 : (int)status1;
+                syslog(LOG_ERR, "gpsd returned %.*s", rlen, buf);
+            }
         } else {
             status = -1;
         }
