@@ -876,8 +876,20 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
     double satpos[MAXCHANNELS][4] = {{0}};
     double xdop, ydop, hdop, vdop, pdop, tdop, gdop;
     int i, j, k, n;
+    int max_skyview;
 
-    for (n = k = 0; k < gpsdata->satellites_visible; k++) {
+    // guard against malicisous fuzzers deep linking past initialization
+    // https://issues.oss-fuzz.com/issues/480975802
+    if (0 > gpsdata->satellites_visible) {
+       max_skyview = 0;
+    } else if (ROWS(gpsdata->skyview) <
+               (unsigned long)gpsdata->satellites_visible) {
+       max_skyview = ROWS(gpsdata->skyview);
+    } else {
+       max_skyview =  gpsdata->satellites_visible;
+    }
+
+    for (n = k = 0; k < max_skyview; k++) {
         // This double counts single sats where we got 2 signals from them.
 #ifdef __UNUSED__
         GPSD_LOG(LOG_IO, errout,
