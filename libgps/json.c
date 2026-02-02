@@ -211,6 +211,7 @@ static int json_internal_read_object(const char *cp,
     if (NULL != end) {
         *end = NULL;    // give it a well-defined value on parse failure
     }
+    memset(valbuf, 0, sizeof(valbuf));
 
     // stuff fields with defaults in case they're omitted in the JSON input
     for (cursor = attrs; cursor->attribute != NULL; cursor++)
