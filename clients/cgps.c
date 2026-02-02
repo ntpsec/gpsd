@@ -360,6 +360,7 @@ static void windowsetup(void)
     int ysize_gps;            // ysize, minus rows reserved for raw
     int slop_width;           // width of the slop window
 
+    // initscr() just exits on failure
     (void)initscr();
     // initscr sets up COLS and LINES
     ysize = LINES;
@@ -379,8 +380,8 @@ static void windowsetup(void)
 
         if ((IMU_WIDTH - 2) > COLS) {
             // allow 78, cutting of the two rightmost columns is acceptable
-            die(CGPS_SIZE,
-                "Your terminal not wide enough.  80 columns required.");
+            die(CGPS_SIZE, "Your terminal is %d wide.  %d columns required.",
+                COLS, IMU_WIDTH - 2);
         }
 
         if (MIN_COMPASS_DATAWIN_YSIZE == ysize) {
@@ -390,13 +391,13 @@ static void windowsetup(void)
             raw_flag = true;
             window_ysize = MIN_COMPASS_DATAWIN_YSIZE;
         } else {
-            die(CGPS_SIZE, "Your terminal does not have enough rows run cgps.");
+            die(CGPS_SIZE, "Your terminal had %d rows. %d rows required",
+                ysize, MIN_COMPASS_DATAWIN_YSIZE);
         }
 
-        datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
-
-        // do not block waiting for user input
-        if (OK != nodelay(datawin, true)) {
+        // create datawin,  do not block waiting for user input
+        if (NULL == (datawin = newwin(window_ysize, IMU_WIDTH, 0, 0)) ||
+            OK != nodelay(datawin, true)) {
             die(CGPS_ERROR, "Fail creating datawin window.");
         }
 
@@ -464,8 +465,8 @@ static void windowsetup(void)
         int row = 1;
 
         if (RTK_WIDTH > COLS) {
-            die(CGPS_SIZE,
-                "Your terminal not wide enough.  78 columns required.");
+            die(CGPS_SIZE, "Your terminal is %d wide.  %d columns required.",
+                COLS, RTK_WIDTH);
         }
 
         if (MIN_COMPASS_DATAWIN_YSIZE == ysize) {
@@ -530,7 +531,8 @@ static void windowsetup(void)
     }
     if ((DATAWIN_WIDTH + SATELLITES_WIDTH - 2) > COLS) {
         // allow 78, cutting of the two rightmost columns is acceptable
-        die(CGPS_SIZE, "Your terminal not wide enough.  80 columns required.");
+        die(CGPS_SIZE, "Your terminal is %d wide.  %d columns required.",
+            COLS, DATAWIN_WIDTH + SATELLITES_WIDTH - 2);
     }
 
     // We're a GPS, set up accordingly.
@@ -1600,23 +1602,33 @@ static void do_resize(void)
     }
     // don'l leak memory
     if (NULL != datawin) {
-        (void)delwin(datawin);
+        if (OK != delwin(datawin)) {
+            die(CGPS_ERROR, "cgps: ERROR in delwin(datawin)\n");
+        }
         datawin = NULL;
     }
     if (NULL != satellites) {
-        (void)delwin(satellites);
+        if (OK != delwin(satellites)) {
+            die(CGPS_ERROR, "cgps: ERROR in delwin(satellites)\n");
+        }
         satellites = NULL;
     }
     if (NULL != slop) {
-        (void)delwin(slop);
+        if (OK != delwin(slop)) {
+            die(CGPS_ERROR, "cgps: ERROR in delwin(slop)\n");
+        }
         slop = NULL;
     }
     if (NULL != messages) {
-        (void)delwin(messages);
+        if (OK != delwin(messages)) {
+            die(CGPS_ERROR, "cgps: ERROR in delwin(messages)\n");
+        }
         messages = NULL;
     }
     // the only way to resize (set LINES and COLUMNS) is to end and start over
-    (void)endwin();
+    if (OK != endwin()) {
+        die(CGPS_ERROR, "cgps: ERROR in endwin()\n");
+    }
     windowsetup();
 }
 
