@@ -221,6 +221,12 @@ int main(int argc, char *argv[])
         usage();
         exit(EXIT_FAILURE);
     }
+    if (0 == len) {
+        // empty device
+        (void)syslog(LOG_ERR, "No device given");
+        usage();
+        exit(EXIT_FAILURE);
+    }
 
     if (NULL != sockenv) {
         control_socket = sockenv;
