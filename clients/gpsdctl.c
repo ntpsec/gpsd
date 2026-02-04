@@ -8,6 +8,7 @@
 #include "../include/gpsd_config.h"   // must be before all includes
 
 #include <assert.h>
+#include <errno.h>                   // for errno, strerrno()
 #include <fcntl.h>
 #ifdef HAVE_GETOPT_LONG
    #include <getopt.h>
@@ -21,6 +22,7 @@
 #include <sys/stat.h>
 #include <unistd.h>                   // for getopt()
 
+
 #include "../include/gpsd.h"          // for netlib_localsocket()
 
 #define DEFAULT_GPSD_TEST_SOCKET        "/tmp/gpsd.sock"
@@ -32,31 +34,39 @@ static char *gpsd_options = "";
 static ssize_t gpsd_control(const char *action, const char *device)
 {
     int connect = -1;
-    char buf[512];
+    char buf[GPS_JSON_RESPONSE_MAX];
     ssize_t status;
-    ssize_t status1;
-    int len;
+    int len = 0;
+    bool do_write = false;
+    struct stat sb;
 
     // limit string to pacify coverity
     (void)syslog(LOG_NOTICE, "gpsd_control(action=%.7s, device=%.*s)",
                  action, GPS_PATH_MAX, device);
-    if (0 == access(control_socket, F_OK) &&
+    if (0 != stat(device, &sb)) {
+        (void)syslog(LOG_ERROR, "stat() device=%.*s) %s(%d)",
+                     GPS_PATH_MAX, device, strerror(errno), errno);
+        exit(EXIT_FAILURE);
+    }
+    if (0 == access(control_socket, R_OK | W_OK) &&
         0 <= (connect = netlib_localsocket(control_socket, SOCK_STREAM))) {
-        syslog(LOG_INFO, "reached a running gpsd");
+        syslog(LOG_INFO, "reached a running gpsd at %s", control_socket);
     } else if (0 == strcmp(action, "add")) {
         (void)snprintf(buf, sizeof(buf),
                        "gpsd %s -F %s", gpsd_options, control_socket);
+        // FIXME: malicious gpsd_options possible, use exec()
         (void)syslog(LOG_NOTICE, "launching %s", buf);
         if (0 != system(buf)) {
             (void)syslog(LOG_ERR, "launch of gpsd failed");
             return -1;
         }
-        if (0 == access(control_socket, F_OK)) {
+        if (0 == access(control_socket, R_OK | W_OK)) {
             connect = netlib_localsocket(control_socket, SOCK_STREAM);
         }
     }
     if (0 > connect) {
-        syslog(LOG_ERR, "can't reach gpsd control socket");
+        syslog(LOG_ERR, "can't reach gpsd control socket.  %s(%d)",
+               strerror(errno), errno);
         return -1;
     }
     /*
@@ -74,50 +84,53 @@ static ssize_t gpsd_control(const char *action, const char *device)
          * Force the group-read & group-write bits on, so gpsd will still be
          * able to use this device after dropping root privileges.
          */
-        struct stat sb;
 
         // Coverity 281679
         // coverity[toctou]
-        if (1 != stat(device, &sb)) {
-            // coverity[tOCTOU]
-            (void)chmod(device, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+        if (0 != chmod(device, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP)) {
+            (void)syslog(LOG_WARNING, "chnod() device=%.*s) %s(%d)",
+                         GPS_PATH_MAX, device, strerror(errno), errno);
         }
+
         len = snprintf(buf, sizeof(buf), "+%s\r\n", device);
-        if (3 < len) {
-            status = write(connect, buf, len);
-            if (0 > status) {
-                syslog(LOG_ERR, "Could not write gpsd control socket");
-            }
-            status1 = read(connect, buf, 12);
-            if (0 > status1) {
-                syslog(LOG_ERR, "Could not read gpsd control socket");
-            } else {
-                int rlen = (12 < status1) ? 12 : (int)status1;
-                syslog(LOG_ERR, "gpsd returned %.*s", rlen, buf);
-            }
-        } else {
-            status = -1;
-        }
+        do_write = true;
     } else if (0 == strcmp(action, "remove")) {
         len = snprintf(buf, sizeof(buf), "-%s\r\n", device);
-        if (3 < len) {
-            status = write(connect, buf, len);
-            if (0 > status) {
-                syslog(LOG_ERR, "Could not write gpsd control socket");
-            }
-            status1 = read(connect, buf, 12);
-            if (0 > status1) {
-                syslog(LOG_ERR, "Could not read  gpsd control socket");
-            } else {
-                int rlen = (12 < status1) ? 12 : (int)status1;
-                syslog(LOG_ERR, "gpsd returned %.*s", rlen, buf);
-            }
-        } else {
-            status = -1;
-        }
+        do_write = true;
     } else {
         (void)syslog(LOG_ERR, "unknown action \"%s\"", action);
         status = -1;
+    }
+
+    if (do_write) {
+        bool do_read = false;
+
+        if (3 < len) {
+            status = write(connect, buf, len);
+            do_read = true;
+            if (0 > status) {
+                syslog(LOG_ERR, "Could not write gpsd control socket. %s(%d)",
+                       strerror(errno), errno);
+                do_read = false;    // don't bother to read
+            }
+        } else {
+            status = -1;
+        }
+        if (do_read) {
+            ssize_t status1;
+
+            // timeout??, wait for it??
+            status1 = read(connect, buf, sizeof(buf) - 2);
+            if (0 == status1) {
+                // EOF
+            } else if (0 > status1) {
+                syslog(LOG_ERR, "Could not read gpsd control socket");
+            } else {
+                // force NUL terminated
+                buf[status1] = '\0';
+                syslog(LOG_ERR, "gpsd returned %s", buf);
+            }
+        }
     }
     (void)close(connect);
     //syslog(LOG_DEBUG, "gpsd_control ends");
