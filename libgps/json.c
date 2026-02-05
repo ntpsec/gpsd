@@ -573,6 +573,7 @@ static int json_internal_read_object(const char *cp,
                                      seeking == t_uinteger ||
                                      seeking == t_longint ||
                                      seeking == t_ulongint ||
+                                     seeking == t_time ||
                                      seeking == t_short ||
                                      seeking == t_ushort))
                         break;
@@ -599,7 +600,6 @@ static int json_internal_read_object(const char *cp,
             if (!value_quoted &&
                 (cursor->type == t_string ||
                  cursor->type == t_check ||
-                 cursor->type == t_time ||
                  cursor->map != 0)) {
                 json_debug_trace(1, "json: %s",
                                  "Didn't see quoted value when expecting"
@@ -675,7 +675,13 @@ static int json_internal_read_object(const char *cp,
                     break;
                 case t_time:
                     {
-                        timespec_t ts_tmp = iso8601_to_timespec(valbuf);
+                        timespec_t ts_tmp = {0, 0};
+
+                        if (value_quoted) {
+                            ts_tmp = iso8601_to_timespec(valbuf);
+                        } else {
+                            ts_tmp.tv_sec = (time_t)atol(valbuf);
+                        }
                         memcpy(lptr, &ts_tmp, sizeof(timespec_t));
                     }
                     break;
