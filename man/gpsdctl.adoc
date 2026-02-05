@@ -1,6 +1,6 @@
 = gpsdctl(8)
 :author: Eric S. Raymond
-:date: 01 February 2026
+:date: 03 February 2026
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsdctl
 :manmanual: GPSD Documentation
@@ -21,6 +21,15 @@ gpsdctl - tool for sending commands to gpsd over its control socket
 *gpsdctl* _action_ _device_
 
 == OPTIONS
+
+*-?*, *-h*, *--help*::
+  Print a summary of options and then exit.
+*-l*::
+  Log to _stderr_, instead of *syslog*.
+*-V*, *--version*::
+  Print the package version and exit.
+
+== ACTIONS
 
 *action*:: may be _add_ or _remove_. If no daemon instance
 is running when an _add_ is requested, this program will launch one.

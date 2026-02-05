@@ -29,6 +29,27 @@
 
 static char *control_socket = DEFAULT_GPSD_SOCKET;
 static char *gpsd_options = "";
+static bool log_stderr = false;
+
+static void client_log(int level, const char *msg, ...)
+{
+    va_list ap;
+    int len;
+
+    va_start(ap, msg);
+    if (log_stderr) {
+        len = vfprintf(stderr, msg, ap);
+        fputs("\n", stderr);
+        if (1 > len) {
+            // uh, oh
+            fprintf(stderr, "format error %s\n", msg);
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        (void)vsyslog(level, msg, ap);
+    }
+    va_end(ap);
+}
 
 // pass a command to gpsd; start the daemon if not already running
 static ssize_t gpsd_control(const char *action, const char *device)
@@ -41,23 +62,24 @@ static ssize_t gpsd_control(const char *action, const char *device)
     struct stat sb;
 
     // limit string to pacify coverity
-    (void)syslog(LOG_NOTICE, "gpsd_control(action=%.7s, device=%.*s)",
+    client_log(LOG_NOTICE, "NOTICE: gpsd_control(action=%.7s, device=%.*s)",
                  action, GPS_PATH_MAX, device);
     if (0 != stat(device, &sb)) {
-        (void)syslog(LOG_ERROR, "stat() device=%.*s) %s(%d)",
+        client_log(LOG_ERR, "ERR: stat() device=%.*s) %s(%d)",
                      GPS_PATH_MAX, device, strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
     if (0 == access(control_socket, R_OK | W_OK) &&
         0 <= (connect = netlib_localsocket(control_socket, SOCK_STREAM))) {
-        syslog(LOG_INFO, "reached a running gpsd at %s", control_socket);
+        client_log(LOG_INFO, "INFO: reached a running gpsd at %s",
+                   control_socket);
     } else if (0 == strcmp(action, "add")) {
         (void)snprintf(buf, sizeof(buf),
                        "gpsd %s -F %s", gpsd_options, control_socket);
         // FIXME: malicious gpsd_options possible, use exec()
-        (void)syslog(LOG_NOTICE, "launching %s", buf);
+        client_log(LOG_NOTICE, "NOTICE: launching %s", buf);
         if (0 != system(buf)) {
-            (void)syslog(LOG_ERR, "launch of gpsd failed");
+            client_log(LOG_ERR, "ERR: launch of gpsd failed");
             return -1;
         }
         if (0 == access(control_socket, R_OK | W_OK)) {
@@ -65,7 +87,7 @@ static ssize_t gpsd_control(const char *action, const char *device)
         }
     }
     if (0 > connect) {
-        syslog(LOG_ERR, "can't reach gpsd control socket.  %s(%d)",
+        client_log(LOG_ERR, "ERR: can't reach gpsd control socket.  %s(%d)",
                strerror(errno), errno);
         return -1;
     }
@@ -88,7 +110,7 @@ static ssize_t gpsd_control(const char *action, const char *device)
         // Coverity 281679
         // coverity[toctou]
         if (0 != chmod(device, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP)) {
-            (void)syslog(LOG_WARNING, "chnod() device=%.*s) %s(%d)",
+            client_log(LOG_WARNING, "WARNING: chnod() device=%.*s) %s(%d)",
                          GPS_PATH_MAX, device, strerror(errno), errno);
         }
 
@@ -98,7 +120,7 @@ static ssize_t gpsd_control(const char *action, const char *device)
         len = snprintf(buf, sizeof(buf), "-%s\r\n", device);
         do_write = true;
     } else {
-        (void)syslog(LOG_ERR, "unknown action \"%s\"", action);
+        client_log(LOG_ERR, "ERR: unknown action \"%s\"", action);
         status = -1;
     }
 
@@ -109,7 +131,8 @@ static ssize_t gpsd_control(const char *action, const char *device)
             status = write(connect, buf, len);
             do_read = true;
             if (0 > status) {
-                syslog(LOG_ERR, "Could not write gpsd control socket. %s(%d)",
+                client_log(LOG_ERR,
+                           "ERR: Could not write gpsd control socket. %s(%d)",
                        strerror(errno), errno);
                 do_read = false;    // don't bother to read
             }
@@ -124,16 +147,24 @@ static ssize_t gpsd_control(const char *action, const char *device)
             if (0 == status1) {
                 // EOF
             } else if (0 > status1) {
-                syslog(LOG_ERR, "Could not read gpsd control socket");
+                client_log(LOG_ERR,
+                           "ERR: Could not read gpsd control socket");
             } else {
                 // force NUL terminated
                 buf[status1] = '\0';
-                syslog(LOG_ERR, "gpsd returned %s", buf);
+                if (NULL == strstr(buf, "ACK")) {
+                    client_log(LOG_ERR, "ERR: gpsd returned %s", buf);
+                    status = -1;
+                } else {
+                    // Succcss!
+                    client_log(LOG_INFO, "INFO: gpsd returned %s", buf);
+                    status = 0;
+                }
             }
         }
     }
     (void)close(connect);
-    //syslog(LOG_DEBUG, "gpsd_control ends");
+    //client_log(LOG_DEBUG, "DEBUG: gpsd_control ends");
     return status;
 }
 
@@ -143,10 +174,12 @@ static void usage(void)
     (void)printf("usage: gpsdctl [OPTIONS] action device\n\n"
 #ifdef HAVE_GETOPT_LONG
          "  --help              Show this help, then exit\n"
+         "  --log               log to stderr instead of syslog\n"
          "  --version           Show version, then exit\n"
 #endif   // HAVE_GETOPT_LONG
          "  -?                  Show this help, then exit\n"
          "  -h                  Show this help, then exit\n"
+         "  -l                  log to stderr instead of syslog\n"
          "  -V                  Show version, then exit\n"
          "\n"
          "  Actions:\n"
@@ -161,11 +194,12 @@ int main(int argc, char *argv[])
     char action[10] = "";            // Action to perform
     const char *device = NULL;       // Device to perform action on
     size_t len;
-    const char *optstring = "?hV";
+    const char *optstring = "?hlV";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
+        {"log", no_argument, NULL, 'l'},
         {"version", no_argument, NULL, 'V' },
         {NULL, 0, NULL, 0},
     };
@@ -194,17 +228,22 @@ int main(int argc, char *argv[])
         case 'h':
             usage();
             exit(EXIT_SUCCESS);
+        case 'l':
+            log_stderr  =  true;
+            break;
         default:
             usage();
             exit(EXIT_FAILURE);
         }
     }
 
-    openlog("gpsdctl", 0, LOG_DAEMON);
+    if (!log_stderr) {
+        openlog("gpsdctl", 0, LOG_DAEMON);
+    }
 
     if (optind >= argc ||
         NULL == argv[optind]) {
-        (void)syslog(LOG_ERR, "requires action and device)");
+        client_log(LOG_ERR, "ERROR: requires action and device)");
         usage();
         exit(EXIT_FAILURE);
     }
@@ -213,30 +252,31 @@ int main(int argc, char *argv[])
     strlcpy(action, argv[optind++], sizeof(action));
     if (0 != strcmp(action, "add") &&
         0 != strcmp(action, "remove")) {
-        (void)syslog(LOG_ERR, "Invalid action.  Must be 'add' or 'remove'");
+        client_log(LOG_ERR,
+                   "ERROR: Invalid action.  Must be 'add' or 'remove'");
         usage();
         exit(EXIT_FAILURE);
     }
     if (optind >= argc ||
         NULL == argv[optind]) {
-        (void)syslog(LOG_ERR, "requires device for action)");
+        client_log(LOG_ERR, "ERROR: requires device for action)");
         usage();
         exit(EXIT_FAILURE);
     }
-
     device = argv[optind];
 
     // pacify codacy hates strlen()
     len = strnlen(device, GPS_PATH_MAX);
     if (GPS_PATH_MAX <= len) {
         // limit string to pacify Coverity 281704
-        (void)syslog(LOG_ERR, "path to long: '%.*s'", GPS_PATH_MAX, device);
+        client_log(LOG_ERR,
+                   "ERROR: path to long: '%.*s'", GPS_PATH_MAX, device);
         usage();
         exit(EXIT_FAILURE);
     }
     if (0 == len) {
         // empty device
-        (void)syslog(LOG_ERR, "No device given");
+        client_log(LOG_ERR, "ERROR: No device given");
         usage();
         exit(EXIT_FAILURE);
     }
