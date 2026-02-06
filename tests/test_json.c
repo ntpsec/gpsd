@@ -196,6 +196,7 @@ static long dftlongint;
 static unsigned long dftulongint;
 static struct timespec ts;
 static struct timespec maxts;
+static struct timespec ts2;
 
 static const struct json_attr_t json_attrs_4[] = {
     // t_byte can be signed, or unsigned, so can only use range 0 - 127
@@ -216,19 +217,20 @@ static const struct json_attr_t json_attrs_4[] = {
     {"flag2",   t_boolean, .addr.boolean = &flag2,},
     {"dftts",  t_timespec, .addr.ts = &ts, .dflt.ts = {0,0}},
     {"maxts",  t_timespec, .addr.ts = &maxts, .dflt.ts = {0x0ffff,9}},
+    {"t_time",  t_time, .addr.ts = &ts2, .dflt.ts = {3,4}},
     {NULL},
 };
 
 // Case 5: test DEVICE parsing
 
-static const char *json_str5 = "{\"class\":\"DEVICE\",\
-           \"path\":\"/dev/ttyUSB0\",\
-           \"flags\":5,\
-           \"driver\":\"Foonly\",\
-           \"sernum\":\"Shivering\",\
-           \"subtype\":\"Sparkling\",\"subtype1\":\"Satisfying\",\
-           \"cycle\":1.1,\"mincycle\":0.002\
-           }";
+static const char *json_str5 = "{\"class\":\"DEVICE\","
+           "\"path\":\"/dev/ttyUSB0\","
+           "\"activated\":\"2026-02-06T00:17:21.039Z\","
+           "\"flags\":5,"
+           "\"driver\":\"Foonly\","
+           "\"sernum\":\"Shivering\","
+           "\"subtype\":\"Sparkling\",\"subtype1\":\"Satisfying\","
+           "\"cycle\":1.1,\"mincycle\":0.002}";
 
 // Case 6: test parsing of subobject list into array of structures
 
@@ -498,6 +500,18 @@ static char *json_str39 =
     "\"mode\":3}";
 
 
+// Case 40: test DEVICE parsing, activated is integer
+
+static const char *json_str40 = "{\"class\":\"DEVICE\","
+           "\"path\":\"/dev/ttyUSB0\","
+           "\"activated\":9}";
+
+// Case 41: test DEVICE parsing, activated is real
+
+static const char *json_str41 = "{\"class\":\"DEVICE\","
+           "\"path\":\"/dev/ttyUSB0\","
+           "\"activated\":13.14}";
+
 // *INDENT-ON*
 
 static void jsontest(int i)
@@ -582,6 +596,9 @@ static void jsontest(int i)
         expected_ts.tv_sec = 0x0ffff;
         expected_ts.tv_nsec = 9;
         assert_ts("maxts", maxts, expected_ts);
+        expected_ts.tv_sec = 3;
+        expected_ts.tv_nsec = 4;
+        assert_ts("ts2", ts2, expected_ts);
         break;
 
     case 5:
@@ -599,6 +616,9 @@ static void jsontest(int i)
         expected_ts.tv_sec = 0;
         expected_ts.tv_nsec = 2000000;
         assert_ts("mincycle", gpsdata.dev.mincycle, expected_ts);
+        expected_ts.tv_sec = 1770337041L;
+        expected_ts.tv_nsec = 39000000;
+        assert_ts("activated", gpsdata.dev.activated, expected_ts);
         break;
 
     case 6:
@@ -948,7 +968,23 @@ static void jsontest(int i)
         assert_int("return", "t_integer", status, 0);
         break;
 
-#define MAXTEST 39
+    case 40:
+        status = libgps_json_unpack(json_str40, &gpsdata, NULL);
+        assert_case(status);
+        expected_ts.tv_sec = 9;
+        expected_ts.tv_nsec = 0;
+        assert_ts("activated", gpsdata.dev.activated, expected_ts);
+        break;
+
+    case 41:
+        status = libgps_json_unpack(json_str41, &gpsdata, NULL);
+        assert_case(status);
+        expected_ts.tv_sec = 13;
+        expected_ts.tv_nsec = 140000000;
+        assert_ts("activated", gpsdata.dev.activated, expected_ts);
+        break;
+
+#define MAXTEST 41
 
     default:
         (void)fputs("Unknown test number\n", stderr);

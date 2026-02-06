@@ -679,8 +679,15 @@ static int json_internal_read_object(const char *cp,
 
                         if (value_quoted) {
                             ts_tmp = iso8601_to_timespec(valbuf);
+                        } else if (NULL == strchr(valbuf, '.')) {
+                            // integer
+                            ts_tmp.tv_sec = (time_t)atoll(valbuf);
                         } else {
-                            ts_tmp.tv_sec = (time_t)atol(valbuf);
+                            // real
+                            double sec_tmp = safe_atof(valbuf);
+                            if (0 != isfinite(sec_tmp)) {
+                                DTOTS(&ts_tmp, sec_tmp);
+                            }  // else, leave at default
                         }
                         memcpy(lptr, &ts_tmp, sizeof(timespec_t));
                     }
