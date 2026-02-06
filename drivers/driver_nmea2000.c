@@ -45,7 +45,10 @@
 
 #define LOG_FILE 1
 #define NMEA2000_NETS 4
-#define NMEA2000_UNITS 256
+/* NMEA 2000 unit is a byte, but 254 is "request for address claim"
+ * and 255 is broadcast address.  So 253 is the number of units possible,
+ * and the highest unit number. */
+#define NMEA2000_UNITS 253
 #define CAN_NAMELEN 32
 #define MIN(a,b) ((a < b) ? a : b)
 
@@ -1576,7 +1579,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
 
     session->driver.nmea2000.workpgn = NULL;
     can_net = session->driver.nmea2000.can_net;
-    if (can_net > (NMEA2000_NETS-1)) {
+    if ((NMEA2000_NETS - 1) < can_net) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "NMEA2000 find_pgn: Invalid can network %d.\n", can_net);
         return;
@@ -1607,10 +1610,15 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
             (void)fprintf(logFile, "\n");
         }
 #endif  // of if LOG_FILE
+        source_unit = frame->can_id & 0x0ff;
+        if (NMEA2000_UNITS < source_unit) {
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "NMEA2000 ignoring unit %d.\n", source_unit);
+            return;
+        }
         session->driver.nmea2000.can_msgcnt += 1;
         source_pgn = (frame->can_id >> 8) & 0x1ffff;
         source_prio = (frame->can_id >> 26) & 0x7;
-        source_unit = frame->can_id & 0x0ff;
 
         if (((source_pgn & 0x0ff00) >> 8) < 240) {
             daddr  = source_pgn & 0x000ff;
