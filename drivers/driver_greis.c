@@ -14,8 +14,8 @@ http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf
  * that is configurable. A future improvement could change to read the
  * information in [MF] Message Format.
  *
- * This file is Copyright 2017 Virgin Orbit
- * This file is Copyright 2017 the GPSD project
+ * This file is Copyright Virgin Orbit
+ * This file is Copyright the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -366,8 +366,13 @@ static gps_mask_t greis_msg_SI(struct gps_device_t *session,
     }
 
     gpsd_zero_satellites(&session->gpsdata);
-    // FIXME: check against MAXCHANNELS?
-    session->gpsdata.satellites_visible = len - 1;
+    session->gpsdata.satellites_visible = (int)(len - 1);
+    if (session->gpsdata.satellites_visible > MAXCHANNELS) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "GREIS: SI too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
+    }
     for (i = 0; i < session->gpsdata.satellites_visible; i++) {
         // This isn't really PRN, this is USI.  Convert it.
         unsigned short PRN = getub(buf, i);
