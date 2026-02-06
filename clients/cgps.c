@@ -372,7 +372,9 @@ static void windowsetup(void)
 //    fflush(dlog);
 
     // turn off cursor
-    curs_set(0);
+    if (ERR == curs_set(0)) {
+        die(CGPS_SIZE, "curs_set(0) failed");
+    }
 
     if (imu_flag) {
         // We're an IMU, set up accordingly.
@@ -1628,6 +1630,9 @@ static void do_resize(void)
     // the only way to resize (set LINES and COLUMNS) is to end and start over
     if (OK != endwin()) {
         die(CGPS_ERROR, "cgps: ERROR in endwin()\n");
+    }
+    if (OK != refresh()) {
+        die(CGPS_ERROR, "cgps: ERROR in refresh()\n");
     }
     windowsetup();
 }
