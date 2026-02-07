@@ -883,8 +883,14 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
 
     if (0 != (SATELLITE_SET & gpsdata->set)) {
         int sat_no;
-        int loop_end = (display_sats < gpsdata->satellites_visible) ? \
-                display_sats : gpsdata->satellites_visible;
+        int loop_end;
+
+        if (MAXCHANNELS < gpsdata->satellites_visible) {
+            gpsdata->satellites_visible = MAXCHANNELS;
+        }
+
+        loop_end = ((display_sats < gpsdata->satellites_visible) ?
+                    display_sats : gpsdata->satellites_visible);
 
          // just repaint every time.  Hides a multitude of mistakes.
         (void)werase(satellites);

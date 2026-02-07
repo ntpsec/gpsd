@@ -2168,6 +2168,12 @@ static gps_mask_t decode_x5c(struct gps_device_t *session, const char *buf)
             mask |= SATELLITE_SET;
             session->gpsdata.satellites_visible = i + 1;
         }
+        if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                    "TSIP x5c: too many satellites %d\n",
+                     session->gpsdata.satellites_visible);
+            session->gpsdata.satellites_visible = MAXCHANNELS;
+        }
         /* If this series has fewer than last series there will
          * be no SKY, unless the cycle ender pushes the SKY */
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2254,6 +2260,12 @@ static gps_mask_t decode_x5d(struct gps_device_t *session, const char *buf)
         }
         /* If this series has fewer than last series there will
          * be no SKY, unless the cycle ender pushes the SKY */
+    }
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "TSIP x5d: too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
             "TSIP x5d: Satellite Tracking Status: Ch %2d Con %d PRN %3d "
@@ -4570,6 +4582,12 @@ static gps_mask_t decode_xa2_00(struct gps_device_t *session, const char *buf)
             mask |= SATELLITE_SET;
             session->driver.tsip.last_a200 = 0;
         }
+    }
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "TSIPv1 xa2-00: too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
     }
     /* If this series has fewer than last series there will
      * be no SKY, unless the cycle ender pushes the SKY */

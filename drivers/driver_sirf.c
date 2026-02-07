@@ -1021,13 +1021,13 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
              num_of_sats);
     }
 
-    session->gpsdata.satellites_visible = num_of_sats;
     // used?
 
     if (MAXCHANNELS < num_of_sats) {
         // shut up coverity
         num_of_sats = MAXCHANNELS;
     }
+    session->gpsdata.satellites_visible = num_of_sats;
 
     // now decode the individual sat data
     /* FIXME: num_of_sats is total sats tracked, not the number of sats
@@ -1609,6 +1609,11 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
                 nsv++;
             }
         }
+    }
+    if (MAXCHANNELS < st) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "SiRF: MTD 4 too many satellites %d\n", st);
+        st = MAXCHANNELS;
     }
     session->gpsdata.satellites_visible = st;
     session->gpsdata.satellites_used = nsv;

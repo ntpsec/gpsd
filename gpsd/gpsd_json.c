@@ -638,7 +638,11 @@ void json_sky_dump(const struct gps_device_t *session,
     }
     if (0 != (datap->set & SATELLITE_SET)) {
         // insurance against flaky drivers
-        for (i = 0; i < datap->satellites_visible; i++)
+        int max = session->gpsdata.satellites_visible;
+        if (MAXCHANNELS < max) {
+            max = MAXCHANNELS;
+        }
+        for (i = 0; i < max; i++)
             if (datap->skyview[i].PRN) {
                 reported++;
                 if (datap->skyview[i].used) {

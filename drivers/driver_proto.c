@@ -207,7 +207,8 @@ static gps_mask_t _proto__msg_svinfo(struct gps_device_t *session,
      * be set to the number of satellites which might be visible.
      */
     nchan = GET_NUMBER_OF_CHANNELS();
-    if ((nchan < 1) || (nchan > MAXCHANNELS)) {
+    if ((1 > nchan) ||
+        (MAXCHANNELS < nchan)) {
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "too many channels reported\n");
         return 0;

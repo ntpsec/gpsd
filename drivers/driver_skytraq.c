@@ -1288,6 +1288,12 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
     }
 
     session->gpsdata.satellites_visible = st;
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "Skytraq 0xDE: too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
+    }
     session->gpsdata.satellites_used = nsv;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,

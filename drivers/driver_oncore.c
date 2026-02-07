@@ -355,6 +355,12 @@ oncore_msg_navsol_8ch(struct gps_device_t *session, unsigned char *buf,
     session->gpsdata.skyview_time = session->newdata.time;
     session->gpsdata.satellites_used = (int)nsv;
     session->gpsdata.satellites_visible = (int)st;
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "oncore NAVSOL - too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
+    }
 
     mask |= SATELLITE_SET | USED_IS;
 
@@ -699,6 +705,12 @@ oncore_msg_navsol_12ch(struct gps_device_t *session, unsigned char *buf,
     session->gpsdata.skyview_time = session->newdata.time;
     session->gpsdata.satellites_used = (int)nsv;
     session->gpsdata.satellites_visible = (int)st;
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "oncore NAVSOL 12ch - too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
+    }
 
     mask |= SATELLITE_SET | USED_IS;
 

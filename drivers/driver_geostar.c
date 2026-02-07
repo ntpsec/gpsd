@@ -266,7 +266,7 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
         ul1 = getleu32(buf, OFFSET(1));
         GPSD_LOG(LOG_INF, &session->context->errout, "SVs in view %d\n", ul1);
         session->gpsdata.satellites_visible = (int)ul1;
-        if (ul1 > GEOSTAR_CHANNELS) {
+        if (GEOSTAR_CHANNELS < ul1) {
             ul1 = GEOSTAR_CHANNELS;
         }
         for(i = 0; (uint32_t)i < ul1; i++) {

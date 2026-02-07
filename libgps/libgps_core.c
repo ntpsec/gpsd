@@ -564,6 +564,9 @@ void libgps_dump_state(struct gps_data_t *collect)
     if (SATELLITE_SET & collect->set) {
         struct satellite_t *sp;
 
+        if (MAXCHANNELS < collect->satellites_visible) {
+            collect->satellites_visible = MAXCHANNELS;
+        }
         (void)fprintf(debugfp, "SKY: satellites in view: %d\n",
                       collect->satellites_visible);
         for (sp = collect->skyview;

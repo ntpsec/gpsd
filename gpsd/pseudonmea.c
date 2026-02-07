@@ -293,6 +293,12 @@ static void gpsd_binary_satellite_dump(struct gps_device_t *session,
     int satellites_visible = 0;
     bufp[0] = '\0';
 
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "gpsd_binary_satellite_dump() too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
+    }
     // check skyview[] for valid sats first
     for (i = 0; i < session->gpsdata.satellites_visible; i++) {
         if (1 > session->gpsdata.skyview[i].PRN) {

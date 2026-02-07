@@ -64,6 +64,10 @@ int main (int argc, char **argv) {
 
                 printf("Satellites visible: %d\n",
                        gps_data.satellites_visible);
+                if (MAXCHANNELS < session->gpsdata.satellites_visible ) {
+                    session->gpsdata.satellites_visible = MAXCHANNELS;
+                }
+
                 for (int i = 0; i < gps_data.satellites_visible; i++) {
                     printf("SV type: ");
                     switch (gps_data.skyview[i].gnssid) {

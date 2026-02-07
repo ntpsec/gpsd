@@ -12,7 +12,7 @@
  * So every firmware seems to have a different opinion on how
  * to implement the messages.
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -2442,6 +2442,12 @@ static gps_mask_t processGSV(int count, char *field[],
         return ONLINE_SET;
     }
     session->nmea.gsx_more = false;
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "NMEA0183: %s too many satellites %d\n", field[0],
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
+    }
     /*
      * This sanity check catches an odd behavior of SiRFstarII receivers.
      * When they can't see any satellites at all (like, inside a
@@ -3116,6 +3122,12 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
         struct satellite_t *sp;
         int i, n = session->gpsdata.satellites_visible = atoi(field[2]);
 
+        if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                    "NMEA0183: PASHR,RID: too many satellites %d\n",
+                     session->gpsdata.satellites_visible);
+            session->gpsdata.satellites_visible = MAXCHANNELS;
+        }
         session->gpsdata.satellites_used = 0;
         for (i = 0, sp = session->gpsdata.skyview;
             sp < session->gpsdata.skyview + n; sp++, i++) {

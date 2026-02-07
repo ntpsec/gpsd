@@ -183,6 +183,12 @@ static gps_mask_t decode_itk_prnstatus(struct gps_device_t *session,
         }
     }
     session->gpsdata.satellites_visible = (int)st;
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "PRN_STTUS: too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
+    }
     session->gpsdata.satellites_used = (int)nsv;
     mask = USED_IS | SATELLITE_SET;
 

@@ -712,6 +712,12 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
 
     // Satellite count
     session->gpsdata.satellites_visible = (int)sats_visible;
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "NAVCOM: too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
+    }
 
     // Fix mode
     switch (sol_status & 0x05) {
