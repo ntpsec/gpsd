@@ -3199,6 +3199,50 @@ static gps_mask_t processPERCGPsts(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Ericsson $PERC,GPver - Receiver identification
+ * Returns hardware model and serial number
+ *
+ * $PERC,GPver,<model>,<part_num>,<hw_rev>,<serial>*XX
+ *
+ * Field 1: model - "GRU 04 01" or "GRU 04 02"
+ * Field 2: part_num - "NCD 901 65/1" or "NCD 901 78/1"
+ * Field 3: hw_rev - Hardware revision (e.g., "R1E")
+ * Field 4: serial - Serial number
+ */
+static gps_mask_t processPERCGPver(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    char new_subtype[64];
+    char new_serial[32];
+
+    // field[0]="PERC", field[1]="GPver", data starts at field[2]
+    // Build new values
+    (void)snprintf(new_subtype, sizeof(new_subtype),
+                   "%s %s %s",
+                   field[2], field[3], field[4]);
+    strlcpy(new_serial, field[5], sizeof(new_serial));
+
+    // Only log at high level if changed
+    if (0 != strcmp(session->subtype, new_subtype) ||
+        0 != strcmp(session->gpsdata.dev.sernum, new_serial)) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "NMEA0183: PERC,GPver: new device %s serial %s\n",
+                 new_subtype, new_serial);
+        mask |= DEVICEID_SET;
+    } else {
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: PERC,GPver: (unchanged)\n");
+    }
+
+    // Update stored values
+    strlcpy(session->subtype, new_subtype, sizeof(session->subtype));
+    strlcpy(session->gpsdata.dev.sernum, new_serial,
+            sizeof(session->gpsdata.dev.sernum));
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -5585,6 +5629,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     } nmea_phrase[NMEA_NUM] = {
         {"PGLOR", NULL, 2,  false, processPGLOR},  // Android something...
         {"PERC", "GPsts", 4, false, processPERCGPsts},  // Ericsson receiver status
+        {"PERC", "GPver", 4, false, processPERCGPver},  // Ericsson version info
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
