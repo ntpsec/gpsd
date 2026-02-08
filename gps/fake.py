@@ -580,10 +580,13 @@ class DaemonInstance(SubprogramInstance):
 
         # try to get rid of the shmkey
         if self.shmkey:
-            result = subprocess.run(["ipcrm", "-M", self.shmkey],
-                                     capture_output=True, text=True)
+            result = subprocess.Popen(["ipcrm", "-M", self.shmkey],
+                                      stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE,
+                                      universal_newlines=True)
+            _outs, errs = result.communicate()
             if 0 != result.returncode:
-                sys.stderr.write(result.stderr)
+                sys.stderr.write("gpsfake: " + errs)
 
     def __init__(self, control_socket=None):
         """Init class DaemonInstance."""
