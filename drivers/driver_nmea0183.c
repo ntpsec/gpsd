@@ -3168,6 +3168,37 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Ericsson $PERC,GPsts - Receiver status
+ * Timing module operating mode and constellation information
+ *
+ * $PERC,GPsts,<mode>,<survey_flag>,<constellation>,<capabilities>*XX
+ *
+ * Field 1: mode - Operating mode (0=acquiring, 1=survey, 2=position-hold)
+ * Field 2: survey_flag - Survey status (0=position valid, 1=no position)
+ * Field 3: constellation - Constellation configuration (2=GPS+GLONASS)
+ * Field 4: capabilities - 18-digit capability bitmask "010011111111011111"
+ *
+ * Primary status sentence providing operating mode and system capabilities.
+ */
+static gps_mask_t processPERCGPsts(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    int mode, survey_flag, constellation;
+    gps_mask_t mask = ONLINE_SET;
+
+    // field[0]="PERC", field[1]="GPsts", data starts at field[2]
+    mode = atoi(field[2]);
+    survey_flag = atoi(field[3]);
+    constellation = atoi(field[4]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPsts: mode=%d survey_flag=%d constellation=%d "
+             "capabilities=%s\n",
+             mode, survey_flag, constellation, field[5]);
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -5553,6 +5584,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         nmea_decoder decoder;
     } nmea_phrase[NMEA_NUM] = {
         {"PGLOR", NULL, 2,  false, processPGLOR},  // Android something...
+        {"PERC", "GPsts", 4, false, processPERCGPsts},  // Ericsson receiver status
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
