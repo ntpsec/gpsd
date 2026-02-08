@@ -3332,6 +3332,50 @@ static gps_mask_t processPERCGPppf(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Ericsson $PERC,GPavp - Averaged position
+ * Position-hold reference coordinates for timing modules
+ *
+ * $PERC,GPavp,<lat>,<lat_ns>,<lon>,<lon_ew>,<alt>,<alt_unit>*XX
+ *
+ * Field 1: lat - Latitude in ddmm.mmmm format
+ * Field 2: lat_ns - Latitude hemisphere (N/S)
+ * Field 3: lon - Longitude in dddmm.mmmm format
+ * Field 4: lon_ew - Longitude hemisphere (E/W)
+ * Field 5: alt - Altitude in meters
+ * Field 6: alt_unit - Altitude units (M=meters)
+ *
+ * This sentence appears only in mode 2 (position-hold) and provides the
+ * surveyed average position that the timing module uses as its reference.
+ * Format matches standard NMEA position encoding.
+ */
+static gps_mask_t processPERCGPavp(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    double lat, lon, alt;
+
+    // field[0]="PERC", field[1]="GPavp", data starts at field[2]
+    // Format: lat, lat_ns, lon, lon_ew, alt, alt_unit
+    lat = decode_lat_or_lon(field[2]);
+    if ('S' == field[3][0])
+        lat = -lat;
+
+    lon = decode_lat_or_lon(field[4]);
+    if ('W' == field[5][0])
+        lon = -lon;
+
+    alt = safe_atof(field[6]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPavp: lat=%.6f lon=%.6f alt=%.1fm\n",
+             lat, lon, alt);
+
+    // Could optionally store in session->newdata if we want to report it
+    // For now just log it - position-hold reference is informational
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -5721,6 +5765,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PERC", "GPver", 4, false, processPERCGPver},  // Ericsson version info
         {"PERC", "GPppr", 6, false, processPERCGPppr},  // Ericsson GPS time reference
         {"PERC", "GPppf", 5, false, processPERCGPppf},  // Ericsson oscillator phase/freq
+        {"PERC", "GPavp", 6, false, processPERCGPavp},  // Ericsson averaged position
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
