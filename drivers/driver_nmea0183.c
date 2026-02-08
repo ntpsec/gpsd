@@ -3243,6 +3243,43 @@ static gps_mask_t processPERCGPver(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Ericsson $PERC,GPppr - Position pulse reference
+ * GPS time reference and PPS quality for timing modules
+ *
+ * $PERC,GPppr,<tow_sec>,<gps_week>,<param>,<sv_count>,<pps_flag>,<reserved>*XX
+ *
+ * Field 1: tow_sec - GPS Time of Week in seconds (0-604799)
+ * Field 2: gps_week - GPS week number
+ * Field 3: param - Constant parameter (always 00050, likely cable delay in ns)
+ * Field 4: sv_count - Number of satellites used in solution
+ * Field 5: pps_flag - PPS quality indicator (0=OK/locked, 3=not locked)
+ * Field 6: reserved - Reserved field (always 0)
+ *
+ * Critical timing sentence providing GPS time reference and PPS lock status.
+ * The pps_flag field indicates whether PPS output is reliable.
+ */
+static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    unsigned int tow_sec, gps_week, param, sv_count, pps_flag, reserved;
+
+    // field[0]="PERC", field[1]="GPppr", data starts at field[2]
+    tow_sec = atoi(field[2]);
+    gps_week = atoi(field[3]);
+    param = atoi(field[4]);
+    sv_count = atoi(field[5]);
+    pps_flag = atoi(field[6]);
+    reserved = atoi(field[7]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPppr: week=%u tow=%u param=%u sats=%u "
+             "pps_flag=%u (0=locked)\n",
+             gps_week, tow_sec, param, sv_count, pps_flag);
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -5630,6 +5667,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PGLOR", NULL, 2,  false, processPGLOR},  // Android something...
         {"PERC", "GPsts", 4, false, processPERCGPsts},  // Ericsson receiver status
         {"PERC", "GPver", 4, false, processPERCGPver},  // Ericsson version info
+        {"PERC", "GPppr", 6, false, processPERCGPppr},  // Ericsson GPS time reference
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
