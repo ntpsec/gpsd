@@ -3403,6 +3403,43 @@ static gps_mask_t processPERCGPreh(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Ericsson $PERC,FWsts - Firmware status
+ * Firmware version and status information for timing modules
+ *
+ * $PERC,FWsts,<grp1>,<grp2>,<grp3>,<state>,<substatus>,<type>*XX
+ *
+ * Field 1: grp1 - Status group 1 (6 digits, format XXYYZZ)
+ * Field 2: grp2 - Status group 2 (6 digits, format XXYYZZ)
+ * Field 3: grp3 - Status group 3 (6 digits, format XXYYZZ)
+ * Field 4: state - Firmware state (0-3)
+ * Field 5: substatus - Sub-status code (0=normal, 1=0xD, 2=0xE)
+ * Field 6: type - Type indicator
+ *
+ * Periodic sentence (~19s interval) providing firmware status details.
+ * Status groups contain device-specific diagnostic information.
+ */
+static gps_mask_t processPERCFWsts(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    int grp1, grp2, grp3, state, substatus, type;
+
+    // field[0]="PERC", field[1]="FWsts", data starts at field[2]
+    grp1 = atoi(field[2]);
+    grp2 = atoi(field[3]);
+    grp3 = atoi(field[4]);
+    state = atoi(field[5]);
+    substatus = atoi(field[6]);
+    type = atoi(field[7]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,FWsts: groups=%06d,%06d,%06d state=%d "
+             "substatus=%d type=%d\n",
+             grp1, grp2, grp3, state, substatus, type);
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -5794,6 +5831,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PERC", "GPppf", 5, false, processPERCGPppf},  // Ericsson oscillator phase/freq
         {"PERC", "GPavp", 6, false, processPERCGPavp},  // Ericsson averaged position
         {"PERC", "GPreh", 2, false, processPERCGPreh},  // Ericsson receiver health
+        {"PERC", "FWsts", 6, false, processPERCFWsts},  // Ericsson firmware status
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
