@@ -3280,6 +3280,58 @@ static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Ericsson $PERC,GPppf - Position phase/frequency error
+ * Oscillator discipline quality for timing modules
+ *
+ * $PERC,GPppf,<phase_error>,<freq_error>,<status>,<leap_sec>,<quality>*XX
+ *
+ * Field 1: phase_error - Phase error in nanoseconds (signed)
+ * Field 2: freq_error - Frequency error in ppb (parts per billion, signed)
+ * Field 3: status - Status indicator (1=holdover/acquiring, 0=GPS-disciplined)
+ * Field 4: leap_sec - UTC-GPS leap second offset (e.g., 18 in 2026)
+ * Field 5: quality - PPS quality indicator (0=locked, 1=good, 2=degraded)
+ *
+ * This sentence provides real-time oscillator discipline quality metrics.
+ * Phase error indicates PPS timing offset, frequency error shows oscillator
+ * stability relative to GPS reference. Leap seconds typically appear ~2.5
+ * minutes after first fix.
+ */
+static gps_mask_t processPERCGPppf(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    double phase_error, freq_error;
+    int status, leap_sec, quality;
+
+    // field[0]="PERC", field[1]="GPppf", data starts at field[2]
+    phase_error = safe_atof(field[2]);
+    freq_error = safe_atof(field[3]);
+    status = atoi(field[4]);
+    leap_sec = atoi(field[5]);
+    quality = atoi(field[6]);
+
+#ifdef OSCILLATOR_ENABLE
+    // Map to oscillator_t structure
+    session->gpsdata.osc.running = true;
+    session->gpsdata.osc.reference = true;
+    session->gpsdata.osc.disciplined = (status == 0);
+    session->gpsdata.osc.delta = (int)phase_error;
+    mask |= OSCILLATOR_SET;
+#endif
+
+    // Store leap seconds in existing gps_data_t field when valid
+    if (leap_sec > 0) {
+        session->gpsdata.leap_seconds = leap_sec;
+    }
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPppf: phase=%.1fns freq=%.1fppb "
+             "disciplined=%d leap=%d quality=%d\n",
+             phase_error, freq_error, (status == 0), leap_sec, quality);
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -5668,6 +5720,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PERC", "GPsts", 4, false, processPERCGPsts},  // Ericsson receiver status
         {"PERC", "GPver", 4, false, processPERCGPver},  // Ericsson version info
         {"PERC", "GPppr", 6, false, processPERCGPppr},  // Ericsson GPS time reference
+        {"PERC", "GPppf", 5, false, processPERCGPppf},  // Ericsson oscillator phase/freq
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
