@@ -3376,6 +3376,33 @@ static gps_mask_t processPERCGPavp(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Ericsson $PERC,GPreh - Receiver health
+ * Health status for timing modules
+ *
+ * $PERC,GPreh,<timestamp>,<health_code>*XX
+ *
+ * Field 1: timestamp - Time/date string (format varies, often null "00:00:00 00/00/0000")
+ * Field 2: health_code - Health status code (numeric)
+ *
+ * Periodic sentence (~19s interval) providing receiver health status.
+ * Health code interpretation is device-specific.
+ */
+static gps_mask_t processPERCGPreh(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    int health_code;
+
+    // field[0]="PERC", field[1]="GPreh", data starts at field[2]
+    health_code = atoi(field[3]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPreh: timestamp=%s health=%d\n",
+             field[2], health_code);
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -5766,6 +5793,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PERC", "GPppr", 6, false, processPERCGPppr},  // Ericsson GPS time reference
         {"PERC", "GPppf", 5, false, processPERCGPppf},  // Ericsson oscillator phase/freq
         {"PERC", "GPavp", 6, false, processPERCGPavp},  // Ericsson averaged position
+        {"PERC", "GPreh", 2, false, processPERCGPreh},  // Ericsson receiver health
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
