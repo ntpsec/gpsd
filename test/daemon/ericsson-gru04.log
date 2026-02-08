@@ -1,0 +1,221 @@
+# Name: Ericsson GRU 04 01/02 (NCD 901 65/1, NCD 901 78/1)
+# Chipset: ST Teseo III (Trimble customized firmware)
+# Submitter: A <a@xmission.com>
+# Date: 2026-02-08
+# Location: Ogden, Utah, USA. 41.19N 111.94W
+#
+# Both GRU 04 01 and 04 02 variants run identical firmware with identical protocol.
+# Hardware differences only:
+#   GRU 04 01 (NCD 901 65/1): Single PPS output, SMA RF connector
+#   GRU 04 02 (NCD 901 78/1): Dual PPS outputs, QMA RF connector
+#
+# Comprehensive regression test demonstrating:
+# 1. Mode 0->1->2 timing state machine transitions (acquisition -> survey -> position-hold)
+# 2. Full sentence type coverage ($PERC proprietary, standard NMEA, $PTNL Trimble-derived)
+# 3. Default periodic outputs (GPver, GPsts, GPppr, GPppf, GPavp, GPreh, FWsts, GPctr)
+#
+# This file is Copyright 2026 by the GPSD project
+# BSD terms apply: see the file COPYING in the distribution root for details.
+#
+# ============================================================================
+# Mode 0 - Acquisition (no fix, mode=0 in GPsts)
+# ============================================================================
+#
+# $PERC,GPver - Receiver identification (GRU 04 01 variant)
+# Format: model, part number, hardware revision, serial number
+$PERC,GPver,GRU 04 01,NCD 901 65/1,R1E,E640226882.2050*0B
+#
+# $PERC,GPver - Receiver identification (GRU 04 02 variant)
+# Format: model, part number, hardware revision, serial number
+$PERC,GPver,GRU 04 02,NCD 901 78/1,R1C,E640018520.1949*0A
+#
+# $PERC,GPppf - Position phase error (frequency domain)
+# Format: phase error (ns), frequency error (ppb), ?, ?, ?
+# Shows large phase error during acquisition
+$PERC,GPppf,-07.6,+000.0,1,,*73
+#
+# $PERC,GPppr - Position pulse reference (time domain)
+# Format: GPS week seconds, GPS week, seconds of day, holdover seconds, ?, ?
+$PERC,GPppr,588250,02403,00050,00,3,0*4C
+#
+# $PERC,GPsts - Receiver status
+# Format: timing mode (0=acq, 1=survey, 2=hold), alarm, constellation (2=GPS+GLONASS), satellite mask
+# Mode 0 = acquisition (no fix yet)
+$PERC,GPsts,0,0,2,010011111111011111*79
+#
+# $GPGGA - Global Positioning System Fix Data
+# Empty fields during acquisition (no position fix)
+$GPGGA,,,,,,0,00,,,,,,,*66
+#
+# $GPGSA - GPS DOP and active satellites (GPS constellation)
+$GPGSA,A,1,,,,,,,,,,,,,99.0,99.0,99.0*00
+#
+# $GNGSA - GNSS DOP and active satellites (GLONASS constellation)
+$GNGSA,A,1,,,,,,,,,,,,,99.0,99.0,99.0*1E
+#
+# $GPGSV - GPS Satellites in View
+# Shows 3 GPS satellites visible during acquisition
+$GPGSV,1,1,03,25,00,,42,19,00,,38,22,00,,34,,,,*7F
+#
+# $GLGSV - GLONASS Satellites in View
+# No GLONASS satellites tracked yet
+$GLGSV,1,1,00,,,,,,,,,,,,,,,,*65
+#
+# $PERC,FWsts - Firmware status
+# Format: firmware version (010100 = 1.1.0), ?, ?, ?, ?, ?
+$PERC,FWsts,010100,,,0,0,0*7D
+#
+# $PERC,GPreh - Receiver health
+# Format: time, date (invalid during acquisition), health status
+$PERC,GPreh,00:00:00 00/00/0000,8*58
+#
+# ============================================================================
+# Mode 1 - Survey (fix acquired, mode=1 in GPsts, collecting position data)
+# ============================================================================
+#
+# $PERC,GPver - Receiver identification (periodic output continues)
+$PERC,GPver,GRU 04 01,NCD 901 65/1,R1E,E640226882.2050*0B
+#
+# $PERC,GPppf - Position phase error
+# Phase error still present during survey
+$PERC,GPppf,-07.6,+000.0,1,,*73
+#
+# $PERC,GPppr - Position pulse reference
+$PERC,GPppr,588287,02403,00050,00,3,0*46
+#
+# $PERC,GPsts - Receiver status
+# Mode 1 = survey (collecting position samples for position-hold)
+$PERC,GPsts,1,0,2,010011111111011111*78
+#
+# Survey mode continues with additional samples
+$PERC,GPppf,-07.6,+000.0,1,,*73
+$PERC,GPppr,588288,02403,00050,08,3,0*41
+$PERC,GPsts,1,0,2,010011111111011111*78
+#
+# ============================================================================
+# Mode 2 - Position-hold (survey complete, mode=2 in GPsts, high precision timing)
+# ============================================================================
+#
+# $PERC,GPver - Receiver identification
+$PERC,GPver,GRU 04 01,NCD 901 65/1,R1E,E640226882.2050*0B
+#
+# $PERC,GPppf - Position phase error
+# Much smaller phase error in position-hold mode (high precision)
+$PERC,GPppf,+03.7,-014.7,0,18,0*4C
+#
+# $PERC,GPppr - Position pulse reference
+# Holdover counter at 0 in position-hold mode
+$PERC,GPppr,428421,02404,00050,15,0,0*47
+#
+# $PERC,GPsts - Receiver status
+# Mode 2 = position-hold (high precision timing mode)
+$PERC,GPsts,2,0,2,010011111111011111*7B
+#
+# Additional position-hold samples showing phase error stability
+$PERC,GPppf,-00.4,-013.1,0,18,0*4B
+$PERC,GPppr,428422,02404,00050,15,0,0*44
+$PERC,GPsts,2,0,2,010011111111011111*7B
+#
+$PERC,GPppf,-07.4,-010.7,0,18,0*49
+$PERC,GPppr,428423,02404,00050,15,0,0*45
+$PERC,GPsts,2,0,2,010011111111011111*7B
+#
+# $PERC,FWsts - Firmware status (periodic)
+$PERC,FWsts,010100,,,0,0,0*7D
+#
+# $PERC,GPreh - Receiver health (periodic)
+$PERC,GPreh,00:00:00 00/00/0000,8*58
+#
+# ============================================================================
+# Full sentence type coverage (mode 2, maximum output mask 0x7E83F)
+# ============================================================================
+#
+# $PERC proprietary sentences
+# ----------------------------
+#
+# $PERC,GPver - Receiver identification (already shown above)
+$PERC,GPver,GRU 04 01,NCD 901 65/1,R1E,E640226882.2050*0B
+#
+# $PERC,GPsts - Receiver status (already shown above)
+$PERC,GPsts,2,0,2,010011111111011111*7B
+#
+# $PERC,GPppr - Position pulse reference (already shown above)
+$PERC,GPppr,493578,02404,00050,16,0,0*49
+#
+# $PERC,GPppf - Position phase error (already shown above)
+$PERC,GPppf,+03.8,-025.4,0,18,0*42
+#
+# $PERC,GPavp - Averaged position
+# Format: latitude (ddmm.mmmm), N/S, longitude (dddmm.mmmm), E/W, altitude (meters), M
+$PERC,GPavp,4111.6010,N,11156.5690,W,001441.6,M*2E
+#
+# $PERC,GPreh - Receiver health (already shown above)
+$PERC,GPreh,00:00:00 00/00/0000,8*58
+#
+# $PERC,FWsts - Firmware status (already shown above)
+$PERC,FWsts,010100,,,0,0,0*7D
+#
+# $PERC,GPctr - Control sentence (heartbeat/acknowledgment)
+# Format: R = response, , , 1 = ?, , , checksum
+$PERC,GPctr,R,,,1,,*39
+#
+# Standard NMEA 0183 sentences
+# ----------------------------
+#
+# $GPGGA - Global Positioning System Fix Data
+# Format: time, latitude, N/S, longitude, E/W, fix quality, satellites, HDOP, altitude, M, geoid separation, M, , , checksum
+$GPGGA,170655.000,4111.59923,N,11156.56692,W,1,20,0.54,01443.9,M,-016.5,M,,*64
+#
+# $GPGSA - GPS DOP and active satellites (GPS constellation)
+# Format: mode, fix type, PRN list (12 slots), PDOP, HDOP, VDOP
+# Shows 8 GPS satellites in solution (PRNs 14,30,07,17,08,02,22,13)
+$GPGSA,A,3,14,30,07,17,08,02,22,13,,,,,1.00,0.54,0.84*01
+#
+# $GNGSA - GNSS DOP and active satellites (GLONASS constellation)
+# Format: mode, fix type, PRN list (12 slots), PDOP, HDOP, VDOP
+# Shows 8 GLONASS satellites in solution (PRNs 67,76,66,77,68,86,78,87)
+$GNGSA,A,3,67,76,66,77,68,86,78,87,,,,,1.00,0.54,0.84*10
+#
+# $GPGSV - GPS Satellites in View (4 sentences total, 13 satellites)
+# Format: total sentences, sentence number, total satellites, [PRN, elevation, azimuth, SNR] x4
+$GPGSV,4,1,13,14,61,276,43,30,82,002,43,07,59,104,45,21,04,249,19*7B
+$GPGSV,4,2,13,17,28,192,39,08,25,046,45,19,07,200,41,02,19,083,31*76
+$GPGSV,4,3,13,09,08,168,38,05,04,276,36,15,08,324,29,22,47,261,39*70
+$GPGSV,4,4,13,13,33,311,46,,,,,,,,,,,,*48
+#
+# $GLGSV - GLONASS Satellites in View (3 sentences total, 9 satellites)
+# Format: total sentences, sentence number, total satellites, [slot, elevation, azimuth, SNR] x4
+$GLGSV,3,1,09,67,46,261,35,76,35,057,42,66,18,199,47,77,59,348,33*65
+$GLGSV,3,2,09,68,27,322,44,85,05,015,18,86,32,070,38,78,21,283,42*60
+$GLGSV,3,3,09,87,29,119,43,,,,,,,,,,,,*56
+#
+# $GNGLL - Geographic Position - Latitude/Longitude
+# Format: latitude, N/S, longitude, E/W, UTC time, status, mode
+$GNGLL,4111.59880,N,11156.56667,W,170600.000,A,A*5A
+#
+# $GNVTG - Course Over Ground and Ground Speed
+# Format: true track, T, magnetic track, M, ground speed (knots), N, ground speed (km/h), K, mode
+$GNVTG,000.0,T,348.3,M,000.0,N,000.0,K,A*31
+#
+# $GNZDA - Time and Date
+# Format: UTC time, day, month, year, local zone hours, local zone minutes
+$GNZDA,170600.000,06,02,2026,,*4A
+#
+# $GNGNS - GNSS fix data
+# Format: UTC time, latitude, N/S, longitude, E/W, mode indicator (AANN=GPS+GLONASS autonomous), satellites, HDOP, altitude, geoid separation, age, reference station
+$GNGNS,170600.000,4111.59880,N,11156.56667,W,AANN,21,0.53,01443.9,-016.5,,*54
+#
+# $PTNL Trimble-derived proprietary sentences
+# -------------------------------------------
+#
+# $PTNLRBA - Receiver battery alarm
+# Format: battery status (1=OK, 0=low), alarm (0=none)
+$PTNLRBA,1,0*56
+#
+# $PTNLRTP - Receiver timing pulse
+# Format: pulse type (T=timing), pulse width (ns), pulse accuracy (ns)
+$PTNLRTP,T,33.23,3.0*2A
+#
+# $PTNLRXO - Receiver oscillator offset
+# Format: oscillator status (1=disciplined), frequency offset (ppb)
+$PTNLRXO,1,-468.013*79
