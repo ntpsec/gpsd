@@ -3440,6 +3440,40 @@ static gps_mask_t processPERCFWsts(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Ericsson $PERC,GPctr - Control/heartbeat
+ * Periodic heartbeat and configuration status message for timing modules
+ *
+ * $PERC,GPctr,<direction>,<data>,<f3>,<f4>,<config_byte>,<f6>,<f7>*XX
+ *
+ * Field 1: direction - 'R'=Read response, 'V'=Value notification
+ * Field 2: data - Configuration data (21 bytes per sentence)
+ * Field 3-5: Additional config fields
+ * Field 6: config_byte - Configuration byte
+ * Field 7: Reserved
+ *
+ * Periodic sentence (~15s interval) serving as keepalive/heartbeat.
+ * Provides configuration and status information.
+ */
+static gps_mask_t processPERCGPctr(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    char direction;
+    int config_byte = 0;
+
+    // field[0]="PERC", field[1]="GPctr", data starts at field[2]
+    direction = field[2][0];
+    if (field[6][0] != '\0') {
+        config_byte = atoi(field[6]);
+    }
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPctr: direction=%c data=%s config=%d\n",
+             direction, field[3], config_byte);
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -5832,6 +5866,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PERC", "GPavp", 6, false, processPERCGPavp},  // Ericsson averaged position
         {"PERC", "GPreh", 2, false, processPERCGPreh},  // Ericsson receiver health
         {"PERC", "FWsts", 6, false, processPERCFWsts},  // Ericsson firmware status
+        {"PERC", "GPctr", 6, false, processPERCGPctr},  // Ericsson control/heartbeat
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
