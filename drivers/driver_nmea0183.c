@@ -3474,6 +3474,39 @@ static gps_mask_t processPERCGPctr(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Trimble $PTNLRNM - Receiver Navigation Mode
+ * Navigation mode status for Trimble/Ericsson receivers
+ *
+ * $PTNLRNM,<mode>*XX
+ *
+ * Field 1: mode - Navigation mode status character
+ *          A = Autonomous/Active
+ *          D = Differential
+ *          E = Estimated/Dead Reckoning
+ *          N = Data not valid
+ *
+ * Periodic sentence providing receiver navigation mode status.
+ * Typically outputs 'A' for autonomous operation.
+ */
+static gps_mask_t processPTNLRNM(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    char mode;
+
+    // field[0]="PTNLRNM", data starts at field[1]
+    mode = field[1][0];
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PTNLRNM: navigation mode=%c\n",
+             mode);
+
+    // Could set session->newdata.mode based on the mode character
+    // A=MODE_3D, D=MODE_DGPS, etc., but this is informational for now
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -6079,6 +6112,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 
         {"PTKM", NULL, 0, false, NULL},           // Robertson RGC12 Gyro
         {"PTNLRHVR", NULL, 0, false, NULL},       // Trimble Software Version
+        {"PTNLRNM", NULL, 1, false, processPTNLRNM},  // Trimble receiver navigation mode
         {"PTNLRPT", NULL, 0, false, NULL},        // Trimble Serial Port COnfig
         {"PTNLRSVR", NULL, 0, false, NULL},       // Trimble Firmware Version
         {"PTNLRZD", NULL, 0, false, NULL},        // Extended Time and Date
