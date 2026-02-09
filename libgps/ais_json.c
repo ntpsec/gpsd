@@ -27,7 +27,7 @@ SPDX-License-Identifier: BSD-2-clause
 static void lenhex_unpack(const char *from,
                           size_t * plen, char *to, size_t maxlen)
 {
-    char *colon = strchr(from, ':');
+    const char *colon = strchr(from, ':');
 
     *plen = (size_t)atoi(from);
     if (NULL != colon) {
