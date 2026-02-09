@@ -809,7 +809,7 @@ int libgps_json_unpack(const char *buf,
                        struct gps_data_t *gpsdata, const char **end)
 {
     int status;
-    char *classtag = strstr(buf, "\"class\":");
+    const char *classtag = strstr(buf, "\"class\":");
 
     if (NULL == classtag) {
         return -1;
