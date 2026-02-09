@@ -25,15 +25,18 @@
  */
 socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
 {
-    char *colon, *dgpsport = "rtcm-sc104";
+    char *colon;
+    const char *dgpsport = "rtcm-sc104";
     int opts;
     char hn[256], buf[BUFSIZ];
     socket_t dsock;
     ssize_t blen;
+    char server[GPS_PATH_MAX];
 
     device->servicetype = SERVICE_DGPSIP;
     device->dgpsip.reported = false;
-    if (NULL != (colon = strchr(dgpsserver, ':'))) {
+    strlcpy(server, dgpsserver, sizeof(server));
+    if (NULL != (colon = strchr(server, ':'))) {
         dgpsport = colon + 1;
         *colon = '\0';
     }
@@ -41,7 +44,7 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
         dgpsport = DEFAULT_RTCM_PORT;
     }
 
-    dsock = netlib_connectsock(AF_UNSPEC, dgpsserver, dgpsport, "tcp");
+    dsock = netlib_connectsock(AF_UNSPEC, server, dgpsport, "tcp");
     if (0 > dsock) {
         // cast for 32-bit ints
         GPSD_LOG(LOG_ERROR, &device->context->errout,
