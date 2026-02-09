@@ -1719,9 +1719,16 @@ static gps_mask_t decode_x47(struct gps_device_t *session, const char *buf,
     // satellite count, RES SMT 360 doc says 12 max
     int count = getub(buf, 0);
 
+    if (count < TSIP_CHANNELS) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIP x47: Too many satellites %d\n", count);
+        return 0;
+    }
+
     // Status code, see vgnss_decode_status
     gpsd_zero_satellites(&session->gpsdata);
 
+    // packet too short?
     if ((5 * count + 1) > len) {
         *pbad_len = 5 * count + 1;
         return mask;
@@ -2124,72 +2131,77 @@ static gps_mask_t decode_x5c(struct gps_device_t *session, const char *buf)
         // start of new cycle, save last count
         session->gpsdata.satellites_visible =
             session->driver.tsip.last_chan_seen;
+    } else if (i > TSIP_CHANNELS) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIP x5c: Satellite Tracking Status: Too many chans %d\n", i);
+        return 0;
+    } else if (0 == PRN ||
+               32 < PRN) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "TSIPv1 x5c: invalid prn %d\n", PRN);
+        return 0;
     }
     session->driver.tsip.last_chan_seen = i;
 
-    if (i < TSIP_CHANNELS) {
-        session->gpsdata.skyview[i].PRN = PRN;
-        session->gpsdata.skyview[i].svid = PRN;
-        session->gpsdata.skyview[i].gnssid = GNSSID_GPS;
-        session->gpsdata.skyview[i].ss = snr;
-        session->gpsdata.skyview[i].elevation = el;
-        session->gpsdata.skyview[i].azimuth = az;
-        session->gpsdata.skyview[i].gnssid = tsip_gnssid(0, PRN,
-            &session->gpsdata.skyview[i].svid);
-        if (2 == (2 & eflag)) {
-            session->gpsdata.skyview[i].health = SAT_HEALTH_OK;
-        } else if (1 == eflag) {
-            session->gpsdata.skyview[i].health = SAT_HEALTH_BAD;
-        } // else, unknown
+    session->gpsdata.skyview[i].PRN = PRN;
+    session->gpsdata.skyview[i].svid = PRN;
+    session->gpsdata.skyview[i].gnssid = GNSSID_GPS;
+    session->gpsdata.skyview[i].ss = snr;
+    session->gpsdata.skyview[i].elevation = el;
+    session->gpsdata.skyview[i].azimuth = az;
+    session->gpsdata.skyview[i].gnssid = tsip_gnssid(0, PRN,
+        &session->gpsdata.skyview[i].svid);
+    if (2 == (2 & eflag)) {
+        session->gpsdata.skyview[i].health = SAT_HEALTH_OK;
+    } else if (1 == eflag) {
+        session->gpsdata.skyview[i].health = SAT_HEALTH_BAD;
+    } // else, unknown
 
-        if (0x10 == (0x10 & eflag)) {
-            session->gpsdata.skyview[i].used = true;
-            if (51 == eflag) {
-                session->newdata.status = STATUS_DGPS;
-                mask |= STATUS_SET;
-            }
-        } else {
-            session->gpsdata.skyview[i].used = false;
+    if (0x10 == (0x10 & eflag)) {
+        session->gpsdata.skyview[i].used = true;
+        if (51 == eflag) {
+            session->newdata.status = STATUS_DGPS;
+            mask |= STATUS_SET;
         }
-        /* when polled by 0x3c, all the skyview times will be the same
-         * in one cluster */
-        if (0.0 < ftow) {
-            DTOTS(&ts_tow, ftow);
-            session->gpsdata.skyview_time =
-                gpsd_gpstime_resolv(session, session->context->gps_week,
-                                    ts_tow);
-            /* do not save in session->driver.tsip.last_tow
-             * as this is skyview time, not fix time */
-        }
-        if ((i + 1) >= session->gpsdata.satellites_visible) {
-            /* Last of the series?
-             * This will cause extra SKY if this set has more
-             * sats than the last set */
-            mask |= SATELLITE_SET;
-            session->gpsdata.satellites_visible = i + 1;
-        }
-        if (MAXCHANNELS < session->gpsdata.satellites_visible) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                    "TSIP x5c: too many satellites %d\n",
-                     session->gpsdata.satellites_visible);
-            session->gpsdata.satellites_visible = MAXCHANNELS;
-        }
-        /* If this series has fewer than last series there will
-         * be no SKY, unless the cycle ender pushes the SKY */
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP x5c: Satellite Tracking Status: Ch %2d PRN %3d "
-                 "es %d Acq %d Eph %2d SNR %4.1f LMT %.04f El %.1f Az %.1f "
-                 "omf %u hlth %u\n",
-                 i, PRN, u2 & 7, acq, eflag, snr, ftow, el, az, omf,
-                session->gpsdata.skyview[i].health);
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "TSIP: acq:%s eflag:%s\n",
-                 val2str(acq, vx5c_acq),
-                 val2str(eflag, vx5c_eflag));
     } else {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIP x5c: Satellite Tracking Status: Too many chans %d\n", i);
+        session->gpsdata.skyview[i].used = false;
     }
+    /* when polled by 0x3c, all the skyview times will be the same
+     * in one cluster */
+    if (0.0 < ftow) {
+        DTOTS(&ts_tow, ftow);
+        session->gpsdata.skyview_time =
+            gpsd_gpstime_resolv(session, session->context->gps_week,
+                                ts_tow);
+        /* do not save in session->driver.tsip.last_tow
+         * as this is skyview time, not fix time */
+    }
+    if ((i + 1) >= session->gpsdata.satellites_visible) {
+        /* Last of the series?
+         * This will cause extra SKY if this set has more
+         * sats than the last set */
+        mask |= SATELLITE_SET;
+        session->gpsdata.satellites_visible = i + 1;
+    }
+    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "TSIP x5c: too many satellites %d\n",
+                 session->gpsdata.satellites_visible);
+        session->gpsdata.satellites_visible = MAXCHANNELS;
+    }
+    /* If this series has fewer than last series there will
+     * be no SKY, unless the cycle ender pushes the SKY */
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP x5c: Satellite Tracking Status: Ch %2d PRN %3d "
+             "es %d Acq %d Eph %2d SNR %4.1f LMT %.04f El %.1f Az %.1f "
+             "omf %u hlth %u\n",
+             i, PRN, u2 & 7, acq, eflag, snr, ftow, el, az, omf,
+            session->gpsdata.skyview[i].health);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "TSIP: acq:%s eflag:%s\n",
+             val2str(acq, vx5c_acq),
+             val2str(eflag, vx5c_eflag));
+
     return mask;
 }
 
@@ -2224,43 +2236,46 @@ static gps_mask_t decode_x5d(struct gps_device_t *session, const char *buf)
         // start of new cycle, save last count
         session->gpsdata.satellites_visible =
             session->driver.tsip.last_chan_seen;
+    } else if (i >= TSIP_CHANNELS) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIP x5d: Satellite Tracking Status: Too many chans %d\n", i);
+        return 0;
     }
     session->driver.tsip.last_chan_seen = i;
 
-    if (TSIP_CHANNELS > i) {
-        session->gpsdata.skyview[i].PRN = u1;
-        session->gpsdata.skyview[i].ss = f1;
-        session->gpsdata.skyview[i].elevation = d1;
-        session->gpsdata.skyview[i].azimuth = d2;
-        session->gpsdata.skyview[i].used = (bool)u4;
-        session->gpsdata.skyview[i].gnssid = tsip_gnssid(u10, u1,
-            &session->gpsdata.skyview[i].svid);
-        if (0 == u7) {
-            session->gpsdata.skyview[i].health = SAT_HEALTH_OK;
-        } else {
-            session->gpsdata.skyview[i].health = SAT_HEALTH_BAD;
-        }
-
-        /* when polled by 0x3c, all the skyview times will be the same
-         * in one cluster */
-        if (0.0 < ftow) {
-            DTOTS(&ts_tow, ftow);
-            session->gpsdata.skyview_time =
-                gpsd_gpstime_resolv(session, session->context->gps_week,
-                                    ts_tow);
-            /* do not save in session->driver.tsip.last_tow
-             * as this is skyview time, not fix time */
-        }
-        if (++i >= session->gpsdata.satellites_visible) {
-            /* Last of the series?
-             * This will cause extra SKY if this set has more
-             * sats than the last set */
-            mask |= SATELLITE_SET;
-            session->gpsdata.satellites_visible = i;
-        }
-        /* If this series has fewer than last series there will
-         * be no SKY, unless the cycle ender pushes the SKY */
+    session->gpsdata.skyview[i].PRN = u1;
+    session->gpsdata.skyview[i].ss = f1;
+    session->gpsdata.skyview[i].elevation = d1;
+    session->gpsdata.skyview[i].azimuth = d2;
+    session->gpsdata.skyview[i].used = (bool)u4;
+    session->gpsdata.skyview[i].gnssid = tsip_gnssid(u10, u1,
+        &session->gpsdata.skyview[i].svid);
+    if (0 == u7) {
+        session->gpsdata.skyview[i].health = SAT_HEALTH_OK;
+    } else {
+        session->gpsdata.skyview[i].health = SAT_HEALTH_BAD;
     }
+
+    /* when polled by 0x3c, all the skyview times will be the same
+     * in one cluster */
+    if (0.0 < ftow) {
+        DTOTS(&ts_tow, ftow);
+        session->gpsdata.skyview_time =
+            gpsd_gpstime_resolv(session, session->context->gps_week,
+                                ts_tow);
+        /* do not save in session->driver.tsip.last_tow
+         * as this is skyview time, not fix time */
+    }
+    if (++i >= session->gpsdata.satellites_visible) {
+        /* Last of the series?
+         * This will cause extra SKY if this set has more
+         * sats than the last set */
+        mask |= SATELLITE_SET;
+        session->gpsdata.satellites_visible = i;
+    }
+    /* If this series has fewer than last series there will
+     * be no SKY, unless the cycle ender pushes the SKY */
+
     if (MAXCHANNELS < session->gpsdata.satellites_visible) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                 "TSIP x5d: too many satellites %d\n",
@@ -4534,6 +4549,15 @@ static gps_mask_t decode_xa2_00(struct gps_device_t *session, const char *buf)
         // start of new cycle, save last count
         session->gpsdata.satellites_visible =
             session->driver.tsip.last_chan_seen;
+    } else if (TSIP_CHANNELS < u1) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "TSIPv1 xa2-00: too many satellites %d\n", u1);
+        return 0;
+    } else if (0 == prn ||
+               99 < prn) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "TSIPv1 xa2-00: invalid prn %d\n", prn);
+        return 0;
     }
     session->driver.tsip.last_chan_seen = u1;
     session->driver.tsip.last_a200 = tow;
