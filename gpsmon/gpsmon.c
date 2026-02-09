@@ -1032,7 +1032,7 @@ static bool do_command(const char *line)
             char parity = session.gpsdata.dev.parity;
             unsigned int stopbits =
                 (unsigned int)session.gpsdata.dev.stopbits;
-            char *modespec;
+            const char *modespec;
             const struct gps_type_t *switcher = session.device_type;
 
             if (NULL != fallback &&
