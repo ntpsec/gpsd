@@ -3496,6 +3496,109 @@ static gps_mask_t processPERCGPctr(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Ericsson $PERC,GPdbg - Debug output
+ * Satellite tracking debug and status counter for Ericsson timing modules
+ *
+ * Two variants based on type field:
+ *
+ * Type 1: Satellite tracking debug (4 messages per second when enabled)
+ * $PERC,GPdbg,1,<page_count>,<page_num>,<sv_data>...*XX
+ *
+ * Pages 1-3: Up to 7 satellites per page in PPPSSXX format:
+ *   PPP = PRN (3 digits)
+ *   SS = SNR (2 digits)
+ *   XX = Status (2 hex digits: 00=solid, 01=weak, 05=acquiring)
+ *
+ * Page 10: Timing/phase measurements with bitmask
+ *   field[5] = Satellite bitmask (hex, e.g., 07FF = 11 sats)
+ *   fields[6-19] = Timing/phase/frequency measurements
+ *
+ * Type 2: Status counter debug
+ * $PERC,GPdbg,2,<counter>*XX
+ *
+ * Enabled via command: $PERC,GPdbg,1*43
+ * Provides real-time satellite tracking status beyond standard GPGSV.
+ */
+static gps_mask_t processPERCGPdbg(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    int type, page_count, page_num, i;
+
+    // field[0]="PERC", field[1]="GPdbg", data starts at field[2]
+    type = atoi(field[2]);
+
+    if (type == 1) {
+        // Satellite tracking debug
+        page_count = atoi(field[3]);
+        page_num = atoi(field[4]);
+
+        if (page_num == 10) {
+            // Page 10: Special format with timing/phase data
+            // field[5]=bitmask (hex), field[6+]=timing fields
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "NMEA0183: PERC,GPdbg: type=1 page=%d/%d bitmask=%s "
+                     "timing=[%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s]\n",
+                     page_num, page_count, field[5],
+                     field[6], field[7], field[8], field[9], field[10],
+                     field[11], field[12], field[13], field[14], field[15],
+                     field[16], field[17], field[18], field[19]);
+        } else {
+            // Pages 1-3: Satellite tracking data
+            // Format: PRN(3)+SNR(2)+Status(2) = 7 digits per satellite
+            // Count non-empty satellite fields
+            int sv_count = 0;
+            for (i = 5; i < NMEA_MAX && field[i][0] != '\0'; i++) {
+                sv_count++;
+            }
+
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "NMEA0183: PERC,GPdbg: type=1 page=%d/%d sv_count=%d\n",
+                     page_num, page_count, sv_count);
+
+            // Log individual satellites (up to 7 per page)
+            for (i = 5; i < 5 + 7 && field[i][0] != '\0'; i++) {
+                int prn = 0, snr = 0, status = 0;
+                if (strlen(field[i]) >= 7) {
+                    // Parse PPPSSXX format
+                    char prn_str[4], snr_str[3], status_str[3];
+                    strncpy(prn_str, field[i], 3);
+                    prn_str[3] = '\0';
+                    strncpy(snr_str, field[i] + 3, 2);
+                    snr_str[2] = '\0';
+                    strncpy(status_str, field[i] + 5, 2);
+                    status_str[2] = '\0';
+
+                    prn = atoi(prn_str);
+                    snr = atoi(snr_str);
+                    status = (int)strtol(status_str, NULL, 16);
+
+                    GPSD_LOG(LOG_DATA, &session->context->errout,
+                             "NMEA0183: PERC,GPdbg:   sv%d: PRN=%d SNR=%d status=0x%02x\n",
+                             i - 4, prn, snr, status);
+                }
+            }
+        }
+    } else if (type == 2) {
+        // Status counter debug
+        int counter = atoi(field[3]);
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: PERC,GPdbg: type=2 counter=%d\n",
+                 counter);
+    } else {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: PERC,GPdbg: unknown type=%d\n",
+                 type);
+    }
+
+    // Debug data is logged but not stored in gps_data_t API structures.
+    // Per-satellite tracking status and page 10 timing measurements
+    // would require API extensions (e.g., per-SV status fields).
+    // Documented as API limitation for future work.
+
+    return mask;
+}
+
 /* Trimble $PTNLRNM - Receiver Navigation Mode
  * Navigation mode status for Trimble/Ericsson receivers
  *
@@ -6053,6 +6156,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PERC", "FWsts", 6, false, processPERCFWsts},  // Ericsson firmware status
         {"PERC", "GPavp", 6, false, processPERCGPavp},  // Ericsson averaged position
         {"PERC", "GPctr", 6, false, processPERCGPctr},  // Ericsson control/heartbeat
+        {"PERC", "GPdbg", 19, false, processPERCGPdbg},  // Ericsson debug output
         {"PERC", "GPppf", 5, false, processPERCGPppf},  // Ericsson oscillator phase/freq
         {"PERC", "GPppr", 6, false, processPERCGPppr},  // Ericsson GPS time reference
         {"PERC", "GPreh", 2, false, processPERCGPreh},  // Ericsson receiver health
