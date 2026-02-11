@@ -3213,30 +3213,32 @@ static gps_mask_t processPERCGPver(int c UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
-    char new_subtype[64];
     char new_serial[32];
+    char old_subtype[64];
 
     // field[0]="PERC", field[1]="GPver", data starts at field[2]
-    // Build new values
-    (void)snprintf(new_subtype, sizeof(new_subtype),
-                   "%s %s %s",
-                   field[2], field[3], field[4]);
+    // Save old subtype for comparison
+    strlcpy(old_subtype, session->subtype, sizeof(old_subtype));
     strlcpy(new_serial, field[5], sizeof(new_serial));
 
+    // Build subtype directly into session->subtype
+    (void)snprintf(session->subtype, sizeof(session->subtype),
+                   "%s %s %s",
+                   field[2], field[3], field[4]);
+
     // Only log at high level if changed
-    if (0 != strcmp(session->subtype, new_subtype) ||
+    if (0 != strcmp(old_subtype, session->subtype) ||
         0 != strcmp(session->gpsdata.dev.sernum, new_serial)) {
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "NMEA0183: PERC,GPver: new device %s serial %s\n",
-                 new_subtype, new_serial);
+                 session->subtype, new_serial);
         mask |= DEVICEID_SET;
     } else {
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: PERC,GPver: (unchanged)\n");
     }
 
-    // Update stored values
-    strlcpy(session->subtype, new_subtype, sizeof(session->subtype));
+    // Update serial number
     strlcpy(session->gpsdata.dev.sernum, new_serial,
             sizeof(session->gpsdata.dev.sernum));
 
@@ -3263,6 +3265,7 @@ static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
 {
     gps_mask_t mask = ONLINE_SET;
     unsigned int tow_sec, gps_week, param, sv_count, pps_flag, reserved;
+    timespec_t ts_tow;
 
     // field[0]="PERC", field[1]="GPppr", data starts at field[2]
     tow_sec = atoi(field[2]);
@@ -3276,6 +3279,16 @@ static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
              "NMEA0183: PERC,GPppr: week=%u tow=%u param=%u sats=%u "
              "pps_flag=%u (0=locked)\n",
              gps_week, tow_sec, param, sv_count, pps_flag);
+
+    // Convert GPS week + TOW to Unix timestamp
+    ts_tow.tv_sec = tow_sec;
+    ts_tow.tv_nsec = 0;
+    session->newdata.time = gpsd_gpstime_resolv(session, gps_week, ts_tow);
+    mask |= TIME_SET;
+
+    // Save satellite count
+    session->gpsdata.satellites_used = (int)sv_count;
+    mask |= SATELLITE_SET;
 
     return mask;
 }
@@ -3310,19 +3323,16 @@ static gps_mask_t processPERCGPppf(int c UNUSED, char *field[],
     leap_sec = atoi(field[5]);
     quality = atoi(field[6]);
 
-#ifdef OSCILLATOR_ENABLE
-    // Map to oscillator_t structure
+    // Note: Always populate oscillator data - distros configure builds
+    // inconsistently. The oscillator field is part of the standard API.
     session->gpsdata.osc.running = true;
     session->gpsdata.osc.reference = true;
     session->gpsdata.osc.disciplined = (status == 0);
     session->gpsdata.osc.delta = (int)phase_error;
     mask |= OSCILLATOR_SET;
-#endif
 
-    // Store leap seconds in existing gps_data_t field when valid
-    if (leap_sec > 0) {
-        session->gpsdata.leap_seconds = leap_sec;
-    }
+    // Store leap seconds (can be negative in the future!)
+    session->gpsdata.leap_seconds = leap_sec;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "NMEA0183: PERC,GPppf: phase=%.1fns freq=%.1fppb "
@@ -3370,8 +3380,11 @@ static gps_mask_t processPERCGPavp(int c UNUSED, char *field[],
              "NMEA0183: PERC,GPavp: lat=%.6f lon=%.6f alt=%.1fm\n",
              lat, lon, alt);
 
-    // Could optionally store in session->newdata if we want to report it
-    // For now just log it - position-hold reference is informational
+    // Save surveyed/averaged position (position-hold reference)
+    session->newdata.latitude = lat;
+    session->newdata.longitude = lon;
+    session->newdata.altHAE = alt;
+    mask |= LATLON_SET | ALTITUDE_SET;
 
     return mask;
 }
@@ -3424,6 +3437,14 @@ static gps_mask_t processPERCFWsts(int c UNUSED, char *field[],
     gps_mask_t mask = ONLINE_SET;
     int grp1, grp2, grp3, state, substatus, type;
 
+    static const struct vlist_t vfwsts_type[] = {
+        {0, "Normal"},
+        {1, "Type 1"},
+        {2, "Type 2"},
+        {3, "Type 3"},
+        {0, NULL},
+    };
+
     // field[0]="PERC", field[1]="FWsts", data starts at field[2]
     grp1 = atoi(field[2]);
     grp2 = atoi(field[3]);
@@ -3434,8 +3455,9 @@ static gps_mask_t processPERCFWsts(int c UNUSED, char *field[],
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "NMEA0183: PERC,FWsts: groups=%06d,%06d,%06d state=%d "
-             "substatus=%d type=%d\n",
-             grp1, grp2, grp3, state, substatus, type);
+             "substatus=%d type=%s(%d)\n",
+             grp1, grp2, grp3, state, substatus,
+             val2str(type, vfwsts_type), type);
 
     return mask;
 }
@@ -3494,15 +3516,39 @@ static gps_mask_t processPTNLRNM(int c UNUSED, char *field[],
     gps_mask_t mask = ONLINE_SET;
     char mode;
 
+    static const struct vlist_t vptnlrnm_mode[] = {
+        {'A', "Autonomous"},
+        {'D', "Differential"},
+        {'E', "Estimated"},
+        {'N', "Invalid"},
+        {0, NULL},
+    };
+
     // field[0]="PTNLRNM", data starts at field[1]
     mode = field[1][0];
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: PTNLRNM: navigation mode=%c\n",
-             mode);
+             "NMEA0183: PTNLRNM: navigation mode=%c (%s)\n",
+             mode, val2str(mode, vptnlrnm_mode));
 
-    // Could set session->newdata.mode based on the mode character
-    // A=MODE_3D, D=MODE_DGPS, etc., but this is informational for now
+    // Map mode to GPS status
+    switch (mode) {
+    case 'A':
+        session->newdata.status = STATUS_GPS;
+        mask |= STATUS_SET;
+        break;
+    case 'D':
+        session->newdata.status = STATUS_DGPS;
+        mask |= STATUS_SET;
+        break;
+    case 'E':
+        session->newdata.status = STATUS_DR;
+        mask |= STATUS_SET;
+        break;
+    default:
+        // N or unknown - no status set
+        break;
+    }
 
     return mask;
 }
@@ -5892,14 +5938,14 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         nmea_decoder decoder;
     } nmea_phrase[NMEA_NUM] = {
         {"PGLOR", NULL, 2,  false, processPGLOR},  // Android something...
+        {"PERC", "FWsts", 6, false, processPERCFWsts},  // Ericsson firmware status
+        {"PERC", "GPavp", 6, false, processPERCGPavp},  // Ericsson averaged position
+        {"PERC", "GPctr", 6, false, processPERCGPctr},  // Ericsson control/heartbeat
+        {"PERC", "GPppf", 5, false, processPERCGPppf},  // Ericsson oscillator phase/freq
+        {"PERC", "GPppr", 6, false, processPERCGPppr},  // Ericsson GPS time reference
+        {"PERC", "GPreh", 2, false, processPERCGPreh},  // Ericsson receiver health
         {"PERC", "GPsts", 4, false, processPERCGPsts},  // Ericsson receiver status
         {"PERC", "GPver", 4, false, processPERCGPver},  // Ericsson version info
-        {"PERC", "GPppr", 6, false, processPERCGPppr},  // Ericsson GPS time reference
-        {"PERC", "GPppf", 5, false, processPERCGPppf},  // Ericsson oscillator phase/freq
-        {"PERC", "GPavp", 6, false, processPERCGPavp},  // Ericsson averaged position
-        {"PERC", "GPreh", 2, false, processPERCGPreh},  // Ericsson receiver health
-        {"PERC", "FWsts", 6, false, processPERCFWsts},  // Ericsson firmware status
-        {"PERC", "GPctr", 6, false, processPERCGPctr},  // Ericsson control/heartbeat
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
