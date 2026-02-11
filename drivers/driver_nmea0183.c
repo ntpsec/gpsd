@@ -3553,6 +3553,118 @@ static gps_mask_t processPTNLRNM(int c UNUSED, char *field[],
     return mask;
 }
 
+/* Trimble $PTNLRBA - Antenna status
+ * Antenna connection health monitoring for Trimble/Ericsson receivers
+ *
+ * $PTNLRBA,<status>,<flag>*XX
+ *
+ * Field 1: status - Antenna status (1=OK, 0=fault)
+ * Field 2: flag - Additional status flag
+ *
+ * Monitors antenna connection health. Important for timing applications
+ * as antenna problems directly affect signal quality and position accuracy.
+ */
+static gps_mask_t processPTNLRBA(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    int status, flag;
+
+    static const struct vlist_t vptnlrba_status[] = {
+        {0, "Fault"},
+        {1, "OK"},
+        {0, NULL},
+    };
+
+    // field[0]="PTNLRBA", data starts at field[1]
+    status = atoi(field[1]);
+    flag = atoi(field[2]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PTNLRBA: antenna_status=%s(%d) flag=%d\n",
+             val2str(status, vptnlrba_status), status, flag);
+
+    // Antenna status could be mapped to gps_data_t if antenna health
+    // field is added to the API. For now, logged for diagnostic purposes.
+
+    return mask;
+}
+
+/* Trimble $PTNLRTP - Receiver temperature
+ * Internal temperature monitoring for Trimble/Ericsson receivers
+ *
+ * $PTNLRTP,T,<temp>,<precision>*XX
+ *
+ * Field 1: type - Always 'T' for temperature
+ * Field 2: temp - Temperature in degrees Celsius
+ * Field 3: precision - Temperature measurement precision/accuracy
+ *
+ * Monitors receiver internal temperature. Useful for thermal stability
+ * analysis in timing applications. Observed range: 30-40°C typical.
+ */
+static gps_mask_t processPTNLRTP(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    double temp, precision;
+    char type;
+
+    // field[0]="PTNLRTP", data starts at field[1]
+    type = field[1][0];
+    temp = safe_atof(field[2]);
+    precision = safe_atof(field[3]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PTNLRTP: type=%c temp=%.2f°C precision=%.1f\n",
+             type, temp, precision);
+
+    // Temperature data could be stored if a temperature field is added
+    // to gps_data_t. For now, logged for thermal analysis.
+    // Note: API extension needed for temperature storage.
+
+    return mask;
+}
+
+/* Trimble $PTNLRXO - Crystal oscillator status
+ * Oscillator lock and frequency offset for Trimble/Ericsson receivers
+ *
+ * $PTNLRXO,<status>,<offset>*XX
+ *
+ * Field 1: status - Oscillator lock status (1=locked, 0=unlocked)
+ * Field 2: offset - Frequency offset in ppb (parts per billion)
+ *
+ * Reports crystal oscillator disciplining status and frequency error.
+ * Complementary to $PERC,GPppf which provides phase error in nanoseconds.
+ * Typical offset: -450 to -500 ppb for this hardware.
+ */
+static gps_mask_t processPTNLRXO(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    int status;
+    double offset;
+
+    static const struct vlist_t vptnlrxo_status[] = {
+        {0, "Unlocked"},
+        {1, "Locked"},
+        {0, NULL},
+    };
+
+    // field[0]="PTNLRXO", data starts at field[1]
+    status = atoi(field[1]);
+    offset = safe_atof(field[2]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PTNLRXO: osc_status=%s(%d) offset=%.3f ppb\n",
+             val2str(status, vptnlrxo_status), status, offset);
+
+    // Frequency offset could be stored alongside GPppf data if an
+    // extended oscillator_t structure is added to gps_data_t.
+    // Note: API extension needed for frequency offset storage.
+
+    return mask;
+}
+
 /* Android GNSS super message
  * A stub.
  */
@@ -6157,10 +6269,13 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PTNI", NULL, 0, false, NULL},
 
         {"PTKM", NULL, 0, false, NULL},           // Robertson RGC12 Gyro
+        {"PTNLRBA", NULL, 2, false, processPTNLRBA},  // Trimble/Ericsson antenna status
         {"PTNLRHVR", NULL, 0, false, NULL},       // Trimble Software Version
         {"PTNLRNM", NULL, 1, false, processPTNLRNM},  // Trimble receiver navigation mode
         {"PTNLRPT", NULL, 0, false, NULL},        // Trimble Serial Port COnfig
         {"PTNLRSVR", NULL, 0, false, NULL},       // Trimble Firmware Version
+        {"PTNLRTP", NULL, 3, false, processPTNLRTP},  // Trimble/Ericsson temperature
+        {"PTNLRXO", NULL, 2, false, processPTNLRXO},  // Trimble/Ericsson oscillator status
         {"PTNLRZD", NULL, 0, false, NULL},        // Extended Time and Date
         {"PTNTA", NULL, 8, false, processTNTA},
         {"PTNTHTM", NULL, 9, false, processTNTHTM},
