@@ -6,7 +6,7 @@
  *
  * By Viktar Palstsiuk, viktar.palstsiuk@promwad.com
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -50,11 +50,17 @@ static int decode_channel_id (uint32_t ch_id) {
  *         negative on error
  */
 static int geostar_write(struct gps_device_t *session,
-                         unsigned int id, unsigned char *data, size_t len)
+                         unsigned int id, const unsigned char *data,
+                         size_t len)
 {
     int i;
     unsigned long cs = 0;
 
+    if (sizeof(session->msgbuf) < ((len * 4) - 12)) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "geostar_write() write too long  %zu\n", len);
+        return -1;
+    }
     putbyte(session->msgbuf, 0, 'P');
     putbyte(session->msgbuf, 1, 'S');
     putbyte(session->msgbuf, 2, 'G');
@@ -82,8 +88,9 @@ static int geostar_write(struct gps_device_t *session,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "Sent GeoStar packet id 0x%x\n", id);
     if (gpsd_write(session, session->msgbuf, session->msgbuflen) !=
-        (ssize_t)session->msgbuflen)
+        (ssize_t)session->msgbuflen) {
         return -1;
+    }
 
     return 0;
 }
@@ -131,16 +138,16 @@ static bool geostar_detect(struct gps_device_t *session)
 
 static gps_mask_t geostar_analyze(struct gps_device_t *session)
 {
-    int i, len;
+    int i;
     gps_mask_t mask = 0;
     unsigned int id;
     uint16_t uw1, uw2;
     uint32_t ul1, ul2, ul3, ul4, ul5;
     double d1, d2, d3, d4, d5;
-    char buf[BUFSIZ];
-    char buf2[BUFSIZ];
+    char buf[sizeof(session->lexer.outbuffer)];
+    unsigned char buf2[sizeof(session->lexer.outbuffer) * 3];
 
-    if (session->lexer.type != GEOSTAR_PACKET) {
+    if (GEOSTAR_PACKET != session->lexer.type) {
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "geostar_analyze packet type %d\n",
                  session->lexer.type);
@@ -149,6 +156,14 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
 
     if (12 > session->lexer.outbuflen ||
         'P' != session->lexer.outbuffer[0]) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "geostar_analyze invalid packet\n");
+        return 0;
+    }
+    if (sizeof(buf) <= session->lexer.outbuflen) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "geostar_analyze overlong packet %zd\n",
+                 session->lexer.outbuflen);
         return 0;
     }
 
@@ -157,16 +172,12 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
     memset(buf, 0, sizeof(buf));
     memcpy(buf, session->lexer.outbuffer, session->lexer.outbuflen);
 
-    buf2[len = 0] = '\0';
-    for (i = 0; i < (int)session->lexer.outbuflen; i++) {
-        str_appendf(buf2, sizeof(buf2),
-                    "%02x", buf[len++] = session->lexer.outbuffer[i]);
-    }
-
     id = (unsigned int)getleu16(session->lexer.outbuffer, OFFSET(0));
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "GeoStar packet id 0x%02x length %d: %s\n", id, len, buf2);
+             "GeoStar packet id 0x%02x length %zd: %s\n",
+             id, session->lexer.outbuflen,
+             gps_hexdump(buf, session->lexer.outbuflen, buf2, sizeof(buf2)));
 
     session->cycle_end_reliable = true;
 
@@ -513,9 +524,10 @@ static gps_mask_t geostar_parse_input(struct gps_device_t *session)
 static ssize_t geostar_control_send(struct gps_device_t *session,
                                  char *buf, size_t buflen)
 {
-    return (ssize_t) geostar_write(session,
-                                   (unsigned int)buf[0],
-                                   (unsigned char *)buf + 1, (buflen - 1)/4);
+    return (ssize_t)geostar_write(session,
+                                  (unsigned int)buf[0],
+                                  (unsigned char *)buf + 1,
+                                  (buflen - 1) / 4);
 }
 
 
@@ -539,8 +551,8 @@ static void geostar_event_hook(struct gps_device_t *session, event_t event)
         return;
     }
 
-    if (event == EVENT_IDENTIFIED ||
-        event == EVENT_REACTIVATE) {
+    if (EVENT_IDENTIFIED == event ||
+        EVENT_REACTIVATE == event) {
         // Select binary packets
         putbe32(buf, 0, 0xffff0000);
         putbe32(buf, 4, 0);
@@ -570,7 +582,7 @@ static void geostar_event_hook(struct gps_device_t *session, event_t event)
     }
 
     if (EVENT_DEACTIVATE == event) {
-        // Perform cold restart
+        // Perform cold restart.  Seem brutal??
         putbe32(buf, 0, 3);
         (void)geostar_write(session, 0xc2, buf, 1);
     }
