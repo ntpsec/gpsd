@@ -3168,176 +3168,48 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
     return mask;
 }
 
-/* Ericsson $PERC,GPsts - Receiver status
- * Timing module operating mode and constellation information
+/* Ericsson $PERC,FWsts - Firmware status
+ * Firmware version and status information for timing modules
  *
- * $PERC,GPsts,<mode>,<survey_flag>,<constellation>,<capabilities>*XX
+ * $PERC,FWsts,<grp1>,<grp2>,<grp3>,<state>,<substatus>,<type>*XX
  *
- * Field 1: mode - Operating mode (0=acquiring, 1=survey, 2=position-hold)
- * Field 2: survey_flag - Survey status (0=position valid, 1=no position)
- * Field 3: constellation - Constellation configuration (2=GPS+GLONASS)
- * Field 4: capabilities - 18-digit capability bitmask "010011111111011111"
+ * Field 1: grp1 - Status group 1 (6 digits, format XXYYZZ)
+ * Field 2: grp2 - Status group 2 (6 digits, format XXYYZZ)
+ * Field 3: grp3 - Status group 3 (6 digits, format XXYYZZ)
+ * Field 4: state - Firmware state (0-3)
+ * Field 5: substatus - Sub-status code (0=normal, 1=0xD, 2=0xE)
+ * Field 6: type - Type indicator
  *
- * Primary status sentence providing operating mode and system capabilities.
+ * Periodic sentence (~19s interval) providing firmware status details.
+ * Status groups contain device-specific diagnostic information.
  */
-static gps_mask_t processPERCGPsts(int c UNUSED, char *field[],
+static gps_mask_t processPERCFWsts(int c UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
-    int mode, survey_flag, constellation;
     gps_mask_t mask = ONLINE_SET;
+    int grp1, grp2, grp3, state, substatus, type;
 
-    // field[0]="PERC", field[1]="GPsts", data starts at field[2]
-    mode = atoi(field[2]);
-    survey_flag = atoi(field[3]);
-    constellation = atoi(field[4]);
+    static const struct vlist_t vfwsts_type[] = {
+        {0, "Normal"},
+        {1, "Type 1"},
+        {2, "Type 2"},
+        {3, "Type 3"},
+        {0, NULL},
+    };
+
+    // field[0]="PERC", field[1]="FWsts", data starts at field[2]
+    grp1 = atoi(field[2]);
+    grp2 = atoi(field[3]);
+    grp3 = atoi(field[4]);
+    state = atoi(field[5]);
+    substatus = atoi(field[6]);
+    type = atoi(field[7]);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: PERC,GPsts: mode=%d survey_flag=%d constellation=%d "
-             "capabilities=%s\n",
-             mode, survey_flag, constellation, field[5]);
-
-    return mask;
-}
-
-/* Ericsson $PERC,GPver - Receiver identification
- * Returns hardware model and serial number
- *
- * $PERC,GPver,<model>,<part_num>,<hw_rev>,<serial>*XX
- *
- * Field 1: model - "GRU 04 01" or "GRU 04 02"
- * Field 2: part_num - "NCD 901 65/1" or "NCD 901 78/1"
- * Field 3: hw_rev - Hardware revision (e.g., "R1E")
- * Field 4: serial - Serial number
- */
-static gps_mask_t processPERCGPver(int c UNUSED, char *field[],
-                                   struct gps_device_t *session)
-{
-    gps_mask_t mask = ONLINE_SET;
-    char new_serial[32];
-    char old_subtype[64];
-
-    // field[0]="PERC", field[1]="GPver", data starts at field[2]
-    // Save old subtype for comparison
-    strlcpy(old_subtype, session->subtype, sizeof(old_subtype));
-    strlcpy(new_serial, field[5], sizeof(new_serial));
-
-    // Build subtype directly into session->subtype
-    (void)snprintf(session->subtype, sizeof(session->subtype),
-                   "%s %s %s",
-                   field[2], field[3], field[4]);
-
-    // Only log at high level if changed
-    if (0 != strcmp(old_subtype, session->subtype) ||
-        0 != strcmp(session->gpsdata.dev.sernum, new_serial)) {
-        GPSD_LOG(LOG_INF, &session->context->errout,
-                 "NMEA0183: PERC,GPver: new device %s serial %s\n",
-                 session->subtype, new_serial);
-        mask |= DEVICEID_SET;
-    } else {
-        GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "NMEA0183: PERC,GPver: (unchanged)\n");
-    }
-
-    // Update serial number
-    strlcpy(session->gpsdata.dev.sernum, new_serial,
-            sizeof(session->gpsdata.dev.sernum));
-
-    return mask;
-}
-
-/* Ericsson $PERC,GPppr - Position pulse reference
- * GPS time reference and PPS quality for timing modules
- *
- * $PERC,GPppr,<tow_sec>,<gps_week>,<param>,<sv_count>,<pps_flag>,<reserved>*XX
- *
- * Field 1: tow_sec - GPS Time of Week in seconds (0-604799)
- * Field 2: gps_week - GPS week number
- * Field 3: param - Constant parameter (always 00050, likely cable delay in ns)
- * Field 4: sv_count - Number of satellites used in solution
- * Field 5: pps_flag - PPS quality indicator (0=OK/locked, 3=not locked)
- * Field 6: reserved - Reserved field (always 0)
- *
- * Critical timing sentence providing GPS time reference and PPS lock status.
- * The pps_flag field indicates whether PPS output is reliable.
- */
-static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
-                                   struct gps_device_t *session)
-{
-    gps_mask_t mask = ONLINE_SET;
-    unsigned int tow_sec, gps_week, param, sv_count, pps_flag, reserved;
-    timespec_t ts_tow;
-
-    // field[0]="PERC", field[1]="GPppr", data starts at field[2]
-    tow_sec = atoi(field[2]);
-    gps_week = atoi(field[3]);
-    param = atoi(field[4]);
-    sv_count = atoi(field[5]);
-    pps_flag = atoi(field[6]);
-    reserved = atoi(field[7]);
-
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: PERC,GPppr: week=%u tow=%u param=%u sats=%u "
-             "pps_flag=%u (0=locked)\n",
-             gps_week, tow_sec, param, sv_count, pps_flag);
-
-    // Convert GPS week + TOW to Unix timestamp
-    ts_tow.tv_sec = tow_sec;
-    ts_tow.tv_nsec = 0;
-    session->newdata.time = gpsd_gpstime_resolv(session, gps_week, ts_tow);
-    mask |= TIME_SET;
-
-    // Save satellite count
-    session->gpsdata.satellites_used = (int)sv_count;
-    mask |= SATELLITE_SET;
-
-    return mask;
-}
-
-/* Ericsson $PERC,GPppf - Position phase/frequency error
- * Oscillator discipline quality for timing modules
- *
- * $PERC,GPppf,<phase_error>,<freq_error>,<status>,<leap_sec>,<quality>*XX
- *
- * Field 1: phase_error - Phase error in nanoseconds (signed)
- * Field 2: freq_error - Frequency error in ppb (parts per billion, signed)
- * Field 3: status - Status indicator (1=holdover/acquiring, 0=GPS-disciplined)
- * Field 4: leap_sec - UTC-GPS leap second offset (e.g., 18 in 2026)
- * Field 5: quality - PPS quality indicator (0=locked, 1=good, 2=degraded)
- *
- * This sentence provides real-time oscillator discipline quality metrics.
- * Phase error indicates PPS timing offset, frequency error shows oscillator
- * stability relative to GPS reference. Leap seconds typically appear ~2.5
- * minutes after first fix.
- */
-static gps_mask_t processPERCGPppf(int c UNUSED, char *field[],
-                                   struct gps_device_t *session)
-{
-    gps_mask_t mask = ONLINE_SET;
-    double phase_error, freq_error;
-    int status, leap_sec, quality;
-
-    // field[0]="PERC", field[1]="GPppf", data starts at field[2]
-    phase_error = safe_atof(field[2]);
-    freq_error = safe_atof(field[3]);
-    status = atoi(field[4]);
-    leap_sec = atoi(field[5]);
-    quality = atoi(field[6]);
-
-    // Note: Always populate oscillator data - distros configure builds
-    // inconsistently. The oscillator field is part of the standard API.
-    session->gpsdata.osc.running = true;
-    session->gpsdata.osc.reference = true;
-    session->gpsdata.osc.disciplined = (status == 0);
-    session->gpsdata.osc.delta = (int)phase_error;
-    mask |= OSCILLATOR_SET;
-
-    // Store leap seconds (can be negative in the future!)
-    session->gpsdata.leap_seconds = leap_sec;
-
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: PERC,GPppf: phase=%.1fns freq=%.1fppb "
-             "disciplined=%d leap=%d quality=%d\n",
-             phase_error, freq_error, (status == 0), leap_sec, quality);
+             "NMEA0183: PERC,FWsts: groups=%06d,%06d,%06d state=%d "
+             "substatus=%d type=%s(%d)\n",
+             grp1, grp2, grp3, state, substatus,
+             val2str(type, vfwsts_type), type);
 
     return mask;
 }
@@ -3385,79 +3257,6 @@ static gps_mask_t processPERCGPavp(int c UNUSED, char *field[],
     session->newdata.longitude = lon;
     session->newdata.altHAE = alt;
     mask |= LATLON_SET | ALTITUDE_SET;
-
-    return mask;
-}
-
-/* Ericsson $PERC,GPreh - Receiver health
- * Health status for timing modules
- *
- * $PERC,GPreh,<timestamp>,<health_code>*XX
- *
- * Field 1: timestamp - Time/date string (format varies, often null "00:00:00 00/00/0000")
- * Field 2: health_code - Health status code (numeric)
- *
- * Periodic sentence (~19s interval) providing receiver health status.
- * Health code interpretation is device-specific.
- */
-static gps_mask_t processPERCGPreh(int c UNUSED, char *field[],
-                                   struct gps_device_t *session)
-{
-    gps_mask_t mask = ONLINE_SET;
-    int health_code;
-
-    // field[0]="PERC", field[1]="GPreh", data starts at field[2]
-    health_code = atoi(field[3]);
-
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: PERC,GPreh: timestamp=%s health=%d\n",
-             field[2], health_code);
-
-    return mask;
-}
-
-/* Ericsson $PERC,FWsts - Firmware status
- * Firmware version and status information for timing modules
- *
- * $PERC,FWsts,<grp1>,<grp2>,<grp3>,<state>,<substatus>,<type>*XX
- *
- * Field 1: grp1 - Status group 1 (6 digits, format XXYYZZ)
- * Field 2: grp2 - Status group 2 (6 digits, format XXYYZZ)
- * Field 3: grp3 - Status group 3 (6 digits, format XXYYZZ)
- * Field 4: state - Firmware state (0-3)
- * Field 5: substatus - Sub-status code (0=normal, 1=0xD, 2=0xE)
- * Field 6: type - Type indicator
- *
- * Periodic sentence (~19s interval) providing firmware status details.
- * Status groups contain device-specific diagnostic information.
- */
-static gps_mask_t processPERCFWsts(int c UNUSED, char *field[],
-                                   struct gps_device_t *session)
-{
-    gps_mask_t mask = ONLINE_SET;
-    int grp1, grp2, grp3, state, substatus, type;
-
-    static const struct vlist_t vfwsts_type[] = {
-        {0, "Normal"},
-        {1, "Type 1"},
-        {2, "Type 2"},
-        {3, "Type 3"},
-        {0, NULL},
-    };
-
-    // field[0]="PERC", field[1]="FWsts", data starts at field[2]
-    grp1 = atoi(field[2]);
-    grp2 = atoi(field[3]);
-    grp3 = atoi(field[4]);
-    state = atoi(field[5]);
-    substatus = atoi(field[6]);
-    type = atoi(field[7]);
-
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: PERC,FWsts: groups=%06d,%06d,%06d state=%d "
-             "substatus=%d type=%s(%d)\n",
-             grp1, grp2, grp3, state, substatus,
-             val2str(type, vfwsts_type), type);
 
     return mask;
 }
@@ -3557,24 +3356,24 @@ static gps_mask_t processPERCGPdbg(int c UNUSED, char *field[],
                      page_num, page_count, sv_count);
 
             // Log individual satellites (up to 7 per page)
+            // FIXME: save them in skyview[]
             for (i = 5; i < 5 + 7 && field[i][0] != '\0'; i++) {
                 int prn = 0, snr = 0, status = 0;
-                if (strlen(field[i]) >= 7) {
+                if (7 <= strnlen(field[i], 8)) {
                     // Parse PPPSSXX format
                     char prn_str[4], snr_str[3], status_str[3];
-                    strncpy(prn_str, field[i], 3);
-                    prn_str[3] = '\0';
-                    strncpy(snr_str, field[i] + 3, 2);
-                    snr_str[2] = '\0';
-                    strncpy(status_str, field[i] + 5, 2);
-                    status_str[2] = '\0';
+
+                    strlcpy(prn_str, field[i], sizeof(prn_str));
+                    strlcpy(snr_str, field[i] + 3, sizeof(snr_str));
+                    strlcpy(status_str, field[i] + 5, sizeof(status_str));
 
                     prn = atoi(prn_str);
                     snr = atoi(snr_str);
                     status = (int)strtol(status_str, NULL, 16);
 
                     GPSD_LOG(LOG_DATA, &session->context->errout,
-                             "NMEA0183: PERC,GPdbg:   sv%d: PRN=%d SNR=%d status=0x%02x\n",
+                             "NMEA0183: PERC,GPdbg:   sv%d: PRN=%d SNR=%d "
+                             "status=0x%02x\n",
                              i - 4, prn, snr, status);
                 }
             }
@@ -3593,8 +3392,210 @@ static gps_mask_t processPERCGPdbg(int c UNUSED, char *field[],
 
     // Debug data is logged but not stored in gps_data_t API structures.
     // Per-satellite tracking status and page 10 timing measurements
-    // would require API extensions (e.g., per-SV status fields).
-    // Documented as API limitation for future work.
+
+    // FIXME: store into satellite_t and skyview
+
+    return mask;
+}
+
+/* Ericsson $PERC,GPppf - Position phase/frequency error
+ * Oscillator discipline quality for timing modules
+ *
+ * $PERC,GPppf,<phase_error>,<freq_error>,<status>,<leap_sec>,<quality>*XX
+ *
+ * Field 1: phase_error - Phase error in nanoseconds (signed)
+ * Field 2: freq_error - Frequency error in ppb (parts per billion, signed)
+ * Field 3: status - Status indicator (1=holdover/acquiring, 0=GPS-disciplined)
+ * Field 4: leap_sec - UTC-GPS leap second offset (e.g., 18 in 2026)
+ * Field 5: quality - PPS quality indicator (0=locked, 1=good, 2=degraded)
+ *
+ * This sentence provides real-time oscillator discipline quality metrics.
+ * Phase error indicates PPS timing offset, frequency error shows oscillator
+ * stability relative to GPS reference. Leap seconds typically appear ~2.5
+ * minutes after first fix.
+ */
+static gps_mask_t processPERCGPppf(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    double phase_error, freq_error;
+    int status, leap_sec, quality;
+
+    // field[0]="PERC", field[1]="GPppf", data starts at field[2]
+    phase_error = safe_atof(field[2]);
+    freq_error = safe_atof(field[3]);
+    status = atoi(field[4]);
+    leap_sec = atoi(field[5]);
+    quality = atoi(field[6]);
+
+    // Note: Always populate oscillator data - distros configure builds
+    // inconsistently. The oscillator field is part of the standard API.
+    session->gpsdata.osc.running = true;
+    session->gpsdata.osc.reference = true;
+    session->gpsdata.osc.disciplined = (status == 0);
+    session->gpsdata.osc.delta = (int)phase_error;
+    mask |= OSCILLATOR_SET;
+
+    // Store leap seconds (can be negative in the future!)
+    session->gpsdata.leap_seconds = leap_sec;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPppf: phase=%.1fns freq=%.1fppb "
+             "disciplined=%d leap=%d quality=%d\n",
+             phase_error, freq_error, (status == 0), leap_sec, quality);
+
+    return mask;
+}
+
+/* Ericsson $PERC,GPppr - Position pulse reference
+ * GPS time reference and PPS quality for timing modules
+ *
+ * $PERC,GPppr,<tow_sec>,<gps_week>,<param>,<sv_count>,<pps_flag>,<reserved>*XX
+ *
+ * Field 1: tow_sec - GPS Time of Week in seconds (0-604799)
+ * Field 2: gps_week - GPS week number
+ * Field 3: param - Constant parameter (always 00050, likely cable delay in ns)
+ * Field 4: sv_count - Number of satellites used in solution
+ * Field 5: pps_flag - PPS quality indicator (0=OK/locked, 3=not locked)
+ * Field 6: reserved - Reserved field (always 0)
+ *
+ * Critical timing sentence providing GPS time reference and PPS lock status.
+ * The pps_flag field indicates whether PPS output is reliable.
+ */
+static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    unsigned int tow_sec, gps_week, param, sv_count, pps_flag, reserved;
+    timespec_t ts_tow;
+
+    // field[0]="PERC", field[1]="GPppr", data starts at field[2]
+    tow_sec = atoi(field[2]);
+    gps_week = atoi(field[3]);
+    param = atoi(field[4]);
+    sv_count = atoi(field[5]);
+    pps_flag = atoi(field[6]);   //  (0=locked)
+    reserved = atoi(field[7]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPppr: week=%u tow=%u param=%u sats=%u "
+             "pps_flag=%u reserved %d\n",
+             gps_week, tow_sec, param, sv_count, pps_flag, reserved);
+
+    // Convert GPS week + TOW to Unix timestamp
+    ts_tow.tv_sec = tow_sec;
+    ts_tow.tv_nsec = 0;
+    session->newdata.time = gpsd_gpstime_resolv(session, gps_week, ts_tow);
+    mask |= TIME_SET;
+
+    // Save satellite count
+    session->gpsdata.satellites_used = (int)sv_count;
+    mask |= SATELLITE_SET;
+
+    return mask;
+}
+
+/* Ericsson $PERC,GPreh - Receiver health
+ * Health status for timing modules
+ *
+ * $PERC,GPreh,<timestamp>,<health_code>*XX
+ *
+ * Field 1: timestamp - Time/date string
+                        (format varies, often null "00:00:00 00/00/0000")
+ * Field 2: health_code - Health status code (numeric)
+ *
+ * Periodic sentence (~19s interval) providing receiver health status.
+ * Health code interpretation is device-specific.
+ */
+static gps_mask_t processPERCGPreh(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    int health_code;
+
+    // field[0]="PERC", field[1]="GPreh", data starts at field[2]
+    health_code = atoi(field[3]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPreh: timestamp=%s health=%d\n",
+             field[2], health_code);
+
+    return mask;
+}
+
+/* Ericsson $PERC,GPsts - Receiver status
+ * Timing module operating mode and constellation information
+ *
+ * $PERC,GPsts,<mode>,<survey_flag>,<constellation>,<capabilities>*XX
+ *
+ * Field 1: mode - Operating mode (0=acquiring, 1=survey, 2=position-hold)
+ * Field 2: survey_flag - Survey status (0=position valid, 1=no position)
+ * Field 3: constellation - Constellation configuration (2=GPS+GLONASS)
+ * Field 4: capabilities - 18-digit capability bitmask "010011111111011111"
+ *
+ * Primary status sentence providing operating mode and system capabilities.
+ */
+static gps_mask_t processPERCGPsts(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    int mode, survey_flag, constellation;
+    gps_mask_t mask = ONLINE_SET;
+
+    // field[0]="PERC", field[1]="GPsts", data starts at field[2]
+    mode = atoi(field[2]);
+    survey_flag = atoi(field[3]);
+    constellation = atoi(field[4]);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PERC,GPsts: mode=%d survey_flag=%d constellation=%d "
+             "capabilities=%s\n",
+             mode, survey_flag, constellation, field[5]);
+
+    return mask;
+}
+
+/* Ericsson $PERC,GPver - Receiver identification
+ * Returns hardware model and serial number
+ *
+ * $PERC,GPver,<model>,<part_num>,<hw_rev>,<serial>*XX
+ *
+ * Field 1: model - "GRU 04 01" or "GRU 04 02"
+ * Field 2: part_num - "NCD 901 65/1" or "NCD 901 78/1"
+ * Field 3: hw_rev - Hardware revision (e.g., "R1E")
+ * Field 4: serial - Serial number
+ */
+static gps_mask_t processPERCGPver(int c UNUSED, char *field[],
+                                   struct gps_device_t *session)
+{
+    gps_mask_t mask = ONLINE_SET;
+    char new_serial[32];
+    char old_subtype[64];
+
+    // field[0]="PERC", field[1]="GPver", data starts at field[2]
+    // Save old subtype for comparison
+    strlcpy(old_subtype, session->subtype, sizeof(old_subtype));
+    strlcpy(new_serial, field[5], sizeof(new_serial));
+
+    // Build subtype directly into session->subtype
+    (void)snprintf(session->subtype, sizeof(session->subtype),
+                   "%s %s %s",
+                   field[2], field[3], field[4]);
+
+    // Only log at high level if changed
+    if (0 != strcmp(old_subtype, session->subtype) ||
+        0 != strcmp(session->gpsdata.dev.sernum, new_serial)) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "NMEA0183: PERC,GPver: new device %s serial %s\n",
+                 session->subtype, new_serial);
+        mask |= DEVICEID_SET;
+    } else {
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: PERC,GPver: (unchanged)\n");
+    }
+
+    // Update serial number
+    strlcpy(session->gpsdata.dev.sernum, new_serial,
+            sizeof(session->gpsdata.dev.sernum));
 
     return mask;
 }
@@ -3687,8 +3688,7 @@ static gps_mask_t processPTNLRBA(int c UNUSED, char *field[],
              "NMEA0183: PTNLRBA: antenna_status=%s(%d) flag=%d\n",
              val2str(status, vptnlrba_status), status, flag);
 
-    // Antenna status could be mapped to gps_data_t if antenna health
-    // field is added to the API. For now, logged for diagnostic purposes.
+    // FIXME: save to: gps_fix_t.ant_stat and gps_fix_t.ant_power
 
     return mask;
 }
@@ -6153,15 +6153,24 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         nmea_decoder decoder;
     } nmea_phrase[NMEA_NUM] = {
         {"PGLOR", NULL, 2,  false, processPGLOR},  // Android something...
-        {"PERC", "FWsts", 6, false, processPERCFWsts},  // Ericsson firmware status
-        {"PERC", "GPavp", 6, false, processPERCGPavp},  // Ericsson averaged position
-        {"PERC", "GPctr", 6, false, processPERCGPctr},  // Ericsson control/heartbeat
-        {"PERC", "GPdbg", 19, false, processPERCGPdbg},  // Ericsson debug output
-        {"PERC", "GPppf", 5, false, processPERCGPppf},  // Ericsson oscillator phase/freq
-        {"PERC", "GPppr", 6, false, processPERCGPppr},  // Ericsson GPS time reference
-        {"PERC", "GPreh", 2, false, processPERCGPreh},  // Ericsson receiver health
-        {"PERC", "GPsts", 4, false, processPERCGPsts},  // Ericsson receiver status
-        {"PERC", "GPver", 4, false, processPERCGPver},  // Ericsson version info
+        // Ericsson firmware status
+        {"PERC", "FWsts", 6, false, processPERCFWsts},
+        // Ericsson averaged position
+        {"PERC", "GPavp", 6, false, processPERCGPavp},
+        // Ericsson control/heartbeat
+        {"PERC", "GPctr", 6, false, processPERCGPctr},
+        // Ericsson debug output
+        {"PERC", "GPdbg", 19, false, processPERCGPdbg},
+        // Ericsson oscillator phase/freq
+        {"PERC", "GPppf", 5, false, processPERCGPppf},
+        // Ericsson GPS time reference
+        {"PERC", "GPppr", 6, false, processPERCGPppr},
+        // Ericsson receiver health
+        {"PERC", "GPreh", 2, false, processPERCGPreh},
+        // Ericsson receiver status
+        {"PERC", "GPsts", 4, false, processPERCGPsts},
+        // Ericsson version info
+        {"PERC", "GPver", 4, false, processPERCGPver},
         {"PGRMB", NULL, 0,  false, NULL},     // ignore Garmin DGPS Beacon Info
         {"PGRMC", NULL, 0,  false, NULL},        // ignore Garmin Sensor Config
         {"PGRME", NULL, 7,  false, processPGRME},
