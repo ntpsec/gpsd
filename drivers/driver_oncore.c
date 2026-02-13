@@ -493,13 +493,13 @@ oncore_msg_navsol_8ch(struct gps_device_t *session, unsigned char *buf,
  *                         Bit   2-1: Antenna sense (00 OK, 01 OC, 10 UC, 11 NV)
  *                 (lsb)   Bit     0: code location 1=INTERNAL 0=EXTERNAL
  *
- *	 rr        - reserved
+ *       rr        - reserved
  *
- * 	 cc        - clock bias in ns
+ *       cc        - clock bias in ns
  *
- * 	 oooo     - oscillator offset in Hz
+ *       oooo      - oscillator offset in Hz
  *
- * 	 TT        - oscillator temperature in half degrees C
+ *       TT        - oscillator temperature in half degrees C
  *
  *       u         - Time mode/UTC parameters
  *                 (msb)   Bit 7: UTC-time mode enabled (0 is GPS mode)
@@ -507,7 +507,7 @@ oncore_msg_navsol_8ch(struct gps_device_t *session, unsigned char *buf,
  *                 (lsb)   Bits 5-0 Present UTC-offset value -32...+31 seconds
  *
  *      GMT offset
- *       s	   - signed byte of GMT offset (0x00 positive, 0xFF negative)
+ *       s         - signed byte of GMT offset (0x00 positive, 0xFF negative)
  *       h         - hour of GMT offset
  *       m         - minute of GMT offset
  *
@@ -524,6 +524,7 @@ oncore_msg_navsol_12ch(struct gps_device_t *session, unsigned char *buf,
     gps_mask_t mask;
     unsigned int flags;
     unsigned char fix_status;
+    unsigned char antenna_sense;
     double lat, lon, alt;
     double speed, track, dop;
     unsigned int i, j, st, nsv;
@@ -545,6 +546,22 @@ oncore_msg_navsol_12ch(struct gps_device_t *session, unsigned char *buf,
 
     flags = (unsigned int)getbeu16(buf, 129);
     fix_status = (flags & 0xE000) >> 13;
+    antenna_sense = (flags & 0x0006) >> 1;
+
+    switch (antenna_sense) {
+    case 1:
+        session->newdata.ant_stat = ANT_SHORT;
+        break;
+    case 2:
+        session->newdata.ant_stat = ANT_OPEN;
+        break;
+    case 3:
+        session->newdata.ant_stat = ANT_UNK;
+        break;
+    default:
+        session->newdata.ant_stat = ANT_OK;
+        break;
+    }
 
     if (7 == fix_status) {
         session->newdata.status = STATUS_GPS;
@@ -566,7 +583,7 @@ oncore_msg_navsol_12ch(struct gps_device_t *session, unsigned char *buf,
     } else {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "oncore NAVSOL 12ch no fix - flags 0x%02x fix_status "
-                 "%d\n", flags, fix_status);
+                 "%d antenna %d\n", flags, fix_status, antenna_sense);
         session->newdata.mode = MODE_NO_FIX;
         session->newdata.status = STATUS_UNK;
     }
@@ -586,7 +603,7 @@ oncore_msg_navsol_12ch(struct gps_device_t *session, unsigned char *buf,
         unpacked_date.tm_sec = (int)getub(buf, 10);
         unpacked_date.tm_isdst = 0;
         unpacked_date.tm_wday = unpacked_date.tm_yday = 0;
-        nsec = (unsigned int) getbeu32(buf, 11);
+        nsec = (unsigned int)getbeu32(buf, 11);
 
         session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
         session->newdata.time.tv_nsec = nsec;
@@ -683,10 +700,10 @@ oncore_msg_navsol_12ch(struct gps_device_t *session, unsigned char *buf,
                 mask |= NTPTIME_IS | GOODTIME_IS;
             }
             /*
-             * The GOODTIME_IS mask bit exists distinctly from TIME_SET exactly
-             * so an OnCore running in time-service mode (and other GPS clocks)
-             * can signal that it's returning time even though no position fixes
-             * have been available.
+             * The GOODTIME_IS mask bit exists distinctly from TIME_SET
+             * exactly so an OnCore running in time-service mode (and other
+             * GPS clocks) can signal that it's returning time even though
+             * no position fixes have been available.
              */
             st++;
         }
