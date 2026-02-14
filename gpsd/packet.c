@@ -2381,17 +2381,25 @@ static void packet_discard(struct gps_lexer_t *lexer)
 static void packet_stash(struct gps_lexer_t *lexer)
 {
     size_t stashlen = lexer->inbufptr - lexer->inbuffer;
-    char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
 
-    memcpy(lexer->stashbuffer, lexer->inbuffer, stashlen);
+    if (sizeof(lexer->stashbuffer) < stashlen) {
+        // too big!
+        stashlen = 0;
+        lexer->stashbuffer[0] = '\0';
+        GPSD_LOG(LOG_WARN, &lexer->errout,
+                 "packet_stash: too big, discarding.\n");
+    } else {
+        char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+
+        memcpy(lexer->stashbuffer, lexer->inbuffer, stashlen);
+
+        GPSD_LOG(LOG_RAW1, &lexer->errout,
+                 "Packet stash of %zu = %s\n",
+                 stashlen,
+                 gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
+                                 lexer->stashbuffer, stashlen));
+    }
     lexer->stashbuflen = stashlen;
-
-    GPSD_LOG(LOG_RAW1, &lexer->errout,
-             "Packet stash of %zu = %s\n",
-             stashlen,
-             gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
-                             lexer->stashbuffer,
-                             lexer->stashbuflen));
 }
 
 // return stash to start of input buffer
@@ -2414,7 +2422,7 @@ static void packet_unstash(struct gps_lexer_t *lexer)
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
                                  lexer->inbuffer, lexer->inbuflen));
     } else {
-        GPSD_LOG(LOG_ERROR, &lexer->errout,
+        GPSD_LOG(LOG_WARN, &lexer->errout,
                  "Rejected too long unstash of %zu\n", stashlen);
         lexer->stashbuflen = 0;
     }
@@ -3516,6 +3524,7 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
         /* Make a copy of the unchunked part of inbuffer.
          * Then unchunk it back into inbuffer. */
         lexer->inbufptr = &lexer->inbuffer[lexer->chunk_remaining];
+        memset(tmp_buffer, 0, sizeof(tmp_buffer));
         memmove(tmp_buffer, lexer->inbufptr, tmp_buflen);
 
         // get ready to copy chunks back into the inbuffer

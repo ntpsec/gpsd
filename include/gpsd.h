@@ -115,9 +115,12 @@ extern "C" {
  *      add shm_clock_lastsec and shm_pps_lastsec to gps_device_t;
  *      add queue, regression, to gps_device_t
  *      add ALL_PACKET
- * 3.27 WIP
+ * 3.27
  *      add SPARTN_PACKET
  *      gps_lexer_t, add type_mask, to mask our bad types, like SPARTN
+ * 3.28 WIP
+ *      gps_lexer_t inbuffer, outbuffer and stashbuffer same size.
+ *
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -211,6 +214,11 @@ enum isgpsstat_t {
 #define SECS_PER_WEEK   (7*SECS_PER_DAY)        // seconds per week
 #define GPS_ROLLOVER    (1024*SECS_PER_WEEK)    // rollover period
 
+/* outbuffer needs to be able to hold 4 GPGSV records at once
+ * inbuffer, outbuffer, and stashbuffer s/b same size to keep things
+ * easier. */
+#define INOUTSTASHSZ (MAX_PACKET_LENGTH*2+1)
+
 struct gpsd_errout_t {
     int debug;                          // lexer debug level
     void (*report)(const char *);       // reporting hook for lexer errors
@@ -263,11 +271,11 @@ struct gps_lexer_t {
     long type_mask;                      //  packet types to mask
     unsigned int state;
     size_t length;         // if a message has a length field, this is it.
-    unsigned char inbuffer[MAX_PACKET_LENGTH*2+1];
+    unsigned char inbuffer[INOUTSTASHSZ];
     size_t inbuflen;
     unsigned char *inbufptr;
     // outbuffer needs to be able to hold 4 GPGSV records at once
-    unsigned char outbuffer[MAX_PACKET_LENGTH*2+1];
+    unsigned char outbuffer[INOUTSTASHSZ];
     size_t outbuflen;
     unsigned long char_counter;         // count characters processed
     unsigned long retry_counter;        // count sniff retries
@@ -298,7 +306,7 @@ struct gps_lexer_t {
     unsigned int json_depth;
     unsigned int json_after;
 #ifdef STASH_ENABLE
-    unsigned char stashbuffer[MAX_PACKET_LENGTH];
+    unsigned char stashbuffer[INOUTSTASHSZ];
     size_t stashbuflen;
 #endif  // STASH_ENABLE
     // chunked: true if NTRIP/1.1 and the HTTP stream is chunked.
