@@ -5156,9 +5156,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     gps_mask_t mask = 0;
     unsigned int id;
     time_t now;
-    char buf[BUFSIZ];
+    char buf[sizeof(session->lexer.outbuflen)];
     char buf2[BUFSIZ];
     int bad_len = 0;
+    bool valid = false;
 
     if (TSIP_PACKET != session->lexer.type) {
         // this should not happen
@@ -5195,22 +5196,28 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         if (0x10 == session->lexer.outbuffer[i] &&
             0x03 == session->lexer.outbuffer[++i]) {
                 // DLE, STX.  end of packet, we know the length
+                valid = true;
                 break;
         }
         buf[len++] = session->lexer.outbuffer[i];
     }
 
     id = (unsigned)session->lexer.outbuffer[1];
-#ifdef __UNUSED__      // debug code
-    GPSD_LOG(LOG_SHOUT, &session->context->errout,
-             "TSIP x%02x: length %d: %s\n",
-             id, len, gps_hexdump(buf2, sizeof(buf2),
-             (char *)session->lexer.outbuffer, session->lexer.outbuflen));
-#endif  // __UNUSED__
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "TSIP x%02x: length %d: %s\n",
-             id, len, gps_hexdump(buf2, sizeof(buf2),
-                                  (unsigned char *)buf, len));
+    if (valid &&
+        1024 > len) {
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIP x%02x: length %d: %s\n",
+                 id, len, gps_hexdump(buf2, sizeof(buf2),
+                                      (unsigned char *)buf, len));
+    } else {
+        /* End of message not found, or too long, or both.
+         * Fuzzers gonna fuzz. */
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIP x%02x: Too long. length %d: %s\n",
+                 id, len, gps_hexdump(buf2, sizeof(buf2),
+                                      (unsigned char *)buf, len));
+        return mask;
+    }
 
     // session->cycle_end_reliable = true;
     switch (id) {
