@@ -55,10 +55,13 @@ static int geostar_write(struct gps_device_t *session,
 {
     int i;
     unsigned long cs = 0;
+    char buf2[64];
 
-    if (sizeof(session->msgbuf) < ((len * 4) - 12)) {
+    if (sizeof(session->msgbuf) < ((len * 4) + 12)) {
+
         GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "geostar_write() write too long  %zu\n", len);
+                 "geostar_write() write too long  %zu, %s\n", len,
+                 gps_hexdump(buf2, sizeof(buf2), data, len * 4));
         return -1;
     }
     putbyte(session->msgbuf, 0, 'P');
@@ -86,7 +89,10 @@ static int geostar_write(struct gps_device_t *session,
     session->msgbuflen = len * 4;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "Sent GeoStar packet id 0x%x\n", id);
+             "Sent GeoStar packet id 0x%x (%s)\n", id,
+             gps_hexdump(buf2, sizeof(buf2),
+                         (const unsigned char*)session->msgbuf,
+                         session->msgbuflen));
     if (gpsd_write(session, session->msgbuf, session->msgbuflen) !=
         (ssize_t)session->msgbuflen) {
         return -1;
@@ -275,11 +281,11 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
         break;
     case 0x22:
         ul1 = getleu32(buf, OFFSET(1));
-        GPSD_LOG(LOG_INF, &session->context->errout, "SVs in view %d\n", ul1);
-        session->gpsdata.satellites_visible = (int)ul1;
         if (GEOSTAR_CHANNELS < ul1) {
             ul1 = GEOSTAR_CHANNELS;
         }
+        GPSD_LOG(LOG_INF, &session->context->errout, "SVs in view %d\n", ul1);
+        session->gpsdata.satellites_visible = (int)ul1;
         for(i = 0; (uint32_t)i < ul1; i++) {
             int16_t s1, s2, s3;
             ul2 = getleu32(buf, OFFSET(2) + i * 3 * 4);
