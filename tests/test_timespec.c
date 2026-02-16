@@ -841,6 +841,12 @@ struct test_ntrip_parse_url_t {
     {"u@b.com:pass@ntrip.com:2101/",
      "u@b.com:pass@ntrip.com:2101/", "u@b.com:pass", "ntrip.com",
      "2101", "MP", -1},
+    // OSS Fuzz
+    {"                                            \xFF\xFF"
+     "                 \xFF                                   "
+     "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF        ",
+     "u@b.com:pass@ntrip.com:2101/", "u@b.com:pass", "ntrip.com",
+     "2101", "MP", -1},
     {NULL, NULL, NULL, NULL, NULL},
 };
 
@@ -853,7 +859,7 @@ static int test_ntrip_parse_url(int verbose)
 
     printf("\n\nTest ntrip_parse_url()\n");
     memset(&errout, 0, sizeof(errout));
-    errout.debug = INT_MIN;             // turn off error reporting
+    errout.debug = INT_MIN;             // turn off error logging
     errout.label = "test";              // turn off error reporting
 
     while(NULL != p->testurl) {
