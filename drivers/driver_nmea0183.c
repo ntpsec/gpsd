@@ -2189,6 +2189,26 @@ static gps_mask_t processGSV(int count, char *field[],
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
     }
+    session->nmea.await = atoi(field[1]);
+    if (1 > session->nmea.await ||
+        10 < session->nmea.await) {
+        // numbeof sentences is either 0, or too many
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: %s: bad number of sentences %d\n",
+                 field[0], session->nmea.await);
+        gpsd_zero_satellites(&session->gpsdata);
+        return ONLINE_SET;
+    }
+    session->nmea.part = atoi(field[2]);
+    if (1 > session->nmea.part ||
+        session->nmea.await < session->nmea.part) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: %s: bad part %d of %d\n",
+                 field[0], session->nmea.part, session->nmea.await);
+        gpsd_zero_satellites(&session->gpsdata);
+        return ONLINE_SET;
+    }
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: %s: part %s of %s, last_gsv_talker '%#x' "
              " last_gsv_sigid %u\n",
@@ -2227,16 +2247,6 @@ static gps_mask_t processGSV(int count, char *field[],
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: malformed %s - fieldcount(%d)\n",
                  field[0], count);
-        gpsd_zero_satellites(&session->gpsdata);
-        return ONLINE_SET;
-    }
-
-    session->nmea.await = atoi(field[1]);
-    session->nmea.part = atoi(field[2]);
-    if (1 > session->nmea.part) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "NMEA0183: %s: malformed - bad part %d\n",
-                 field[0], session->nmea.part);
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
     }
