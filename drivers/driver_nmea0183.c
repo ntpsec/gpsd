@@ -3479,18 +3479,26 @@ static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
     unsigned int tow_sec, gps_week, param, sv_count, pps_flag, reserved;
     timespec_t ts_tow;
 
+    static const struct vlist_t vpercgpppr_pps[] = {
+        {0, "locked"},
+        {3, "unlocked"},
+        {0, NULL},
+    };
+
     // field[0]="PERC", field[1]="GPppr", data starts at field[2]
     tow_sec = atoi(field[2]);
     gps_week = atoi(field[3]);
     param = atoi(field[4]);
     sv_count = atoi(field[5]);
-    pps_flag = atoi(field[6]);   //  (0=locked)
+    pps_flag = atoi(field[6]);
+    // field[7] is reserved (always 0)
     reserved = atoi(field[7]);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "NMEA0183: PERC,GPppr: week=%u tow=%u param=%u sats=%u "
-             "pps_flag=%u reserved %d\n",
-             gps_week, tow_sec, param, sv_count, pps_flag, reserved);
+             "pps_flag=%s reserved=%d(%u)\n",
+             gps_week, tow_sec, param, sv_count,
+             val2str(pps_flag, vpercgpppr_pps), pps_flag, reserved);
 
     // Convert GPS week + TOW to Unix timestamp
     ts_tow.tv_sec = tow_sec;
@@ -3501,6 +3509,20 @@ static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
     // Save satellite count
     session->gpsdata.satellites_used = (int)sv_count;
     mask |= SATELLITE_SET;
+
+    /* Cable delay parameter (constant 50ns on GRU 04??)
+     * Logged for reference - no suitable API field for cable delay */
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: Cable delay compensation: %u\n", param);
+
+    // Save PPS lock status to oscillator structure
+    // pps_flag: 0 = locked/OK, 3 = not locked
+    if (0 == pps_flag) {
+        session->gpsdata.osc.reference = true;
+    } else {
+        session->gpsdata.osc.reference = false;
+    }
+    mask |= OSCILLATOR_SET;
 
     return mask;
 }
@@ -3551,15 +3573,41 @@ static gps_mask_t processPERCGPsts(int c UNUSED, char *field[],
     int mode, survey_flag, constellation;
     gps_mask_t mask = ONLINE_SET;
 
+    static const struct vlist_t vpercgpsts_mode[] = {
+        {0, "Acquiring"},
+        {1, "Survey"},
+        {2, "Position-hold"},
+        {3, "Overdetermined"},
+        {4, "Manual"},
+        {5, "3D-hold"},
+        {0, NULL},
+    };
+
     // field[0]="PERC", field[1]="GPsts", data starts at field[2]
     mode = atoi(field[2]);
     survey_flag = atoi(field[3]);
     constellation = atoi(field[4]);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: PERC,GPsts: mode=%d survey_flag=%d constellation=%d "
-             "capabilities=%s\n",
-             mode, survey_flag, constellation, field[5]);
+             "NMEA0183: PERC,GPsts: mode=%s(%d) survey_flag=%d "
+             "constellation=%d capabilities=%s\n",
+             val2str(mode, vpercgpsts_mode), mode, survey_flag,
+             constellation, field[5]);
+
+    /* Map receiver operating mode to fix status
+     * Survey and Position-hold modes are timing receiver states */
+    if (1 == mode ||
+        2 == mode ||
+        4 == mode) {
+        // Survey, Position-hold, or Manual → timing mode
+        session->newdata.status = STATUS_TIME;
+        mask |= STATUS_SET;
+    } else if (0 == mode) {
+        // Acquiring → GPS fix mode
+        session->newdata.status = STATUS_GPS;
+        mask |= STATUS_SET;
+    }
+    // Modes 3 (Overdetermined) and 5 (3D-hold) not mapped
 
     return mask;
 }
@@ -3698,7 +3746,14 @@ static gps_mask_t processPTNLRBA(int c UNUSED, char *field[],
              "NMEA0183: PTNLRBA: antenna_status=%s(%d) flag=%d\n",
              val2str(status, vptnlrba_status), status, flag);
 
-    // FIXME: save to: gps_fix_t.ant_stat and gps_fix_t.ant_power
+    // Save antenna status to fix structure
+    if (1 == status) {
+        session->newdata.ant_stat = ANT_OK;
+    } else {
+        // Status 0 = Fault (type unknown, map to generic fault)
+        session->newdata.ant_stat = ANT_SHORT;
+        mask |= ERROR_SET;
+    }
 
     return mask;
 }
@@ -3731,9 +3786,9 @@ static gps_mask_t processPTNLRTP(int c UNUSED, char *field[],
              "NMEA0183: PTNLRTP: type=%c temp=%.2f°C precision=%.1f\n",
              type, temp, precision);
 
-    // Temperature data could be stored if a temperature field is added
-    // to gps_data_t. For now, logged for thermal analysis.
-    // Note: API extension needed for temperature storage.
+    // Store temperature in gps_fix_t.temp field.  What temperature is it?
+    session->newdata.temp = temp;
+    // No specific mask for temperature - aux data included in fix
 
     return mask;
 }

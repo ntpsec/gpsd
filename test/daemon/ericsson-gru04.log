@@ -1,22 +1,19 @@
-# Name: Ericsson GRU 04 01/02 (NCD 901 65/1, NCD 901 78/1)
+# Name: Ericsson GRU 04 01 (NCD 901 65/1)
 # Chipset: ST Teseo III (Trimble customized firmware)
-# Submitter: Luke Jenkins <https://gitlab.com/lukejenkins/> 
+# Submitter: Luke Jenkins <https://gitlab.com/lukejenkins/>
 # Date: 2026-02-08
 # Location: Ogden, Utah, USA. 41.19N 111.94W
 #
-# Both GRU 04 01 and 04 02 variants run identical firmware with
-# identical protocol.
-# Hardware differences only:
-#   GRU 04 01 (NCD 901 65/1): Single PPS output, SMA RF connector
-#   GRU 04 02 (NCD 901 78/1): Dual PPS outputs, QMA RF connector
+# Sister unit: test/daemon/ericsson-gru04-02-70sec.log (GRU 04 02, NCD 901 78/1)
 #
-# Comprehensive regression test demonstrating:
-# 1. Mode 0->1->2 timing state machine transitions
-#    (acquisition -> survey -> position-hold)
-# 2. Full sentence type coverage ($PERC proprietary, standard NMEA,
-#    $PTNL Trimble-derived)
-# 3. Default periodic outputs:
-#    (GPver, GPsts, GPppr, GPppf, GPavp, GPreh, FWsts, GPctr)
+# Both GRU 04 01 and 04 02 variants run identical firmware with identical protocol.
+# Hardware difference: GRU 04 01 has SMA RF connector, GRU 04 02 has QMA RF connector.
+#
+# This capture demonstrates cold start through final timing lock:
+# Mode 0 (acquisition) -> Mode 1 (survey) -> Mode 2 (position-hold)
+#
+# Coverage: Default periodic outputs (GPver, GPsts, GPppr, GPppf, GPavp, GPreh, FWsts, GPctr)
+# and standard NMEA sentences during state transitions.
 #
 # This file is Copyright by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
