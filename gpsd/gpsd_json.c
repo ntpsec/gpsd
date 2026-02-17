@@ -177,7 +177,7 @@ static void json_log_dump(const struct gps_device_t *session,
         str_appendf(reply, replylen, ",\"hAcc\":%.0f", logp->hAcc);
     }
     if (0 != isfinite(logp->vAcc)) {
-        str_appendf(reply, replylen, ",\"tAcc\":%.0f", logp->vAcc);
+        str_appendf(reply, replylen, ",\"vAcc\":%.0f", logp->vAcc);
     }
     if (0 != isfinite(logp->sAcc)) {
         str_appendf(reply, replylen, ",\"sAcc\":%.0f", logp->sAcc);
