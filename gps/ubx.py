@@ -239,7 +239,7 @@ def pack_s16(number):
 
 def pack_u16(number):
     """Convert a number to 2 bytes (little endian unsigned)"""
-    return struct.pack('<h', number)
+    return struct.pack('<H', number)
 
 
 def pack_s32(number):
