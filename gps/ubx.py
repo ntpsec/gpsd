@@ -11494,6 +11494,21 @@ Not supported on 9-series and later.
         m_data[11] = 0          # flags, bits 24:31, unused
         self.gps_send(6, 0x3e, m_data)
 
+    def send_poll_antenna(self, args):
+        """UBX-CFG-ANT, poll/set optional antenna config"""
+
+        if len(args) == 2:
+            m_data = bytearray(4)
+            m_data[0:2] = pack_u16(int(args[0], 0))
+            m_data[2:4] = pack_u16(int(args[1], 0))
+        elif len(args) == 0:
+            m_data = bytearray(0)
+        else:
+            sys.stderr.write('gps/ubx: ERROR: Invalid CFG-ANT options [flags,pincfg]\n')
+            sys.exit(2)
+
+        self.gps_send(6, 0x13, m_data)
+
     def send_poll_cfg_esfalg(self, args):
         """UBX-CFG-ESFALG, poll/set optional doAutoMntAlg"""
 
@@ -12124,8 +12139,11 @@ present in 9-series and higher
         "BINARY": {"ablecmd": send_able_binary,
                    "help": "basic binary messages"},
         # UBX-CFG-ANT
-        "CFG-ANT": {"pollcmd": send_poll, "mid": [0x06, 0x13],
-                    "help": "poll UBX-CFG-ANT antenna config"},
+        "CFG-ANT": {"pollcmd": send_poll_antenna,
+                    "help": "poll/set UBX-CFG-ANT antenna config\n"
+                               "                    "
+                               "UBX-CFG-ANT[,flags,pincfg]",
+                    "args": 2},
         # UBX-CFG-BATCH
         # Assume 23 is close enough to the proper 23.01
         "CFG-BATCH": {"pollcmd": send_poll, "mid": [0x06, 0x93],
