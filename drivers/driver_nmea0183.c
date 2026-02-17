@@ -3130,25 +3130,25 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
         return mask;
     } else if (0 == strcmp("SAT", field[1])) {  // Satellite Status
         struct satellite_t *sp;
-        int i, n = session->gpsdata.satellites_visible = atoi(field[2]);
+        int i;
+        session->gpsdata.satellites_visible = atoi(field[2]);
 
-        if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        if (((NMEA_MAX_FLD - 15) / 5) < session->gpsdata.satellites_visible) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                    "NMEA0183: PASHR,RID: too many satellites %d\n",
+                    "NMEA0183: PASHR,SAT: too many satellites %d\n",
                      session->gpsdata.satellites_visible);
-            session->gpsdata.satellites_visible = MAXCHANNELS;
+            session->gpsdata.satellites_visible = (NMEA_MAX_FLD - 15) / 5;
         }
         session->gpsdata.satellites_used = 0;
-        for (i = 0, sp = session->gpsdata.skyview;
-            sp < session->gpsdata.skyview + n; sp++, i++) {
-
-            sp->PRN = (short)atoi(field[3 + i * 5 + 0]);
-            sp->azimuth = (double)atoi(field[3 + i * 5 + 1]);
-            sp->elevation = (double)atoi(field[3 + i * 5 + 2]);
-            sp->ss = safe_atof(field[3 + i * 5 + 3]);
-            sp->used = false;
+        sp = session->gpsdata.skyview;
+        for (i = 0; i < session->gpsdata.satellites_visible; i++) {
+            sp[i].PRN = (short)atoi(field[3 + i * 5 + 0]);
+            sp[i].azimuth = (double)atoi(field[3 + i * 5 + 1]);
+            sp[i].elevation = (double)atoi(field[3 + i * 5 + 2]);
+            sp[i].ss = safe_atof(field[3 + i * 5 + 3]);
+            sp[i].used = false;
             if ('U' == field[3 + i * 5 + 4][0]) {
-                sp->used = true;
+                sp[i].used = true;
                 session->gpsdata.satellites_used++;
             }
         }
@@ -3357,7 +3357,7 @@ static gps_mask_t processPERCGPdbg(int c UNUSED, char *field[],
             // Format: PRN(3)+SNR(2)+Status(2) = 7 digits per satellite
             // Count non-empty satellite fields
             int sv_count = 0;
-            for (i = 5; i < NMEA_MAX && field[i][0] != '\0'; i++) {
+            for (i = 5; i < NMEA_MAX_FLD && field[i][0] != '\0'; i++) {
                 sv_count++;
             }
 
