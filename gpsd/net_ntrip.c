@@ -876,7 +876,7 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
 int ntrip_parse_url(const struct gpsd_errout_t *errout,
                     struct ntrip_stream_t *stream, const char *fullurl)
 {
-    char dup[256];                       // working copy of url
+    char dup[sizeof(stream->url)];       // working copy of url
     char *at;                            // pointer to at
     char *colon;                         // pointer to colon
     char *slash;                         // pointer to slash
