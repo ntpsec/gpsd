@@ -597,44 +597,48 @@ static int ntrip_auth_encode(struct ntrip_stream_t *stream)
     return ret;
 }
 
-/* netlib_connectsock() open a blocking socket to host.
+/* ntrip_stream_get_req() open a blocking socket to host.
  *
  * Return: socket to ntrip server on success
  *         less than zero on error
  */
 static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
-                                     const struct gpsd_errout_t *errout)
+                                     const struct gpsd_errout_t *errout,
+                                     int gps_fd,
+                                     const bool sourcetable_parsed)
 {
-    int dsock;
+    ssize_t blen;
     char buf[BUFSIZ];
     char outbuf[BUFSIZ];
-    ssize_t cnt, cnt1;
+    ssize_t cnt;
 
     // open blocking
-    dsock = netlib_connectsock1(AF_UNSPEC, stream->host, stream->port,
-                                "tcp", 0, false, NULL, 0);
-    if (BAD_SOCKET(dsock)) {
+    gps_fd = netlib_connectsock1(AF_UNSPEC, stream->host, stream->port,
+                                 "tcp", 0, false, NULL, 0);
+    if (BAD_SOCKET(gps_fd)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream connect error %ss(%d)\n",
-                 netlib_errstr(dsock), dsock);
+                 netlib_errstr(gps_fd), gps_fd);
         return -1;
     }
 
     GPSD_LOG(LOG_SPIN, errout,
              "NTRIP: netlib_connectsock() returns socket on fd %d\n",
-             dsock);
+             gps_fd);
 
-    cnt = snprintf(buf, sizeof(buf),
-                   "GET /%s HTTP/1.1\r\n"
-                   "Ntrip-Version: Ntrip/2.0\r\n"
-                   "User-Agent: NTRIP gpsd/%s\r\n"
-                   "Host: %s\r\n"
-                   "Accept: rtk/rtcm, dgps/rtcm\r\n"
-                   "%s"
-                   "Connection: close\r\n"
-                   "\r\n", stream->mountpoint, VERSION, stream->host,
-                   stream->authStr);
-    if (1 > cnt) {
+    blen = snprintf(buf, sizeof(buf),
+                    "GET /%s HTTP/1.1\r\n"
+                    "Ntrip-Version: Ntrip/2.0\r\n"
+                    "User-Agent: NTRIP gpsd/%s\r\n"
+                    "Host: %s\r\n"
+                    "Accept: rtk/rtcm, dgps/rtcm\r\n"
+                    "%s"
+                    "Connection: close\r\n"
+                    "\r\n",
+                    sourcetable_parsed ? stream->mountpoint : "",
+                    VERSION, stream->host,
+                    sourcetable_parsed ? stream->authStr : "");
+    if (1 > blen) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: netlib_connectsock() snprintf fail<\n");
         return -1;
@@ -642,18 +646,18 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
 
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: netlib_connectsock() sending >%s<\n",
-             gps_visibilize(outbuf, sizeof(outbuf), buf, cnt));
+             gps_visibilize(outbuf, sizeof(outbuf), buf, blen));
 
-    cnt1 = write(dsock, buf, cnt);
-    if (cnt != cnt1) {
+    cnt = write(gps_fd, buf, blen);
+    if (blen != cnt) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream write error %s(%d) on fd %d during "
                  "get request\n",
-                 strerror(errno), errno, dsock);
-        (void)close(dsock);
+                 strerror(errno), errno, gps_fd);
+        (void)close(gps_fd);
         return -1;
     }
-    return dsock;
+    return gps_fd;
 }
 
 /* lexer_getline() -- get one line, ending in \n or \0, from lexer->inbuffer,
@@ -1175,7 +1179,10 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
             return -1;
         }
         ret = ntrip_stream_get_req(&device->ntrip.stream,
-                                   &device->context->errout);
+                                   &device->context->errout,
+                                   device->gpsdata.gps_fd,
+                                   device->ntrip.sourcetable_parsed);
+
         if (-1 == ret) {
             device->gpsdata.gps_fd = PLACEHOLDING_FD;
             device->ntrip.conn_state = NTRIP_CONN_ERR;
