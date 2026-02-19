@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -146,6 +146,8 @@ if __name__ == '__main__':
     else:
         srcdir = options.arguments
 
+    # FIXME: this does gps.h, or gpsd.h, and adds up max lenght
+    # but later both lists are used, so length wrong!
     clientside = SourceExtractor(srcdir + "/include/gps.h",
                                  clientside=True)
     daemonside = SourceExtractor(srcdir + "/include/gpsd.h",
@@ -207,7 +209,10 @@ const char *gps_maskdump(gps_mask_t set)
     const struct {
         gps_mask_t      mask;
         const char      *name;
-    } *sp, names[] = {""" % (maxout + 3,))
+    } *sp, names[] = {""" % ((maxout * 3) + 3,))
+            # KLUDGE: maxout * 3 is kludge!
+            # FIXME: above added up just gps.h or gpsd.h but now do BOTH!!!
+            # length is WRONG!
             masks = clientside.primitive_masks + daemonside.primitive_masks
             for (flag, value) in sorted(masks):
                 stem = flag
