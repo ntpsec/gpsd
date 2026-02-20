@@ -983,8 +983,8 @@ extern gps_mask_t garmin_ser_parse(struct gps_device_t *);
 extern gps_mask_t garmintxt_parse(struct gps_device_t *);
 extern gps_mask_t aivdm_parse(struct gps_device_t *);
 
-extern net_link_type netgnss_uri_type(char *);
-extern bool netgnss_uri_check(char *);
+extern net_link_type netgnss_uri_type(const char *);
+extern bool netgnss_uri_check(const char *);
 extern gps_fd_t netgnss_uri_open(struct gps_device_t *, char *);
 extern void netgnss_report(struct gps_context_t *,
                          struct gps_device_t *,

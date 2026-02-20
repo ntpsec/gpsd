@@ -24,7 +24,7 @@
 #define NETGNSS_NMEA2000  "nmea2000://"
 
 // is given string a valid URI for network/service? Is so, which one?
-net_link_type netgnss_uri_type(char *name)
+net_link_type netgnss_uri_type(const char *name)
 {
     if (str_starts_with(name, NETGNSS_DGPSIP)) {
         return NET_DGPSIP;
@@ -55,7 +55,7 @@ net_link_type netgnss_uri_type(char *name)
 
 // is given string a valid URI for DGPS/NTRIP service?
 // FIXME: replace with netgnss_uri_type()
-bool netgnss_uri_check(char *name)
+bool netgnss_uri_check(const char *name)
 {
     switch (netgnss_uri_type(name)) {
     case NET_DGPSIP:
