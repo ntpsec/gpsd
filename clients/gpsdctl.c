@@ -64,7 +64,9 @@ static ssize_t gpsd_control(const char *action, const char *device)
     // limit string to pacify coverity
     client_log(LOG_NOTICE, "NOTICE: gpsd_control(action=%.7s, device=%.*s)",
                  action, GPS_PATH_MAX, device);
-    if (0 != stat(device, &sb)) {
+    if (NET_LOCAL != netgnss_uri_type(device)) {
+        // don't confuse stat().
+    } else if (0 != stat(device, &sb)) {
         client_log(LOG_ERR, "ERR: stat() device=%.*s) %s(%d)",
                      GPS_PATH_MAX, device, strerror(errno), errno);
         exit(EXIT_FAILURE);
