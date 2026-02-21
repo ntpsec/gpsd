@@ -5156,7 +5156,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     gps_mask_t mask = 0;
     unsigned int id;
     time_t now;
-    char buf[sizeof(session->lexer.outbuflen)];
+    char buf[sizeof(session->lexer.outbuffer)];
     char buf2[BUFSIZ];
     int bad_len = 0;
     bool valid = false;
