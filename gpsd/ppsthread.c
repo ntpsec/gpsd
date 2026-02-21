@@ -132,6 +132,7 @@ struct inner_context_t {
     int pps_caps;                       // RFC2783 getcaps()
     pps_handle_t kernelpps_handle;
 #endif   // defined(HAVE_SYS_TIMEPPS_H)
+    int kernelpps_fd;
 };
 
 #if defined(HAVE_SYS_TIMEPPS_H)
@@ -268,11 +269,8 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
 
     inner_context->kernelpps_handle = (pps_handle_t)-1;
     inner_context->pps_canwait = false;
+    errno = 0;
 
-    /*
-     * This next code block abuses "ret" by storing the filedescriptor
-     * to use for RFC2783 calls.
-     */
 #ifdef __linux__
     /*
      * Some Linuxes, like the RasPi's, have PPS devices preexisting.
@@ -355,7 +353,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
     /* root privs are probably required for this device open
      * do not bother to check uid, just go for the open() */
 
-    ret = open(path, O_RDWR);
+    inner_context->kernelpps_fd = open(path, O_RDWR);
 #else    // not __linux__
     /*
      * On BSDs that support RFC2783, one uses the API calls on serial
@@ -364,16 +362,16 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
      * FIXME! need more specific than 'not linux'
      */
     (void)strlcpy(path, pps_thread->devicename, sizeof(path));
-    ret  = pps_thread->devicefd;
+    inner_context->kernelpps_fd = pps_thread->devicefd;
 
     // If this is a PPS device, the devicefd is simply a placeholder
-    if (PLACEHOLDING_FD == ret) {
-        ret = open(path, O_RDWR);
+    if (PLACEHOLDING_FD == inner_context->kernelpps_fd) {
+        inner_context->kernelpps_fd = open(path, O_RDWR);
     }
 #endif
 
     // Should be a valid descriptor by this point
-    if (0 > ret) {
+    if (0 > inner_context->kernelpps_fd) {
         char errbuf[BUFSIZ] = "unknown error";
 
         // sometimes geteuid() and geteiud() are long
@@ -388,18 +386,18 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
 
     pps_thread->log_hook(pps_thread, THREAD_INF,
                 "KPPS:%s RFC2783 path:%s, fd %d\n",
-                pps_thread->devicename, path, ret);
+                pps_thread->devicename, path, inner_context->kernelpps_fd);
 
     /* RFC 2783 implies the time_pps_setcap() needs privileges
      * keep root a tad longer just in case */
-    if (0 > time_pps_create(ret,
+    if (0 > time_pps_create(inner_context->kernelpps_fd,
                     (pps_handle_t *)&inner_context->kernelpps_handle)) {
         char errbuf[BUFSIZ] = "unknown error";
 
         pps_thread->log_hook(pps_thread, THREAD_INF,
                     "KPPS:%s time_pps_create(%d) failed: %s(%d)\n",
                     pps_thread->devicename,
-                    ret,
+                    inner_context->kernelpps_fd,
                     pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
         return -1;
     }
@@ -474,7 +472,14 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
             "KPPS:%s time_pps_setparams(mode=0x%02X) failed: %s(%d)\n",
             pps_thread->devicename, pp.mode,
             pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
-        (void)time_pps_destroy(inner_context->kernelpps_handle);
+        ret = time_pps_destroy(inner_context->kernelpps_handle);
+        if (0 > ret) {
+            pps_thread->log_hook(pps_thread, THREAD_ERROR,
+                "KPPS:%s time_pps_destroy(%d) %s(%d)\n",
+                pps_thread->devicename,
+                inner_context->kernelpps_handle,
+                pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
+        }
         return -1;
     }
     return 0;
@@ -1293,11 +1298,33 @@ static void *gpsd_ppsmonitor(void *arg)
     }
 #if defined(HAVE_SYS_TIMEPPS_H)
     if ((pps_handle_t)0 < inner_context.kernelpps_handle) {
-        thread_context->log_hook(thread_context, THREAD_PROG,
-            "KPPS:%s fd %d cleaned up\n",
-            thread_context->devicename,
-            inner_context.kernelpps_handle);
-        (void)time_pps_destroy(inner_context.kernelpps_handle);
+        int ret;
+        char errbuf[BUFSIZ] = "unknown error";
+
+        errno = 0;
+        ret = time_pps_destroy(inner_context.kernelpps_handle);
+        if (0 > ret) {
+            thread_context->log_hook(thread_context, THREAD_ERROR,
+                "KPPS:%s time_pps_destroy(%d) %s(%d)\n",
+                thread_context->devicename,
+                inner_context.kernelpps_handle,
+                pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
+        }
+        ret = close(inner_context.kernelpps_fd);
+        if (0 < ret) {
+            thread_context->log_hook(thread_context, THREAD_PROG,
+                "KPPS:%s fd %d/%d cleaned up\n",
+                thread_context->devicename,
+                inner_context.kernelpps_handle,
+                inner_context.kernelpps_fd);
+        } else {
+            thread_context->log_hook(thread_context, THREAD_ERROR,
+                "KPPS:%s fd %d close(%d) %s(%d)\n",
+                thread_context->devicename,
+                inner_context.kernelpps_handle,
+                inner_context.kernelpps_fd,
+                pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
+        }
     }
 #endif
     thread_context->log_hook(thread_context, THREAD_PROG,
@@ -1323,7 +1350,7 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
      * of this function would be guarded by a separate mutex.
      * Either that, or this should be an exception to the no-malloc rule.
      */
-    static struct inner_context_t inner_context;
+    static struct inner_context_t inner_context = {0};
 
     inner_context.pps_thread = pps_thread;
 #if defined(HAVE_SYS_TIMEPPS_H)
