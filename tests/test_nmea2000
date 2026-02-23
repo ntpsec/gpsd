@@ -1,4 +1,4 @@
-#!/bin/sh
+#! /bin/sh
 #
 # The regression-test driver script for the nmea2000 driver.
 # CAN is a bit different from normal serial interfaces.
@@ -9,9 +9,18 @@ CAN_PLAYER=canplayer
 CAN_UNIT="vcan0"
 BUILD=0
 
-# Requires GNU date extensions
+# FIXME:  Requires GNU date extensions
 # Should return an empty blank string if those are not present.
 STARTTIME=`date +"%s" 2>/dev/null`
+
+# Enables us to turn debugging up high without screwing up the diff checks
+# First and Second filter out gpsd log messages.
+# Third filters out gps.py verbose logging
+# Fourth filters out WATCH responses
+# Fifth filters out DEVICE responses
+# Sixth filters out VERSION responses
+# Seventh filters out device fields
+GPSFILTER="sed -e /^gpsd:/d -e /^gpsfake/d -e /GPS-DATA/d -e /WATCH/d -e /DEVICE/d -e /VERSION/d -e s/,\"device\":[^,}]*//"
 
 # We need to have the build directory in $GPSD_HOME to find the new gpsd
 if [ "`dirname $0`" = "." ]; then
@@ -98,7 +107,7 @@ ${GPSD_HOME}/../clients/gpspipe -d -r -w -S -o ${TMP_OUT_FILE} :${GPSD_PORT}
 
 sleep 1
 
-# -t makes it go way faster
+# -t makes it go way faster, but breaks it...
 ${CAN_PLAYER} -t -I${TEST_FILE} ${CAN_UNIT}=can0
 
 sleep 1
@@ -107,12 +116,17 @@ kill `cat ${TMP_PID_FILE}`
 
 sleep 1
 
+# filter it
+TMP_OUT_FILE1=`mktemp`
+${GPSFILTER} < ${TMP_OUT_FILE} > ${TMP_OUT_FILE1}
+
 if [ ${BUILD} -ne 0 ]
 then
-    cp ${TMP_OUT_FILE} ${TEST_FILE}.chk
+    cp ${TMP_OUT_FILE1} ${TEST_FILE}.chk
 else
-    diff ${TEST_FILE}.chk ${TMP_OUT_FILE}
+    diff ${TEST_FILE}.chk ${TMP_OUT_FILE1}
 fi
 
 rm -f ${TMP_PID_FILE}
 rm -f ${TMP_OUT_FILE}
+rm -f ${TMP_OUT_FILE1}
