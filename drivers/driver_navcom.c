@@ -72,9 +72,10 @@
 static uint8_t checksum(unsigned char *buf, size_t len)
 {
     size_t n;
-    uint8_t csum = (uint8_t) 0x00;
-    for (n = 0; n < len; n++)
+    uint8_t csum = (uint8_t)0x00;
+    for (n = 0; n < len; n++) {
         csum ^= buf[n];
+    }
     return csum;
 }
 
@@ -845,12 +846,13 @@ static gps_mask_t handle_0xb0(struct gps_device_t *session)
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "Navcom: week = %u, tow = %s "
              "time slew accumulator = %u (1/1023mS), status = 0x%02x "
-             "(%sclock %s - %u blocks follow)\n",
+             "(%sclock %s - %u blocks follow) msg_len %u\n",
              session->context->gps_week,
              timespec_str(&session->context->gps_tow, ts_buf, sizeof(ts_buf)),
              tm_slew_acc, status,
              ((status & 0x80) ? "channel time set - " : ""),
-             ((status & 0x40) ? "stable" : "not stable"), status & 0x0f);
+             ((status & 0x40) ? "stable" : "not stable"), status & 0x0f,
+             msg_len);
 
     if (530 < msg_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -888,7 +890,8 @@ static gps_mask_t handle_0xb0(struct gps_device_t *session)
             ((sv_status & 0x20) ? c1 +
              (double)p2_ca_pseudorange / 16.0 * LAMBDA_L1 : NAN);
         GPSD_LOG(LOG_SPIN, &session->context->errout,
-                 "Navcom: >> sv status = 0x%02x (PRN %u - C/A & L1 %s - P1 %s - P2 & L2 %s)\n",
+                 "Navcom: >> sv status = 0x%02x (PRN %u - C/A & L1 %s "
+                 "- P1 %s - P2 & L2 %s)\n",
                  sv_status, (sv_status & 0x1f),
                  ((sv_status & 0x80) ? "valid" : "invalid"),
                  ((sv_status & 0x40) ? "valid" : "invalid"),
@@ -1139,15 +1142,29 @@ gps_mask_t navcom_parse(struct gps_device_t * session, unsigned char *buf,
     unsigned char cmd_id;
     unsigned int msg_len;
 
-    if (len == 0)
+    if (7 > len) {
+        // min msg: STX, 0x99, 0x66, cmd_id, msg_len(2), ..., checksum
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Navcom: too short, len %zu\n", len);
         return 0;
+    }
+    // Navcom checksum already checked in gpsd/parser.c
 
     cmd_id = (unsigned char)getub(buf, 3);
     //payload = &buf[6];
-    msg_len = (unsigned int) getleu16(buf, 4);
+    msg_len = (unsigned)getleu16(buf, 4);
+
+    if (4 > msg_len ||
+        (msg_len + 4) > len) {
+        /* min payload: cmd_id, msg_len(2), cksum
+         * Fuzzers love to do this. */
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Navcom: bad lenghts, msg_len %u len %zu\n", msg_len, len);
+        return 0;
+    }
 
     GPSD_LOG(LOG_RAW, &session->context->errout,
-             "Navcom: packet type 0x%02x\n", cmd_id);
+             "Navcom: packet type x%02x msg_len %u\n", cmd_id, msg_len);
 
     session->cycle_end_reliable = true;
 
@@ -1176,7 +1193,7 @@ gps_mask_t navcom_parse(struct gps_device_t * session, unsigned char *buf,
         return handle_0xef(session);
     default:
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "Navcom: received packet type 0x%02x, length %d - "
+                 "Navcom: received packet type 0x%02x, msg_len %d - "
                  "unknown or unimplemented\n",
                  cmd_id, msg_len);
         return 0;
