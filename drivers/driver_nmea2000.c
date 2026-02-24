@@ -8,6 +8,7 @@
  *
  * Here is one good source of reverse engineered info:
  *     https://github.com/canboat/canboat
+ *     https://canboat.github.io/canboat/canboat.html
  *
  * Message contents can be had from canboat/analyzer:
  *     analyzer -explain
@@ -674,10 +675,17 @@ static gps_mask_t hnd_129029(unsigned char *bu, int len, PGN *pgn,
 
     session->gpsdata.satellites_used = (int)bu[33];
 
-    session->gpsdata.dop.hdop = getleu16(bu, 34) * 0.01;
-    session->gpsdata.dop.pdop = getleu16(bu, 36) * 0.01;
+    session->gpsdata.dop.hdop = getleu16(bu, 34) * 1e-2;
+    session->gpsdata.dop.pdop = getleu16(bu, 36) * 1e-2;
     mask |= DOP_SET;
 
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "pgn %6d(%3d): sid:%02x hdop:%5.2f pdop:%5.2f\n",
+             pgn->pgn,
+             session->driver.nmea2000.unit,
+             session->driver.nmea2000.sid[1],
+             session->gpsdata.dop.hdop,
+             session->gpsdata.dop.pdop);
     return mask | get_mode(session);
 }
 
