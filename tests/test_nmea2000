@@ -8,6 +8,8 @@ GPSD_PORT=2948
 CAN_PLAYER=canplayer
 CAN_UNIT="vcan0"
 BUILD=0
+DEBUG=0
+KEEP=0
 
 # FIXME:  Requires GNU date extensions
 # Should return an empty blank string if those are not present.
@@ -43,12 +45,14 @@ usage()
     echo "      :" `basename $0` " -v";
     echo "      :" `basename $0` " -h";
     echo "  Options include:";
+    echo "  -D <dbglevel>   = Debuglevel for gpsd. Default is 0.";
     echo "  -S <portnumber> = Port for gpsd communication. Default is 2948.";
-    echo "  -u <can_device> = Used CAN device. Default is \"vcan0\"";
-    echo "  -p <canplayer>  = Program to replay logfile. Default is \"canplayer\"";
     echo "  -b              = Create testfile.chk instead of checking it.";
-    echo "  -v              = Print version and exit.";
     echo "  -h              = Print this helptext and exit.";
+    echo "  -k              = Keep temporary files.";
+    echo "  -p <canplayer>  = Program to replay logfile. Default is \"canplayer\"";
+    echo "  -u <can_device> = Used CAN device. Default is \"vcan0\"";
+    echo "  -v              = Print version and exit.";
     echo "  <testfile>      = A file created by \"candump -l <can_device> ><testfile>\".";
     echo
 }
@@ -73,15 +77,17 @@ can_utils()
     echo
 )
 
-while getopts :S:u:p:vhb opt
+while getopts D:S:bhkp:u:v opt
 do
     case ${opt} in
+        D)  DEBUG=${OPTARG};;
         S)  GPSD_PORT=${OPTARG};;
-        u)  CAN_UNIT=${OPTARG};;
-        p)  CAN_PLAYER=${OPTARG};;
         b)  BUILD=1;;
-        v)  version; exit 0;;
         h)  usage; exit 0;;
+        k)  KEEP=1;;
+        p)  CAN_PLAYER=${OPTARG};;
+        u)  CAN_UNIT=${OPTARG};;
+        v)  version; exit 0;;
         \?) usage; exit 1;;
     esac
 done
@@ -98,16 +104,24 @@ if [ `command -v ${CAN_PLAYER} | wc -c` -eq 0 ]; then can_utils; exit 1; fi
 
 TMP_PID_FILE=`mktemp --suffix=.pid`
 TMP_OUT_FILE=`mktemp --suffix=.out`
+TMP_OUT_FILE1=`mktemp --suffix=.out1`
+TMP_LOG_FILE=`mktemp --suffix=.log`
 
 # cleanup on exit
 function cleanup {
     rm -f ${TMP_PID_FILE}
     rm -f ${TMP_OUT_FILE}
     rm -f ${TMP_OUT_FILE1}
+    rm -f ${TMP_LOG_FILE}
 }
-trap cleanup EXIT
 
-${GPSD_HOME}/../gpsd/gpsd -n -G -D10 -S ${GPSD_PORT} -P ${TMP_PID_FILE} nmea2000://${CAN_UNIT}
+if [ ${KEEP} -eq 0 ]
+then
+    trap cleanup EXIT
+fi
+
+${GPSD_HOME}/../gpsd/gpsd -nN -G -D ${DEBUG} -S ${GPSD_PORT} \
+   -P ${TMP_PID_FILE} nmea2000://${CAN_UNIT} > ${TMP_LOG_FILE} 2>&1 &
 
 sleep 1
 
@@ -125,7 +139,6 @@ kill `cat ${TMP_PID_FILE}`
 sleep 1
 
 # filter it
-TMP_OUT_FILE1=`mktemp --suffix=.out1`
 ${GPSFILTER} < ${TMP_OUT_FILE} > ${TMP_OUT_FILE1}
 
 if [ ${BUILD} -ne 0 ]
