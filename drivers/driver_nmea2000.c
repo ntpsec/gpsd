@@ -22,8 +22,9 @@
 #if defined(NMEA2000_ENABLE)
 
 #include <ctype.h>
+#include <errno.h>                  // for strerror(errno), errno)
 #include <fcntl.h>
-#include <linux/can.h>
+#include <linux/can.h>              // for  struct can_frame
 #include <linux/can/raw.h>
 #include <math.h>
 #include <net/if.h>
@@ -1592,6 +1593,8 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
 {
     unsigned int can_net;
 
+    GPSD_LOG(LOG_RAW, &session->context->errout,
+             "NMEA2000 find_pgn()\n");
     session->driver.nmea2000.workpgn = NULL;
     can_net = session->driver.nmea2000.can_net;
     if ((NMEA2000_NETS - 1) < can_net) {
@@ -1796,8 +1799,10 @@ static ssize_t nmea2000_get(struct gps_device_t *session)
     struct can_frame frame;
     ssize_t          status;
 
+    errno = 0;
     session->lexer.outbuflen = 0;
     // FIXME: read() into a struct is not guaranteed in C
+    // sizeof(frame) === 16
     status = read(session->gpsdata.gps_fd, &frame, sizeof(frame));
     if ((ssize_t)sizeof(frame) == status) {
         session->lexer.type = NMEA2000_PACKET;
@@ -1805,6 +1810,13 @@ static ssize_t nmea2000_get(struct gps_device_t *session)
 
         return frame.can_dlc & 0x0f;
     }
+    if (EAGAIN == status) {
+        // nothing to read
+        return 0;
+    }
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "NMEA2000 nmea2000_get() status %ld %s(%d) \n",
+             status, strerror(errno), errno);
     return 0;
 }
 
@@ -1812,10 +1824,16 @@ static gps_mask_t nmea2000_parse_input(struct gps_device_t *session)
 {
     gps_mask_t mask;
     PGN *work;
+    char buf[128];
 
 //  printf("NMEA2000 parse_input called\n");
+    GPSD_LOG(LOG_RAW, &session->context->errout,
+             "NMEA2000 nmea2000_parse_input(%s)\n",
+             gps_hexdump(buf, sizeof(buf),
+                         session->lexer.outbuffer,
+                         session->lexer.outbuflen));
     mask = 0;
-    work = (PGN *) session->driver.nmea2000.workpgn;
+    work = (PGN *)session->driver.nmea2000.workpgn;
 
     if (NULL != work) {
         mask = (work->func)(&session->lexer.outbuffer[0],
