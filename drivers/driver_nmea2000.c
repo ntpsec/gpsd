@@ -25,6 +25,7 @@
 #include <errno.h>                  // for strerror(errno), errno)
 #include <fcntl.h>
 #include <linux/can.h>              // for  struct can_frame
+#include <linux/can/error.h>        // for CAN_ERR_BUSOFF, etc.
 #include <linux/can/raw.h>
 #include <math.h>
 #include <net/if.h>
@@ -1603,7 +1604,12 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
         return;
     }
 
-    if (frame->can_id & 0x80000000) {
+    if (frame->can_id & CAN_ERR_FLAG) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "NMEA2000 CAN_ERR_FLAG set %d.\n", frame->can_id);
+        return;
+    }
+    if (frame->can_id & CAN_EFF_FLAG) {
         unsigned int source_prio;
         unsigned int daddr;
         unsigned int source_pgn;
@@ -1857,6 +1863,11 @@ int nmea2000_open(struct gps_device_t *session)
     struct ifreq ifr;
     struct sockaddr_can addr;
     char *unit_ptr;
+    can_err_mask_t err_mask;
+    int rcvbuf_size = 1000000;  // requested receiver buffer size
+    int curr_rcvbuf_size;
+    socklen_t curr_rcvbuf_size_len = sizeof(curr_rcvbuf_size);
+
 
     INVALIDATE_SOCKET(session->gpsdata.gps_fd);
 
@@ -1936,16 +1947,57 @@ int nmea2000_open(struct gps_device_t *session)
 
     if (BAD_SOCKET(sock)) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "NMEA2000 open: can not get socket.\n");
+                 "NMEA2000 open: socket(PF_CAN) %s(%d).\n",
+                 strerror(errno), errno);
         return -1;
     }
 
     status = fcntl(sock, F_SETFL, O_NONBLOCK);
     if (0 != status) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "NMEA2000 open: can not set socket to O_NONBLOCK.\n");
+                 "NMEA2000 open: fcntl(O_NONBLOCK) %s(%d).\n",
+                 strerror(errno), errno);
         close(sock);
         return -1;
+    }
+
+    // turn on CANBUS error reporting
+    err_mask = CAN_ERR_ACK | CAN_ERR_BUSOFF | CAN_ERR_CRTL | CAN_ERR_LOSTARB |
+               CAN_ERR_PROT | CAN_ERR_RESTARTED | CAN_ERR_TRX |
+               CAN_ERR_TX_TIMEOUT;
+
+    status = setsockopt(sock, SOL_CAN_RAW, CAN_RAW_ERR_FILTER,
+                        &err_mask, sizeof(err_mask));
+    if (0 != status) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "NMEA2000 open: setsockopt() %s(%d)\n",
+                 strerror(errno), errno);
+    }
+
+    /* enbiggen the receiver buffer size
+     * try SO_RCVBUFFORCE first, if we run with CAP_NET_ADMIN */
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVBUFFORCE,
+                   &rcvbuf_size, sizeof(rcvbuf_size)) < 0) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "NMEA2000 open:SO_RCVBUFFORCE failed try RCVBUF. "
+                     "%s(%d)\n",
+                     strerror(errno), errno);
+            if (0 > setsockopt(sock, SOL_SOCKET, SO_RCVBUF,
+                               &rcvbuf_size, sizeof(rcvbuf_size))) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "NMEA2000 open:setsockopt(SO_RCVBUF) %s(%d).\n",
+                         strerror(errno), errno);
+            }
+    }
+    if (0 > getsockopt(sock, SOL_SOCKET, SO_RCVBUF,
+                   &curr_rcvbuf_size, &curr_rcvbuf_size_len)) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "NMEA2000 open:getsockopt(SO_RCVBUF) %s(%d)\n",
+                     strerror(errno), errno);
+    } else {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "NMEA2000 open:getsockopt(SO_RCVBUF) =  %d\n",
+                     curr_rcvbuf_size);
     }
 
     // Locate the interface you wish to use
