@@ -4543,7 +4543,11 @@ static gps_mask_t decode_xa2_00(struct gps_device_t *session, const char *buf)
     // TOW of measurement, not current TOW!
     unsigned tow = getbeu32(buf, 23);          // TOW, seconds
 
-    if (1 == u1) {
+    if (0 == u1) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "TSIPv1 xa2-00: invalid message number %u\n", u1);
+        return 0;
+    } else if (1 == u1) {
         // message number starts at 1, no way to know last number
         gpsd_zero_satellites(&session->gpsdata);
         // start of new cycle, save last count
