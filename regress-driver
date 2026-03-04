@@ -7,6 +7,15 @@
 # This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
+regressor () {
+    # common clause to build regressions to a pipe
+    case $testing in
+        daemon) ${PYTHON} ${PYTHON_COVERAGE} "${GPSD_HOME}/gpsfake" -s 38400 -1 -p $opts ${f} | ${GPSFILTER} || return 1 ;;
+        clientlib) "${GPSD_HOME}/tests/test_libgps" -b <${f} || return 1 ;;
+    esac
+    return 0
+}
+
 # Without GNU date extensions, %N won't expand and we only get 1sec precision
 starttime=`date +"%s  * 1000000000 + %N" | sed '/+ N/s///' 2>/dev/null`
 
@@ -155,10 +164,7 @@ case $mode in
             if [ -r "$f.chk" ]
             then
                 trap 'rm -f "${TMP}/test-$$.chk"; exit $errors' EXIT HUP INT TERM
-                case $testing in
-                daemon) TMPDIR=${TMP} ${PYTHON} ${PYTHON_COVERAGE} "${GPSD_HOME}/gpsfake" -s 38400 -1 -p $opts "${f}" | ${GPSFILTER} ${ALTFILTER} > "${TMP}/test-$$.chk" ;;
-                clientlib) "${GPSD_HOME}/tests/test_libgps" -b < "${f}" > "${TMP}/test-$$.chk" ;;
-                esac
+                regressor ${f} > "${TMP}/test-$$.chk"
                 if [ "${ALTFILTER}" ]
                 then
                     trap 'rm -f "${TMP}/test-$$.chk" "${TMP}/testout-$$.chk" "${TMP}/testin-$$.chk" "${TMP}/diff-$$"; exit $errors' EXIT HUP INT TERM
@@ -213,20 +219,14 @@ case $mode in
     build)
         [ $quiet = true ] || echo "Rebuilding $testing regressions..." >&2
         for f in $*; do
-            case $testing in
-            daemon) ${PYTHON} ${PYTHON_COVERAGE} "${GPSD_HOME}/gpsfake" -s 38400 -1 -p $opts ${f} | ${GPSFILTER} >${f}.chk;;
-            clientlib) "${GPSD_HOME}/test_libgps" -b <${f} >${f}.chk ;;
-            esac
+            regressor ${f} >${f}.chk
         done
         status=0
         ;;
     view)
         [ $quiet = true ] || echo "Viewing..." >&2
         for f in $*; do
-            case $testing in
-            daemon) ${PYTHON} ${PYTHON_COVERAGE} "${GPSD_HOME}/gpsfake" -s 38400 -1 -p $opts ${f} | ${GPSFILTER} ;;
-            clientlib) "${GPSD_HOME}/tests/test_libgps" -b <${f} ;;
-            esac
+            regressor ${f}
         done
         status=0
         ;;
