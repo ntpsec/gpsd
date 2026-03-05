@@ -1593,6 +1593,10 @@ static PGN *search_pgnlist(unsigned int pgn, PGN *pgnlist)
 static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
 {
     unsigned int can_net;
+    unsigned int source_prio;
+    unsigned int daddr;
+    unsigned int source_pgn;
+    unsigned int source_unit;
 
     GPSD_LOG(LOG_RAW, &session->context->errout,
              "NMEA2000 find_pgn()\n");
@@ -1609,200 +1613,196 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
                  "NMEA2000 CAN_ERR_FLAG set %d.\n", frame->can_id);
         return;
     }
-    if (frame->can_id & CAN_EFF_FLAG) {
-        unsigned int source_prio;
-        unsigned int daddr;
-        unsigned int source_pgn;
-        unsigned int source_unit;
 
+    if (!(frame->can_id & CAN_EFF_FLAG)) {
+        // we got RTR or 2.0A CAN frame, not used
+        return;
+    }
 #if LOG_FILE
-        if (logFile != NULL) {
-            struct timespec  msgTime;
+    if (logFile != NULL) {
+        struct timespec  msgTime;
 
-            clock_gettime(CLOCK_REALTIME, &msgTime);
-            (void)fprintf(logFile,
-                          "(%010lld.%06ld) can0 %08x#",
-                          (long long)msgTime.tv_sec,
-                          msgTime.tv_nsec / 1000,
-                          frame->can_id & 0x1ffffff);
-            if (0 < (frame->can_dlc & 0x0f)) {
-                int l1;
-                for (l1 = 0; l1 < (frame->can_dlc & 0x0f); l1++) {
-                    (void)fprintf(logFile, "%02x", frame->data[l1]);
-                }
+        clock_gettime(CLOCK_REALTIME, &msgTime);
+        (void)fprintf(logFile,
+                      "(%010lld.%06ld) can0 %08x#",
+                      (long long)msgTime.tv_sec,
+                      msgTime.tv_nsec / 1000,
+                      frame->can_id & 0x1ffffff);
+        if (0 < (frame->can_dlc & 0x0f)) {
+            int l1;
+            for (l1 = 0; l1 < (frame->can_dlc & 0x0f); l1++) {
+                (void)fprintf(logFile, "%02x", frame->data[l1]);
             }
-            (void)fprintf(logFile, "\n");
         }
+        (void)fprintf(logFile, "\n");
+    }
 #endif  // of if LOG_FILE
-        source_unit = frame->can_id & 0x0ff;
-        if (NMEA2000_UNITS < source_unit) {
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "NMEA2000 ignoring unit %d.\n", source_unit);
-            return;
-        }
-        session->driver.nmea2000.can_msgcnt += 1;
-        source_pgn = (frame->can_id >> 8) & 0x1ffff;
-        source_prio = (frame->can_id >> 26) & 0x7;
+    source_unit = frame->can_id & 0x0ff;
+    if (NMEA2000_UNITS < source_unit) {
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA2000 ignoring unit %d.\n", source_unit);
+        return;
+    }
+    session->driver.nmea2000.can_msgcnt += 1;
+    source_pgn = (frame->can_id >> 8) & 0x1ffff;
+    source_prio = (frame->can_id >> 26) & 0x7;
 
-        if (240 > ((source_pgn & 0x0ff00) >> 8)) {
-            daddr  = source_pgn & 0x000ff;
-            source_pgn  = source_pgn & 0x1ff00;
+    if (240 > ((source_pgn & 0x0ff00) >> 8)) {
+        daddr  = source_pgn & 0x000ff;
+        source_pgn  = source_pgn & 0x1ff00;
+    } else {
+        daddr = 0xff;
+    }
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "nmea2000: source_prio %u daddr %u\n",
+             source_prio, daddr);
+
+    if (!session->driver.nmea2000.unit_valid) {
+        unsigned int l1, l2;
+
+        for (l1 = 0; l1 < NMEA2000_NETS; l1++) {
+            for (l2 = 0; l2 < NMEA2000_UNITS; l2++) {
+                if (session == nmea2000_units[l1][l2]) {
+                    session->driver.nmea2000.unit = l2;
+                    session->driver.nmea2000.unit_valid = true;
+                    session->driver.nmea2000.can_net = l1;
+                    can_net = l1;
+                }
+            }
+        }
+
+        session->driver.nmea2000.unit = source_unit;
+        session->driver.nmea2000.unit_valid = true;
+        nmea2000_units[can_net][source_unit] = session;
+    }
+
+    if (source_unit == session->driver.nmea2000.unit) {
+        PGN *work;
+        if (NULL != session->driver.nmea2000.pgnlist) {
+            work = search_pgnlist(source_pgn,
+                                  session->driver.nmea2000.pgnlist);
         } else {
-            daddr = 0xff;
-        }
-        GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "nmea2000: source_prio %u daddr %u\n",
-                 source_prio, daddr);
+            PGN *pgnlist;
 
-        if (!session->driver.nmea2000.unit_valid) {
-            unsigned int l1, l2;
-
-            for (l1 = 0; l1 < NMEA2000_NETS; l1++) {
-                for (l2 = 0; l2 < NMEA2000_UNITS; l2++) {
-                    if (session == nmea2000_units[l1][l2]) {
-                        session->driver.nmea2000.unit = l2;
-                        session->driver.nmea2000.unit_valid = true;
-                        session->driver.nmea2000.can_net = l1;
-                        can_net = l1;
-                    }
-                }
-            }
-
-            session->driver.nmea2000.unit = source_unit;
-            session->driver.nmea2000.unit_valid = true;
-            nmea2000_units[can_net][source_unit] = session;
-        }
-
-        if (source_unit == session->driver.nmea2000.unit) {
-            PGN *work;
-            if (NULL != session->driver.nmea2000.pgnlist) {
-                work = search_pgnlist(source_pgn,
-                                      session->driver.nmea2000.pgnlist);
-            } else {
-                PGN *pgnlist;
-
-                pgnlist = &gpspgn[0];
+            pgnlist = &gpspgn[0];
+            work = search_pgnlist(source_pgn, pgnlist);
+            if (work == NULL) {
+                pgnlist = &aispgn[0];
                 work = search_pgnlist(source_pgn, pgnlist);
-                if (work == NULL) {
-                    pgnlist = &aispgn[0];
-                    work = search_pgnlist(source_pgn, pgnlist);
-                }
-                if (work == NULL) {
-                    pgnlist = &pwrpgn[0];
-                    work = search_pgnlist(source_pgn, pgnlist);
-                }
-                if (work == NULL) {
-                    pgnlist = &navpgn[0];
-                    work = search_pgnlist(source_pgn, pgnlist);
-                }
-                if ((work != NULL) && (work->type > 0)) {
-                    session->driver.nmea2000.pgnlist = pgnlist;
-                }
             }
-            if (work != NULL) {
-                if (work->fast == 0) {
-                    size_t l2;
+            if (work == NULL) {
+                pgnlist = &pwrpgn[0];
+                work = search_pgnlist(source_pgn, pgnlist);
+            }
+            if (work == NULL) {
+                pgnlist = &navpgn[0];
+                work = search_pgnlist(source_pgn, pgnlist);
+            }
+            if ((work != NULL) && (work->type > 0)) {
+                session->driver.nmea2000.pgnlist = pgnlist;
+            }
+        }
+        if (work != NULL) {
+            if (work->fast == 0) {
+                size_t l2;
 
-                    GPSD_LOG(LOG_DATA, &session->context->errout,
-                             "pgn %6d:%s \n", work->pgn, work->name);
-                    session->driver.nmea2000.workpgn = (void *) work;
-                    session->lexer.outbuflen =  frame->can_dlc & 0x0f;
-                    for (l2 = 0; l2 < session->lexer.outbuflen; l2++) {
-                        session->lexer.outbuffer[l2]= frame->data[l2];
-                    }
-                } else if (0 == (frame->data[0] & 0x1f)) {
-                    unsigned int l2;
+                GPSD_LOG(LOG_DATA, &session->context->errout,
+                         "pgn %6d:%s \n", work->pgn, work->name);
+                session->driver.nmea2000.workpgn = (void *) work;
+                session->lexer.outbuflen =  frame->can_dlc & 0x0f;
+                for (l2 = 0; l2 < session->lexer.outbuflen; l2++) {
+                    session->lexer.outbuffer[l2]= frame->data[l2];
+                }
+            } else if (0 == (frame->data[0] & 0x1f)) {
+                unsigned int l2;
 
-                    session->driver.nmea2000.fast_packet_len = frame->data[1];
-                    session->driver.nmea2000.idx = frame->data[0];
+                session->driver.nmea2000.fast_packet_len = frame->data[1];
+                session->driver.nmea2000.idx = frame->data[0];
 #if NMEA2000_FAST_DEBUG
-                    GPSD_LOG(LOG_ERROR, &session->context->errout,
-                             "Set idx    %2x    %2x %2x %6d\n",
-                             frame->data[0],
-                             session->driver.nmea2000.unit,
-                             frame->data[1],
-                             source_pgn);
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "Set idx    %2x    %2x %2x %6d\n",
+                         frame->data[0],
+                         session->driver.nmea2000.unit,
+                         frame->data[1],
+                         source_pgn);
 #endif  // of #if NMEA2000_FAST_DEBUG
-                    session->lexer.inbuflen = 0;
-                    session->driver.nmea2000.idx += 1;
-                    for (l2 = 2; l2 < 8; l2++) {
+                session->lexer.inbuflen = 0;
+                session->driver.nmea2000.idx += 1;
+                for (l2 = 2; l2 < 8; l2++) {
+                    session->lexer.inbuffer[session->lexer.inbuflen++] =
+                        frame->data[l2];
+                }
+                GPSD_LOG(LOG_DATA, &session->context->errout,
+                         "pgn %6d:%s \n", work->pgn, work->name);
+            } else if (frame->data[0] == session->driver.nmea2000.idx) {
+                unsigned int l2;
+
+                for (l2 = 1; l2 < 8; l2++) {
+                    if (session->driver.nmea2000.fast_packet_len >
+                        session->lexer.inbuflen) {
                         session->lexer.inbuffer[session->lexer.inbuflen++] =
                             frame->data[l2];
                     }
-                    GPSD_LOG(LOG_DATA, &session->context->errout,
-                             "pgn %6d:%s \n", work->pgn, work->name);
-                } else if (frame->data[0] == session->driver.nmea2000.idx) {
-                    unsigned int l2;
-
-                    for (l2 = 1; l2 < 8; l2++) {
-                        if (session->driver.nmea2000.fast_packet_len >
-                            session->lexer.inbuflen) {
-                            session->lexer.inbuffer[session->lexer.inbuflen++] =
-                                frame->data[l2];
-                        }
-                    }
-                    if (session->lexer.inbuflen ==
-                        session->driver.nmea2000.fast_packet_len) {
+                }
+                if (session->lexer.inbuflen ==
+                    session->driver.nmea2000.fast_packet_len) {
 #if NMEA2000_FAST_DEBUG
-                        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                                 "Fast done  %2x %2x %2x %2x %6d\n",
-                                 session->driver.nmea2000.idx,
-                                 frame->data[0],
-                                 session->driver.nmea2000.unit,
-                                 (unsigned int)session->driver.nmea2000.fast_packet_len,
-                                 source_pgn);
-#endif  // of #if  NMEA2000_FAST_DEBUG
-                        session->driver.nmea2000.workpgn = (void *) work;
-                        session->lexer.outbuflen =
-                            session->driver.nmea2000.fast_packet_len;
-                        for (l2 = 0;
-                             l2 < (unsigned int)session->lexer.outbuflen;
-                             l2++) {
-                            session->lexer.outbuffer[l2] =
-                                session->lexer.inbuffer[l2];
-                        }
-                        session->driver.nmea2000.fast_packet_len = 0;
-                    } else {
-                        session->driver.nmea2000.idx += 1;
-                    }
-                } else {
                     GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "Fast error %2x %2x %2x %2x %6d\n",
-                         session->driver.nmea2000.idx,
-                         frame->data[0],
-                         session->driver.nmea2000.unit,
-                         (unsigned int)session->driver.nmea2000.fast_packet_len,
-                         source_pgn);
+                             "Fast done  %2x %2x %2x %2x %6d\n",
+                             session->driver.nmea2000.idx,
+                             frame->data[0],
+                             session->driver.nmea2000.unit,
+                             (unsigned int)session->driver.nmea2000.fast_packet_len,
+                             source_pgn);
+#endif  // of #if  NMEA2000_FAST_DEBUG
+                    session->driver.nmea2000.workpgn = (void *) work;
+                    session->lexer.outbuflen =
+                        session->driver.nmea2000.fast_packet_len;
+                    for (l2 = 0;
+                         l2 < (unsigned int)session->lexer.outbuflen;
+                         l2++) {
+                        session->lexer.outbuffer[l2] =
+                            session->lexer.inbuffer[l2];
+                    }
+                    session->driver.nmea2000.fast_packet_len = 0;
+                } else {
+                    session->driver.nmea2000.idx += 1;
                 }
             } else {
-                GPSD_LOG(LOG_WARN, &session->context->errout,
-                         "PGN not found %08d %08x \n",
-                         source_pgn, source_pgn);
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "Fast error %2x %2x %2x %2x %6d\n",
+                     session->driver.nmea2000.idx,
+                     frame->data[0],
+                     session->driver.nmea2000.unit,
+                     (unsigned int)session->driver.nmea2000.fast_packet_len,
+                     source_pgn);
             }
         } else {
-            // we got an unknown unit number
-            if (NULL == nmea2000_units[can_net][source_unit]) {
-                char buffer[GPS_PATH_MAX];
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "PGN not found %08d %08x \n",
+                     source_pgn, source_pgn);
+        }
+    } else {
+        // we got an unknown unit number
+        if (NULL == nmea2000_units[can_net][source_unit]) {
+            char buffer[GPS_PATH_MAX];
 
-                (void) snprintf(buffer,
-                                sizeof(buffer),
-                                "nmea2000://%s:%u",
-                                can_interface_name[can_net],
-                                source_unit);
-                if (NULL != gpsd_add_device) {
-                    if (gpsd_add_device(buffer, true)) {
-                        GPSD_LOG(LOG_INF, &session->context->errout,
-                                 "NMEA2000: gpsd_add_device(%s)\n", buffer);
-                    } else {
-                        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                                 "NMEA2000: gpsd_add_device(%s) failed\n",
-                                 buffer);
-                    }
+            (void) snprintf(buffer,
+                            sizeof(buffer),
+                            "nmea2000://%s:%u",
+                            can_interface_name[can_net],
+                            source_unit);
+            if (NULL != gpsd_add_device) {
+                if (gpsd_add_device(buffer, true)) {
+                    GPSD_LOG(LOG_INF, &session->context->errout,
+                             "NMEA2000: gpsd_add_device(%s)\n", buffer);
+                } else {
+                    GPSD_LOG(LOG_ERROR, &session->context->errout,
+                             "NMEA2000: gpsd_add_device(%s) failed\n",
+                             buffer);
                 }
             }
         }
-    } else {
-        // we got RTR or 2.0A CAN frame, not used
     }
 }
 
