@@ -95,7 +95,7 @@ import threading
 import time
 
 import gps
-from . import packet as sniffer
+from gps import packet as sniffer
 
 # The magic number below has to be derived from observation.  If
 # it's too high you'll slow the tests down a lot.  If it's too low
@@ -132,7 +132,7 @@ TEST_TIMEOUT = 60
 def GetDelay(slow=False):
     """Get appropriate per-line delay."""
 
-    delay = float(os.getenv("WRITE_PAD", WRITE_PAD))
+    delay = float(os.getenv("WRITE_PAD", str(WRITE_PAD)))
     if slow:
         delay += WRITE_PAD_SLOWDOWN
     return delay
@@ -203,9 +203,9 @@ class TestLoad(object):
                             stopbits = int(params[2])
                         else:
                             raise ValueError
-                    except (ValueError, IndexError):
+                    except (ValueError, IndexError) as exc:
                         raise TestLoadError("bad serial-parameter spec in %s" %
-                                            self.name)
+                                            self.name) from exc
                     self.serial = (baud, databits, parity, stopbits)
                 elif b"Transport: UDP" in packet:
                     # "#Transport:'
@@ -221,9 +221,9 @@ class TestLoad(object):
                         (_dummy, self.delimiter, delay) = \
                             packet.strip().split()
                         self.delay = float(delay)
-                    except ValueError:
+                    except ValueError as exc:
                         raise TestLoadError("bad Delay-Cookie line in %s" %
-                                            self.name)
+                                            self.name) from exc
                     self.resplit = True
                 elif b"Date:" in packet:
                     # "# Date: yyyy-mm-dd' -- preset date
@@ -239,7 +239,7 @@ class TestLoad(object):
                                         self.name)
                 self.sentences.append(packet)
         # Look at the first packet to grok the GPS type
-        self.textual = (sniffer.NMEA_PACKET == type_latch)
+        self.textual = sniffer.NMEA_PACKET == type_latch
         if self.textual:
             self.legend = "gpsfake: line %d: "
         else:
@@ -355,10 +355,10 @@ class FakePTY(FakeGPS):
         try:
             termios.tcsetattr(self.slave_fd, termios.TCSANOW,
                               [iflag, oflag, cflag, lflag, ispeed, ospeed, cc])
-        except termios.error:
+        except termios.error as exc:
             raise TestLoadError("error attempting to set serial mode to %s "
                                 " %s%s%s"
-                                % (speed, databits, parity, stopbits))
+                                % (speed, databits, parity, stopbits)) from exc
 
     def read(self):
         """Discard control strings written by gpsd."""
@@ -689,6 +689,7 @@ class TestSession(object):
                  predump=False, udp=False, tcp=False, slow=False,
                  timeout=None):
         """Initialize the test session by launching the daemon."""
+
         self.prefix = prefix
         self.options = options
         self.verbose = verbose
@@ -773,9 +774,9 @@ class TestSession(object):
         self.progress("gpsfake: client_add()\n")
         try:
             newclient = gps.gps(port=self.port, verbose=self.verbose)
-        except socket.error:
+        except socket.error as exc:
             if not self.daemon.is_alive():
-                raise TestSessionError("daemon died")
+                raise TestSessionError("daemon died") from exc
             raise
         self.append(newclient)
         newclient.id = self.client_id + 1
