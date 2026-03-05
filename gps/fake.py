@@ -610,7 +610,7 @@ class DaemonInstance(SubprogramInstance):
                 sys.stderr.write("gpsfake: " + errs)
 
         # try to get rid of the control socket
-        if self.control_socket:
+        if self.control_socket and os.path.exists(self.control_socket):
             os.remove(self.control_socket)
 
     def __init__(self, control_socket=None):
