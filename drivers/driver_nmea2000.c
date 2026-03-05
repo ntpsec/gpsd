@@ -1782,7 +1782,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
         } else {
             // we got an unknown unit number
             if (NULL == nmea2000_units[can_net][source_unit]) {
-                char buffer[55];
+                char buffer[GPS_PATH_MAX];
 
                 (void) snprintf(buffer,
                                 sizeof(buffer),
@@ -1790,7 +1790,14 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
                                 can_interface_name[can_net],
                                 source_unit);
                 if (NULL != gpsd_add_device) {
-                    (void) gpsd_add_device(buffer, true);
+                    if (gpsd_add_device(buffer, true)) {
+                        GPSD_LOG(LOG_INF, &session->context->errout,
+                                 "NMEA2000: gpsd_add_device(%s)\n", buffer);
+                    } else {
+                        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                                 "NMEA2000: gpsd_add_device(%s) failed\n",
+                                 buffer);
+                    }
                 }
             }
         }
