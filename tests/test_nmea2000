@@ -22,7 +22,7 @@ STARTTIME=`date +"%s" 2>/dev/null`
 # Fifth filters out DEVICE responses
 # Sixth filters out VERSION responses
 # Seventh filters out device fields
-GPSFILTER="sed -e /^gpsd:/d -e /^gpsfake/d -e /GPS-DATA/d -e /WATCH/d -e /DEVICE/d -e /VERSION/d -e s/,\"device\":[^,}]*//"
+GPSFILTER="sed -e /^gpsd:/d -e /^gpsfake/d -e /GPS-DATA/d -e /WATCH/d -e /DEVICE/d -e /VERSION/d"
 
 # We need to have the build directory in $GPSD_HOME to find the new gpsd
 if [ "`dirname $0`" = "." ]; then
