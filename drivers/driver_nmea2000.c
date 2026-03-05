@@ -1816,8 +1816,11 @@ static ssize_t nmea2000_get(struct gps_device_t *session)
 
         return frame.can_dlc & 0x0f;
     }
-    if (EAGAIN == status) {
-        // nothing to read
+    if (-1 == status &&
+        EAGAIN == errno &&
+        LOG_PROG > session->context->errout.debug) {
+        /* nothing to read, try again later
+         * do not log at low log levels */
         return 0;
     }
     GPSD_LOG(LOG_WARN, &session->context->errout,
