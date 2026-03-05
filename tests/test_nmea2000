@@ -108,7 +108,7 @@ TMP_OUT_FILE1=`mktemp --suffix=.out1`
 TMP_LOG_FILE=`mktemp --suffix=.log`
 
 # cleanup on exit
-function cleanup {
+cleanup() {
     rm -f ${TMP_PID_FILE}
     rm -f ${TMP_OUT_FILE}
     rm -f ${TMP_OUT_FILE1}
