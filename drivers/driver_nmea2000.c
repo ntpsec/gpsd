@@ -1506,7 +1506,7 @@ static const char msg_130311[] = {"NAV Environmental Parameters"};
 
 static const char msg_error [] = {"**error**"};
 
-static PGN gpspgn[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
+static PGN pgnlst[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
                        { 60928, 0, 0, hnd_060928, &msg_060928[0]},
                        {126208, 0, 0, hnd_126208, &msg_126208[0]},
                        {126464, 1, 0, hnd_126464, &msg_126464[0]},
@@ -1521,9 +1521,8 @@ static PGN gpspgn[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
                        {129285, 1, 0, hnd_129285, &msg_129285[0]},
                        {129539, 0, 1, hnd_129539, &msg_129539[0]},
                        {129540, 1, 1, hnd_129540, &msg_129540[0]},
-                       {0     , 0, 0, NULL,       &msg_error [0]}};
-
-static PGN aispgn[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
+                       // AIS pgn's
+                       { 59392, 0, 0, hnd_059392, &msg_059392[0]},
                        { 60928, 0, 0, hnd_060928, &msg_060928[0]},
                        {126208, 0, 0, hnd_126208, &msg_126208[0]},
                        {126464, 1, 0, hnd_126464, &msg_126464[0]},
@@ -1538,9 +1537,8 @@ static PGN aispgn[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
                        {129802, 1, 2, hnd_129802, &msg_129802[0]},
                        {129809, 1, 2, hnd_129809, &msg_129809[0]},
                        {129810, 1, 2, hnd_129810, &msg_129810[0]},
-                       {0     , 0, 0, NULL,       &msg_error [0]}};
-
-static PGN pwrpgn[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
+                       // power pgn's
+                       { 59392, 0, 0, hnd_059392, &msg_059392[0]},
                        { 60928, 0, 0, hnd_060928, &msg_060928[0]},
                        {126208, 0, 0, hnd_126208, &msg_126208[0]},
                        {126464, 1, 0, hnd_126464, &msg_126464[0]},
@@ -1549,9 +1547,8 @@ static PGN pwrpgn[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
                        {127506, 1, 3, hnd_127506, &msg_127506[0]},
                        {127508, 1, 3, hnd_127508, &msg_127508[0]},
                        {127513, 1, 3, hnd_127513, &msg_127513[0]},
-                       {0     , 0, 0, NULL,       &msg_error [0]}};
-
-static PGN navpgn[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
+                       // NAV pgn's.
+                       { 59392, 0, 0, hnd_059392, &msg_059392[0]},
                        { 60928, 0, 0, hnd_060928, &msg_060928[0]},
                        {126208, 0, 0, hnd_126208, &msg_126208[0]},
                        {126464, 1, 0, hnd_126464, &msg_126464[0]},
@@ -1574,17 +1571,15 @@ static PGN navpgn[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
 
 static PGN *search_pgnlist(unsigned int pgn, PGN *pgnlist)
 {
-    int l1;
-    PGN *work;
+    int l1 = 0;
+    PGN *work = NULL;
 
-    l1 = 0;
-    work = NULL;
     while (0 != pgnlist[l1].pgn) {
         if (pgnlist[l1].pgn == pgn) {
             work = &pgnlist[l1];
             break;
         } else {
-            l1 = l1 + 1;
+            l1++;
         }
     }
     return work;
@@ -1677,33 +1672,13 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
     }
 
     if (source_unit == session->driver.nmea2000.unit) {
-        PGN *work;
-        if (NULL != session->driver.nmea2000.pgnlist) {
-            work = search_pgnlist(source_pgn,
-                                  session->driver.nmea2000.pgnlist);
-        } else {
-            PGN *pgnlist;
+        PGN *work = search_pgnlist(source_pgn, pgnlst);
 
-            pgnlist = &gpspgn[0];
-            work = search_pgnlist(source_pgn, pgnlist);
-            if (work == NULL) {
-                pgnlist = &aispgn[0];
-                work = search_pgnlist(source_pgn, pgnlist);
-            }
-            if (work == NULL) {
-                pgnlist = &pwrpgn[0];
-                work = search_pgnlist(source_pgn, pgnlist);
-            }
-            if (work == NULL) {
-                pgnlist = &navpgn[0];
-                work = search_pgnlist(source_pgn, pgnlist);
-            }
-            if ((work != NULL) && (work->type > 0)) {
-                session->driver.nmea2000.pgnlist = pgnlist;
-            }
-        }
-        if (work != NULL) {
-            if (work->fast == 0) {
+        session->driver.nmea2000.pgnlist = pgnlst;  // ??
+
+        if (NULL != work) {
+            if (0 == work->fast) {
+                // not FAST
                 size_t l2;
 
                 GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -1714,6 +1689,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
                     session->lexer.outbuffer[l2]= frame->data[l2];
                 }
             } else if (0 == (frame->data[0] & 0x1f)) {
+                // FAST
                 unsigned int l2;
 
                 session->driver.nmea2000.fast_packet_len = frame->data[1];
@@ -1755,7 +1731,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
                              (unsigned int)session->driver.nmea2000.fast_packet_len,
                              source_pgn);
 #endif  // of #if  NMEA2000_FAST_DEBUG
-                    session->driver.nmea2000.workpgn = (void *) work;
+                    session->driver.nmea2000.workpgn = (void *)work;
                     session->lexer.outbuflen =
                         session->driver.nmea2000.fast_packet_len;
                     for (l2 = 0;
