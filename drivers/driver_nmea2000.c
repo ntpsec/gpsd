@@ -1450,112 +1450,65 @@ static gps_mask_t hnd_130311(unsigned char *bu, int len, PGN *pgn,
 }
 
 
-static const char msg_059392[] = {"ISO  Acknowledgment"};
-static const char msg_060928[] = {"ISO  Address Claim"};
-static const char msg_126208[] = {"NMEA Command/Request/Acknowledge"};
-static const char msg_126464[] = {"ISO  Transmit/Receive PGN List"};
-static const char msg_126992[] = {"GNSS System Time"};
-static const char msg_126996[] = {"ISO  Product Information"};
-
-static const char msg_127506[] = {"PWR DC Detailed Status"};
-static const char msg_127508[] = {"PWR Battery Status"};
-static const char msg_127513[] = {"PWR Battery Configuration Status"};
-
-static const char msg_127258[] = {"GNSS Magnetic Variation"};
-static const char msg_129025[] = {"GNSS Position Rapid Update"};
-static const char msg_129026[] = {"GNSS COG and SOG Rapid Update"};
-static const char msg_129029[] = {"GNSS Positition Data"};
-static const char msg_129539[] = {"GNSS DOPs"};
-static const char msg_129540[] = {"GNSS Satellites in View"};
-
-static const char msg_129038[] = {"AIS  Class A Position Report"};
-static const char msg_129039[] = {"AIS  Class B Position Report"};
-static const char msg_129040[] = {"AIS  Class B Extended Position Report"};
-static const char msg_129793[] = {"AIS  UTC and Date report"};
-static const char msg_129794[] = {"AIS  Class A Static and Voyage Related Data"};
-static const char msg_129798[] = {"AIS  SAR Aircraft Position Report"};
-static const char msg_129802[] = {"AIS  Safety Related Broadcast Message"};
-static const char msg_129809[] = {"AIS  Class B CS Static Data Report, Part A"};
-static const char msg_129810[] = {"AIS  Class B CS Static Data Report, Part B"};
-
-static const char msg_127245[] = {"NAV Rudder"};
-static const char msg_127250[] = {"NAV Vessel Heading"};
-static const char msg_128259[] = {"NAV Speed"};
-static const char msg_128267[] = {"NAV Water Depth"};
-static const char msg_128275[] = {"NAV Distance Log"};
-
-static const char msg_129283[] = {"NAV Cross Track Error"};
-static const char msg_129284[] = {"NAV Navigation Data"};
-static const char msg_129285[] = {"NAV Navigation - Route/WP Information"};
-
-static const char msg_130306[] = {"NAV Wind Data"};
-static const char msg_130310[] = {"NAV Water Temp., Outside Air Temp.,"
-                                  "Atmospheric Pressure"};
-static const char msg_130311[] = {"NAV Environmental Parameters"};
-
-static const char msg_error [] = {"**error**"};
-
-static PGN pgnlst[] = {{ 59392, 0, 0, hnd_059392, &msg_059392[0]},
-                       { 60928, 0, 0, hnd_060928, &msg_060928[0]},
-                       {126208, 0, 0, hnd_126208, &msg_126208[0]},
-                       {126464, 1, 0, hnd_126464, &msg_126464[0]},
-                       {126992, 0, 0, hnd_126992, &msg_126992[0]},
-                       {126996, 1, 0, hnd_126996, &msg_126996[0]},
-                       {127258, 0, 0, hnd_127258, &msg_127258[0]},
-                       {129025, 0, 1, hnd_129025, &msg_129025[0]},
-                       {129026, 0, 1, hnd_129026, &msg_129026[0]},
-                       {129029, 1, 1, hnd_129029, &msg_129029[0]},
-                       {129283, 0, 0, hnd_129283, &msg_129283[0]},
-                       {129284, 1, 0, hnd_129284, &msg_129284[0]},
-                       {129285, 1, 0, hnd_129285, &msg_129285[0]},
-                       {129539, 0, 1, hnd_129539, &msg_129539[0]},
-                       {129540, 1, 1, hnd_129540, &msg_129540[0]},
+static PGN pgnlst[] = {{ 59392, 0, 0, hnd_059392, "ISO Acknowledgment"},
+                       { 60928, 0, 0, hnd_060928, "ISO Address Claim"},
+                       {126208, 0, 0, hnd_126208,
+                        "NMEA Command/Request/Acknowledge"},
+                       {126464, 1, 0, hnd_126464,
+                        "ISO Transmit/Receive PGN List"},
+                       {126992, 0, 0, hnd_126992, "GNSS System Time"},
+                       {126996, 1, 0, hnd_126996, "ISO  Product Information"},
+                       {127258, 0, 0, hnd_127258, "GNSS Magnetic Variation"},
+                       {129025, 0, 1, hnd_129025,
+                         "GNSS Position Rapid Update"},
+                       {129026, 0, 1, hnd_129026,
+                        "GNSS COG and SOG Rapid Update"},
+                       {129029, 1, 1, hnd_129029, "GNSS Positition Data"},
+                       {129539, 0, 1, hnd_129539, "GNSS DOPs"},
+                       {129540, 1, 1, hnd_129540, "GNSS Satellites in View"},
                        // AIS pgn's
-                       { 59392, 0, 0, hnd_059392, &msg_059392[0]},
-                       { 60928, 0, 0, hnd_060928, &msg_060928[0]},
-                       {126208, 0, 0, hnd_126208, &msg_126208[0]},
-                       {126464, 1, 0, hnd_126464, &msg_126464[0]},
-                       {126992, 0, 0, hnd_126992, &msg_126992[0]},
-                       {126996, 1, 0, hnd_126996, &msg_126996[0]},
-                       {129038, 1, 2, hnd_129038, &msg_129038[0]},
-                       {129039, 1, 2, hnd_129039, &msg_129039[0]},
-                       {129040, 1, 2, hnd_129040, &msg_129040[0]},
-                       {129793, 1, 2, hnd_129793, &msg_129793[0]},
-                       {129794, 1, 2, hnd_129794, &msg_129794[0]},
-                       {129798, 1, 2, hnd_129798, &msg_129798[0]},
-                       {129802, 1, 2, hnd_129802, &msg_129802[0]},
-                       {129809, 1, 2, hnd_129809, &msg_129809[0]},
-                       {129810, 1, 2, hnd_129810, &msg_129810[0]},
+                       {129038, 1, 2, hnd_129038,
+                        "AIS  Class A Position Report"},
+                       {129039, 1, 2, hnd_129039,
+                        "AIS  Class B Position Report"},
+                       {129040, 1, 2, hnd_129040,
+                        "AIS  Class B Extended Position Report"},
+                       {129793, 1, 2, hnd_129793,
+                        "AIS  UTC and Date report"},
+                       {129794, 1, 2, hnd_129794,
+                        "AIS  Class A Static and Voyage Related Data"},
+                       {129798, 1, 2, hnd_129798,
+                        "AIS  SAR Aircraft Position Report"},
+                       {129802, 1, 2, hnd_129802,
+                        "AIS  Safety Related Broadcast Message"},
+                       {129809, 1, 2, hnd_129809,
+                        "AIS  Class B CS Static Data Report, Part A"},
+                       {129810, 1, 2, hnd_129810,
+                        "AIS  Class B CS Static Data Report, Part B"},
                        // power pgn's
-                       { 59392, 0, 0, hnd_059392, &msg_059392[0]},
-                       { 60928, 0, 0, hnd_060928, &msg_060928[0]},
-                       {126208, 0, 0, hnd_126208, &msg_126208[0]},
-                       {126464, 1, 0, hnd_126464, &msg_126464[0]},
-                       {126992, 0, 0, hnd_126992, &msg_126992[0]},
-                       {126996, 1, 0, hnd_126996, &msg_126996[0]},
-                       {127506, 1, 3, hnd_127506, &msg_127506[0]},
-                       {127508, 1, 3, hnd_127508, &msg_127508[0]},
-                       {127513, 1, 3, hnd_127513, &msg_127513[0]},
+                       {127506, 1, 3, hnd_127506, "PWR DC Detailed Status"},
+                       {127508, 1, 3, hnd_127508, "PWR Battery Status"},
+                       {127513, 1, 3, hnd_127513,
+                        "PWR Battery Configuration Status"},
                        // NAV pgn's.
-                       { 59392, 0, 0, hnd_059392, &msg_059392[0]},
-                       { 60928, 0, 0, hnd_060928, &msg_060928[0]},
-                       {126208, 0, 0, hnd_126208, &msg_126208[0]},
-                       {126464, 1, 0, hnd_126464, &msg_126464[0]},
-                       {126992, 0, 0, hnd_126992, &msg_126992[0]},
-                       {126996, 1, 0, hnd_126996, &msg_126996[0]},
-                       {127245, 0, 4, hnd_127245, &msg_127245[0]},
-                       {127250, 0, 4, hnd_127250, &msg_127250[0]},
-                       {127258, 0, 0, hnd_127258, &msg_127258[0]},
-                       {128259, 0, 4, hnd_128259, &msg_128259[0]},
-                       {128267, 0, 4, hnd_128267, &msg_128267[0]},
-                       {128275, 1, 4, hnd_128275, &msg_128275[0]},
-                       {129283, 0, 0, hnd_129283, &msg_129283[0]},
-                       {129284, 1, 0, hnd_129284, &msg_129284[0]},
-                       {129285, 1, 0, hnd_129285, &msg_129285[0]},
-                       {130306, 0, 4, hnd_130306, &msg_130306[0]},
-                       {130310, 0, 4, hnd_130310, &msg_130310[0]},
-                       {130311, 0, 4, hnd_130311, &msg_130311[0]},
-                       {0     , 0, 0, NULL,       &msg_error [0]}};
+                       {127245, 0, 4, hnd_127245, "NAV Rudder"},
+                       {127250, 0, 4, hnd_127250, "NAV Vessel Heading"},
+                       {127258, 0, 0, hnd_127258, "NAV Vessel Heading"},
+                       {128259, 0, 4, hnd_128259, "NAV Speed"},
+                       {128267, 0, 4, hnd_128267, "NAV Water Depth"},
+                       {128275, 1, 4, hnd_128275, "NAV Distance Log"},
+                       {129283, 0, 0, hnd_129283, "NAV Cross Track Error"},
+                       {129284, 1, 0, hnd_129284, "NAV Navigation Data"},
+                       {129285, 1, 0, hnd_129285,
+                        "NAV Navigation - Route/WP Information"},
+                       {130306, 0, 4, hnd_130306, "NAV Wind Data"},
+                       {130310, 0, 4, hnd_130310,
+                        "NAV Water Temp., Outside Air Temp., "
+                        "Atmospheric Pressure"},
+                       {130311, 0, 4, hnd_130311,
+                        "NAV Environmental Parameters"},
+                       {0     , 0, 0, NULL, "**error**"},
+};
 
 
 static PGN *search_pgnlist(unsigned int pgn, PGN *pgnlist)
