@@ -89,7 +89,7 @@ static int scale_int(int32_t var, const int64_t factor)
 }
 
 static void print_data(struct gps_context_t *context,
-                       unsigned char *buffer, int len, PGN *pgn)
+                       unsigned char *buffer, int len, const PGN *pgn)
 {
     if (LOG_IO <= libgps_debuglevel) {
         int   l1;
@@ -1450,6 +1450,7 @@ static gps_mask_t hnd_130311(unsigned char *bu, int len, PGN *pgn,
 }
 
 
+// keep list sorted!
 static PGN pgnlst[] = {{ 59392, 0, 0, hnd_059392, "ISO Acknowledgment"},
                        { 60928, 0, 0, hnd_060928, "ISO Address Claim"},
                        {126208, 0, 0, hnd_126208,
@@ -1457,22 +1458,41 @@ static PGN pgnlst[] = {{ 59392, 0, 0, hnd_059392, "ISO Acknowledgment"},
                        {126464, 1, 0, hnd_126464,
                         "ISO Transmit/Receive PGN List"},
                        {126992, 0, 0, hnd_126992, "GNSS System Time"},
-                       {126996, 1, 0, hnd_126996, "ISO  Product Information"},
-                       {127258, 0, 0, hnd_127258, "GNSS Magnetic Variation"},
+                       {126996, 1, 0, hnd_126996,
+                        "ISO  Product Information"},
+                       {127245, 0, 4, hnd_127245, "NAV Rudder"},
+                       {127250, 0, 4, hnd_127250, "NAV Vessel Heading"},
+                       {127258, 0, 0, hnd_127258,
+                       "GNSS Magnetic Variation"},
+                       {127258, 0, 0, hnd_127258, "NAV Vessel Heading"},
+                       {127506, 1, 3, hnd_127506,
+                       "PWR DC Detailed Status"},
+                       {127508, 1, 3, hnd_127508, "PWR Battery Status"},
+                       {127513, 1, 3, hnd_127513,
+                        "PWR Battery Configuration Status"},
+                       {128259, 0, 4, hnd_128259, "NAV Speed"},
+                       {128267, 0, 4, hnd_128267, "NAV Water Depth"},
+                       {128275, 1, 4, hnd_128275, "NAV Distance Log"},
                        {129025, 0, 1, hnd_129025,
-                         "GNSS Position Rapid Update"},
+                        "GNSS Position Rapid Update"},
                        {129026, 0, 1, hnd_129026,
                         "GNSS COG and SOG Rapid Update"},
-                       {129029, 1, 1, hnd_129029, "GNSS Positition Data"},
-                       {129539, 0, 1, hnd_129539, "GNSS DOPs"},
-                       {129540, 1, 1, hnd_129540, "GNSS Satellites in View"},
-                       // AIS pgn's
+                       {129029, 1, 1, hnd_129029,
+                        "GNSS Positition Data"},
                        {129038, 1, 2, hnd_129038,
                         "AIS  Class A Position Report"},
                        {129039, 1, 2, hnd_129039,
                         "AIS  Class B Position Report"},
                        {129040, 1, 2, hnd_129040,
                         "AIS  Class B Extended Position Report"},
+                       {129283, 0, 0, hnd_129283,
+                        "NAV Cross Track Error"},
+                       {129284, 1, 0, hnd_129284, "NAV Navigation Data"},
+                       {129285, 1, 0, hnd_129285,
+                        "NAV Navigation - Route/WP Information"},
+                       {129539, 0, 1, hnd_129539, "GNSS DOPs"},
+                       {129540, 1, 1, hnd_129540,
+                        "GNSS Satellites in View"},
                        {129793, 1, 2, hnd_129793,
                         "AIS  UTC and Date report"},
                        {129794, 1, 2, hnd_129794,
@@ -1485,22 +1505,6 @@ static PGN pgnlst[] = {{ 59392, 0, 0, hnd_059392, "ISO Acknowledgment"},
                         "AIS  Class B CS Static Data Report, Part A"},
                        {129810, 1, 2, hnd_129810,
                         "AIS  Class B CS Static Data Report, Part B"},
-                       // power pgn's
-                       {127506, 1, 3, hnd_127506, "PWR DC Detailed Status"},
-                       {127508, 1, 3, hnd_127508, "PWR Battery Status"},
-                       {127513, 1, 3, hnd_127513,
-                        "PWR Battery Configuration Status"},
-                       // NAV pgn's.
-                       {127245, 0, 4, hnd_127245, "NAV Rudder"},
-                       {127250, 0, 4, hnd_127250, "NAV Vessel Heading"},
-                       {127258, 0, 0, hnd_127258, "NAV Vessel Heading"},
-                       {128259, 0, 4, hnd_128259, "NAV Speed"},
-                       {128267, 0, 4, hnd_128267, "NAV Water Depth"},
-                       {128275, 1, 4, hnd_128275, "NAV Distance Log"},
-                       {129283, 0, 0, hnd_129283, "NAV Cross Track Error"},
-                       {129284, 1, 0, hnd_129284, "NAV Navigation Data"},
-                       {129285, 1, 0, hnd_129285,
-                        "NAV Navigation - Route/WP Information"},
                        {130306, 0, 4, hnd_130306, "NAV Wind Data"},
                        {130310, 0, 4, hnd_130310,
                         "NAV Water Temp., Outside Air Temp., "
@@ -1511,20 +1515,20 @@ static PGN pgnlst[] = {{ 59392, 0, 0, hnd_059392, "ISO Acknowledgment"},
 };
 
 
-static PGN *search_pgnlist(unsigned int pgn, PGN *pgnlist)
+static PGN *search_pgnlist(unsigned int pgn)
 {
     int l1 = 0;
-    PGN *work = NULL;
 
-    while (0 != pgnlist[l1].pgn) {
-        if (pgnlist[l1].pgn == pgn) {
-            work = &pgnlist[l1];
+    // since list is sorted, we can early out
+    for (l1 = 0; pgn > pgnlst[l1].pgn; l1++) {
+        if (0 == pgnlst[l1].pgn) {
             break;
-        } else {
-            l1++;
         }
     }
-    return work;
+    if (pgnlst[l1].pgn == pgn) {
+        return &pgnlst[l1];
+    }
+    return NULL;
 }
 
 static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
@@ -1614,7 +1618,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
     }
 
     if (source_unit == session->driver.nmea2000.unit) {
-        PGN *work = search_pgnlist(source_pgn, pgnlst);
+        PGN *work = search_pgnlist(source_pgn);
 
         session->driver.nmea2000.pgnlist = pgnlst;  // ??
 
