@@ -16,7 +16,7 @@ variables:
       when: always
     - when: never
 
-.when_sched:
+.when_schedule:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: always
@@ -40,7 +40,7 @@ alpine-3:
     - apk update
     - apk add scons libcap-dev ncurses-dev build-base bash linux-headers musl-dev ccache
     - .ci-build/build.sh
-  extends: .when_sched
+  extends: .when_schedule
 
 debian-experimental:gcc:
   allow_failure: true
@@ -117,7 +117,7 @@ fedora-latest:
       bluez-libs-devel dbus-devel gcc-c++ ncurses-devel
       python3-setuptools qt5-qtbase-devel scons pps-tools-devel
     - eatmydata .ci-build/build.sh
-  extends: .when_sched
+  extends: .when_schedule
 
 alma-9:
   allow_failure: true
@@ -136,7 +136,7 @@ alma-9:
       python3-cairo python3-gobject-base ccache
     - eatmydata -- ln -sv scons-3 /usr/bin/scons&&ln -sv python3 /usr/bin/python
     - eatmydata -- .ci-build/build.sh
-  extends: .when_sched
+  extends: .when_schedule
 
 # to avoid failed builds on MRs/forks where no builder with the
 # tag `freebsd` is available, run this job only if
@@ -156,7 +156,7 @@ freebsd:
   script:
     - .ci-build/build.sh
   timeout: 2 h
-  extends: .when_sched
+  extends: .when_schedule
 
 # to avoid failed builds on MRs/forks where no builder with the
 # tag `sparc64` is available, run this job only if
@@ -176,7 +176,7 @@ sparc64-linux:
   script:
     - .ci-build/build.sh
   timeout: 1 h 10m
-  extends: .when_sched
+  extends: .when_schedule
 
 # to avoid failed builds on MRs/forks where no builder with the
 # tag `mips64le` is available, run this job only if
@@ -191,7 +191,7 @@ mips64le-linux:
     - linux
   script:
     - .ci-build/build.sh
-  extends: .when_sched
+  extends: .when_schedule
 
 scan-build:
   allow_failure: true
@@ -211,7 +211,7 @@ scan-build:
     expire_in: 1 week
   extends: .debian_build
 
-# https://www.synopsys.com/blogs/software-security/integrating-coverity-scan-with-gitlab-ci/
+# https://www.blackduck.com/blog/integrating-coverity-scan-with-gitlab-ci.html
 # Check if three variables required for Coverity job are set before running.
 # Otherwise do not even create the job. Also, only run for sched events.
 coverity:
@@ -220,11 +220,18 @@ coverity:
     SCONSOPTS: 'qt=yes xgps=yes'
     SCAN_BUILD: 'cov-analysis-linux64-*/bin/cov-build --dir cov-int'
     NOCHECK: 'true'
-    PACKAGES: 'bc build-essential ca-certificates clang clang-tools curl file
-        git libbluetooth-dev libdbus-1-dev libglib2.0-dev libncurses-dev
-        libqt5network5 libusb-1.0-0-dev pps-tools python-is-python3
-        python3-setuptools qtbase5-dev scons'
+    PACKAGES: 'bc build-essential ca-certificates clang clang-tools curl
+        file git libbluetooth-dev libdbus-1-dev libglib2.0-dev
+        libncurses-dev libqt5network5 libusb-1.0-0-dev pps-tools
+        python-is-python3python3-setuptools qtbase5-dev scons'
   script:
+    - for v in
+          COVERITY_SCAN_PROJECT_NAME
+          COVERITY_SCAN_TOKEN 
+          COVERITY_USER_EMAIL;
+      do
+          test -z "`eval \"\\$$v\"`" && echo Fix $v && f=1;
+      done; test "$f" -eq 1 && exit 1
     - apt update
     - apt -y install --no-install-recommends eatmydata
     - eatmydata -- apt -y install --no-install-recommends ${PACKAGES}
@@ -235,25 +242,15 @@ coverity:
     - eatmydata -- tar xfz /tmp/cov-analysis-linux64.tgz
     - eatmydata -- .ci-build/build.sh
     - eatmydata -- tar cfz cov-int.tar.gz cov-int
-    - curl https://scan.coverity.com/builds?project=$COVERITY_SCAN_PROJECT_NAME
-      --form token=$COVERITY_SCAN_TOKEN --form email=$COVERITY_USER_EMAIL
-      -D - --form file=@cov-int.tar.gz
+    - curl -D - --form file=@cov-int.tar.gz
       --form version="`git describe --tags`"
-      --form description="`git describe --tags` / $CI_COMMIT_TITLE / $CI_COMMIT_REF_NAME:$CI_PIPELINE_ID"
+      https://scan.coverity.com/builds?project=$COVERITY_SCAN_PROJECT_NAME
+      --form token=$COVERITY_SCAN_TOKEN --form email=$COVERITY_USER_EMAIL
+      --form description="`git describe --tags` / $CI_COMMIT_TITLE"
   artifacts:
     paths:
       - cov-int
-  rules:
-    - if: $COVERITY_SCAN_PROJECT_NAME =~ "^$"
-      when: never
-    - if: $COVERITY_SCAN_TOKEN =~ "^$"
-      when: never
-    - if: $COVERITY_USER_EMAIL =~ "^$"
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "sched"
-      when: always
-    - when: never
-
+  extends: .when_schedule
 
 # as long as sconstruct has so many options, this does not make sense
 # needs a better / faster way to test
