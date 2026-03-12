@@ -2924,7 +2924,8 @@ if ((env["nmea2000"] and
         # oddly this runs in build root, but needs to run in variant_dir
         tgt = Utility(
             'nmea2000-regress-' + nmea2000_log[:-4],
-            ['tests/test_nmea2000', nmea2000_log, nmea2000_log + '.chk'],
+            [gpsd, gpspipe, 'tests/test_nmea2000',
+                nmea2000_log, nmea2000_log + '.chk'],
             'cd %s; "${SRCDIR}/tests/test_nmea2000" %s' %
             (variantdir, nmea2000_log))
         nmea2000_tests.append(tgt)
