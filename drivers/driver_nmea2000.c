@@ -787,7 +787,6 @@ static gps_mask_t hnd_129040(unsigned char *bu, int len, PGN *pgn,
 
     if (0 != decode_ais_header(session->context, bu, len, ais, 0xffffffffU)) {
         uint16_t length, beam, to_bow, to_starboard;
-        int l;
 
         ais->type19.lon = (int)scale_int(getles32(bu, 5),
                                          (int64_t)(SHIFT32 *.06L));
@@ -824,10 +823,8 @@ static gps_mask_t hnd_129040(unsigned char *bu, int len, PGN *pgn,
         ais->type19.epfd         = (unsigned int) ((bu[23] >> 4) & 0x0f);
         ais->type19.dte          = (unsigned int) ((bu[52] >> 0) & 0x01);
         ais->type19.assigned     = (bool)         ((bu[52] >> 1) & 0x01);
-        for (l = 0; l < AIS_SHIPNAME_MAXLEN; l++) {
-            ais->type19.shipname[l] = (char)bu[32+l];
-        }
-        ais->type19.shipname[AIS_SHIPNAME_MAXLEN] = (char) 0;
+        strlcpy(ais->type19.shipname, (char *)&bu[32],
+                sizeof(ais->type19.shipname));
         decode_ais_channel_info(bu, len, 422, session);
 
         return ONLINE_SET | AIS_SET;
@@ -1087,13 +1084,8 @@ static gps_mask_t hnd_129802(unsigned char *bu, int len, PGN *pgn,
              "pgn %6d(%3d):\n", pgn->pgn, session->driver.nmea2000.unit);
 
     if (0 != decode_ais_header(session->context, bu, len, ais, 0x3fffffff)) {
-        int                   l;
-
 //      ais->type14.channel = (bu[ 5] >> 0) & 0x1f;
-        for (l = 0; l < 36; l++) {
-            ais->type14.text[l] = (char) bu[6+l];
-        }
-        ais->type14.text[36] = (char) 0;
+        strlcpy(ais->type14.text, (char *)&bu[6], sizeof(ais->type14.text));
         decode_ais_channel_info(bu, len, 40, session);
 
         return ONLINE_SET | AIS_SET;
@@ -1115,7 +1107,6 @@ static gps_mask_t hnd_129809(unsigned char *bu, int len, PGN *pgn,
              "pgn %6d(%3d):\n", pgn->pgn, session->driver.nmea2000.unit);
 
     if (0 != decode_ais_header(session->context, bu, len, ais, 0xffffffffU)) {
-        int l;
         int index   = session->driver.aivdm.context[0].type24_queue.index;
         struct ais_type24a_t *saveptr =
             &session->driver.aivdm.context[0].type24_queue.ships[index];
@@ -1124,12 +1115,9 @@ static gps_mask_t hnd_129809(unsigned char *bu, int len, PGN *pgn,
                  "NMEA2000: AIS message 24A from %09u stashed.\n",
                  ais->mmsi);
 
-        for (l = 0; l < AIS_SHIPNAME_MAXLEN; l++) {
-            ais->type24.shipname[l] = (char) bu[ 5+l];
-            saveptr->shipname[l] = (char) bu[ 5+l];
-        }
-        ais->type24.shipname[AIS_SHIPNAME_MAXLEN] = (char) 0;
-        saveptr->shipname[AIS_SHIPNAME_MAXLEN] = (char) 0;
+        strlcpy(ais->type24.shipname, (char *)&bu[5],
+                sizeof(ais->type24.shipname));
+        strlcpy(saveptr->shipname, (char *)&bu[5], sizeof(saveptr->shipname));
 
         saveptr->mmsi = ais->mmsi;
 
@@ -1159,25 +1147,20 @@ static gps_mask_t hnd_129810(unsigned char *bu, int len, PGN *pgn,
              "pgn %6d(%3d):\n", pgn->pgn, session->driver.nmea2000.unit);
 
     if (0 != decode_ais_header(session->context, bu, len, ais, 0xffffffffU)) {
-        int l, i;
+        int i;
 
         ais->type24.shiptype = (unsigned int) ((bu[ 5] >> 0) & 0xff);
 
-        for (l = 0; l < 7; l++) {
-            ais->type24.vendorid[l] = (char) bu[ 6+l];
-        }
-        ais->type24.vendorid[7] = (char) 0;
-
-        for (l = 0; l < 7; l++) {
-            ais->type24.callsign[l] = (char) bu[13+l];
-        }
-        ais->type24.callsign[7] = (char )0;
+        strlcpy(ais->type24.vendorid, (char *)&bu[6],
+                sizeof(ais->type24.vendorid));
+        strlcpy(ais->type24.callsign, (char *)&bu[13],
+                sizeof(ais->type24.callsign));
 
         ais->type24.model = 0;
         ais->type24.serial = 0;
 
         if (AIS_AUXILIARY_MMSI(ais->mmsi)) {
-            ais->type24.mothership_mmsi   = (unsigned int) (getleu32(bu, 28));
+            ais->type24.mothership_mmsi   = (unsigned int)getleu32(bu, 28);
         } else {
             uint16_t length, beam, to_bow, to_starboard;
 
@@ -1202,11 +1185,9 @@ static gps_mask_t hnd_129810(unsigned char *bu, int len, PGN *pgn,
         for (i = 0; i < MAX_TYPE24_INTERLEAVE; i++) {
             if (session->driver.aivdm.context[0].type24_queue.ships[i].mmsi ==
                 ais->mmsi) {
-                for (l = 0; l < AIS_SHIPNAME_MAXLEN; l++) {
-                    ais->type24.shipname[l] =
-  (char)(session->driver.aivdm.context[0].type24_queue.ships[i].shipname[l]);
-                }
-                ais->type24.shipname[AIS_SHIPNAME_MAXLEN] = (char) 0;
+                strlcpy(ais->type24.shipname,
+                       (char *)session->driver.aivdm.context[0].type24_queue.ships[i].shipname,
+                       sizeof(ais->type24.shipname));
 
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "NMEA2000: AIS 24B from %09u matches a 24A.\n",
@@ -1595,8 +1576,8 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
         daddr = 0xff;
     }
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "nmea2000: source_prio %u daddr %u\n",
-             source_prio, daddr);
+             "nmea2000: source_prio %u source_unit %u daddr %u\n",
+             source_prio, source_unit, daddr);
 
     if (!session->driver.nmea2000.unit_valid) {
         unsigned int l1, l2;
