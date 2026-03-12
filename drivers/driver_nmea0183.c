@@ -1936,12 +1936,12 @@ static gps_mask_t processGSA(int count, char *field[],
                 continue;
             }
             // check first BEFORE over-writing memory
-            if (MAXCHANNELS <= session->gpsdata.satellites_used) {
+            if (MAXCHANNELS < session->gpsdata.satellites_used) {
                 /* This should never happen as xxGSA is limited to 12,
                  * except for the Navior-24 CH-4701.
                  * But it could happen with multiple GSA per cycle */
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "NMEA0183: %s used >= MAXCHANNELS!\n", field[0]);
+                         "NMEA0183: %s used > MAXCHANNELS!\n", field[0]);
                 break;
             }
             /* check for duplicate.
@@ -1988,7 +1988,7 @@ static gps_mask_t processGSA(int count, char *field[],
     // cast for 32/64 compatibility
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: %s: count %d visible %d used %d mask %#llx\n",
-             field[0], count, session->gpsdata.satellites_used,
+             field[0], count, session->gpsdata.satellites_visible,
              session->gpsdata.satellites_used,
              (long long unsigned)mask);
     return mask;
@@ -2193,6 +2193,7 @@ static gps_mask_t processGSV(int count, char *field[],
     if (1 > session->nmea.await ||
         10 < session->nmea.await) {
         // numbeof sentences is either 0, or too many
+        session->nmea.await = 0;
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: %s: bad number of sentences %d\n",
                  field[0], session->nmea.await);
@@ -2351,7 +2352,8 @@ static gps_mask_t processGSV(int count, char *field[],
         struct satellite_t *sp;
         int nmea_svid;
 
-        if (MAXCHANNELS <= session->gpsdata.satellites_visible) {
+        if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+            0 > session->gpsdata.satellites_visible) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "NMEA0183: %s: internal error - too many "
                      "satellites [%d]!\n",
