@@ -2952,7 +2952,7 @@ if env['python']:
         # oddly this runs in build root, but needs to run in variant_dir
         tgt = Utility(
             'gps-regress-' + gps_log[:-4],
-            [gps_herald, gps_log],
+            [gps_herald, gpspipe, 'regress-driver', gps_log, gps_log + '.chk'],
             'cd %s; ./regress-driver -q -o -t $REGRESSOPTS %s' %
             (variantdir, gps_log))
         gps_tests.append(tgt)
