@@ -2966,7 +2966,7 @@ if env['python']:
         # oddly this runs in build root, but needs to run in variant_dir
         tgt = Utility(
             'gpsfake-' + name,
-            [gps_herald, gpsfake_logs],
+            [gps_herald, 'regress-driver', gpsfake_logs],
             'cd %s; ./regress-driver $REGRESSOPTS -q %s %s' %
             (variantdir, opts, 'test/daemon/passthrough.log'))
         gpsfake_tests.append(tgt)
