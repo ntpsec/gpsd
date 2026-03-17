@@ -5261,6 +5261,46 @@ static gps_mask_t processPSTI036(int count UNUSED, char *field[],
     return mask;
 }
 
+/* decoce $PSTMCPU CPU load
+ * Private STM
+ * Present in ST Teseo liv4f
+ *
+ */
+static gps_mask_t processPSTMCPU(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    /*
+     * $PSTMCPU,<CPU_Usage>,<PLL_ON_OFF>,<CPU_Speed>*<checksum><cr><lf>
+     *
+     *  CPU_Usage  %
+     *
+     *  PLL_ON_OFF
+     *      0 = PLL Disabled
+     *      1 = PLL Enabled
+     *      -1 = Not supported
+     *
+     *  CPU_Speed  decimal digits
+     */
+
+    static const struct vlist_t pll[] = {
+        {0, "PLL Disabled"},
+        {1, "PLL Ensabled"},
+        {-1, "Not Supported"},
+        {0, NULL},
+    };
+
+    gps_mask_t mask = ONLINE_SET;
+    double cpu_usage = atof(field[1]);
+    int pll_on_off = atoi(field[2]);
+    unsigned cpu_speed = atoi(field[3]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+            "NMEA0183: PSTMCPU cpu_usage %.2f pll %s(%d) cpu_speed %u\n",
+            cpu_usage, val2str(pll_on_off, pll), pll_on_off, cpu_speed);
+
+    return mask;
+}
+
 /* decoce $PSTMANTENNASTATUS antenna status
  * Private STM
  * Also used bysome Quectel.
@@ -6429,6 +6469,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
         {"PSTM", NULL, 0, false, NULL},
         // STM messages
+        {"PSTMCPU", NULL, 4, false, processPSTMCPU},
         {"PSTMANTENNASTATUS", NULL, 4, false, processPSTMANTENNASTATUS},
         {"PSTMVER", NULL, 1, false, processPSTMVER},
 
