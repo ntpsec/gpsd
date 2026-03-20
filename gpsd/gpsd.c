@@ -1287,7 +1287,9 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
             int status = json_watch_read(buf + 1, &sub->policy, &end);
 
             if (NULL == end) {
+                //  how can this happen?
                 buf += strnlen(buf, bufsize - 1);
+                end = buf;
             } else {
                 if (';' == *end) {
                     ++end;
@@ -1311,7 +1313,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
                             if (SOURCE_GPSD == devp->sourcetype) {
                                 // wake all, so no devpath/remote issues
                                 (void)gpsd_write(devp, start,
-                                                 (size_t)(end-start));
+                                                 (size_t)(end - start));
                             }
                         }
                 } else {
