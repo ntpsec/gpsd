@@ -874,10 +874,10 @@ time_t mkgmtime(struct tm * t)
 // ISO8601 UTC to Unix timespec, no leapsecond correction.
 timespec_t iso8601_to_timespec(const char *isotime)
 {
-    timespec_t ret;
+    timespec_t ret = {0};
 
-#ifndef __clang_analyzer__
 #ifdef USE_QT
+  #ifndef __clang_analyzer__
     double usec = 0;
 
     QString t(isotime);
@@ -893,6 +893,7 @@ timespec_t iso8601_to_timespec(const char *isotime)
     ret.tv_sec = d.toSecsSinceEpoch();
 #endif
     ret.tv_nsec = usec * 1e9;
+  #endif  // __clang_analyzer__
 #else  // USE_QT
     double usec = 0;
     struct tm tm = {0};
@@ -916,7 +917,6 @@ timespec_t iso8601_to_timespec(const char *isotime)
     ret.tv_sec = mkgmtime(&tm);
     ret.tv_nsec = usec * 1e9;
 #endif  // USE_QT
-#endif  // __clang_analyzer__
 
 #if 4 < SIZEOF_TIME_T
     if (253402300799LL < ret.tv_sec) {
