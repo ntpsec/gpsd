@@ -59,7 +59,7 @@ static ssize_t gpsd_control(const char *action, const char *device)
     ssize_t status;
     int len = 0;
     bool do_write = false;
-    struct stat sb;
+    struct stat sb = {0};    //  pacify scan-build
 
     // limit string to pacify coverity
     client_log(LOG_NOTICE, "NOTICE: gpsd_control(action=%.7s, device=%.*s)",
