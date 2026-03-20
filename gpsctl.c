@@ -279,6 +279,14 @@ int main(int argc, char **argv)
         {NULL, 0, NULL, 0},
     };
 #endif
+    const char *shmkey_s = getenv("GPSD_SHM_KEY");;
+    long shmkey = GPSD_SHM_KEY;
+    if (NULL != shmkey_s) {
+        long tmp = strtol(shmkey_s, NULL, 0);
+        if (0 < tmp) {
+            shmkey = tmp;
+        }
+    }
 
     // We need this before any logging happens (for report_mutex)
     gps_context_init(&context, "gpsctl");
@@ -344,9 +352,7 @@ int main(int argc, char **argv)
             break;
 #ifdef SHM_EXPORT_ENABLE
         case 'R':               // remove the SHM export segment
-            status = shmget(getenv("GPSD_SHM_KEY") ?
-                            (key_t)strtol(getenv("GPSD_SHM_KEY"), NULL, 0) :
-                            (key_t)GPSD_SHM_KEY, 0, 0);
+            status = shmget(shmkey, 0, 0);
             if (-1 == status) {
                 GPSD_LOG(LOG_WARN, &context.errout,
                          "GPSD SHM segment does not exist.\n");

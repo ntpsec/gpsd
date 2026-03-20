@@ -56,8 +56,14 @@ static void shm_cleanup(void)
  */
 bool shm_acquire(struct gps_context_t *context)
 {
-    long shmkey = getenv("GPSD_SHM_KEY") ? \
-                      strtol(getenv("GPSD_SHM_KEY"), NULL, 0) : GPSD_SHM_KEY;
+    const char *shmkey_s = getenv("GPSD_SHM_KEY");;
+    long shmkey = GPSD_SHM_KEY;
+    if (NULL != shmkey_s) {
+        long tmp = strtol(shmkey_s, NULL, 0);
+        if (0 < tmp) {
+            shmkey = tmp;
+        }
+    }
 
     int shmid = shmget((key_t)shmkey, sizeof(struct shmexport_t),
                        (int)(IPC_CREAT|0666));
