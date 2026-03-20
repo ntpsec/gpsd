@@ -227,10 +227,11 @@ coverity:
   script:
     - for v in
           COVERITY_SCAN_PROJECT_NAME
-          COVERITY_SCAN_TOKEN 
+          COVERITY_SCAN_TOKEN
           COVERITY_USER_EMAIL;
       do
-          test -z "`eval \"\\$$v\"`" && echo Fix $v && f=1;
+          test -z $(eval "echo \"\${$v}\"")
+          && echo Fix $v && f=1;
       done; test "$f" -eq 1 && exit 1
     - apt update
     - apt -y install --no-install-recommends eatmydata
