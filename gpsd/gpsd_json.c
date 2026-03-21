@@ -772,7 +772,7 @@ static const char *obfuscate_uri(const char *uri)
     // grab prefix
     p = stpncpy(buf, uri, 3 + proto_end - uri);
     // p = stpcpy(p, "XXXX:XXXX");  // just strip, not obfuscae.
-    p = stpcpy(p, last_at + 1);
+    (void)stpcpy(p, last_at + 1);
 
     return buf;
 }
