@@ -1126,10 +1126,9 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
         (void)strlcpy(scr, "OFFLINE", sizeof(scr));
     } else {
         const char *fmt;
-        const char *mod = "";
+        const char *mod = status2str(gpsdata->fix.status);
 
         newstate = gpsdata->fix.mode;
-        mod = status2str(gpsdata->fix.status);
 
         switch (gpsdata->fix.mode) {
         case MODE_2D:
