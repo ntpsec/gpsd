@@ -683,7 +683,6 @@ static gps_mask_t sirf_msg_navnot(struct gps_device_t *session,
         definition = "DEMO_TEST_ERROR";
         break;
     default:
-        definition = "Unknown";
         break;
     }
 
@@ -1311,7 +1310,6 @@ static gps_mask_t sirf_msg_stats(struct gps_device_t *session,
         definition = "SIRF_MSG_SSB_EE_SEA_PROVIDE_EPH_EXT";
         break;
     default:
-        definition = "Unknown";
         break;
     }
 
@@ -1416,7 +1414,6 @@ static gps_mask_t sirf_msg_tcxo(struct gps_device_t *session,
         }
         break;
     default:
-        definition = "Unknown";
         break;
     }
 
