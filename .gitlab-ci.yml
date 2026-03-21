@@ -205,7 +205,7 @@ coverity:
     PACKAGES: 'bc build-essential ca-certificates clang clang-tools curl
         file git libbluetooth-dev libdbus-1-dev libglib2.0-dev
         libncurses-dev libqt5network5 libusb-1.0-0-dev pps-tools
-        python-is-python3python3-setuptools qtbase5-dev scons'
+        python-is-python3 python3-setuptools qtbase5-dev scons'
   script:
     - for v in
           COVERITY_SCAN_PROJECT_NAME
