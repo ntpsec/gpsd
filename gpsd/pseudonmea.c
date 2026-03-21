@@ -252,7 +252,6 @@ static void gpsd_transit_fix_dump(struct gps_device_t *session,
     }
     if (0 == isfinite(session->gpsdata.fix.magnetic_var)) {
         var_str[0] = '\0';
-        var_dir = "";
     } else {
         f_str(session->gpsdata.fix.magnetic_var, "%.1f", var_str),
         var_dir = (session->gpsdata.fix.magnetic_var > 0) ? "E" : "W";
