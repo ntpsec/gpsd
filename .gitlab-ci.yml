@@ -209,7 +209,7 @@ scan-build:
     paths:
       - scan_build
     expire_in: 1 week
-  extends: .debian_build
+  extends: .when_schedule
 
 # https://www.blackduck.com/blog/integrating-coverity-scan-with-gitlab-ci.html
 # Check if three variables required for Coverity job are set before running.
@@ -251,7 +251,7 @@ coverity:
   artifacts:
     paths:
       - cov-int
-  extends: .when_schedule
+  extends: .when_push
 
 # as long as sconstruct has so many options, this does not make sense
 # needs a better / faster way to test
