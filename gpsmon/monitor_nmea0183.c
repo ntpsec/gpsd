@@ -362,7 +362,6 @@ static void nmea_update(void)
 
                 switch (session.gpsdata.skyview[i].gnssid) {
                 default:
-                    gnssid = "  ";
                     break;
                 case GNSSID_GPS:
                     gnssid = "GP";  // GPS
