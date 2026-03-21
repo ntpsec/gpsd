@@ -223,11 +223,11 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
 
         // scan to find end of message (\n), or end of buffer
         eol = PRIVATE(gpsdata)->buffer;
-        eptr = eol + PRIVATE(gpsdata)->waiting;
 
         // fill the buffer
 #if !defined(USE_QT)
         // Coverity takes the first branch, we want this checked.
+        eptr = eol + PRIVATE(gpsdata)->waiting;
         read_ret = read(gpsdata->gps_fd, eptr,
                         sizeof(PRIVATE(gpsdata)->buffer) -
                         PRIVATE(gpsdata)->waiting - 1);
