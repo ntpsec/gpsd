@@ -461,7 +461,6 @@ int main(int argc, char **argv)
             (void)fprintf(stderr,
                           "gpsctl: gps_open() failed  %s(%d) errno %s(%d)\n",
                           gps_errstr(err), err, strerror(errno), errno);
-            lowlevel = true;
         }
 
         if (!explicit_timeout) {
