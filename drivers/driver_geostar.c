@@ -151,7 +151,7 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
     uint32_t ul1, ul2, ul3, ul4, ul5;
     double d1, d2, d3, d4, d5;
     char buf[sizeof(session->lexer.outbuffer)];
-    unsigned char buf2[sizeof(session->lexer.outbuffer) * 3];
+    char buf2[sizeof(session->lexer.outbuffer) * 3];
 
     if (GEOSTAR_PACKET != session->lexer.type) {
         GPSD_LOG(LOG_INF, &session->context->errout,
@@ -183,7 +183,8 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "GeoStar packet id 0x%02x length %zd: %s\n",
              id, session->lexer.outbuflen,
-             gps_hexdump(buf, session->lexer.outbuflen, buf2, sizeof(buf2)));
+             gps_hexdump(buf2, sizeof(buf2), (unsigned char*)buf,
+                         session->lexer.outbuflen));
 
     session->cycle_end_reliable = true;
 
