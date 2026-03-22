@@ -394,7 +394,10 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
     // calculate length of good data still in buffer
     PRIVATE(gpsdata)->waiting -= response_length;
 
-    if (0 >= PRIVATE(gpsdata)->waiting) {
+    if (0 >= PRIVATE(gpsdata)->waiting ||
+        sizeof(PRIVATE(gpsdata)->buffer) < (size_t)(PRIVATE(gpsdata)->waiting +
+                                                    response_length)) {
+        // coverity  498047 Overflowed integer argument
         // no waiting data, or overflow, clear the buffer, just in case
         *PRIVATE(gpsdata)->buffer = '\0';
         PRIVATE(gpsdata)->waiting = 0;
@@ -495,7 +498,7 @@ int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
     sent = send(gpsdata->gps_fd, buf, buf_len, 0);
 #else
     sent = write(gpsdata->gps_fd, buf, buf_len);
-#endif /* HAVE_WINSOCK2_H */
+#endif  // HAVE_WINSOCK2_H
     if ((ssize_t)buf_len == sent) {
         return 0;
     }
