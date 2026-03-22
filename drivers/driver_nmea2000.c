@@ -49,9 +49,9 @@
 #define LOG_FILE 1
 #define NMEA2000_NETS 4
 /* NMEA 2000 unit is a byte, but 254 is "request for address claim"
- * and 255 is broadcast address.  So 253 is the number of units possible,
- * and the highest unit number. */
-#define NMEA2000_UNITS 253
+ * and 255 is broadcast address.  So 254 is the number of units possible,
+ * and 253 the highest unit number. */
+#define NMEA2000_UNITS 254
 #define CAN_NAMELEN 32
 #define MIN(a,b) ((a < b) ? a : b)
 
@@ -1599,6 +1599,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
     }
 
     if (source_unit == session->driver.nmea2000.unit) {
+        // current unit number.  Current net???
         PGN *work = search_pgnlist(source_pgn);
 
         session->driver.nmea2000.pgnlist = pgnlst;  // ??
@@ -1683,28 +1684,24 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
                  (unsigned int)session->driver.nmea2000.fast_packet_len,
                  source_pgn);
         }
-    } else {
-        // we got an unknown unit number
-        if (NULL == nmea2000_units[can_net][source_unit]) {
-            char buffer[GPS_PATH_MAX];
+    } else if (NULL == nmea2000_units[can_net][source_unit]) {
+        // unkown net/unit, add it as a new device.
+        char buffer[GPS_PATH_MAX];
 
-            (void) snprintf(buffer,
-                            sizeof(buffer),
-                            "nmea2000://%s:%u",
-                            can_interface_name[can_net],
-                            source_unit);
-            if (NULL != gpsd_add_device) {
-                if (gpsd_add_device(buffer, true)) {
-                    GPSD_LOG(LOG_INF, &session->context->errout,
-                             "NMEA2000: gpsd_add_device(%s)\n", buffer);
-                } else {
-                    GPSD_LOG(LOG_ERROR, &session->context->errout,
-                             "NMEA2000: gpsd_add_device(%s) failed\n",
-                             buffer);
-                }
+        (void) snprintf(buffer, sizeof(buffer), "nmea2000://%s:%u",
+                        can_interface_name[can_net],
+                        source_unit);
+        if (NULL != gpsd_add_device) {
+            if (gpsd_add_device(buffer, true)) {
+                GPSD_LOG(LOG_INF, &session->context->errout,
+                         "NMEA2000: gpsd_add_device(%s)\n", buffer);
+            } else {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "NMEA2000: gpsd_add_device(%s) failed\n",
+                         buffer);
             }
         }
-    }
+    } // else, known net/unit that is not this net/unit.  Ignore it.
 }
 
 
