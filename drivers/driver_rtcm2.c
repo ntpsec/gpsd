@@ -368,7 +368,7 @@ struct rtcm2_msg_t {
                     unsigned int    freq_l:6;
                     unsigned int    _pad:2;
                 } w5;
-            } almanac[(RTCM2_WORDS_MAX - 2)/3];
+            } almanac[32];
         } type7;
 
         // msg 8 - Pseudolite almanac
@@ -838,7 +838,7 @@ struct rtcm2_msg_t {
                     unsigned int    encoding:1;
                     unsigned int    parity:6;
                 } w5;
-            } almanac[(RTCM2_WORDS_MAX - 2)/3];
+            } almanac[32];
         } type7;
 
         // msg 8 - Pseudolite almanac
@@ -1137,8 +1137,8 @@ static unsigned int tx_speed[] = { 25, 50, 100, 110, 150, 200, 250, 300 };
 // break out the raw bits into the content fields
 void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
 {
-    int len;
-    unsigned int n, w;
+    unsigned len;
+    unsigned n, w;
     struct rtcm2_msg_t *msg = (struct rtcm2_msg_t *)buf;
     bool unknown = true;              // we don't know how to decode
     const char *msg_name = NULL;      // no decode, but maybe we know the name
@@ -1175,19 +1175,20 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
     // FIXME: test tp->length + 2, against session->lexer.isgps.buflen,
 
     // len does not include 2 byte header
-    len = (int)tp->length;
+    len = tp->length;
     n = 0;
     switch (tp->type) {
     case 1:
         FALLTHROUGH
     case 9:
     {
+        int lens = (int)len;
         struct gps_correction_t *m = &msg->msg_type.type1.corrections[0];
         msg_name = "Differential GPS Corrections";
         unknown = false;
 
-        while (0 <= len) {
-            if (2 <= len) {
+        while (0 <= lens) {
+            if (2 <= lens) {
                 tp->gps_ranges.sat[n].ident = m->w3.satident1;
                 tp->gps_ranges.sat[n].udre = m->w3.udre1;
                 tp->gps_ranges.sat[n].iod = m->w4.iod1;
@@ -1197,7 +1198,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
                     (m->w3.scale1 ? RRLARGE : RRSMALL);
                 n++;
             }
-            if (4 <= len) {
+            if (4 <= lens) {
                 tp->gps_ranges.sat[n].ident = m->w4.satident2;
                 tp->gps_ranges.sat[n].udre = m->w4.udre2;
                 tp->gps_ranges.sat[n].iod = m->w6.iod2;
@@ -1207,7 +1208,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
                     (m->w4.scale2 ? RRLARGE : RRSMALL);
                 n++;
             }
-            if (5 <= len) {
+            if (5 <= lens) {
                 tp->gps_ranges.sat[n].ident = m->w6.satident3;
                 tp->gps_ranges.sat[n].udre = m->w6.udre3;
                 tp->gps_ranges.sat[n].iod = m->w7.iod3;
@@ -1218,7 +1219,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
                     m->w7.rrc3 * (m->w6.scale3 ? RRLARGE : RRSMALL);
                 n++;
             }
-            len -= 5;
+            lens -= 5;
             m++;
         }
         tp->gps_ranges.nentries = n;
@@ -1235,7 +1236,8 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
             msg_name = "Reference Station Parameters (GPS)";
             unknown = false;
 
-            if ((tp->ref_sta.valid = len >= 4)) {
+            if (4 <= len) {
+                tp->ref_sta.valid = true;
                 tp->ref_sta.x = ((m->w3.x_h << 8) | (m->w4.x_l)) * XYZ_SCALE;
                 tp->ref_sta.y = ((m->w4.y_h << 16) | (m->w5.y_l)) * XYZ_SCALE;
                 tp->ref_sta.z = ((m->w5.z_h << 24) | (m->w6.z_l)) * XYZ_SCALE;
@@ -1246,8 +1248,9 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
     case 4:
         msg_name = "Reference Station Datum";
         unknown = false;
-        if ((tp->reference.valid = len >= 2)) {
+        if (2 <= len) {
             struct rtcm2_msg4 *m = &msg->msg_type.type4;
+            tp->reference.valid = true;
 
             tp->reference.system =
                 (m->w3.dgnss == 0) ? NAVSYSTEM_GPS :
@@ -1271,7 +1274,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
             }
             // we used to say n++ here, but scan-build complains
             tp->reference.datum[n] = '\0';
-            if (len >= 4) {
+            if (4 <= len) {
                 tp->reference.dx = m->w5.dx * DXYZ_SCALE;
                 tp->reference.dy =
                     ((m->w5.dy_h << 8) | m->w6.dy_l) * DXYZ_SCALE;
@@ -1284,7 +1287,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
     case 5:
         msg_name = "Constellation health (GPS)";
         unknown = false;
-        for (n = 0; n < (unsigned)len; n++) {
+        for (n = 0; n < len; n++) {
             struct consat_t *csp = &tp->conhealth.sat[n];
             struct b_health_t *m = &msg->msg_type.type5.health[n];
 
@@ -1308,7 +1311,14 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
     case 7:
         msg_name = "Beacon Almanac (GPS)";
         unknown = false;
-        for (w = 0; w < (unsigned)len; w++) {
+        if (ROWS(msg->msg_type.type7.almanac) <= len) {
+            // Coverity  645086 Out-of-bounds write
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "RTCM2: type 7 bad len %u >= %zu\n",
+                     len, ROWS(msg->msg_type.type7.almanac));
+            break;
+        }
+        for (w = 0; w < len; w++) {
             struct station_t *np = &tp->almanac.station[n];
             struct b_station_t *mp = &msg->msg_type.type7.almanac[w];
 
@@ -1323,7 +1333,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
                 np->bitrate = tx_speed[mp->w5.bit_rate];
             n++;
         }
-        tp->almanac.nentries = (unsigned)(len / 3);
+        tp->almanac.nentries = len / 3;
         break;
 
     case 8:
@@ -1352,8 +1362,9 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
         tp->xmitter.lat = msg->msg_type.type13.w1.lat * LATLON_SCALE;
         tp->xmitter.lon = msg->msg_type.type13.w2.lon * LATLON_SCALE;
         tp->xmitter.range = msg->msg_type.type13.w2.range * RANGE_SCALE;
-        if (tp->xmitter.range == 0)
+        if (0 == tp->xmitter.range) {
             tp->xmitter.range = 1024;
+        }
         break;
 
     case 14:
@@ -1371,7 +1382,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
     case 16:
         msg_name = "Special Message (GPS)";
         unknown = false;
-        for (w = 0; w < (unsigned)len; w++) {
+        for (w = 0; w < len; w++) {
             if (!msg->msg_type.type16.txt[w].byte1) {
                 break;
             }
@@ -1521,7 +1532,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
             unsigned nad = 0, nas = 0;
             unsigned char tbuf[RTCM2_WORDS_MAX * 3];
             struct rtcm2_msg23 *m = &msg->msg_type.type23;
-            int i = 0, j = 0;
+            unsigned i = 0, j = 0;
 
             tp->ref_sta.ar = (m->words[0].byte0 >> 6) & 1;
             // sf, serial flag.  serial number to follow?
@@ -1531,7 +1542,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
 
             if (sizeof(tbuf) < ((size_t)len * 3)) {
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "RTCM2: len too long, len %d nad %d\n",
+                         "RTCM2: len too long, len %u nad %d\n",
                          len, nad);
                 break;
             }
@@ -1547,7 +1558,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
             {
                 char tmpbuf[100];
                 GPSD_LOG(LOG_SHOUT, &session->context->errout,
-                         "RTCM2: len %d nad %d tbuf %s\n",
+                         "RTCM2: len %u nad %d tbuf %s\n",
                          len, nad,
                          gps_hexdump(tmpbuf, sizeof(tmpbuf),
                                      (char *)tbuf, len * 3));
@@ -1614,13 +1625,14 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
         FALLTHROUGH
     case 34:
     {
+        int lens = (int)len;
         // 32 and 34 are the same, except 31 is all sats, 34 is some sats
         struct glonass_correction_t *m = &msg->msg_type.type31.corrections[0];
         msg_name = "Differential GLONASS corrections";
         unknown = false;
 
-        while (len >= 0) {
-            if (len >= 2) {
+        while (0 <= lens) {
+            if (2 <= lens) {
                 tp->glonass_ranges.sat[n].ident = m->w3.satident1;
                 tp->glonass_ranges.sat[n].udre = m->w3.udre1;
                 tp->glonass_ranges.sat[n].change = (bool)m->w4.change1;
@@ -1631,7 +1643,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
                     (m->w3.scale1 ? RRLARGE : RRSMALL);
                 n++;
             }
-            if (len >= 4) {
+            if (4 <= lens) {
                 tp->glonass_ranges.sat[n].ident = m->w4.satident2;
                 tp->glonass_ranges.sat[n].udre = m->w4.udre2;
                 tp->glonass_ranges.sat[n].change = (bool)m->w6.change2;
@@ -1642,7 +1654,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
                     (m->w4.scale2 ? RRLARGE : RRSMALL);
                 n++;
             }
-            if (len >= 5) {
+            if (5 <= lens) {
                 tp->glonass_ranges.sat[n].ident = m->w6.satident3;
                 tp->glonass_ranges.sat[n].udre = m->w6.udre3;
                 tp->glonass_ranges.sat[n].change = (bool)m->w7.change3;
@@ -1654,7 +1666,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
                     m->w7.rrc3 * (m->w6.scale3 ? RRLARGE : RRSMALL);
                 n++;
             }
-            len -= 5;
+            lens -= 5;
             m++;
         }
         tp->glonass_ranges.nentries = n;
