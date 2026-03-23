@@ -405,7 +405,7 @@ struct gst_t {
  */
 #define RTCM2_WORDS_MAX 33
 #define MAXCORRECTIONS  18      // max correction count in type 1 or 9
-#define MAXSTATIONS     10      // maximum stations in almanac, type 5
+#define MAXSTATIONS     32      // maximum stations in almanac, type 7
 // RTCM104 doesn't specify this, so give it the largest reasonable value
 #define MAXHEALTH       (RTCM2_WORDS_MAX-2)
 

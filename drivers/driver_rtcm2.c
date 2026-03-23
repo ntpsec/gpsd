@@ -1319,7 +1319,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
             break;
         }
         for (w = 0; w < len; w++) {
-            struct station_t *np = &tp->almanac.station[n];
+            struct station_t *np = &tp->almanac.station[w];
             struct b_station_t *mp = &msg->msg_type.type7.almanac[w];
 
             np->latitude = mp->w3.lat * LA_SCALE;
@@ -1331,7 +1331,6 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
             np->health = mp->w5.health;
             np->station_id = mp->w5.station_id,
                 np->bitrate = tx_speed[mp->w5.bit_rate];
-            n++;
         }
         tp->almanac.nentries = len / 3;
         break;
