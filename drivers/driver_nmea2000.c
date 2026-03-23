@@ -1524,7 +1524,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
              "NMEA2000 find_pgn()\n");
     session->driver.nmea2000.workpgn = NULL;
     can_net = session->driver.nmea2000.can_net;
-    if ((NMEA2000_NETS - 1) < can_net) {
+    if (NMEA2000_NETS <= can_net) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "NMEA2000 find_pgn: Invalid can network %d.\n", can_net);
         return;
@@ -1560,7 +1560,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
     }
 #endif  // of if LOG_FILE
     source_unit = frame->can_id & 0x0ff;
-    if (NMEA2000_UNITS < source_unit) {
+    if (NMEA2000_UNITS <= source_unit) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA2000 ignoring unit %d.\n", source_unit);
         return;
