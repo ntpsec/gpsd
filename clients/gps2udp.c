@@ -249,7 +249,7 @@ static void connect2gpsd(bool restart)
             break;
         }
         delay *= 2;
-        if (3600 >= delay) {
+        if (3600 < delay) {
             // one hour wait max. Fix Coverity 498038, delay went infinite.
             delay = 3600;
         }
