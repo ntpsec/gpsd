@@ -3670,9 +3670,9 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
 
     // now get one message
     // RTCM3 message header not always at inbufptr[0]
-    for (idx = 0; idx < lexer->inbuflen; idx++) {
+    for (idx = 0; idx < (lexer->inbuflen - 1); idx++) {
         if (0xd3 == lexer->inbuffer[idx] &&
-            0 == (0xfc & lexer->inbuffer[idx +1])) {
+            0 == (0xfc & lexer->inbuffer[idx + 1])) {
             // Looking for 0xd3, followed by 6 zeros.
             break;
         }
