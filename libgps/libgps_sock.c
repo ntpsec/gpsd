@@ -395,8 +395,8 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
     PRIVATE(gpsdata)->waiting -= response_length;
 
     if (0 >= PRIVATE(gpsdata)->waiting ||
-        sizeof(PRIVATE(gpsdata)->buffer) < (size_t)(PRIVATE(gpsdata)->waiting +
-                                                    response_length)) {
+        sizeof(PRIVATE(gpsdata)->buffer) <= (size_t)(PRIVATE(gpsdata)->waiting +
+                                                     response_length)) {
         // coverity  498047 Overflowed integer argument
         // no waiting data, or overflow, clear the buffer, just in case
         *PRIVATE(gpsdata)->buffer = '\0';
