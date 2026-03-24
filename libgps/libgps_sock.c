@@ -110,10 +110,11 @@ int gps_sock_open(const char *host, const char *port,
         sock = netlib_connectsock(AF_UNSPEC, host, port, "tcp");
         if (0 > sock) {
             gpsdata->gps_fd = PLACEHOLDING_FD;
+            // sock is long with USE_QT
             libgps_debug_trace(DEBUG_CALLS,
                                "libgps: netlib_connectsock() "
-                               "returns error %s(%d)\n",
-                               netlib_errstr(sock), sock);
+                               "returns error %s(%ld)\n",
+                               netlib_errstr(sock), (long)sock);
             return -1;
         }
         gpsdata->gps_fd = sock;
