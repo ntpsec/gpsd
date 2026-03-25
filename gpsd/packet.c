@@ -3668,13 +3668,17 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
               gps_hexdump(scratchbuf, sizeof(scratchbuf),
                           lexer->inbuffer, lexer->inbuflen));
 
-    // now get one message
-    // RTCM3 message header not always at inbufptr[0]
-    for (idx = 0; idx < (lexer->inbuflen - 1); idx++) {
-        if (0xd3 == lexer->inbuffer[idx] &&
-            0 == (0xfc & lexer->inbuffer[idx + 1])) {
-            // Looking for 0xd3, followed by 6 zeros.
-            break;
+    if (2 <= lexer->inbuflen) {
+        /* now get one message
+         * don't  underflow  inbuflen, or voerrun inbuffer
+         * RTCM3 message header not always at inbufptr[0]
+         */
+        for (idx = 0; idx < (lexer->inbuflen - 1); idx++) {
+            if (0xd3 == lexer->inbuffer[idx] &&
+                0 == (0xfc & lexer->inbuffer[idx + 1])) {
+                // Looking for 0xd3, followed by 6 zeros.
+                break;
+            }
         }
     }
     if (0xd3 != lexer->inbuffer[idx]) {
