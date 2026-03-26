@@ -590,7 +590,7 @@ Type 1, 2 and 3 messages share a common reporting structure for
 navigational information; we'll call it the Common Navigation Block
 (CNB). This is the information most likely to be of interest for
 decoding software. Total of 168 bits, occupying one AIVDM sentence.
-More information on the CNB is at <<MSGS123>>>.
+More information on the CNB is at <<MSGS123>>.
 
 //: Type CNB
 .Common Navigation Block
