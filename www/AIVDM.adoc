@@ -642,7 +642,7 @@ maximum of three hops. A value of 3 indicates "Do not repeat".
 |12| Power-driven vessel pushing ahead or towing alongside (regional use).
 |13| Reserved for future use
 |14| AIS-SART is active
-|15| Ubdefined (default)
+|15| Undefined (default)
 |======
 
 Note, the AIS-SART value was added after <<IALA>> and designates an
