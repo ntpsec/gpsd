@@ -1,7 +1,7 @@
 = ubxtool(1)
 Gary E. Miller <gem@rellim.com>
 :author: Gary E. Miller
-:date: 1 January 2023
+:date: 26 March 2026
 :email: <gem@rellim.com.>
 :keywords: gps, gpsd, ubxtool, u-blox
 :manmanual: GPSD Documentation
@@ -82,7 +82,7 @@ Disable sending of NED binary messages. UBX-NAV-VELNED and
 UBX-NAV-RELPOSNED.
 NMEA;;
 Disable sending basic NMEA messages. The messages are GBS, GGA, GSA,
-GGL, GST, GSV, RMC, VTG, and ZDA.
+GLL, GST, GSV, RMC, VTG, and ZDA.
 PPS;;
 Disable TIMEPULSE 0.
 RAWX;;
