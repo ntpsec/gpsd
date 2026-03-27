@@ -5256,7 +5256,7 @@ Identification System]
   Multiple Access in the Maritime Mobile Band]. All versions are
   available here.
 
-- [[[IALA]]]  http://www.ialathree.org/iala/pages/AIS/IALATech1.5.pdf[IALA
+- [[[IALA]]]  https://web.archive.org/web/20111110211252/https://www.ialathree.org/iala/pages/AIS/IALATech1.5.pdf[IALA
   Technical Clarifications on Recommendation ITU-R M.1371-1]
 
 - [[[IALA-ASM]]] https://www.iala-aism.org/asm/[Collection of regional applications for AIS Application Specific Messages of regional applications for AIS Binary Messages]
