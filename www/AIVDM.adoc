@@ -675,8 +675,8 @@ The position accuracy flag indicates the accuracy of the fix.  A value of
 default, indicates an unaugmented GNSS fix with accuracy > 10m.
 
 Longitude is given in in 1/10000 min; divide by 600000.0 to obtain
-degrees. Values up to plus or minus 180 degrees, East = positive, West
-\= negative.  A value of 181 degrees (0x6791AC0 hex) indicates that
+degrees. Values up to plus or minus 180 degrees, East = positive,
+West = negative.  A value of 181 degrees (0x6791AC0 hex) indicates that
 longitude is not available and is the default.
 
 Latitude is given in in 1/10000 min; divide by 600000.0 to obtain
