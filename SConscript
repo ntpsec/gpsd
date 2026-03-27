@@ -250,7 +250,7 @@ annmail = "gpsd-announce@nongnu.org"
 bugtracker = "https://gitlab.com/gpsd/gpsd/-/issues"
 cgiupload = "root@thyrsus.com:/var/www/cgi-bin/"
 clonerepo = "git@gitlab.com:gpsd/gpsd.git"
-devmail = "gpsd-dev@lists.nongnu.org"
+devmail = "gpsd-dev@nongnu.org"
 download = "http://download-mirror.savannah.gnu.org/releases/gpsd/"
 formserver = "www@thyrsus.com"
 gitrepo = "git@gitlab.com:gpsd/gpsd.git"
@@ -265,7 +265,7 @@ tiplink = "<a href='https://www.patreon.com/esr'>" \
           "leave a remittance at Patreon</a>"
 tipwidget = '<p><a href="https://www.patreon.com/esr">' \
             'Donate here to support continuing development.</a></p>'
-usermail = "gpsd-users@lists.nongnu.org"
+usermail = "gpsd-users@nongnu.org"
 webform = "http://www.thyrsus.com/cgi-bin/gps_report.cgi"
 website = "https://gpsd.io/"
 # Hosting information ends here
