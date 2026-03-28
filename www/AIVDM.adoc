@@ -657,7 +657,7 @@ Turn rate is encoded as follows:
 * 1...-126 = turning left at up to 708 degrees per minute or higher
 * 127 = turning right at more than 5deg/30s (No TI available)
 * -127 = turning left at more than 5deg/30s (No TI available)
-* 128 (80 hex) indicates no turn information available (default)
+* -128 (80 hex) indicates no turn information available (default)
 
 Values between 0 and 708 degrees/min coded by ROT~AIS~=4.733 *
 SQRT(ROT~sensor~) degrees/min where ROT~sensor~ is the Rate of Turn as
