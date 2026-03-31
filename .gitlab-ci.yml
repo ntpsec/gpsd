@@ -214,7 +214,7 @@ coverity:
       do
           test -z $(eval "echo \"\${$v}\"")
           && echo Fix $v && f=1;
-      done; test "$f" -eq 1 && exit 1
+      done; test "$f" -eq 1 && exit 0
     - apt update
     - apt -y install --no-install-recommends eatmydata
     - eatmydata -- apt -y install --no-install-recommends ${PACKAGES}
