@@ -59,7 +59,7 @@
 #define NMEA2000_FAST_DEBUG 0
 
 static struct gps_device_t *nmea2000_units[NMEA2000_NETS][NMEA2000_UNITS];
-static char can_interface_name[NMEA2000_NETS][CAN_NAMELEN+1];
+static char can_interface_name[NMEA2000_NETS][CAN_NAMELEN + 1];
 
 typedef struct PGN {
     unsigned int  pgn;
@@ -808,18 +808,20 @@ static gps_mask_t hnd_129040(unsigned char *bu, int len, PGN *pgn,
         beam                     =                 getleu16(bu, 26);
         to_starboard             =                 getleu16(bu, 28);
         to_bow                   =                 getleu16(bu, 30);
-        if ((length == 0xffff) || (to_bow       == 0xffff)) {
+        if ((0xffff == length) ||
+            (0xffff == to_bow)) {
             length       = 0;
             to_bow       = 0;
         }
-        if ((beam   == 0xffff) || (to_starboard == 0xffff)) {
+        if ((0xffff == beam) ||
+            (0xffff == to_starboard)) {
             beam         = 0;
             to_starboard = 0;
         }
-        ais->type19.to_bow       = (unsigned int) (to_bow/10);
-        ais->type19.to_stern     = (unsigned int) ((length-to_bow)/10);
-        ais->type19.to_port      = (unsigned int) ((beam-to_starboard)/10);
-        ais->type19.to_starboard = (unsigned int) (to_starboard/10);
+        ais->type19.to_bow       = (unsigned int) (to_bow / 10);
+        ais->type19.to_stern     = (unsigned int) ((length-to_bow) / 10);
+        ais->type19.to_port      = (unsigned int) ((beam-to_starboard) / 10);
+        ais->type19.to_starboard = (unsigned int) (to_starboard / 10);
         ais->type19.epfd         = (unsigned int) ((bu[23] >> 4) & 0x0f);
         ais->type19.dte          = (unsigned int) ((bu[52] >> 0) & 0x01);
         ais->type19.assigned     = (bool)         ((bu[52] >> 1) & 0x01);
@@ -876,8 +878,8 @@ static gps_mask_t hnd_129793(unsigned char *bu, int len, PGN *pgn,
         if (0xffff != date) {
             date1 = (time_t)date * (24L *60L *60L);
             (void) gmtime_r(&date1, &date2);
-            ais->type4.year     = (unsigned int) (date2.tm_year+1900);
-            ais->type4.month    = (unsigned int) (date2.tm_mon+1);
+            ais->type4.year     = (unsigned int) (date2.tm_year + 1900);
+            ais->type4.month    = (unsigned int) (date2.tm_mon + 1);
             ais->type4.day      = (unsigned int) (date2.tm_mday);
         } else {
             ais->type4.day      = AIS_DAY_NOT_AVAILABLE;
@@ -936,33 +938,33 @@ static gps_mask_t hnd_129794(unsigned char *bu, int len, PGN *pgn,
             to_starboard = 0;
         }
         ais->type5.to_bow        = (unsigned int) (to_bow/10);
-        ais->type5.to_stern      = (unsigned int) ((length-to_bow)/10);
-        ais->type5.to_port       = (unsigned int) ((beam-to_starboard)/10);
-        ais->type5.to_starboard  = (unsigned int) (to_starboard/10);
+        ais->type5.to_stern      = (unsigned int) ((length-to_bow) / 10);
+        ais->type5.to_port       = (unsigned int) ((beam-to_starboard) / 10);
+        ais->type5.to_starboard  = (unsigned int) (to_starboard / 10);
         ais->type5.epfd          = (unsigned int) ((bu[73] >> 2) & 0x0f);
         date                     =                 getleu16(bu, 45);
         time                     =                 getleu32(bu, 47);
-        date1                    = (time_t)       (date*24*60*60);
+        date1                    = (time_t)       (date * 24 * 60 * 60);
         (void) gmtime_r(&date1, &date2);
-        ais->type5.month         = (unsigned int) (date2.tm_mon+1);
+        ais->type5.month         = (unsigned int) (date2.tm_mon + 1);
         ais->type5.day           = (unsigned int) (date2.tm_mday);
-        ais->type5.minute        = (unsigned int) (time/(10000*60));
-        ais->type5.hour          = (unsigned int) (ais->type5.minute/60);
+        ais->type5.minute        = (unsigned int) (time/(10000 * 60));
+        ais->type5.hour          = (unsigned int) (ais->type5.minute / 60);
         ais->type5.minute =
             (unsigned int)(ais->type5.minute-(ais->type5.hour * 60));
 
-        ais->type5.draught       = (unsigned int) (getleu16(bu, 51)/10);
+        ais->type5.draught       = (unsigned int) (getleu16(bu, 51) / 10);
         ais->type5.dte           = (unsigned int) ((bu[73] >> 6) & 0x01);
 
         for (l = 0, cpy_stop = 0; l < 7; l++) {
             char next;
 
             next = (char) bu[9+l];
-            if ((next < ' ') ||
-                (next > 0x7e)) {
+            if ((' ' > next) ||
+                (0x7e < next)) {
                 cpy_stop = 1;
             }
-            if (cpy_stop == 0) {
+            if (0 == cpy_stop) {
                 ais->type5.callsign[l] = next;
             } else {
                 ais->type5.callsign[l] = 0;
@@ -1013,12 +1015,12 @@ static gps_mask_t hnd_129794(unsigned char *bu, int len, PGN *pgn,
                ais->type5.to_stern,
                ais->type5.to_port,
                ais->type5.to_starboard,
-               ais->type5.draught/10.0);
+               ais->type5.draught / 10.0);
         printf("AIS: arrival:%-20.20s at %02u-%02u-%04d %02u:%0u\n",
                ais->type5.destination,
                ais->type5.day,
                ais->type5.month,
-               date2.tm_year+1900,
+               date2.tm_year + 1900,
                ais->type5.hour,
                ais->type5.minute);
 #endif  // end of #if NMEA2000_DEBUG_AIS
@@ -1526,18 +1528,20 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
     can_net = session->driver.nmea2000.can_net;
     if (NMEA2000_NETS <= can_net) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "NMEA2000 find_pgn: Invalid can network %d.\n", can_net);
+                 "NMEA2000 find_pgn: Invalid can network %u.\n", can_net);
         return;
     }
 
     if (frame->can_id & CAN_ERR_FLAG) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "NMEA2000 CAN_ERR_FLAG set %d.\n", frame->can_id);
+                 "NMEA2000 CAN_ERR_FLAG set x%x.\n", frame->can_id);
         return;
     }
 
     if (!(frame->can_id & CAN_EFF_FLAG)) {
-        // we got RTR or 2.0A CAN frame, not used
+        // we got RTR or 2.0A CAN frame, not used.  SHould have been filtered.
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA2000 CAN_EFF_FLAG not set x%x.\n", frame->can_id);
         return;
     }
 #if LOG_FILE
@@ -1728,9 +1732,10 @@ static ssize_t nmea2000_get(struct gps_device_t *session)
          * do not log at low log levels */
         return 0;
     }
+    // long cast for 32-bit.
     GPSD_LOG(LOG_WARN, &session->context->errout,
              "NMEA2000 nmea2000_get() status %ld %s(%d) \n",
-             status, strerror(errno), errno);
+             (long)status, strerror(errno), errno);
     return 0;
 }
 
@@ -1785,7 +1790,7 @@ int nmea2000_open(struct gps_device_t *session)
     // FIXME, don't strnlen(interface_name) over and over again!
     for (l = 0; l < strnlen(interface_name, sizeof(interface_name)); l++) {
         if (':' == interface_name[l]) {
-            unit_ptr = &interface_name[l+1];
+            unit_ptr = &interface_name[l + 1];
             interface_name[l] = 0;
             continue;
         }
@@ -1904,19 +1909,19 @@ int nmea2000_open(struct gps_device_t *session)
     }
     if (0 > getsockopt(sock, SOL_SOCKET, SO_RCVBUF,
                    &curr_rcvbuf_size, &curr_rcvbuf_size_len)) {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "NMEA2000 open:getsockopt(SO_RCVBUF) %s(%d)\n",
-                     strerror(errno), errno);
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "NMEA2000 open:getsockopt(SO_RCVBUF) %s(%d)\n",
+                 strerror(errno), errno);
     } else {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "NMEA2000 open:getsockopt(SO_RCVBUF) =  %d\n",
-                     curr_rcvbuf_size);
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "NMEA2000 open:getsockopt(SO_RCVBUF) =  %d\n",
+                 curr_rcvbuf_size);
     }
 
     // Locate the interface you wish to use
     (void)strlcpy(ifr.ifr_name, interface_name, sizeof(ifr.ifr_name));
-    status = ioctl(sock, SIOCGIFINDEX, &ifr);  /* ifr.ifr_ifindex gets filled
-                                                * with that device's index */
+    // ifr.ifr_ifindex gets filled with that device's index
+    status = ioctl(sock, SIOCGIFINDEX, &ifr);
 
     if (0 != status) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -1951,9 +1956,8 @@ int nmea2000_open(struct gps_device_t *session)
         can_filter.can_id = CAN_EFF_FLAG;
 
         session->driver.nmea2000.unit_valid = false;
-        for (l = 0; l < NMEA2000_UNITS; l++) {
-            nmea2000_units[can_net][l] = NULL;
-        }
+        // no unit, yet.
+        memset(nmea2000_units[can_net], 0, sizeof(nmea2000_units[can_net]));
     } else {
         // Only include EFF CAN frames with the specific source address
         can_filter.can_mask = CAN_EFF_FLAG | CAN_RTR_FLAG | 0xff;
