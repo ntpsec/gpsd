@@ -1522,10 +1522,13 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
     unsigned int source_pgn;
     unsigned int source_unit;
 
-    GPSD_LOG(LOG_RAW, &session->context->errout,
-             "NMEA2000 find_pgn()\n");
     session->driver.nmea2000.workpgn = NULL;
     can_net = session->driver.nmea2000.can_net;
+
+    GPSD_LOG(LOG_RAW, &session->context->errout,
+             "NMEA2000 find_pgn() can_id x%x can_net %u\n",
+             frame->can_id, can_net);
+
     if (NMEA2000_NETS <= can_net) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "NMEA2000 find_pgn: Invalid can network %u.\n", can_net);
