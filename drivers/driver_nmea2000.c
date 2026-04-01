@@ -1773,6 +1773,7 @@ int nmea2000_open(struct gps_device_t *session)
     int rcvbuf_size = 1000000;  // requested receiver buffer size
     int curr_rcvbuf_size;
     socklen_t curr_rcvbuf_size_len = sizeof(curr_rcvbuf_size);
+    struct can_filter can_filter;
 
     INVALIDATE_SOCKET(session->gpsdata.gps_fd);
 
@@ -1813,6 +1814,14 @@ int nmea2000_open(struct gps_device_t *session)
                                  sizeof(can_interface_name[l])))) {
                 can_net = l;
                 break;
+            }
+        }
+        if (0 > can_net) {
+            for (l = 0; l < NMEA2000_NETS; l++) {
+                if (0 == can_interface_name[l][0]) {
+                    can_net = l;
+                    break;
+                }
             }
         }
         if (0 > can_net) {
@@ -1905,7 +1914,7 @@ int nmea2000_open(struct gps_device_t *session)
     }
 
     // Locate the interface you wish to use
-    strlcpy(ifr.ifr_name, interface_name, sizeof(ifr.ifr_name));
+    (void)strlcpy(ifr.ifr_name, interface_name, sizeof(ifr.ifr_name));
     status = ioctl(sock, SIOCGIFINDEX, &ifr);  /* ifr.ifr_ifindex gets filled
                                                 * with that device's index */
 
@@ -1933,18 +1942,37 @@ int nmea2000_open(struct gps_device_t *session)
     session->servicetype = SERVICE_SENSOR;
     session->driver.nmea2000.can_net = can_net;
 
+    (void)strlcpy(can_interface_name[can_net],
+                  interface_name, sizeof(can_interface_name[0]));
+
     if (NULL == unit_ptr) {
-        strlcpy(can_interface_name[can_net],
-                interface_name,
-                MIN(sizeof(can_interface_name[0]), sizeof(interface_name)));
+        //  Only include EFF CAN frames
+        can_filter.can_mask = CAN_EFF_FLAG | CAN_RTR_FLAG;
+        can_filter.can_id = CAN_EFF_FLAG;
+
         session->driver.nmea2000.unit_valid = false;
         for (l = 0; l < NMEA2000_UNITS; l++) {
             nmea2000_units[can_net][l] = NULL;
         }
     } else {
+        // Only include EFF CAN frames with the specific source address
+        can_filter.can_mask = CAN_EFF_FLAG | CAN_RTR_FLAG | 0xff;
+        can_filter.can_id = CAN_EFF_FLAG | unit_number;
+
         nmea2000_units[can_net][unit_number] = session;
         session->driver.nmea2000.unit = unit_number;
         session->driver.nmea2000.unit_valid = true;
+    }
+
+    status = setsockopt(sock, SOL_CAN_RAW, CAN_RAW_FILTER,
+                        &can_filter, sizeof(can_filter));
+    if (0 != status) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "NMEA2000 open:setsockopt(CAN_RAW_FILTER) %s(%d).\n",
+                 strerror(errno), errno);
+        close(sock);
+        session->gpsdata.gps_fd = -1;
+        return -1;
     }
 
     // how do we know the speed???
