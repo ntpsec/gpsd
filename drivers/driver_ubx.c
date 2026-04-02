@@ -109,7 +109,7 @@ static const struct vlist_t vgnss_sig_ids[] = {
     {0x0306, "BDS B1 Cd"},
     {0x0307, "BDS B2 ap"},
     {0x0308, "BDS B2 ad"},
-    {0x0508, "QZSS L1 C/A"},
+    {0x0500, "QZSS L1 C/A"},
     {0x0501, "QZSS L1 S"},
     {0x0504, "QZSS L2 CM"},
     {0x0505, "QZSS L2 CL"},
