@@ -85,6 +85,19 @@ SPDX-License-Identifier: BSD-2-clause
 #define sgrab(width)    (bitcount += width, sbits(buf,  \
                          bitcount - width, width, false))
 
+static void rtcm3_copy_string_field(char *dst, size_t dstlen,
+                                    const unsigned char *src, size_t srclen)
+{
+    if (0 == dstlen) {
+        return;
+    }
+    if (srclen >= dstlen) {
+        srclen = dstlen - 1;
+    }
+    (void)memcpy(dst, src, srclen);
+    dst[srclen] = '\0';
+}
+
 /* decode 1015/1016/1017 header
  * they share a common header
  * TODO: rtklib has C code for these.
@@ -599,8 +612,9 @@ void rtcm3_unpack(const struct gps_context_t *context,
         }
         // RTCM 3.3 says DF030 is 31 chars of ISO 8859-1
         // but 1007 says DF030 is 20 chars of ASCII
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1007.descriptor, buf + 7, n);
-        rtcm->rtcmtypes.rtcm3_1007.descriptor[n] = '\0';
+        rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1007.descriptor,
+                                sizeof(rtcm->rtcmtypes.rtcm3_1007.descriptor),
+                                buf + 7, n);
         bitcount += 8 * n;
         rtcm->rtcmtypes.rtcm3_1007.setup_id = ugrab(8);
         unknown = false;
@@ -611,13 +625,15 @@ void rtcm3_unpack(const struct gps_context_t *context,
         // 6 to 68 bytes
         rtcm->rtcmtypes.rtcm3_1008.station_id = (unsigned short)ugrab(12);
         n = (unsigned long)ugrab(8);
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1008.descriptor, buf + 7, n);
-        rtcm->rtcmtypes.rtcm3_1008.descriptor[n] = '\0';
+        rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1008.descriptor,
+                                sizeof(rtcm->rtcmtypes.rtcm3_1008.descriptor),
+                                buf + 7, n);
         bitcount += 8 * n;
         rtcm->rtcmtypes.rtcm3_1008.setup_id = ugrab(8);
         n2 = (unsigned long)ugrab(8);
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1008.serial, buf + 9 + n, n2);
-        rtcm->rtcmtypes.rtcm3_1008.serial[n2] = '\0';
+        rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1008.serial,
+                                sizeof(rtcm->rtcmtypes.rtcm3_1008.serial),
+                                buf + 9 + n, n2);
         // bitcount += 8 * n2;
         unknown = false;
         break;
@@ -1035,21 +1051,25 @@ void rtcm3_unpack(const struct gps_context_t *context,
         // TODO: rtklib has C code for this one.
         rtcm->rtcmtypes.rtcm3_1033.station_id = (unsigned short)ugrab(12);
         n = (unsigned long)ugrab(8);
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1033.descriptor, buf + 7, n);
-        rtcm->rtcmtypes.rtcm3_1033.descriptor[n] = '\0';
+        rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.descriptor,
+                                sizeof(rtcm->rtcmtypes.rtcm3_1033.descriptor),
+                                buf + 7, n);
         bitcount += 8 * n;
         rtcm->rtcmtypes.rtcm3_1033.setup_id = ugrab(8);
         n2 = (unsigned long)ugrab(8);
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1033.serial, buf + 9 + n, n2);
-        rtcm->rtcmtypes.rtcm3_1033.serial[n2] = '\0';
+        rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.serial,
+                                sizeof(rtcm->rtcmtypes.rtcm3_1033.serial),
+                                buf + 9 + n, n2);
         bitcount += 8 * n2;
         n3 = (unsigned long)ugrab(8);
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1033.receiver, buf + 10+n+n2, n3);
-        rtcm->rtcmtypes.rtcm3_1033.receiver[n3] = '\0';
+        rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.receiver,
+                                sizeof(rtcm->rtcmtypes.rtcm3_1033.receiver),
+                                buf + 10 + n + n2, n3);
         bitcount += 8 * n3;
         n4 = (unsigned long)ugrab(8);
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1033.firmware, buf + 11+n+n2+n3, n3);
-        rtcm->rtcmtypes.rtcm3_1033.firmware[n4] = '\0';
+        rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.firmware,
+                                sizeof(rtcm->rtcmtypes.rtcm3_1033.firmware),
+                                buf + 11 + n + n2 + n3, n4);
         // bitcount += 8 * n4;
         // TODO: next is receiver serial number
         unknown = false;
