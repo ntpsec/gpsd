@@ -85,6 +85,10 @@ SPDX-License-Identifier: BSD-2-clause
 #define sgrab(width)    (bitcount += width, sbits(buf,  \
                          bitcount - width, width, false))
 
+/* copy strings safely.
+ * RTCM 3.3 says most strings are 31 chars, or less, of ISO 8859-1
+ * but 1007 says DF030 is 20 chars, or less, of ASCII
+ */
 static void rtcm3_copy_string_field(char *dst, size_t dstlen,
                                     const unsigned char *src, size_t srclen)
 {
@@ -602,16 +606,14 @@ void rtcm3_unpack(const struct gps_context_t *context,
         // 5 to 36 bytes
         rtcm->rtcmtypes.rtcm3_1007.station_id = ugrab(12);
         n = ugrab(8);
-        if (31 < n ||
-            (5 + n) != rtcm->length) {
+        if ((5 + n) != rtcm->length) {
             GPSD_LOG(LOG_WARN, &context->errout,
-                     "RTCM3: type %d (%s) bad n %u length %u ",
+                     "RTCM3: type %d (%s) bad n %u length %u\n",
                      rtcm->type,  msg_name, n, rtcm->length);
             rtcm->length = 0;          // set to zero to prevent JSON decode
             break;
         }
-        // RTCM 3.3 says DF030 is 31 chars of ISO 8859-1
-        // but 1007 says DF030 is 20 chars of ASCII
+        // 1007 says DF030 is 20 chars, or less, of ASCII
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1007.descriptor,
                                 sizeof(rtcm->rtcmtypes.rtcm3_1007.descriptor),
                                 buf + 7, n);
@@ -624,7 +626,14 @@ void rtcm3_unpack(const struct gps_context_t *context,
         msg_name = "Antenna Description & Serial Number";
         // 6 to 68 bytes
         rtcm->rtcmtypes.rtcm3_1008.station_id = ugrab(12);
-        n = (unsigned long)ugrab(8);
+        n = ugrab(8);
+        if ((6 + n) != rtcm->length) {
+            GPSD_LOG(LOG_WARN, &context->errout,
+                     "RTCM3: type %d (%s) bad n %u length %u\n",
+                     rtcm->type,  msg_name, n, rtcm->length);
+            rtcm->length = 0;          // set to zero to prevent JSON decode
+            break;
+        }
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1008.descriptor,
                                 sizeof(rtcm->rtcmtypes.rtcm3_1008.descriptor),
                                 buf + 7, n);
@@ -1010,11 +1019,19 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* 9 bytes minimum
          * (max. 127 multibyte characters and max. 255 bytes)
          */
-        rtcm->rtcmtypes.rtcm3_1029.station_id = (unsigned short)ugrab(12);
-        rtcm->rtcmtypes.rtcm3_1029.mjd = (unsigned short)ugrab(16);
-        rtcm->rtcmtypes.rtcm3_1029.sod = (unsigned short)ugrab(17);
-        rtcm->rtcmtypes.rtcm3_1029.len = (unsigned long)ugrab(7);
-        rtcm->rtcmtypes.rtcm3_1029.unicode_units = (size_t)ugrab(8);
+        rtcm->rtcmtypes.rtcm3_1029.station_id = ugrab(12);
+        rtcm->rtcmtypes.rtcm3_1029.mjd = ugrab(16);
+        rtcm->rtcmtypes.rtcm3_1029.sod = ugrab(17);
+        rtcm->rtcmtypes.rtcm3_1029.len = ugrab(7);
+        n = ugrab(8);
+        if ((9 + n) != rtcm->length) {
+            GPSD_LOG(LOG_WARN, &context->errout,
+                     "RTCM3: type %d (%s) bad n %u length %u\n",
+                     rtcm->type,  msg_name, n, rtcm->length);
+            rtcm->length = 0;          // set to zero to prevent JSON decode
+            break;
+        }
+        rtcm->rtcmtypes.rtcm3_1029.unicode_units = n;
         rtcm3_copy_string_field((char *)rtcm->rtcmtypes.rtcm3_1029.text,
                                 sizeof(rtcm->rtcmtypes.rtcm3_1029.text),
                                 buf + 12,
@@ -1050,8 +1067,15 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * as well as receiver descriptor and serial number.
          */
         // TODO: rtklib has C code for this one.
-        rtcm->rtcmtypes.rtcm3_1033.station_id = (unsigned short)ugrab(12);
-        n = (unsigned long)ugrab(8);
+        rtcm->rtcmtypes.rtcm3_1033.station_id = ugrab(12);
+        n = ugrab(8);
+        if ((29 + n) > rtcm->length) {
+            GPSD_LOG(LOG_WARN, &context->errout,
+                     "RTCM3: type %d (%s) bad n %u length %u\n",
+                     rtcm->type,  msg_name, n, rtcm->length);
+            rtcm->length = 0;          // set to zero to prevent JSON decode
+            break;
+        }
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.descriptor,
                                 sizeof(rtcm->rtcmtypes.rtcm3_1033.descriptor),
                                 buf + 7, n);

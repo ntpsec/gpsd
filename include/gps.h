@@ -1006,7 +1006,7 @@ struct rtcm3_t {
             unsigned int sod;           // Seconds of Day (UTC)
             size_t len;                 // # chars to follow
             size_t unicode_units;       // # Unicode units (bytes) in text
-            unsigned char text[255];
+            unsigned char text[256];
         } rtcm3_1029;
         struct rtcm3_1033_t {
             unsigned int station_id;                    // Reference Station ID
