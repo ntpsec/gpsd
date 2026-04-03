@@ -1015,8 +1015,10 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1029.sod = (unsigned short)ugrab(17);
         rtcm->rtcmtypes.rtcm3_1029.len = (unsigned long)ugrab(7);
         rtcm->rtcmtypes.rtcm3_1029.unicode_units = (size_t)ugrab(8);
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1029.text,
-                     buf + 12, rtcm->rtcmtypes.rtcm3_1029.unicode_units);
+        rtcm3_copy_string_field((char *)rtcm->rtcmtypes.rtcm3_1029.text,
+                                sizeof(rtcm->rtcmtypes.rtcm3_1029.text),
+                                buf + 12,
+                                rtcm->rtcmtypes.rtcm3_1029.unicode_units);
         unknown = false;
         break;
 
@@ -2073,7 +2075,9 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * Leader bytes, message length, and checksum won't be copied.
          * The first 12 bits of the copied payload will be the type field.
          */
-        memcpy(rtcm->rtcmtypes.data, buf + 3, rtcm->length);
+        rtcm3_copy_string_field((char *)rtcm->rtcmtypes.data,
+                                sizeof(rtcm->rtcmtypes.data),
+                                buf + 3, rtcm->length);
         GPSD_LOG(LOG_PROG, &context->errout,
                  "RTCM3: %d (%s) Undecoded, length %u\n",
                  rtcm->type, msg_name, rtcm->length);
