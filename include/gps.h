@@ -720,6 +720,7 @@ struct rtcm3_msm_hdr {
     unsigned char n_sig;        // Number of signals derived from sig_mask
     unsigned char n_cell;       // no. of sats * no. of sigs (<=64!)
     struct rtcm3_msm_sat sat[RTCM3_MAX_SATELLITES];
+    // 64 too large, RTCM3 <= 4, maybe use 10?
     struct rtcm3_msm_sig sig[RTCM3_MAX_SATELLITES];
 };
 

@@ -88,6 +88,7 @@ SPDX-License-Identifier: BSD-2-clause
 /* copy strings safely.
  * RTCM 3.3 says most strings are 31 chars, or less, of ISO 8859-1
  * but 1007 says DF030 is 20 chars, or less, of ASCII
+ * and 1029 DF140 is 255 bytes, or less, of UTF-8
  */
 static void rtcm3_copy_string_field(char *dst, size_t dstlen,
                                     const unsigned char *src, size_t srclen)
@@ -250,7 +251,8 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     rtcm->rtcmtypes.rtcm3_msm.n_cell = n_cell;
 
     if (0 == n_sat ||
-        64 < n_cell) {
+        RTCM3_MAX_SATELLITES < n_sat ||
+        RTCM3_MAX_SATELLITES < n_cell) {
         GPSD_LOG(LOG_WARN, &context->errout,
                  "RTCM3: rtcm3_decode_msm(%u) interval %u  sat_mask x%llx "
                  "sig_mask x%x invalid n_cell %u\n",
@@ -471,7 +473,16 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1001.header.station_id = ugrab(12);
         rtcm->rtcmtypes.rtcm3_1001.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1001.header.sync = (bool)ugrab(1);
-        rtcm->rtcmtypes.rtcm3_1001.header.satcount = ugrab(5);
+        n = ugrab(5);
+        if ((8 + (8 * n)) > rtcm->length) {
+            // not exactly: 8 + (7.25 * n)
+            GPSD_LOG(LOG_WARN, &context->errout,
+                     "RTCM3: type %d (%s) bad n %u length %u\n",
+                     rtcm->type,  msg_name, n, rtcm->length);
+            rtcm->length = 0;          // set to zero to prevent JSON decode
+            break;
+        }
+        rtcm->rtcmtypes.rtcm3_1001.header.satcount = n;
         rtcm->rtcmtypes.rtcm3_1001.header.smoothing = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1001.header.interval = ugrab(3);
 #define R1001 rtcm->rtcmtypes.rtcm3_1001.rtk_data[i]
@@ -491,7 +502,16 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1002.header.station_id = ugrab(12);
         rtcm->rtcmtypes.rtcm3_1002.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1002.header.sync = (bool)ugrab(1);
-        rtcm->rtcmtypes.rtcm3_1002.header.satcount = ugrab(5);
+        n = ugrab(5);
+        if ((8 + (10 * n)) > rtcm->length) {
+            // not exactly: 8 + (9.25 * n)
+            GPSD_LOG(LOG_WARN, &context->errout,
+                     "RTCM3: type %d (%s) bad n %u length %u\n",
+                     rtcm->type,  msg_name, n, rtcm->length);
+            rtcm->length = 0;          // set to zero to prevent JSON decode
+            break;
+        }
+        rtcm->rtcmtypes.rtcm3_1002.header.satcount = n;
         rtcm->rtcmtypes.rtcm3_1002.header.smoothing = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1002.header.interval = ugrab(3);
 #define R1002 rtcm->rtcmtypes.rtcm3_1002.rtk_data[i]
