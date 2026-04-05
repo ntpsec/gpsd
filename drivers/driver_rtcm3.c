@@ -115,15 +115,6 @@ static bool rtcm3_101567(const struct gps_context_t *context,
 {
     int bitcount = 36;  // 8 preamble, 6 zero, 10 length, 12 type
 
-    if (22 > rtcm->length) {
-        // need 76 bits, 9.5 bytes
-        rtcm->length = 0;          // set to zero to prevent JSON decode
-        GPSD_LOG(LOG_WARN, &context->errout,
-                 "RTCM3: rtcm3_101567_msm() type %d runt length %u ",
-                 rtcm->type, rtcm->length);
-        return true;
-    }
-
     // 1015, 1016, and 1017 all use the 1015 struct
     rtcm->rtcmtypes.rtcm3_1015.header.network_id = ugrab(12);
     rtcm->rtcmtypes.rtcm3_1015.header.subnetwork_id = ugrab(4);
@@ -159,15 +150,6 @@ static bool rtcm3_4076(const struct gps_context_t *context,
                          struct rtcm3_t *rtcm, const unsigned char *buf)
 {
     int bitcount = 36;         // 8 preamble, 6 zero, 10 length, 12 type
-
-    if (22 > rtcm->length) {
-        // need 76 bits, 9.5 bytes
-        rtcm->length = 0;          // set to zero to prevent JSON decode
-        GPSD_LOG(LOG_WARN, &context->errout,
-                 "RTCM3: rtcm3_4076() type %d runt length %u ",
-                 rtcm->type, rtcm->length);
-        return true;
-    }
 
     rtcm->rtcmtypes.rtcm3_4076.ssr_vers = ugrab(3);
     rtcm->rtcmtypes.rtcm3_4076.igs_num = ugrab(8);
@@ -423,6 +405,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
     bool unknown = true;               // we don't know how to decode
     const char *msg_name = "Unknown";  // we know the name
     unsigned preamble, mbz;            // preamble 0xd3, and must be zero
+    unsigned bad_len = 0;
 
 #define GPS_PSEUDORANGE(fld, len) \
     {temp = ugrab(len);                         \
@@ -449,6 +432,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         GPSD_LOG(LOG_WARN, &context->errout,
                  "RTCM3: invalid preamble x%2x or mbz x%x\n",
                  preamble, mbz);
+        return;
     }
 
     rtcm->length = ugrab(10);
@@ -476,10 +460,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         n = ugrab(5);
         if ((8 + (8 * n)) > rtcm->length) {
             // not exactly: 8 + (7.25 * n)
-            GPSD_LOG(LOG_WARN, &context->errout,
-                     "RTCM3: type %d (%s) bad n %u length %u\n",
-                     rtcm->type,  msg_name, n, rtcm->length);
-            rtcm->length = 0;          // set to zero to prevent JSON decode
+            bad_len = 8 + (8 * n);
             break;
         }
         rtcm->rtcmtypes.rtcm3_1001.header.satcount = n;
@@ -505,10 +486,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         n = ugrab(5);
         if ((8 + (10 * n)) > rtcm->length) {
             // not exactly: 8 + (9.25 * n)
-            GPSD_LOG(LOG_WARN, &context->errout,
-                     "RTCM3: type %d (%s) bad n %u length %u\n",
-                     rtcm->type,  msg_name, n, rtcm->length);
-            rtcm->length = 0;          // set to zero to prevent JSON decode
+            bad_len = 8 + (10 * n);
             break;
         }
         rtcm->rtcmtypes.rtcm3_1002.header.satcount = n;
@@ -627,10 +605,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1007.station_id = ugrab(12);
         n = ugrab(8);
         if ((5 + n) != rtcm->length) {
-            GPSD_LOG(LOG_WARN, &context->errout,
-                     "RTCM3: type %d (%s) bad n %u length %u\n",
-                     rtcm->type,  msg_name, n, rtcm->length);
-            rtcm->length = 0;          // set to zero to prevent JSON decode
+            bad_len = 5 + n;
             break;
         }
         // 1007 says DF030 is 20 chars, or less, of ASCII
@@ -648,10 +623,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1008.station_id = ugrab(12);
         n = ugrab(8);
         if ((6 + n) != rtcm->length) {
-            GPSD_LOG(LOG_WARN, &context->errout,
-                     "RTCM3: type %d (%s) bad n %u length %u\n",
-                     rtcm->type,  msg_name, n, rtcm->length);
-            rtcm->length = 0;          // set to zero to prevent JSON decode
+            bad_len = 6 + n;
             break;
         }
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1008.descriptor,
@@ -819,6 +791,12 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * between the master station and one auxiliary station
          * 9 bytes minimum
          */
+        if (22 > rtcm->length) {
+            // need 76 bits, 9.5 bytes
+            bad_len = 22;
+            break;
+        }
+
         unknown = rtcm3_101567(context, rtcm, buf);
         msg_name = "GPS Ionospheric Correction Differences";
         break;
@@ -1045,10 +1023,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1029.len = ugrab(7);
         n = ugrab(8);
         if ((9 + n) != rtcm->length) {
-            GPSD_LOG(LOG_WARN, &context->errout,
-                     "RTCM3: type %d (%s) bad n %u length %u\n",
-                     rtcm->type,  msg_name, n, rtcm->length);
-            rtcm->length = 0;          // set to zero to prevent JSON decode
+            bad_len = 9 + n;
             break;
         }
         rtcm->rtcmtypes.rtcm3_1029.unicode_units = n;
@@ -1090,10 +1065,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1033.station_id = ugrab(12);
         n = ugrab(8);
         if ((29 + n) > rtcm->length) {
-            GPSD_LOG(LOG_WARN, &context->errout,
-                     "RTCM3: type %d (%s) bad n %u length %u\n",
-                     rtcm->type,  msg_name, n, rtcm->length);
-            rtcm->length = 0;          // set to zero to prevent JSON decode
+            bad_len = 29 + n;
             break;
         }
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.descriptor,
@@ -1969,6 +1941,12 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.x
          * International GNSS Service Proprietary, www.igs.org
          */
+        if (22 > rtcm->length) {
+            // need 76 bits, 9.5 bytes
+            bad_len = 22;
+            break;
+        }
+
         msg_name = "International GNSS Service Proprietary";
         unknown = rtcm3_4076(context, rtcm, buf);
         break;
@@ -2114,6 +2092,13 @@ void rtcm3_unpack(const struct gps_context_t *context,
 #undef GPS_PSEUDORANGE
 #undef sgrab
 #undef ugrab
+    if (0 != bad_len) {
+            GPSD_LOG(LOG_WARN, &context->errout,
+                     "RTCM3: type %d (%s) bad n %u length %u\n",
+                     rtcm->type,  msg_name, n, rtcm->length);
+            rtcm->length = 0;          // set to zero to prevent JSON decode
+            return;
+    }
     if (unknown) {
         /*
          * Leader bytes, message length, and checksum won't be copied.
