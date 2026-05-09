@@ -959,7 +959,7 @@ static bool garmin_usb_detect(struct gps_device_t *session UNUSED)
     /*
      * Only perform this check if we're looking at a USB-serial
      * device.  This prevents drivers for attached serial GPSes
-     * fronm being rudely elbowed aside by this one if they happen
+     * from being rudely elbowed aside by this one if they happen
      * to be trying to coexist with the Garmin.
      */
     if (SOURCE_USB != session->sourcetype) {
