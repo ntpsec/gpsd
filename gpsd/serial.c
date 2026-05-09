@@ -601,7 +601,7 @@ bool gpsd_set_raw(struct gps_device_t * session)
 {
     // on some OS cfmakeraw() returns an int, POSIX says it is void.
     (void)cfmakeraw(&session->ttyset);
-    if (0 == tcsetattr(session->gpsdata.gps_fd, TCIOFLUSH,
+    if (0 != tcsetattr(session->gpsdata.gps_fd, TCIOFLUSH,
                        &session->ttyset)) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "SER: error changing port attributes: %s(%d)\n",
