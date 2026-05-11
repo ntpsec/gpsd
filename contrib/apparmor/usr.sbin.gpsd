@@ -61,6 +61,9 @@
   /sys/dev/char     r,
   /sys/dev/char/**  r,
 
+  # gnss interface of WWAN devices
+  /dev/gnss[0-9]* rw,
+
   # Bluetooth devices, for Bluetooth GNSS receivers
   /dev/rfcomm* rw,
   owner /dev/rfcomm* w,
