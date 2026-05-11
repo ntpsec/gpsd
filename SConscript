@@ -1938,7 +1938,7 @@ libraries = [libgps_shared, packet_ffi_shared]
 # otherwise we have a mismash of objects in library
 if qt_env:
     qtobjects = []
-    qt_flags = qt_env['CFLAGS']
+    qt_flags = qt_env['CXXFLAGS']
     for c_only in ('--disable-excess-fp-precision',
                    '-fexcess-precision=standard',
                    '-Wmissing-prototypes',
