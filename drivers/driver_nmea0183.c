@@ -6602,6 +6602,10 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
             *p = '\0';                       // replace it with a NUL
             count++;                         // bump the counters and continue
             p++;
+           if (NMEA_MAX_FLD <= count) {
+               // ensure no overflow
+              break;
+          }
         }
     }
 
