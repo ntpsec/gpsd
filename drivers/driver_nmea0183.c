@@ -6090,12 +6090,17 @@ static gps_mask_t processXDR(unsigned count, char *field[],
      *
      */
     gps_mask_t mask = ONLINE_SET;
-    unsigned int i;
-    unsigned int num_meas = count / 4;
+    unsigned i;
+    unsigned num_meas = count / 4;
+
+    if (10 < num_meas) {
+        // nodocumented limit of measurements, we pick 10
+        num_meas = 10;
+    }
 
     for (i = 0; i < num_meas; i++) {
         double data = 0.0;
-        unsigned int j = i * 4;
+        unsigned j = i * 4;
 
         if ('\0' == field[j + 2][0]) {
             // no data, skip it
