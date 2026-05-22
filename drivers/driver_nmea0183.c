@@ -881,7 +881,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
  *
  **************************************************************************/
 
-static gps_mask_t processACCURACY(int c UNUSED, char *field[],
+static gps_mask_t processACCURACY(unsigned count UNUSED, char *field[],
                                   struct gps_device_t *session)
 {
     /*
@@ -905,7 +905,7 @@ static gps_mask_t processACCURACY(int c UNUSED, char *field[],
 }
 
 // BWC - Bearing and Distance to Waypoint - Great Circle
-static gps_mask_t processBWC(int count, char *field[],
+static gps_mask_t processBWC(unsigned count, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -953,7 +953,7 @@ static gps_mask_t processBWC(int count, char *field[],
     return mask;
 }
 
-static gps_mask_t processDBT(int c UNUSED, char *field[],
+static gps_mask_t processDBT(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -989,7 +989,7 @@ static gps_mask_t processDBT(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processDPT(int c UNUSED, char *field[],
+static gps_mask_t processDPT(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -1029,8 +1029,8 @@ static gps_mask_t processDPT(int c UNUSED, char *field[],
  *
  * FIXME: seems to happen after cycle ender, so nothing happens...
  */
-static gps_mask_t processDTM(int c UNUSED, char *field[],
-                               struct gps_device_t *session)
+static gps_mask_t processDTM(unsigned count UNUSED, char *field[],
+                             struct gps_device_t *session)
 {
     /*
      * $GPDTM,W84,C*52
@@ -1098,8 +1098,8 @@ static gps_mask_t processDTM(int c UNUSED, char *field[],
 }
 
 // NMEA 3.0 Estimated Position Error
-static gps_mask_t processGBS(int c UNUSED, char *field[],
-                               struct gps_device_t *session)
+static gps_mask_t processGBS(unsigned count UNUSED, char *field[],
+                             struct gps_device_t *session)
 {
     /*
      * $GPGBS,082941.00,2.4,1.5,3.9,25,,-43.7,27.5*65
@@ -1144,8 +1144,8 @@ static gps_mask_t processGBS(int c UNUSED, char *field[],
 }
 
 // Global Positioning System Fix Data
-static gps_mask_t processGGA(int c UNUSED, char *field[],
-                               struct gps_device_t *session)
+static gps_mask_t processGGA(unsigned count UNUSED, char *field[],
+                             struct gps_device_t *session)
 {
     /*
      * GGA,123519,4807.038,N,01131.324,E,1,08,0.9,545.4,M,46.9,M, , *42
@@ -1393,7 +1393,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
 }
 
 // Geographic position - Latitude, Longitude
-static gps_mask_t processGLL(int count, char *field[],
+static gps_mask_t processGLL(unsigned count, char *field[],
                              struct gps_device_t *session)
 {
     /* Introduced in NMEA 3.0.
@@ -1493,7 +1493,7 @@ static gps_mask_t processGLL(int count, char *field[],
 }
 
 // Geographic position - Latitude, Longitude, and more
-static gps_mask_t processGNS(int count UNUSED, char *field[],
+static gps_mask_t processGNS(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {
     /* Introduced in NMEA 4.0?
@@ -1624,7 +1624,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
 }
 
 // GNSS Range residuals
-static gps_mask_t processGRS(int count UNUSED, char *field[],
+static gps_mask_t processGRS(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {
     /* In NMEA 3.01
@@ -1665,7 +1665,7 @@ static gps_mask_t processGRS(int count UNUSED, char *field[],
 }
 
 // GPS DOP and Active Satellites
-static gps_mask_t processGSA(int count, char *field[],
+static gps_mask_t processGSA(unsigned count, char *field[],
                              struct gps_device_t *session)
 {
 #define GSA_TALKER      field[0][1]
@@ -1759,7 +1759,7 @@ static gps_mask_t processGSA(int count, char *field[],
                  "NMEA0183: %s: non-advancing timestamp\n", field[0]);
         // FIXME: return here?
     } else {
-        int i;
+        unsigned i;
 
         i = atoi(field[2]);
         /*
@@ -1996,7 +1996,7 @@ static gps_mask_t processGSA(int count, char *field[],
 }
 
 // GST - GPS Pseudorange Noise Statistics
-static gps_mask_t processGST(int count, char *field[],
+static gps_mask_t processGST(unsigned count, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -2017,7 +2017,7 @@ static gps_mask_t processGST(int count, char *field[],
     char ts_buf[TIMESPEC_LEN];
     gps_mask_t mask = ONLINE_SET;
 
-    if (0 > count) {
+    if (9 > count) {
       return mask;
     }
 
@@ -2073,7 +2073,7 @@ static gps_mask_t processGST(int count, char *field[],
 }
 
 // xxGSV -  GPS Satellites in View
-static gps_mask_t processGSV(int count, char *field[],
+static gps_mask_t processGSV(unsigned count, char *field[],
                              struct gps_device_t *session)
 {
 #define GSV_TALKER      field[0][1]
@@ -2176,7 +2176,7 @@ static gps_mask_t processGSV(int count, char *field[],
      * (L1C/L2C/etc.)
      */
 
-    int n, fldnum;
+    unsigned n, fldnum;
     unsigned char  nmea_sigid = 0;
     int nmea_gnssid = 0;
     unsigned char  ubx_sigid = 0;
@@ -2469,7 +2469,7 @@ static gps_mask_t processGSV(int count, char *field[],
      * revision 231.000.000_A2.
      */
     sane = 0;
-    for (n = 0; n < session->gpsdata.satellites_visible; n++) {
+    for (n = 0; n < (unsigned)session->gpsdata.satellites_visible; n++) {
         if (0 != session->gpsdata.skyview[n].azimuth) {
             sane = 1;
             break;
@@ -2529,8 +2529,8 @@ static gps_mask_t processGSV(int count, char *field[],
  * Unicore $GYOACC  MEMS Sensor DAta
  * Note: Invalid sender: $GY
  */
-static gps_mask_t processGYOACC(int c UNUSED, char *field[],
-                             struct gps_device_t *session)
+static gps_mask_t processGYOACC(unsigned count UNUSED, char *field[],
+                                struct gps_device_t *session)
 {
     /*
      * $GYOACC,050624,002133.10,0.004634,0.000273,0.004348,100,-4.666065,
@@ -2584,7 +2584,7 @@ static gps_mask_t processGYOACC(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processHDG(int c UNUSED, char *field[],
+static gps_mask_t processHDG(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -2673,7 +2673,7 @@ static gps_mask_t processHDG(int c UNUSED, char *field[],
  *
  * Deprecated by NMEA in 2008
  */
-static gps_mask_t processHDM(int c UNUSED, char *field[],
+static gps_mask_t processHDM(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -2701,7 +2701,7 @@ static gps_mask_t processHDM(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processHDT(int c UNUSED, char *field[],
+static gps_mask_t processHDT(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -2741,7 +2741,7 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
  * Not a legal NMEA message name
  * https://docs.inertialsense.com/user-manual/com-protocol/nmea/#info
  */
-static gps_mask_t processINFO(int c UNUSED, char *field[],
+static gps_mask_t processINFO(unsigned count UNUSED, char *field[],
                               struct gps_device_t *session)
 {
     /*
@@ -2827,8 +2827,8 @@ static gps_mask_t processINFO(int c UNUSED, char *field[],
     return ONLINE_SET;
 }
 
-static gps_mask_t processMTW(int c UNUSED, char *field[],
-                              struct gps_device_t *session)
+static gps_mask_t processMTW(unsigned count UNUSED, char *field[],
+                             struct gps_device_t *session)
 {
     /* Water temp in degrees C
      * $--MTW,x.x,C*hh<CR><LF>
@@ -2853,8 +2853,8 @@ static gps_mask_t processMTW(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processMWD(int c UNUSED, char *field[],
-                              struct gps_device_t *session)
+static gps_mask_t processMWD(unsigned count UNUSED, char *field[],
+                             struct gps_device_t *session)
 {
     /*
      * xxMWD - Wind direction and speed
@@ -2885,8 +2885,8 @@ static gps_mask_t processMWD(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processMWV(int c UNUSED, char *field[],
-                              struct gps_device_t *session)
+static gps_mask_t processMWV(unsigned count UNUSED, char *field[],
+                             struct gps_device_t *session)
 {
     /*
      * xxMWV - Wind speed and angle
@@ -2921,7 +2921,7 @@ static gps_mask_t processMWV(int c UNUSED, char *field[],
 // PAIRxxx is Airoha, spunoff from Mediatek
 
 // PAIR001 -- ACK/NAK
-static gps_mask_t processPAIR001(int c UNUSED, char *field[],
+static gps_mask_t processPAIR001(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     int reason;
@@ -2957,7 +2957,7 @@ static gps_mask_t processPAIR001(int c UNUSED, char *field[],
 }
 
 // PAIR010 -- Request Aiding
-static gps_mask_t processPAIR010(int c UNUSED, char *field[],
+static gps_mask_t processPAIR010(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     int type;
@@ -3002,7 +3002,7 @@ static gps_mask_t processPAIR010(int c UNUSED, char *field[],
 }
 
 // PDTINFO Unicore Product Information
-static gps_mask_t processPDTINFO(int c UNUSED, char *field[],
+static gps_mask_t processPDTINFO(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     (void)snprintf(session->subtype, sizeof(session->subtype),
@@ -3031,7 +3031,7 @@ static gps_mask_t processPDTINFO(int c UNUSED, char *field[],
  * so field 1 in ASHTECH is always alphabetic and numeric in OXTS
  *
  */
-static gps_mask_t processPASHR(int c UNUSED, char *field[],
+static gps_mask_t processPASHR(unsigned count UNUSED, char *field[],
                                struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3195,7 +3195,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
  * Periodic sentence (~19s interval) providing firmware status details.
  * Status groups contain device-specific diagnostic information.
  */
-static gps_mask_t processPERCFWsts(int c UNUSED, char *field[],
+static gps_mask_t processPERCFWsts(unsigned count UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3242,7 +3242,7 @@ static gps_mask_t processPERCFWsts(int c UNUSED, char *field[],
  * surveyed average position that the timing module uses as its reference.
  * Format matches standard NMEA position encoding.
  */
-static gps_mask_t processPERCGPavp(int c UNUSED, char *field[],
+static gps_mask_t processPERCGPavp(unsigned count UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3287,7 +3287,7 @@ static gps_mask_t processPERCGPavp(int c UNUSED, char *field[],
  * Periodic sentence (~15s interval) serving as keepalive/heartbeat.
  * Provides configuration and status information.
  */
-static gps_mask_t processPERCGPctr(int c UNUSED, char *field[],
+static gps_mask_t processPERCGPctr(unsigned count UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3330,7 +3330,7 @@ static gps_mask_t processPERCGPctr(int c UNUSED, char *field[],
  * Enabled via command: $PERC,GPdbg,1*43
  * Provides real-time satellite tracking status beyond standard GPGSV.
  */
-static gps_mask_t processPERCGPdbg(int c UNUSED, char *field[],
+static gps_mask_t processPERCGPdbg(unsigned count UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3426,7 +3426,7 @@ static gps_mask_t processPERCGPdbg(int c UNUSED, char *field[],
  * stability relative to GPS reference. Leap seconds typically appear ~2.5
  * minutes after first fix.
  */
-static gps_mask_t processPERCGPppf(int c UNUSED, char *field[],
+static gps_mask_t processPERCGPppf(unsigned count UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3474,7 +3474,7 @@ static gps_mask_t processPERCGPppf(int c UNUSED, char *field[],
  * Critical timing sentence providing GPS time reference and PPS lock status.
  * The pps_flag field indicates whether PPS output is reliable.
  */
-static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
+static gps_mask_t processPERCGPppr(unsigned count UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3541,7 +3541,7 @@ static gps_mask_t processPERCGPppr(int c UNUSED, char *field[],
  * Periodic sentence (~19s interval) providing receiver health status.
  * Health code interpretation is device-specific.
  */
-static gps_mask_t processPERCGPreh(int c UNUSED, char *field[],
+static gps_mask_t processPERCGPreh(unsigned count UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3569,7 +3569,7 @@ static gps_mask_t processPERCGPreh(int c UNUSED, char *field[],
  *
  * Primary status sentence providing operating mode and system capabilities.
  */
-static gps_mask_t processPERCGPsts(int c UNUSED, char *field[],
+static gps_mask_t processPERCGPsts(unsigned count UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     int mode, survey_flag, constellation;
@@ -3624,7 +3624,7 @@ static gps_mask_t processPERCGPsts(int c UNUSED, char *field[],
  * Field 3: hw_rev - Hardware revision (e.g., "R1E")
  * Field 4: serial - Serial number
  */
-static gps_mask_t processPERCGPver(int c UNUSED, char *field[],
+static gps_mask_t processPERCGPver(unsigned count UNUSED, char *field[],
                                    struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3674,7 +3674,7 @@ static gps_mask_t processPERCGPver(int c UNUSED, char *field[],
  * Periodic sentence providing receiver navigation mode status.
  * Typically outputs 'A' for autonomous operation.
  */
-static gps_mask_t processPTNLRNM(int c UNUSED, char *field[],
+static gps_mask_t processPTNLRNM(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3728,7 +3728,7 @@ static gps_mask_t processPTNLRNM(int c UNUSED, char *field[],
  * Monitors antenna connection health. Important for timing applications
  * as antenna problems directly affect signal quality and position accuracy.
  */
-static gps_mask_t processPTNLRBA(int c UNUSED, char *field[],
+static gps_mask_t processPTNLRBA(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3772,7 +3772,7 @@ static gps_mask_t processPTNLRBA(int c UNUSED, char *field[],
  * Monitors receiver internal temperature. Useful for thermal stability
  * analysis in timing applications. Observed range: 30-40°C typical.
  */
-static gps_mask_t processPTNLRTP(int c UNUSED, char *field[],
+static gps_mask_t processPTNLRTP(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3807,7 +3807,7 @@ static gps_mask_t processPTNLRTP(int c UNUSED, char *field[],
  * Complementary to $PERC,GPppf which provides phase error in nanoseconds.
  * Typical offset: -450 to -500 ppb for this hardware.
  */
-static gps_mask_t processPTNLRXO(int c UNUSED, char *field[],
+static gps_mask_t processPTNLRXO(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -3838,7 +3838,7 @@ static gps_mask_t processPTNLRXO(int c UNUSED, char *field[],
 /* Android GNSS super message
  * A stub.
  */
-static gps_mask_t processPGLOR(int c UNUSED, char *field[],
+static gps_mask_t processPGLOR(unsigned count UNUSED, char *field[],
                                struct gps_device_t *session)
 {
     /*
@@ -3928,7 +3928,7 @@ static gps_mask_t processPGLOR(int c UNUSED, char *field[],
 }
 
 // Inertial Sense GPS nav data, not a legal message name
-static gps_mask_t processPGPSP(int count UNUSED, char *field[],
+static gps_mask_t processPGPSP(unsigned count UNUSED, char *field[],
                                struct gps_device_t *session)
 {
     /*
@@ -4075,7 +4075,7 @@ static gps_mask_t processPGPSP(int count UNUSED, char *field[],
 }
 
 // Garmin Estimated Position Error
-static gps_mask_t processPGRME(int c UNUSED, char *field[],
+static gps_mask_t processPGRME(unsigned count UNUSED, char *field[],
                                struct gps_device_t *session)
 {
     /*
@@ -4120,7 +4120,7 @@ static gps_mask_t processPGRME(int c UNUSED, char *field[],
  *
  * FIXME: seems to happen after cycle ender, so little happens...
  */
-static gps_mask_t processPGRMF(int c UNUSED, char *field[],
+static gps_mask_t processPGRMF(unsigned count UNUSED, char *field[],
                                struct gps_device_t *session)
 {
  /*
@@ -4221,7 +4221,7 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
  *
  * FIXME: seems to happen after cycle ender, so nothing happens...
  */
-static gps_mask_t processPGRMM(int c UNUSED, char *field[],
+static gps_mask_t processPGRMM(unsigned count UNUSED, char *field[],
                                struct gps_device_t *session)
 {
     /*
@@ -4242,7 +4242,7 @@ static gps_mask_t processPGRMM(int c UNUSED, char *field[],
 }
 
 // Garmin Sensor Status Info
-static gps_mask_t processPGRMT(int c UNUSED, char *field[],
+static gps_mask_t processPGRMT(unsigned count UNUSED, char *field[],
                                struct gps_device_t *session)
 {
     /*
@@ -4273,7 +4273,7 @@ static gps_mask_t processPGRMT(int c UNUSED, char *field[],
 }
 
 // Garmin 3D Velocity Information
-static gps_mask_t processPGRMV(int c UNUSED, char *field[],
+static gps_mask_t processPGRMV(unsigned count UNUSED, char *field[],
                                struct gps_device_t *session)
 {
     /*
@@ -4306,7 +4306,7 @@ static gps_mask_t processPGRMV(int c UNUSED, char *field[],
 }
 
 // Garmin Altitude Information
-static gps_mask_t processPGRMZ(int c UNUSED, char *field[],
+static gps_mask_t processPGRMZ(unsigned count UNUSED, char *field[],
                                struct gps_device_t *session)
 {
     /*
@@ -4358,7 +4358,7 @@ static gps_mask_t processPGRMZ(int c UNUSED, char *field[],
 }
 
 // Magellan Status
-static gps_mask_t processPMGNST(int c UNUSED, char *field[],
+static gps_mask_t processPMGNST(unsigned count UNUSED, char *field[],
                                 struct gps_device_t *session)
 {
     /*
@@ -4398,7 +4398,7 @@ static gps_mask_t processPMGNST(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processPMTK001(int c UNUSED, char *field[],
+static gps_mask_t processPMTK001(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     int reason;
@@ -4431,7 +4431,7 @@ static gps_mask_t processPMTK001(int c UNUSED, char *field[],
     return ONLINE_SET;
 }
 
-static gps_mask_t processPMTK424(int c UNUSED, char *field[],
+static gps_mask_t processPMTK424(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     // PPS pulse width response
@@ -4490,7 +4490,7 @@ static gps_mask_t processPMTK424(int c UNUSED, char *field[],
     return ONLINE_SET;
 }
 
-static gps_mask_t processPMTK705(int count, char *field[],
+static gps_mask_t processPMTK705(unsigned count, char *field[],
                                  struct gps_device_t *session)
 {
     /* Trimble version:
@@ -4541,7 +4541,7 @@ static gps_mask_t processPMTK705(int count, char *field[],
     return ONLINE_SET;
 }
 
-static gps_mask_t processPQxERR(int c UNUSED, char* field[],
+static gps_mask_t processPQxERR(unsigned count UNUSED, char* field[],
                                 struct gps_device_t* session)
 {
     /* Quectel generic PQxxxERRROR message handler
@@ -4558,7 +4558,7 @@ static gps_mask_t processPQxERR(int c UNUSED, char* field[],
     return ONLINE_SET;
 }
 
-static gps_mask_t processPQxOK(int c UNUSED, char* field[],
+static gps_mask_t processPQxOK(unsigned count UNUSED, char* field[],
                                struct gps_device_t* session)
 {
     /* Quectel generic PQTMxxxOK message handler
@@ -4575,7 +4575,7 @@ static gps_mask_t processPQxOK(int c UNUSED, char* field[],
 }
 
 // Quectel $PQTMGPS - GNSS position stuff
-static gps_mask_t processPQTMGPS(int count UNUSED, char *field[],
+static gps_mask_t processPQTMGPS(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -4623,7 +4623,7 @@ static gps_mask_t processPQTMGPS(int count UNUSED, char *field[],
 }
 
 // Quectel $PQTMIMU - IMU Raw Data
-static gps_mask_t processPQTMIMU(int count UNUSED, char *field[],
+static gps_mask_t processPQTMIMU(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -4659,7 +4659,7 @@ static gps_mask_t processPQTMIMU(int count UNUSED, char *field[],
 }
 
 // Quectel $PQTMINS - DR Nav results
-static gps_mask_t processPQTMINS(int count UNUSED, char *field[],
+static gps_mask_t processPQTMINS(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -4701,7 +4701,7 @@ static gps_mask_t processPQTMINS(int count UNUSED, char *field[],
 }
 
 // Quectel $PQTMVER - Firmware info
-static gps_mask_t processPQTMVER(int count UNUSED, char *field[],
+static gps_mask_t processPQTMVER(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -4730,7 +4730,7 @@ static gps_mask_t processPQTMVER(int count UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processPQVERNO(int c UNUSED, char* field[],
+static gps_mask_t processPQVERNO(unsigned count UNUSED, char* field[],
                                  struct gps_device_t* session)
 {
     /* Example request & response are provided courtesy of Quectel below.
@@ -4768,8 +4768,8 @@ static gps_mask_t processPQVERNO(int c UNUSED, char* field[],
 /* smart watch sensors
  * A stub.
  */
-static gps_mask_t processPRHS(int c UNUSED, char *field[],
-                               struct gps_device_t *session)
+static gps_mask_t processPRHS(unsigned count UNUSED, char *field[],
+                              struct gps_device_t *session)
 {
     /*
      * $PRHS ,type,....
@@ -4795,8 +4795,8 @@ static gps_mask_t processPRHS(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processPSRFEPE(int c UNUSED, char *field[],
-                               struct gps_device_t *session)
+static gps_mask_t processPSRFEPE(unsigned count UNUSED, char *field[],
+                                 struct gps_device_t *session)
 {
     /*
      * $PSRFEPE,100542.000,A,0.7,6.82,10.69,0.0,180.0*24
@@ -4872,7 +4872,7 @@ static gps_mask_t processPSRFEPE(int c UNUSED, char *field[],
 /*  Recommended Minimum 3D GNSS Data
  *  Skytaq
  */
-static gps_mask_t processPSTI030(int count UNUSED, char *field[],
+static gps_mask_t processPSTI030(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -4982,7 +4982,7 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
  * Same as $PSTI.035, except that is moving base to rover
  * PX1172RH
  */
-static gps_mask_t processPSTI032(int count UNUSED, char *field[],
+static gps_mask_t processPSTI032(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -5053,7 +5053,7 @@ static gps_mask_t processPSTI032(int count UNUSED, char *field[],
 
 /* Skytraq  RTK RAW Measurement Monitoring Data
  */
-static gps_mask_t processPSTI033(int count UNUSED, char *field[],
+static gps_mask_t processPSTI033(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -5133,7 +5133,7 @@ static gps_mask_t processPSTI033(int count UNUSED, char *field[],
  * Same as $PSTI.032, except that is moving base to rover
  * PX1172RH
  */
-static gps_mask_t processPSTI035(int count UNUSED, char *field[],
+static gps_mask_t processPSTI035(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -5202,7 +5202,7 @@ static gps_mask_t processPSTI035(int count UNUSED, char *field[],
 
 // Skytraq PSTI,036 – Heading, Pitch and Roll
 // PX1172RH
-static gps_mask_t processPSTI036(int count UNUSED, char *field[],
+static gps_mask_t processPSTI036(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -5269,7 +5269,7 @@ static gps_mask_t processPSTI036(int count UNUSED, char *field[],
  * Present in ST Teseo liv4f
  *
  */
-static gps_mask_t processPSTMCPU(int c UNUSED, char *field[],
+static gps_mask_t processPSTMCPU(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -5310,8 +5310,9 @@ static gps_mask_t processPSTMCPU(int c UNUSED, char *field[],
  * Present in ST Teseo liv4f
  *
  */
-static gps_mask_t processPSTMANTENNASTATUS(int c UNUSED, char *field[],
-                                          struct gps_device_t *session)
+static gps_mask_t processPSTMANTENNASTATUS(unsigned count UNUSED,
+                                           char *field[],
+                                           struct gps_device_t *session)
 {
     /*
      * $PSTMANTENNASTATUS,<ant_status>,<op_mode>,<rf_path>,<pwr_switch>*<chk>
@@ -5413,7 +5414,7 @@ static gps_mask_t processPSTMANTENNASTATUS(int c UNUSED, char *field[],
  * Response to $PSTMGETVER,255
  *
  */
-static gps_mask_t processPSTMVER(int c UNUSED, char *field[],
+static gps_mask_t processPSTMVER(unsigned count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     /*
@@ -5474,7 +5475,7 @@ static gps_mask_t processPSTMVER(int c UNUSED, char *field[],
 }
 
 // Recommend Minimum Course Specific GPS/TRANSIT Data
-static gps_mask_t processRMC(int count, char *field[],
+static gps_mask_t processRMC(unsigned count, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -5672,7 +5673,7 @@ static gps_mask_t processRMC(int count, char *field[],
  *
  * Deprecated by NMEA in 2008
  */
-static gps_mask_t processROT(int c UNUSED, char *field[],
+static gps_mask_t processROT(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -5705,8 +5706,8 @@ static gps_mask_t processROT(int c UNUSED, char *field[],
  * Unicore $SNRSTAT  Sensor status
  * Note: Invalid sender: $SN
  */
-static gps_mask_t processSNRSTAT(int count UNUSED, char *field[],
-                                struct gps_device_t *session)
+static gps_mask_t processSNRSTAT(unsigned count UNUSED, char *field[],
+                                 struct gps_device_t *session)
 {
     /*
      * $SNRSTAT,1,1,0,0*5D
@@ -5750,7 +5751,7 @@ static gps_mask_t processSNRSTAT(int count UNUSED, char *field[],
  * type is a 2 char subsentence type
  * Note: NO checksum
  */
-static gps_mask_t processSTI(int count, char *field[],
+static gps_mask_t processSTI(unsigned count, char *field[],
                              struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
@@ -5775,7 +5776,7 @@ static gps_mask_t processSTI(int count, char *field[],
 
 // SiRF Estimated Position Errors
 // $xxTHS -- True Heading and Status
-static gps_mask_t processTHS(int c UNUSED, char *field[],
+static gps_mask_t processTHS(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -5816,7 +5817,7 @@ static gps_mask_t processTHS(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processTNTA(int c UNUSED, char *field[],
+static gps_mask_t processTNTA(unsigned count UNUSED, char *field[],
                               struct gps_device_t *session)
 {
     /*
@@ -5873,7 +5874,7 @@ static gps_mask_t processTNTA(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processTNTHTM(int c UNUSED, char *field[],
+static gps_mask_t processTNTHTM(unsigned count UNUSED, char *field[],
                                 struct gps_device_t *session)
 {
     /*
@@ -5927,7 +5928,7 @@ static gps_mask_t processTNTHTM(int c UNUSED, char *field[],
 }
 
 // GPS Text message
-static gps_mask_t processTXT(int count, char *field[],
+static gps_mask_t processTXT(unsigned count, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -6005,7 +6006,7 @@ static gps_mask_t processTXT(int count, char *field[],
  * see also:
  * https://gpsd.gitlab.io/gpsd/NMEA.html#_vtg_track_made_good_and_ground_speed
  */
-static gps_mask_t processVTG(int count,
+static gps_mask_t processVTG(unsigned count,
                              char *field[],
                              struct gps_device_t *session)
 {
@@ -6065,7 +6066,7 @@ static gps_mask_t processVTG(int count,
 
 /* precessXDR() - process transducer messages
  */
-static gps_mask_t processXDR(int count, char *field[],
+static gps_mask_t processXDR(unsigned count, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -6079,6 +6080,7 @@ static gps_mask_t processXDR(int count, char *field[],
      *     D = degrees
      * 4) Transducer ID
      *     can be repeated...
+     * The previsou 4 messages can be repeated at least 9 more times.
      * )  checksum
      *
      * TODO: stacked measurements, like the TNT Revolution:
@@ -6168,8 +6170,8 @@ static gps_mask_t processXDR(int count, char *field[],
 }
 
 // Time & Date
-static gps_mask_t processZDA(int c UNUSED, char *field[],
-                               struct gps_device_t *session)
+static gps_mask_t processZDA(unsigned count UNUSED, char *field[],
+                             struct gps_device_t *session)
 {
     /*
      * $GPZDA,160012.71,11,03,2004,-1,00*7D
@@ -6252,7 +6254,7 @@ static gps_mask_t processZDA(int c UNUSED, char *field[],
 // parse an NMEA sentence, unpack it into a session structure
 gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 {
-    typedef gps_mask_t(*nmea_decoder) (int count, char *f[],
+    typedef gps_mask_t(*nmea_decoder) (unsigned count, char *f[],
                                        struct gps_device_t * session);
     static struct
     {
@@ -6545,7 +6547,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {NULL, NULL,  0,  false, NULL},         // no more
     };
 
-    int count;
+    unsigned count;
     gps_mask_t mask = 0;
     unsigned i, thistag = 0, lasttag;
     char *p, *e;
@@ -6605,15 +6607,15 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
             *p = '\0';                       // replace it with a NUL
             count++;                         // bump the counters and continue
             p++;
-           if (NMEA_MAX_FLD <= count) {
-               // ensure no overflow
-              break;
-          }
+            if (NMEA_MAX_FLD <= count) {
+                // ensure no overflow
+                break;
+            }
         }
     }
 
     // point remaining fields at empty string, just in case
-    for (i = (unsigned int)count; i < NMEA_MAX_FLD; i++) {
+    for (i = count; i < NMEA_MAX_FLD; i++) {
         session->nmea.field[i] = e;
     }
 
@@ -6665,8 +6667,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
                      session->nmea.field[0]);
             break;
         }
-        if (count < nmea_phrase[i].nf) {
-            // sentence to short
+        if (count < (unsigned)nmea_phrase[i].nf) {
+            // sentence too short
             mask = ONLINE_SET;
             GPSD_LOG(LOG_DATA, &session->context->errout,
                      "NMEA0183: Sentence %s too short\n",
