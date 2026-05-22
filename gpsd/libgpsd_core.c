@@ -1907,6 +1907,16 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
              "CORE: before  alt %f new %f\n",
              session->gpsdata.fix.altMSL,
              session->newdata.altMSL);
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+             "CORE: before base S %d E %f N %f U %f new %d %f %f %f\n",
+             session->gpsdata.fix.base.status,
+             session->gpsdata.fix.base.east,
+             session->gpsdata.fix.base.north,
+             session->gpsdata.fix.base.up,
+             session->newdata.base.status,
+             session->newdata.base.east,
+             session->newdata.base.north,
+             session->newdata.base.up);
 
     GPSD_LOG(LOG_SHOUT, &session->context->errout,
              "CORE: transfer mask: %s\n",
@@ -1915,6 +1925,19 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     gps_merge_fix(&session->gpsdata.fix,
                   session->gpsdata.set, &session->newdata);
 
+#ifdef __UNUSED
+    // debug
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+             "CORE: after base S %d E %f N %f U %f new %d %f %f %f\n",
+             session->gpsdata.fix.base.status,
+             session->gpsdata.fix.base.east,
+             session->gpsdata.fix.base.north,
+             session->gpsdata.fix.base.up,
+             session->newdata.base.status,
+             session->newdata.base.east,
+             session->newdata.base.north,
+             session->newdata.base.up);
+#endif  // __UNUSED
     /*
      * Compute fix-quality data from the satellite positions.
      * These will not overwrite any DOPs reported from the packet

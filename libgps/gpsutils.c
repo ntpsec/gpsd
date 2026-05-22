@@ -775,6 +775,28 @@ void gps_merge_fix(struct gps_fix_t *to,
         to->dgps_station = from->dgps_station;
     }
 
+    if (STATUS_UNK != from->base.status) {
+        to->base.status = from->base.status;
+    }
+
+    if (0 != isfinite(from->base.ratio)) {
+        to->base.ratio = from->base.ratio;
+    }
+
+    if (0 != isfinite(from->base.east) &&
+        0 != isfinite(from->base.north) &&
+        0 != isfinite(from->base.up)) {
+        to->base.east = from->base.east;
+        to->base.north = from->base.north;
+        to->base.up = from->base.up;
+    }
+
+    if (0 != isfinite(from->base.length) &&
+        0 != isfinite(from->base.course)) {
+        to->base.length = from->base.length;
+        to->base.course = from->base.course;
+    }
+
     if (ANT_UNK != from->ant_stat) {
         to->ant_stat = from->ant_stat;
     }

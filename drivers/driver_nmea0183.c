@@ -4952,7 +4952,7 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
         if (0.05 < (age + ratio)) {
             // don't report age == ratio == 0.0
             session->newdata.dgps_age = age;
-            session->gpsdata.fix.base.ratio = ratio;
+            session->newdata.base.ratio = ratio;
         }
 
         mask |= VNED_SET | STATUS_SET;
@@ -5005,7 +5005,7 @@ static gps_mask_t processPSTI032(int count UNUSED, char *field[],
      * 16 Checksum
      */
     gps_mask_t mask = ONLINE_SET;
-    struct baseline_t *base = &session->gpsdata.fix.base;
+    struct baseline_t *base = &session->newdata.base;
 
     if ('A' != field[4][0]) {
         //  status not valid
@@ -5129,8 +5129,10 @@ static gps_mask_t processPSTI033(int count UNUSED, char *field[],
     return mask;
 }
 
-// Skytraq RTK Baseline, moving base to moving rover
-// PX1172RH
+/* Skytraq RTK Baseline, moving base to rover
+ * Same as $PSTI.032, except that is moving base to rover
+ * PX1172RH
+ */
 static gps_mask_t processPSTI035(int count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
@@ -5155,6 +5157,7 @@ static gps_mask_t processPSTI035(int count UNUSED, char *field[],
      */
 
     gps_mask_t mask = ONLINE_SET;
+    // should this be fix, not attitude??
     struct baseline_t *base = &session->gpsdata.attitude.base;
 
     // RTK Baseline Data of Rover Moving Base Receiver
