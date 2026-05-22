@@ -4090,13 +4090,14 @@ static gps_mask_t decode_x90_01(struct gps_device_t *session, const char *buf,
     session->driver.tsip.hardware_code = u7;
     // check for valid module name length
     // RES720 is 27 long
+    if ((int)u8 > (len - 13)) {
+        u8 = len - 13;
+    }
     // check for valid module name length, again
     if (40 < u8) {
         u8 = 40;
     }
-    if ((int)u8 > (len - 13)) {
-        u8 = len - 13;
-    }
+  
     memcpy(buf2, &buf[14], u8);
     buf2[u8] = '\0';
     (void)snprintf(session->subtype, sizeof(session->subtype),
@@ -4950,7 +4951,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     case 0x9001:
         /* Receiver Version Information, x90-01
          * Received in response to the TSIPv1 probe */
-        if (11 > length) {
+        if (13 > length) {
             bad_len = true;
             break;
         }
