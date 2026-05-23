@@ -3762,12 +3762,11 @@ void json_aivdm_dump(const struct ais_t *ais,
                                 ais->type8.dac1fid31.lon);
                 }
                 str_appendf(buf, buflen,
-                            ",\"accuracy\":%s",
-                            JSON_BOOL(ais->type8.dac1fid31.accuracy));
-                str_appendf(buf, buflen,
+                            ",\"accuracy\":%s"
                             ",\"timestamp\":\"%02uT%02u:%02uZ\","
                             "\"wspeed\":%u,\"wgust\":%u,\"wdir\":%u,"
                             "\"wgustdir\":%u,\"humidity\":%u",
+                            JSON_BOOL(ais->type8.dac1fid31.accuracy),
                             ais->type8.dac1fid31.day,
                             ais->type8.dac1fid31.hour,
                             ais->type8.dac1fid31.minute,
@@ -4622,7 +4621,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     case 27:                    // Long Range AIS Broadcast message
         if (scaled) {
             str_appendf(buf, buflen,
-                        ",\"status\":%u,\"status_text\":\"%s\""
+                        ",\"status\":%u,\"status_text\":\"%s\","
                         "\"accuracy\":%s,\"lon\":%.4f,\"lat\":%.4f,"
                         "\"speed\":%u,\"course\":%u,\"raim\":%s,"
                         "\"gnss\":%s}\r\n",
