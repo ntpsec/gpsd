@@ -6618,6 +6618,10 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
             }
         }
     }
+    if (NMEA_MAX_FLD < count) {
+        // ensure no overflow, OSS Fuzz 515100083
+        count = NMEA_MAX_FLD;
+    }
 
     // point remaining fields at empty string, just in case
     for (i = count; i < NMEA_MAX_FLD; i++) {
