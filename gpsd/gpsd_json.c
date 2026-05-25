@@ -1039,17 +1039,16 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
     (void)strlcat(buf, "}", buflen);
 }
 
-void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
-                        char buf[], size_t buflen)
+static void json_subframe_dump(struct gps_device_t *session, const bool scaled,
+                               char buf[], size_t buflen)
 {
+    struct gps_data_t *datap = &session->gpsdata;
     const struct subframe_t *subframe = &datap->subframe;
 
     (void)snprintf(buf, buflen, "{\"class\":\"SUBFRAME\",\"device\":\"%s\","
                    "\"gnssId\":%u,\"tSV\":%u,\"frame\":%u",
-                   datap->dev.path,
-                   (unsigned int)subframe->gnssId,
-                   (unsigned int)subframe->tSVID,
-                   (unsigned int)subframe->subframe_num);
+                   datap->dev.path, subframe->gnssId, subframe->tSVID,
+                   subframe->subframe_num);
 
     if (0 <= subframe->WN) {
         str_appendf(buf, buflen, ",\"WN\":%d", subframe->WN);
@@ -1063,15 +1062,36 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
         case GNSSID_SBAS:
             str_appendf(buf, buflen, ",\"TOW17\":%d", subframe->TOW17);
             break;
+
         case GNSSID_BD:
             str_appendf(buf, buflen, ",\"SOW\":%d", subframe->TOW17);
             break;
+
         case GNSSID_GAL:
             FALLTHROUGH
-        default:
+        case GNSSID_QZSS:
+            FALLTHROUGH
+        case GNSSID_GLO:
+            FALLTHROUGH
+        case GNSSID_IRNSS:
             str_appendf(buf, buflen, ",\"TOW\":%d", subframe->TOW17);
             break;
+
+        case GNSSID_IMES:
+            FALLTHROUGH
+        default:
+            // Should never happen...
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "json_data_report(%s) invalid gnssId %u\n",
+                     datap->dev.path,subframe->gnssId);
+            return;
         }
+    } else if (GNSSID_CNT <= subframe->gnssId) {
+        // Should never happen...
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "json_data_report(%s) invalid gnssId %u\n",
+                 datap->dev.path,subframe->gnssId);
+        return;
     }
 
     if (SUBFRAME_ORBIT == subframe->is_almanac){
@@ -4827,7 +4847,7 @@ void json_data_report(const gps_mask_t changed,
 
     if (0 != (changed & SUBFRAME_SET)) {
         buf_len = strnlen(buf, MAX_PACKET_LENGTH);
-        json_subframe_dump(datap, policy->scaled, buf + buf_len,
+        json_subframe_dump(session, policy->scaled, buf + buf_len,
                            buflen - buf_len);
     }
 

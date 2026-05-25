@@ -1,7 +1,7 @@
 /* gps_json.h - JSON handling for libgps and gpsd
  *
  * By Eric S. Raymond, 2009
- * This file is Copyright 2009 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -37,8 +37,6 @@ char *json_stringify(char *, size_t, const char *);
 void json_tpv_dump(const gps_mask_t, struct gps_device_t *,
                    const struct gps_policy_t *, char *, size_t);
 void json_sky_dump(const struct gps_device_t *, char *, size_t);
-void json_subframe_dump(const struct gps_data_t *, const bool scaled,
-                        char buf[], size_t);
 void json_watch_dump(const struct gps_policy_t *, char *, size_t);
 int json_watch_read(const char *, struct gps_policy_t *,
                     const char **);
