@@ -275,7 +275,7 @@ static gps_mask_t decode_itk_subframe(struct gps_device_t *session,
 }
 
 static gps_mask_t decode_itk_pseudo(struct gps_device_t *session,
-                                      unsigned char *buf, size_t len)
+                                    unsigned char *buf, size_t len)
 {
     unsigned short flags, n, i;
     unsigned int tow;             // time of week, in ms
@@ -289,21 +289,22 @@ static gps_mask_t decode_itk_pseudo(struct gps_device_t *session,
         return 0;
     }
 
-    if (len != (size_t)((n+1)*36)) {
-        GPSD_LOG(LOG_PROG, &session->context->errout,
+    if ((size_t)((n + 1) * 36) != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
                  "ITALK: bad PSEUDO len %zu\n", len);
+       return 0;
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout, "iTalk PSEUDO [%u]\n", n);
-    flags = (unsigned short)getleu16(buf, 7 + 6);
+    flags = getleu16(buf, 7 + 6);
     if ((flags & 0x3) != 0x3) {
         return 0; // bail if measurement time not valid.
     }
 
-    tow = (unsigned int)getleu32(buf, 7 + 38);
+    tow = getleu32(buf, 7 + 38);
     MSTOTS(&ts_tow, tow);
     session->newdata.time = gpsd_gpstime_resolv(session,
-        (unsigned short int)getleu16((char *)buf, 7 + 8), ts_tow);
+        (unsigned short)getleu16((char *)buf, 7 + 8), ts_tow);
 
     session->gpsdata.raw.mtime = session->newdata.time;
 
