@@ -697,7 +697,7 @@ static int antStat2ant_status(unsigned antStat)
  *
  * return 0 on fail
  */
-static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
+static short ubx_to_prn(int ubx_PRN, gnssid_t *gnssId,
                         unsigned char *svId)
 {
     *gnssId = 0;
@@ -709,36 +709,36 @@ static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
         return 0;
     } else if (32 >= ubx_PRN) {
         // GPS 1..32 -> 1..32
-        *gnssId = 0;
+        *gnssId = GNSSID_GPS;
         *svId = ubx_PRN;
     } else if (64 >= ubx_PRN) {
         /* BeiDou, 159..163,33..64 -> 1..5,6..37
          * Wikipedia, March 2025, says BDS PRNs go up to 62
          * Where/how do they map??
          * https://en.wikipedia.org/wiki/List_of_BeiDou_satellites */
-        *gnssId = 3;
+        *gnssId = GNSSID_BD;
         *svId = ubx_PRN - 27;
     } else if (96 >= ubx_PRN) {
         // GLONASS 65..96 -> 1..32
-        *gnssId = 6;
+        *gnssId = GNSSID_GLO;
         *svId = ubx_PRN - 64;
     } else if (120 > ubx_PRN) {
         // Huh?
         return 0;
     } else if (158 >= ubx_PRN) {
         // SBAS 120..158 -> 120..158
-        *gnssId = 1;
+        *gnssId = GNSSID_SBAS;
         *svId = ubx_PRN;
     } else if (163 >= ubx_PRN) {
         // BeiDou, 159..163 -> 1..5
-        *gnssId = 3;
+        *gnssId = GNSSID_BD;
         *svId = ubx_PRN - 158;
     } else if (173 > ubx_PRN) {
         // Huh?
-        return 0;
+        return GNSSID_GPS;
     } else if (182 >= ubx_PRN) {
         // IMES 173..182 -> 1..5, in u-blox 8, bot u-blox 9
-        *gnssId = 4;
+        *gnssId = GNSSID_IMES;
         *svId = ubx_PRN - 172;
     } else if (193 > ubx_PRN) {
         // Huh?
@@ -746,14 +746,14 @@ static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
     } else if (199 >= ubx_PRN) {
         // QZSS 193..197 -> 1..5
         // ZED-F9T also see 198 and 199
-        *gnssId = 5;
+        *gnssId = GNSSID_QZSS;
         *svId = ubx_PRN - 192;
     } else if (211 > ubx_PRN) {
         // Huh?
         return 0;
     } else if (246 >= ubx_PRN) {
         // Galileo 211..246 -> 1..36
-        *gnssId = 2;
+        *gnssId = GNSSID_GAL;
         *svId = ubx_PRN - 210;
     } else {
         // greater than 246, GLONASS (255), unused, or other unknown
@@ -3586,7 +3586,7 @@ static gps_mask_t ubx_msg_nav_sbas(struct gps_device_t *session,
     unsigned i, cnt;
     unsigned ubx_PRN;
     short nmea_PRN;
-    unsigned char gnssid = 0;
+    gnssid_t gnssid = 0;
     unsigned char svid = 0;
 
     if (12 > data_len) {
@@ -4747,7 +4747,7 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     uint32_t words[33];
     char *chn_s;
 
-    unsigned gnssId = getub(buf, 0);
+    gnssid_t gnssId = getub(buf, 0);
     unsigned svId = getub(buf, 1);
     // reserved in Version 1, and some Version2.  Valid in protVer 27.31 and up
     unsigned sigId = getub(buf, 2);

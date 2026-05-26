@@ -119,6 +119,7 @@ extern "C" {
  *       gps_fix_t Add: ant_power.
  * 16    Add SPARTN.
  *       MAXUSERDEVS is setable
+ *       Add gnssid_t to limit gnssid to valid values.
  */
 
 // API version should match in SConscript
@@ -586,6 +587,20 @@ struct rtcm2_t {
     };
 };
 
+// defines for u-blox gnssId, as used in satellite_t
+typedef enum
+{
+    GNSSID_GPS = 0,
+    GNSSID_SBAS = 1,
+    GNSSID_GAL = 2,
+    GNSSID_BD = 3,
+    GNSSID_IMES = 4,
+    GNSSID_QZSS = 5,
+    GNSSID_GLO = 6,
+    GNSSID_IRNSS = 7,            // ZED-F9T
+    GNSSID_CNT = 8,              // count for array size
+} gnssid_t;
+
 // RTCM3 report structures begin here
 
 #define RTCM3_MAX_SATELLITES    64
@@ -714,7 +729,7 @@ struct rtcm3_msm_hdr {
     uint32_t sig_mask;          // Signal Mask
     uint64_t cell_mask;         // Cell Mask
     // not part of the network message:
-    unsigned char gnssid;       // gnssid
+    gnssid_t gnssid;            // gnssid
     unsigned char msm;          // 1 to 7, MSMx
     unsigned char n_sat;        // Number of satellites derived from sat_mask
     unsigned char n_sig;        // Number of signals derived from sig_mask
@@ -2503,17 +2518,8 @@ struct satellite_t {
      *
      * Note: other GNSS receivers use different mappings!
      */
-    uint8_t gnssid;
-// defines for u-blox gnssId, as used in satellite_t
-#define GNSSID_GPS 0
-#define GNSSID_SBAS 1
-#define GNSSID_GAL 2
-#define GNSSID_BD 3
-#define GNSSID_IMES 4
-#define GNSSID_QZSS 5
-#define GNSSID_GLO 6
-#define GNSSID_IRNSS 7            // ZED-F9T
-#define GNSSID_CNT 8              // count for array size
+    // as for u-blox gnssId, as used in satellite_t
+    gnssid_t gnssid;
 
     // ignore gnssid and sigid if svid is zero
     uint8_t svid;
@@ -2665,7 +2671,7 @@ struct rawdata_t {
                                  * Note: GPS time, not UTC time */
     struct meas_t {
         // gnssid see satellite_t for decode
-        unsigned char gnssid;
+        gnssid_t gnssid;
         // svid see RINEX 3 for decode, not satellite_t
         unsigned char svid;
         // sigid see satellite_t for decode

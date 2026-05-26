@@ -361,6 +361,8 @@ static void nmea_update(void)
                 char sigid = ' ';
 
                 switch (session.gpsdata.skyview[i].gnssid) {
+                case GNSSID_CNT:
+                    FALLTHROUGH
                 default:
                     break;
                 case GNSSID_GPS:

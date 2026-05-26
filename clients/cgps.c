@@ -915,6 +915,8 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
                 gnssid = "  ";
             } else {
                 switch (gpsdata->skyview[sat_no].gnssid) {
+                case GNSSID_CNT:
+                    FALLTHROUGH
                 default:
                     gnssid = "  ";
                     break;

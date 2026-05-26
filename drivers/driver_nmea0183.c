@@ -548,7 +548,7 @@ static unsigned char nmea_sigid_to_ubx(struct gps_device_t *session,
  */
 static int nmeaid_to_prn(char *talker, int nmea_satnum,
                          int nmea_gnssid,
-                         unsigned char *ubx_gnssid,
+                         gnssid_t *ubx_gnssid,
                          unsigned char *ubx_svid)
 {
     /*
@@ -584,8 +584,8 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
      */
     int nmea2_prn = nmea_satnum;
 
-    *ubx_gnssid = 0;   // default to ubx_gnssid is GPS
-    *ubx_svid = 0;     // default to unknown ubx_svid
+    *ubx_gnssid = GNSSID_GPS;   // default to ubx_gnssid is GPS
+    *ubx_svid = 0;              // default to unknown ubx_svid
 
     if (1 > nmea_satnum) {
         // uh, oh...
@@ -596,49 +596,49 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
         case 1:
             if (33 > nmea_satnum) {
                 // 1 = GPS       1-32
-                *ubx_gnssid = 0;
+                *ubx_gnssid = GNSSID_GPS;
                 *ubx_svid = nmea_satnum;
             } else if (65 > nmea_satnum) {
                 // 1 = SBAS      33-64
-                *ubx_gnssid = 1;
+                *ubx_gnssid = GNSSID_SBAS;
                 *ubx_svid = nmea_satnum + 87;
             } else if (137 > nmea_satnum) {
                 // 3 = Galileo, 101-136, NOT NMEA.  Quectel Querk
-                *ubx_gnssid = 3;
+                *ubx_gnssid = GNSSID_GAL;
                 *ubx_svid = nmea_satnum - 100;
             } else if (152 > nmea_satnum) {
                 // Huh?
-                *ubx_gnssid = 0;
+                *ubx_gnssid = GNSSID_GPS;
                 *ubx_svid = 0;
                 nmea2_prn = 0;
             } else if (158 > nmea_satnum) {
                 // 1 = SBAS      152-158
-                *ubx_gnssid = 1;
+                *ubx_gnssid = GNSSID_SBAS;
                 *ubx_svid = nmea_satnum;
             } else if (193 > nmea_satnum) {
                 // Huh?
-                *ubx_gnssid = 0;
+                *ubx_gnssid = GNSSID_GPS;
                 *ubx_svid = 0;
                 nmea2_prn = 0;
             } else if (200 > nmea_satnum) {
                 // 1 = QZSS      193-197
                 // undocumented u-blox goes to 199
-                *ubx_gnssid = 3;
+                *ubx_gnssid = GNSSID_QZSS;
                 *ubx_svid = nmea_satnum - 192;
             } else if (265 > nmea_satnum) {
                 // 3 = BeiDor, 201-264, NOT NMEA.  Quectel Querk
-                *ubx_gnssid = 3;
+                *ubx_gnssid = GNSSID_BD;
                 *ubx_svid = nmea_satnum - 200;
             } else {
                 // Huh?
-                *ubx_gnssid = 0;
+                *ubx_gnssid = GNSSID_GPS;
                 *ubx_svid = 0;
                 nmea2_prn = 0;
             }
             break;
         case 2:
             //  2 = GLONASS   65-96, nul
-            *ubx_gnssid = 6;
+            *ubx_gnssid = GNSSID_GLO;
             if (64 > nmea_satnum) {
                 // NMEA svid 1 - 64
                 *ubx_svid = nmea_satnum;
@@ -651,7 +651,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             break;
         case 3:
             //  3 = Galileo   1-36
-            *ubx_gnssid = 2;
+            *ubx_gnssid = GNSSID_GAL;
             if (100 > nmea_satnum) {
                 // NMEA
                 *ubx_svid = nmea_satnum;
@@ -668,7 +668,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             break;
         case 4:
             //  4 - BeiDou    1-37
-            *ubx_gnssid = 3;
+            *ubx_gnssid = GNSSID_BD;
             if (100 > nmea_satnum) {
                 // NMEA 1 - 99
                 *ubx_svid = nmea_satnum;
@@ -686,7 +686,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             break;
         case 5:
             //  5 - QZSS, 1 - 10, NMEA 4.11
-            *ubx_gnssid = 5;
+            *ubx_gnssid = GNSSID_QZSS;
             if (100 > nmea_satnum) {
                 // NMEA 1 - 99
                 *ubx_svid = nmea_satnum;
@@ -701,7 +701,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             break;
         case 6:
             //  6 - NavIC (IRNSS)    1-15
-            *ubx_gnssid = 7;
+            *ubx_gnssid = GNSSID_IRNSS;
             *ubx_svid = nmea_satnum;
             nmea2_prn = nmea_satnum + 500;  // This is wrong...
             break;
@@ -722,27 +722,27 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             case 'A':
                 // Galileo
                 nmea2_prn = 300 + nmea_satnum;
-                *ubx_gnssid = 2;
+                *ubx_gnssid = GNSSID_GAL;
                 break;
             case 'B':
                 // map Beidou IDs 1..37 to 401..437
-                *ubx_gnssid = 3;
+                *ubx_gnssid = GNSSID_BD;
                 nmea2_prn = 400 + nmea_satnum;
                 break;
             case 'I':
                 // map NavIC (IRNSS) IDs 1..10 to 500 - 509, not NMEA
-                *ubx_gnssid = 7;
+                *ubx_gnssid = GNSSID_IRNSS;
                 nmea2_prn = 500 + nmea_satnum;
                 break;
             case 'L':
                 // GLONASS GL doesn't seem to do this, better safe than sorry
                 nmea2_prn = 64 + nmea_satnum;
-                *ubx_gnssid = 6;
+                *ubx_gnssid = GNSSID_GLO;
                 break;
             case 'Q':
                 // GQ, QZSS, 1 - 10
                 nmea2_prn = 192 + nmea_satnum;
-                *ubx_gnssid = 5;
+                *ubx_gnssid = GNSSID_QZSS;
                 break;
             case 'N':
                 // all of them, but only GPS is 0 < PRN < 33
@@ -759,7 +759,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             if ('D' == talker[1]) {
                 // map Beidou IDs
                 nmea2_prn = 400 + nmea_satnum;
-                *ubx_gnssid = 3;
+                *ubx_gnssid = GNSSID_BD;
             }  // else ??
             break;
         case 'P':
@@ -767,14 +767,14 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             if ('Q' == talker[1]) {
                 // map Beidou IDs
                 nmea2_prn = 400 + nmea_satnum;
-                *ubx_gnssid = 3;
+                *ubx_gnssid = GNSSID_BD;
             }  // else ??
             break;
         case 'Q':
             if ('Z' == talker[1]) {
                 // QZSS
                 nmea2_prn = 192 + nmea_satnum;
-                *ubx_gnssid = 5;
+                *ubx_gnssid = GNSSID_QZSS;
             }  // else ?
             break;
         default:
@@ -784,90 +784,90 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
     } else if (64 >= nmea_satnum) {
         // NMEA-ID (33..64) to SBAS PRN 120-151.
         // SBAS
-        *ubx_gnssid = 1;
+        *ubx_gnssid = GNSSID_SBAS;
         *ubx_svid = 87 + nmea_satnum;
     } else if (96 >= nmea_satnum) {
         // GLONASS 65..96
-        *ubx_gnssid = 6;
+        *ubx_gnssid = GNSSID_GLO;
         *ubx_svid = nmea_satnum - 64;
     } else if (120 > nmea_satnum) {
         // Huh?
-        *ubx_gnssid = 0;
+        *ubx_gnssid = GNSSID_GPS;
         *ubx_svid = 0;
         nmea2_prn = 0;
     } else if (158 >= nmea_satnum) {
         // SBAS 120..158
-        *ubx_gnssid = 1;
+        *ubx_gnssid = GNSSID_SBAS;
         *ubx_svid = nmea_satnum;
     } else if (173 > nmea_satnum) {
         // Huh?
-        *ubx_gnssid = 0;
+        *ubx_gnssid = GNSSID_GPS;
         *ubx_svid = 0;
         nmea2_prn = 0;
     } else if (182 >= nmea_satnum) {
         // IMES 173..182
-        *ubx_gnssid = 4;
+        *ubx_gnssid = GNSSID_IMES;
         *ubx_svid = nmea_satnum - 172;
     } else if (193 > nmea_satnum) {
         // Huh?
-        *ubx_gnssid = 0;
+        *ubx_gnssid = GNSSID_GPS;
         *ubx_svid = 0;
         nmea2_prn = 0;
     } else if (197 >= nmea_satnum) {
         // QZSS 193..197
         // undocumented u-blox goes to 199
-        *ubx_gnssid = 5;
+        *ubx_gnssid = GNSSID_QZSS;
         *ubx_svid = nmea_satnum - 192;
     } else if (201 > nmea_satnum) {
         // Huh?
-        *ubx_gnssid = 0;
+        *ubx_gnssid = GNSSID_GPS;
         *ubx_svid = 0;
         nmea2_prn = 0;
     } else if (237 >= nmea_satnum) {
         // BeiDou, non-standard, some SiRF put BeiDou 201-237
         // $GBGSV,2,2,05,209,07,033,*62
-        *ubx_gnssid = 3;
+        *ubx_gnssid = GNSSID_BD;
         *ubx_svid = nmea_satnum - 200;
         nmea2_prn += 200;           // move up to 400 where NMEA 2.x wants it.
     } else if (301 > nmea_satnum) {
         // Huh?
-        *ubx_gnssid = 0;
+        *ubx_gnssid = GNSSID_GPS;
         *ubx_svid = 0;
         nmea2_prn = 0;
     } else if (356 >= nmea_satnum) {
         // Galileo 301..356
-        *ubx_gnssid = 2;
+        *ubx_gnssid = GNSSID_GAL;
         *ubx_svid = nmea_satnum - 300;
     } else if (401 > nmea_satnum) {
         // Huh?
-        *ubx_gnssid = 0;
+        *ubx_gnssid = GNSSID_GPS;
         *ubx_svid = 0;
         nmea2_prn = 0;
     } else if (437 >= nmea_satnum) {
         // BeiDou
-        *ubx_gnssid = 3;
+        *ubx_gnssid = GNSSID_BD;
         *ubx_svid = nmea_satnum - 400;
     } else if (499 >= nmea_satnum) {
         // 438 to 500??
-        *ubx_gnssid = 0;
+        *ubx_gnssid = GNSSID_GPS;
         *ubx_svid = 0;
         nmea2_prn = 0;
     } else if (518 >= nmea_satnum) {
         // NavIC (IRNSS) IDs 1..18 to 510 - 509, not NMEA
-        *ubx_gnssid = 7;
+        *ubx_gnssid = GNSSID_IRNSS;
         *ubx_svid = nmea_satnum - 500;
     } else if (900 >= nmea_satnum) {
         // 438 to 900??
-        *ubx_gnssid = 0;
+        *ubx_gnssid = GNSSID_GPS;
         *ubx_svid = 0;
         nmea2_prn = 0;
     } else if (918 >= nmea_satnum) {
         // 900 to 918 NavIC (IRNSS), per ALLYSTAR (NMEA?)
-        *ubx_gnssid = 7;
+        *ubx_gnssid = GNSSID_IRNSS;
         *ubx_svid = nmea_satnum - 900;
     } else {
         // greater than 437 Huh?
-        *ubx_gnssid = 0;
+        *ubx_gnssid = GNSSID_GPS;
         *ubx_svid = 0;
         nmea2_prn = 0;
     }
@@ -1904,7 +1904,7 @@ static gps_mask_t processGSA(unsigned count, char *field[],
             int prn;
             int n;
             int nmea_satnum;            // almost svid...
-            unsigned char ubx_gnssid;   // UNUSED
+            gnssid_t ubx_gnssid;        // UNUSED
             unsigned char ubx_svid;     // UNUSED
 
             // skip empty fields, otherwise empty becomes prn=200
