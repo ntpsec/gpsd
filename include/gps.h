@@ -2328,7 +2328,7 @@ struct ais_t
         // Type 21 - Aids to Navigation Report
         struct {
             unsigned int aid_type;      // aid type
-            char name[35];              // name of aid to navigation
+            char name[37];              // name of aid to navigation
             bool accuracy;              // position accuracy
             int lon;                    // longitude
             int lat;                    // latitude
