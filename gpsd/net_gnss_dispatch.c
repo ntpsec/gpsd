@@ -62,6 +62,19 @@ bool netgnss_uri_check(const char *name)
         FALLTHROUGH
     case NET_NTRIP:
         return true;
+
+    case NET_GPSD:
+        FALLTHROUGH
+    case NET_LOCAL:
+        FALLTHROUGH
+    case NET_NMEA2000:
+        FALLTHROUGH
+    case NET_TCP:
+        FALLTHROUGH
+    case NET_UDP:
+        FALLTHROUGH
+    case NET_UNKNOWN:
+        FALLTHROUGH
     default:
         return false;
     }
@@ -80,6 +93,19 @@ gps_fd_t netgnss_uri_open(struct gps_device_t *dev, char *netgnss_service)
     case NET_NTRIP:
         // could be initial open, or reopen, or...
         return ntrip_open(dev, netgnss_service + sizeof(NETGNSS_NTRIP) - 1);
+
+    case NET_GPSD:
+        FALLTHROUGH
+    case NET_LOCAL:
+        FALLTHROUGH
+    case NET_NMEA2000:
+        FALLTHROUGH
+    case NET_TCP:
+        FALLTHROUGH
+    case NET_UDP:
+        FALLTHROUGH
+    case NET_UNKNOWN:
+        FALLTHROUGH
     default:
         GPSD_LOG(LOG_ERROR, &dev->context->errout,
                  "DGNSS/NTRIP: Unknown/unspecified protocol for service %s\n",
