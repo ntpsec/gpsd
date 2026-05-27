@@ -152,6 +152,7 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
              almp->d_af1);
 }
 
+// interpret GPS subframes
 gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                                    gnssid_t gnssId, unsigned int tSVID,
                                    uint32_t words[])
@@ -179,6 +180,11 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
              gnssId, tSVID, words[0], words[1], words[2], words[3], words[4],
              words[5], words[6], words[7], words[8], words[9]);
 
+    if (GNSSID_GPS != gnssId) {
+        GPSD_LOG(LOG_INFO, &session->context->errout,
+                 "SUB,GPS: Unsupportd gnssId %u\n", gnssId);
+        return 0;
+    }
     preamble = (uint8_t)((words[0] >> 16) & BITMASK(8));
     if (preamble == 0x8b) {
         // somehow missed an inversion
