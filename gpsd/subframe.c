@@ -66,7 +66,7 @@ static void init_orbit(orbit_t *orbit)
 }
 
 // init a subrame_t
-static void init_subframe(struct subframe_t *subp, uint8_t gnssId,
+static void init_subframe(struct subframe_t *subp, gnssid_t gnssId,
                           uint8_t tSVID)
 {
     memset(subp, 0, sizeof(struct subframe_t));
@@ -153,7 +153,7 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
 }
 
 gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
-                                   unsigned int gnssId, unsigned int tSVID,
+                                   gnssid_t gnssId, unsigned int tSVID,
                                    uint32_t words[])
 {
     /*
@@ -1952,7 +1952,7 @@ static gps_mask_t subframe_glo(struct gps_device_t *session,
 
 
 gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
-                                       unsigned int gnssId,
+                                       gnssid_t gnssId,
                                        unsigned int sigId,
                                        unsigned int tSVID,
                                        uint32_t words[],
@@ -2020,6 +2020,8 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
             return subframe_glo(session, tSVID, words, numwords);
         }
         break;
+    case GNSSID_CNT:
+        FALLTHROUGH
     case GNSSID_IMES:
         FALLTHROUGH
     case GNSSID_IRNSS:

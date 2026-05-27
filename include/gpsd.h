@@ -1032,11 +1032,11 @@ extern void gpsd_century_update(struct gps_device_t *, int);
 
 extern void gpsd_zero_satellites(struct gps_data_t *sp);
 extern gps_mask_t gpsd_interpret_subframe(struct gps_device_t *,
-                                          unsigned int,
+                                          gnssid_t,
                                           unsigned int,
                                           uint32_t[]);
 extern gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *,
-                                              unsigned int,
+                                              gnssid_t,
                                               unsigned int,
                                               unsigned int,
                                               uint32_t[],
