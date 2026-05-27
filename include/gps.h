@@ -2229,8 +2229,8 @@ struct ais_t
         // Type 14 - Safety-Related Broadcast Message
         struct {
             // unsigned int spare;      // spare bit(s)
-#define AIS_TYPE14_TEXT_MAX     161     // 952 bits of six-bit, plus NUL
-            char text[AIS_TYPE14_TEXT_MAX];
+            // 960 bits of six-bit, plus NUL (960 / 6 = 160 chars)
+            char text[161];
         } type14;
         // Type 15 - Interrogation
         struct {
@@ -2343,6 +2343,7 @@ struct ais_t
         // Type 21 - Aids to Navigation Report
         struct {
             unsigned int aid_type;      // aid type
+            // 0 base + 16 extension + 1 NUL = 37 bytes
             char name[37];              // name of aid to navigation
             bool accuracy;              // position accuracy
             int lon;                    // longitude
