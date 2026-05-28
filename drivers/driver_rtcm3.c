@@ -644,7 +644,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         // 6 to 68 bytes
         rtcm->rtcmtypes.rtcm3_1008.station_id = ugrab(12);
         n = ugrab(8);
-        if ((6 + n) != rtcm->length) {
+        if ((6 + n) > rtcm->length) {
             bad_len = 6 + n;
             break;
         }
@@ -654,6 +654,10 @@ void rtcm3_unpack(const struct gps_context_t *context,
         bitcount += 8 * n;
         rtcm->rtcmtypes.rtcm3_1008.setup_id = ugrab(8);
         n2 = ugrab(8);
+        if ((6 + n + n2) != rtcm->length) {
+            bad_len = 6 + n + n2;
+            break;
+        }
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1008.serial,
                                 sizeof(rtcm->rtcmtypes.rtcm3_1008.serial),
                                 buf + 9 + n, n2);
