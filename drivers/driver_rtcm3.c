@@ -1197,8 +1197,8 @@ void rtcm3_unpack(const struct gps_context_t *context,
         // TODO: rtklib has C code for this one.
         rtcm->rtcmtypes.rtcm3_1033.station_id = ugrab(12);
         n = ugrab(8);
-        if ((29 + n) > rtcm->length) {
-            bad_len = 29 + n;
+        if ((28 + n) > rtcm->length) {
+            bad_len = 28 + n;
             break;
         }
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.descriptor,
@@ -1206,17 +1206,31 @@ void rtcm3_unpack(const struct gps_context_t *context,
                                 buf + 7, n);
         bitcount += 8 * n;
         rtcm->rtcmtypes.rtcm3_1033.setup_id = ugrab(8);
-        n2 = (unsigned long)ugrab(8);
+        n2 = ugrab(8);
+
+        if ((8 + n + n2) > rtcm->length) {
+            bad_len = 8 + n + n2;
+            break;
+        }
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.serial,
                                 sizeof(rtcm->rtcmtypes.rtcm3_1033.serial),
                                 buf + 9 + n, n2);
         bitcount += 8 * n2;
-        n3 = (unsigned long)ugrab(8);
+        n3 = ugrab(8);
+        if ((8 + n + n2 + n3) > rtcm->length) {
+            bad_len = 9 + n + n2 + n3;
+            break;
+        }
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.receiver,
                                 sizeof(rtcm->rtcmtypes.rtcm3_1033.receiver),
                                 buf + 10 + n + n2, n3);
         bitcount += 8 * n3;
-        n4 = (unsigned long)ugrab(8);
+        n4 = ugrab(8);
+
+        if ((9 + n + n2 + n3 + n4) > rtcm->length) {
+            bad_len = 9 + n + n2 + n3 + n4;
+            break;
+        }
         rtcm3_copy_string_field(rtcm->rtcmtypes.rtcm3_1033.firmware,
                                 sizeof(rtcm->rtcmtypes.rtcm3_1033.firmware),
                                 buf + 11 + n + n2 + n3, n4);
