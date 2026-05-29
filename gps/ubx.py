@@ -584,6 +584,9 @@ class ubx(object):
         # M10S, protVer 34.00
         ("CFG-I2C-REMAP", 0x10510004, "L", 1, "",
          "I2C remapping"),
+        # X20P
+        ("CFG-I2C-PULL_UPS_DISABLED", 0x1051000b, "L", 1, "",
+          "Flag if the internal Pull-Ups (SDA and SCL lines) disabled"),
 
         # CFG-I2CINPROT
         ("CFG-I2CINPROT", 0x1071ffff, "", 0, "",
@@ -975,6 +978,17 @@ class ubx(object):
          "Output rate of the RTCM-3X-TYPE1005 message on port USB"),
         ("CFG-MSGOUT-RTCM_3X_TYPE1005_SPI", 0x209102c1, "U1", 1, "",
          "Output rate of the RTCM-3X-TYPE1005 message on port SPI"),
+        ("CFG-MSGOUT-RTCM_3X_TYPE1006_I2C", 0x209102c2, "U1", 1, "",
+         "Output rate of the RTCM-3X-TYPE1006 message on the I2C port"),
+        ("CFG-MSGOUT-RTCM_3X_TYPE1006_UART1", 0x209102c3, "U1", 1, "",
+         "Output rate of the RTCM-3X-TYPE1006 message on the UART1 port"),
+        ("CFG-MSGOUT-RTCM_3X_TYPE1006_UART2", 0x209102c4, "U1", 1, "",
+         "Output rate of the RTCM-3X-TYPE1006 message on the UART2 port"),
+        ("CFG-MSGOUT-RTCM_3X_TYPE1006_USB", 0x209102c5, "U1", 1, "",
+         "Output rate of the RTCM-3X-TYPE1006 message on the USB port"),
+        ("CFG-MSGOUT-RTCM_3X_TYPE1006_SPI", 0x209102c6, "U1", 1, "",
+         "Output rate of the RTCM-3X-TYPE1006 message on the SPI port"),
+
         ("CFG-MSGOUT-RTCM_3X_TYPE1077_I2C", 0x209102cc, "U1", 1, "",
          "Output rate of the RTCM-3X-TYPE1077 message on port I2"),
         ("CFG-MSGOUT-RTCM_3X_TYPE1077_UART1", 0x209102cd, "U1", 1, "",
@@ -2403,6 +2417,14 @@ class ubx(object):
         ("CFG-NAV2-NAVSPG_ONLY_AUTHDATA", 0x10170003, "L", 1, "",
          "ONly authenticated data in NAV2 output"),
 
+        # CFG-NAVCOR-
+        ("CFG-NAVCOR", 0x100dffff, "", 0, "",
+         "get all CFG-NAV2"),
+        ("CFG-NAVCOR-ENABLE_GAL_HAS", 0x100d0002, "L", 1, "",
+         "Enable/disable Galileo HAS corrections"),
+        ("CFG-NAVCOR-ENABLE_HOST", 0x100d0001, "L", 1, "",
+         "Enable/disable HOST corrections"),
+
         # CFG-NAVHPG-
         ("CFG-NAVHPG", 0x2014ffff, "", 0, "",
          "get all CFG-NAVHPG"),
@@ -2741,6 +2763,8 @@ class ubx(object):
          "RTCM DF003 reference station ID (input)"),
         ("CFG-RTCM-DF003_IN_FILTER", 0x20090009, "E1", 1, "",
          "RTCM input filter configuration based on DF003 value"),
+        ("CFG-RTCM-DF028_OUT", 0x30090010, "U2", 1, "",
+         "RTCM DF028 (antenna height) output value"),
 
         # CFG-SBAS-
         ("CFG-SBAS", 0x1036ffff, "", 0, "",
@@ -2961,6 +2985,9 @@ class ubx(object):
         ("CFG-SIGNAL-IGNORE_BAND_OTP", 0x10310029, "L", 1, "",
          "Enable all bands disregarding OTP band file. "
          "For production  testing."),
+        ("CFG-SIGNAL-LBAND_ENA", 0x1031002a, "L", 1, "", "L-Band enable"),
+        ("CFG-SIGNAL-LBAND_PMP_ENA", 0x1031002f, "L", 1, "", "L-Band PMP"),
+
         ("CFG-SIGNAL-QZSS_L1CB_ENA", 0x10310039, "L", 1, "",
          "QZSS L1C/B"),
         ("CFG-SIGNAL-PLAN", 0x2031003a, "E1", 1, "",
