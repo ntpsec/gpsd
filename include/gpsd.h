@@ -590,7 +590,7 @@ struct gps_device_t {
     struct gps_data_t gpsdata;
     const struct gps_type_t *device_type;
     unsigned int driver_index;        // numeric index of current driver
-    unsigned int drivers_identified;  // bitmask; what drivers have we seen?
+    uint64_t drivers_identified;      // bitmask; what drivers have we seen?
     unsigned int cfg_stage;           // configuration stage counter
     unsigned int cfg_step;            // configuration step counter
     const struct gps_type_t *last_controller;
