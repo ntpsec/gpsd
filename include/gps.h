@@ -120,13 +120,16 @@ extern "C" {
  * 16    Add SPARTN.
  *       MAXUSERDEVS is setable
  *       Add gnssid_t to limit gnssid to valid values.
+ *       MAXCHANNELS bumped 230, for SkyTraq
  */
 
 // API version should match in SConscript
 #define GPSD_API_MAJOR_VERSION  16       // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  1        // bump on compatible changes
 
-#define MAXCHANNELS     184              // u-blox 9 tracks 140 signals
+// u-blox 9 tracks 140 signals
+// Skytraq Phoenix tracks 230 signals
+#define MAXCHANNELS     230
 #ifdef MAX_DEVICES
     #define MAXUSERDEVS     MAX_DEVICES  // max devices per user
 #else

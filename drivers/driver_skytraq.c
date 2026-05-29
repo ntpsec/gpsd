@@ -34,6 +34,10 @@
 // Phoenix has 230 channels
 #define SKY_CHANNELS    230      // max channels allowed in format
 
+#if MAXCHANNELS < SKY_CHANNELS
+    #error "MACHANNELS < SKY_CHANNELS"
+#endif
+
 #ifdef __UNUSED
 // Poll Software Version MID 2
 static unsigned char versionprobe[] = {
