@@ -2336,6 +2336,13 @@ static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
         *pbad_len = 18 + count;
         return mask;
     }
+
+    if (MAXCHANNELS < count) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIP x6c: too many used satellites %d\n", count);
+        *pbad_len = 18 + count;
+        return mask;
+    }
     *pbad_len = 0;
 
     /*
