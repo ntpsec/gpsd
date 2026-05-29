@@ -484,8 +484,21 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "passivesock_af(): Maybe gpsd is already running!  "
                      "Or systemd has the port?\n");
+            exit(1);
         }
-        /* Make this fatal, users never notice the ERROR, and spend
+        /* Soft-fail only if AF_INET6 + EADDRNOTAVAIL.
+         * Some fool turned off IPv6.
+         * Closes #112. */
+        if (AF_INET6 == af &&
+            EADDRNOTAVAIL == errno) {
+            GPSD_LOG(LOG_ERROR, &context.errout,
+                     "passivesock_af() IPv6 unavailable. "
+                     "Turn on your IPv6!\n");
+            (void)close(s);
+            return -1;
+        }
+        /* gpsd has no port to use! Make this fatal.
+         * Users never notice the ERROR, and spend
          * days looking at the rest of the log output. */
         exit(1);
     }
