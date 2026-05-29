@@ -10205,6 +10205,7 @@ Partial decode."""
 
         # protVer 19, ZED-F9T, ver 1
         # protVer 34, F10-TIM, ver 2
+        # protVer 50.11, X20P-HPG, ver 3
         u = struct.unpack_from('<B', buf, 0)
         if 1 == u[0]:
             if 12 != m_len:
@@ -10221,7 +10222,9 @@ Partial decode."""
                            index_s((u[1] >> 1) & 3, self.sec_sig_jamState),
                            index_s(u[6] & 1, self.yes_no),
                            index_s((u[1] >> 5) & 3, self.sec_sig_spfState1)))
-        elif 2 == u[0]:
+        elif ((2 == u[0] or
+               3 == u[0])):
+            # version 3 undocumented, but seems like version 2
             u = struct.unpack_from('<BBBB', buf, 0)
             s = (" version %u sigSecFlags x%x reserved0 x%x "
                  "jamNumCentFraqs %u\n" % u)
@@ -10232,6 +10235,10 @@ Partial decode."""
                        index_s((u[1] >> 1) & 3, self.sec_sig_jamState),
                        index_s((u[1] >> 4) & 1, self.yes_no),
                        index_s((u[1] >> 5) & 3, self.sec_sig_spfState2)))
+                if 3 == u[0]:
+                    # unknowen version 3 bit.
+                    s += (' bit7 (%s)\n' %
+                          index_s((u[1] >> 7) & 1, self.yes_no))
 
             a_len = 4 + (4 * u[3])
             if a_len != m_len:
