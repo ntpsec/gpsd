@@ -813,6 +813,9 @@ struct gps_device_t {
              * it up to the client.
              */
 #define ZODIAC_CHANNELS 12
+#if MAXCHANNELS < ZODIAC_CHANNELS
+    #error "MACHANNELS < ZODIAC_CHANNELS"
+#endif
             unsigned int Zs[ZODIAC_CHANNELS];   // satellite PRNs
             unsigned int Zv[ZODIAC_CHANNELS];   // signal values (0-7)
         } zodiac;

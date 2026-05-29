@@ -35,6 +35,9 @@
 #ifdef TSIP_ENABLE
 // RES SMT 360 has 32 max channels, use 64 for next gen
 #define TSIP_CHANNELS  64
+#if MAXCHANNELS < TSIP_CHANNELS
+    #error "MACHANNELS < TSIP_CHANNELS"
+#endif
 
 /* defines for Set or Request I/O Options (0x35)
  * SMT 360 default: IO1_DP|IO1_LLA, IO2_ENU, 0, IO4_DBHZ */
