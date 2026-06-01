@@ -563,6 +563,19 @@ static const fw_protver_map_entry_t fw_protver_map[] = {
     {NULL, 0.0},
 };
 
+// Fix GPS week since we know UTC time
+static void fix_week(struct gps_device_t * session)
+{
+    // we hope leap seconds is correct...
+    time_t secs_since_gps_epoch =
+        (session->newdata.time.tv_sec + session->context->leap_seconds -
+         GPS_EPOCH);
+
+    // compute GPS week
+    session->context->gps_week = secs_since_gps_epoch / 604800;
+    session->context->rollovers = (int)(secs_since_gps_epoch / GPS_ROLLOVER);
+}
+
 /*
  * Model  Fw          Protver
  * M8     2,01        15.00
@@ -1565,6 +1578,9 @@ static gps_mask_t ubx_msg_hnr_pvt(struct gps_device_t *session,
         // field 9, nano, can be negative! So normalize
         session->newdata.time.tv_nsec = getles32(buf, 12);
         TS_NORM(&session->newdata.time);
+        // compute GPS week
+        fix_week(session);
+
         mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
     }
 
@@ -3031,6 +3047,9 @@ static gps_mask_t ubx_msg_nav_pvat(struct gps_device_t *session,
         // nano, can be negative! So normalize
         session->newdata.time.tv_nsec = nano;
         TS_NORM(&session->newdata.time);
+        // compute GPS week
+        fix_week(session);
+
         mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
     }
 
@@ -3270,6 +3289,9 @@ static gps_mask_t ubx_msg_nav_pvt(struct gps_device_t *session,
         // field 16, nano, can be negative! So normalize
         session->newdata.time.tv_nsec = getles32(buf, 16);
         TS_NORM(&session->newdata.time);
+        // compute GPS week
+        fix_week(session);
+
         mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
     }
 
@@ -3466,6 +3488,7 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
     unsigned int i, nchan, ver;
     int seen = 0, used_tot = 0;
     timespec_t ts_tow;
+    char ts_buf[TIMESPEC_LEN];
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -3567,7 +3590,10 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
     session->gpsdata.satellites_visible = seen;
     session->gpsdata.satellites_used = used_tot;
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX: NAV-SAT: visible=%d used=%d mask={SATELLITE|USED}\n",
+             "UBX: NAV-SAT: time %s visible %d used %d "
+             "mask={SATELLITE|USED}\n",
+             timespec_str(&session->gpsdata.skyview_time,
+                          ts_buf, sizeof(ts_buf)),
              session->gpsdata.satellites_visible,
              session->gpsdata.satellites_used);
     return SATELLITE_SET | USED_IS;
@@ -3667,6 +3693,7 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
     timespec_t ts_tow;
     // saved skyview, hopefully from NAV-SAT
     struct satellite_t skyview_old[MAXCHANNELS];
+    char ts_buf[TIMESPEC_LEN];
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -3795,7 +3822,10 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
     session->gpsdata.satellites_visible = seen;
     session->gpsdata.satellites_used = used_tot;
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX: NAV-SIG: visible=%d used=%d mask={SATELLITE|USED}\n",
+             "UBX: NAV-SIG: time %s visible=%d used=%d"
+             " mask={SATELLITE|USED}\n",
+             timespec_str(&session->gpsdata.skyview_time,
+                          ts_buf, sizeof(ts_buf)),
              session->gpsdata.satellites_visible,
              session->gpsdata.satellites_used);
     return SATELLITE_SET | USED_IS;
@@ -4105,6 +4135,7 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
     timespec_t ts_tow;
     // chipGen to protVer, Antaris 4, u-blox 4, 5, 6, 7 and 8
     static unsigned gen2ver[] = {8, 10, 12, 13, 15};
+    char ts_buf[TIMESPEC_LEN];
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -4208,8 +4239,10 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
     session->gpsdata.satellites_visible = seen;
     session->gpsdata.satellites_used = used_tot;
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX: NAV-SVINFO: visible %d used %d mask {SATELLITE|USED} "
-             "gFlags x%x\n",
+             "UBX: NAV-SVINFO: time %s visible %d used %d "
+             " mask {SATELLITE|USED} gFlags x%x\n",
+             timespec_str(&session->gpsdata.skyview_time,
+                          ts_buf, sizeof(ts_buf)),
              session->gpsdata.satellites_visible,
              session->gpsdata.satellites_used,
              globalFlags);
