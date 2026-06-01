@@ -1800,7 +1800,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
 
     // track the packet count since achieving sync on the device
     if (driver_change &&
-        0 == (session->drivers_identified & (1 << session->driver_index))) {
+        0 == (session->drivers_identified & (1ULL << session->driver_index))) {
 
         // coverity[var_deref_op]
         GPSD_LOG(LOG_INF, &session->context->errout,
@@ -1840,7 +1840,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         received |= DRIVER_IS;
 
         // mark the fact that this driver has been seen
-        session->drivers_identified |= (1 << session->driver_index);
+        session->drivers_identified |= (1ULL << session->driver_index);
     } else {
         session->lexer.counter++;
     }
