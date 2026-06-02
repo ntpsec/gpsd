@@ -371,10 +371,8 @@ static void windowsetup(void)
 //    fprintf(dlog, "windowsetup(), LINES = %d COLS %d\n", LINES, COLS);
 //    fflush(dlog);
 
-    // turn off cursor
-    if (ERR == curs_set(0)) {
-        die(CGPS_SIZE, "curs_set(0) failed");
-    }
+    // turn off cursor, fails on vt100, vt220, so do not die()
+    (void)curs_set(0);
 
     if (imu_flag) {
         // We're an IMU, set up accordingly.
