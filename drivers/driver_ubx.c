@@ -4624,6 +4624,9 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
         return 0;
     }
 
+    // zero the raw data area.
+    memset((void *)&session->gpsdata.raw, 0, sizeof(session->gpsdata.raw));
+
     // Note: this is "approximately" GPS TOW, this is not iTOW
     rcvTow = getled64((const char *)buf, 0);   // time of week in seconds
     week = getleu16(buf, 8);
@@ -4649,10 +4652,6 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
     // Do not set newdata.time.  set gpsdata.raw.mtime
     // RINEX 3 "GPS time", not UTC, no leap seconds
     session->gpsdata.raw.mtime = gpsd_gpstime(session, week, ts_tow);
-
-    /* zero the measurement data
-     * so we can tell which meas never got set */
-    memset(session->gpsdata.raw.meas, 0, sizeof(session->gpsdata.raw.meas));
 
     if (numMeas > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
