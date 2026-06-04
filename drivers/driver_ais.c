@@ -79,10 +79,16 @@ static void from_sixbit(const unsigned char *bitvec, unsigned int start,
 #define SBITS(s, l)     sbits(bits, s, l, false)
 #define UCHARS(s, to)   from_sixbit(bits, s, sizeof(to)-1, to)
 
-static void endchars(const struct gpsd_errout_t *errout UNUSED,
-                     const unsigned char *bits, size_t bitlen,
-                     unsigned start, char *to)
+static void endchars(const struct gpsd_errout_t *errout,
+                     const unsigned char *bits, const size_t bitlen,
+                     const unsigned start, char *to)
 {
+    if (bitlen <= start) {
+        GPSD_LOG(LOG_WARN, errout, "AIVDM bitlen %zu <=  start %u\n",
+                 bitlen, start);
+        to[0] = '\0';
+        return;
+    }
     from_sixbit(bits, start, (bitlen - start) / 6, to);
 }
 
