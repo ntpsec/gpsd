@@ -282,10 +282,9 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             }
-        }
+        } else if (235 == ais->type6.dac ||
+                   250 == ais->type6.dac) {
         // UK and Republic Of Ireland
-        else if (235 == ais->type6.dac ||
-                 250 == ais->type6.dac) {
             switch (ais->type6.fid) {
             case 10:    // GLA - AtoN monitoring data
                 if (136 != bitlen) {
@@ -303,9 +302,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             }
-        }
-        // International
-        else if (1 == ais->type6.dac)
+        } else if (1 == ais->type6.dac) {
+            // International
             switch (ais->type6.fid) {
             case 12:    // IMO236 - Dangerous cargo indication
                 UCHARS(88, ais->type6.dac1fid12.lastport);
@@ -481,6 +479,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             }
+        }
         if (!ais->type6.structured) {
             (void)memcpy(ais->type6.bitdata, bits + (88 / CHAR_BIT),
                          BITS_TO_BYTES(ais->type6.bitcount));
@@ -521,7 +520,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         // not strictly required - helps stability in testing
         (void)memset(ais->type8.bitdata, '\0', sizeof(ais->type8.bitdata));
         ais->type8.structured = false;
-        if (1 == ais->type8.dac)
+        if (1 == ais->type8.dac) {
             switch (ais->type8.fid) {
             case 11:        // IMO236 - Meteorological/Hydrological data
                 // layout is almost identical to FID=31 from IMO289
@@ -719,7 +718,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type8.structured = true;
                 break;
             }
-        else if (200 == ais->type8.dac) {
+        } else if (200 == ais->type8.dac) {
             switch (ais->type8.fid) {
             case 10:    // Inland ship static and voyage related data
                 if (168 != bitlen) {
