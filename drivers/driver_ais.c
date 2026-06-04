@@ -31,12 +31,17 @@
 
 // beginning at bitvec bit start, unpack count sixbit characters
 static void from_sixbit_untrimmed(const unsigned char *bitvec,
-                                  unsigned int start,
-                                  int count, char *to)
+                                  const unsigned start,
+                                  unsigned count, char *to,
+                                  const size_t to_sz)
 {
     const char sixchr[65] =
         "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?";
-    int i;
+    unsigned i;
+
+    if (to_sz <= count) {
+        count = to_sz - 1;
+    }
 
     // six-bit to ASCII
     for (i = 0; i < count; i++) {
@@ -68,20 +73,20 @@ static void trim_spaces_on_right_end(char* to, size_t max)
 
 /* beginning at bitvec bit start, unpack count sixbit characters
  * and remove trailing spaces */
-static void from_sixbit(const unsigned char *bitvec, unsigned int start,
-                        int count, char *to)
+static void from_sixbit(const unsigned char *bitvec, const unsigned start,
+                        const unsigned count, char *to, const size_t to_sz)
 {
-       from_sixbit_untrimmed(bitvec, start, count, to);
+       from_sixbit_untrimmed(bitvec, start, count, to, to_sz);
        trim_spaces_on_right_end(to, count);
 }
 
 #define UBITS(s, l)     ubits(bits, s, l, false)
 #define SBITS(s, l)     sbits(bits, s, l, false)
-#define UCHARS(s, to)   from_sixbit(bits, s, sizeof(to)-1, to)
+#define UCHARS(s, to)   from_sixbit(bits, s, sizeof(to)-1, to, sizeof(to))
 
 static void endchars(const struct gpsd_errout_t *errout,
                      const unsigned char *bits, const size_t bitlen,
-                     const unsigned start, char *to)
+                     const unsigned start, char *to, const size_t to_sz)
 {
     if (bitlen <= start) {
         GPSD_LOG(LOG_WARN, errout, "AIVDM bitlen %zu <=  start %u\n",
@@ -89,7 +94,7 @@ static void endchars(const struct gpsd_errout_t *errout,
         to[0] = '\0';
         return;
     }
-    from_sixbit(bits, start, (bitlen - start) / 6, to);
+    from_sixbit(bits, start, (bitlen - start) / 6, to, to_sz);
 }
 
 /* decode an AIS binary packet
@@ -449,7 +454,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
             case 30:    // IMO289 - Text description - addressed
                 ais->type6.dac1fid30.linkage   = UBITS(88, 10);
                 endchars(errout, bits, bitlen,
-                         98, ais->type6.dac1fid30.text);
+                         98, ais->type6.dac1fid30.text,
+                         sizeof(ais->type6.dac1fid30.text));
                 ais->type6.structured = true;
                 break;
             case 32:    // IMO289 - Tidal Window
@@ -667,7 +673,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
             case 29:        // IMO289 - Text Description - broadcast
                 ais->type8.dac1fid29.linkage   = UBITS(56, 10);
                 endchars(errout, bits, bitlen,
-                         66, ais->type8.dac1fid29.text);
+                         66, ais->type8.dac1fid29.text,
+                         sizeof(ais->type8.dac1fid29.text));
                 ais->type8.structured = true;
                 break;
             case 31:        // IMO289 - Meteorological/Hydrological data
@@ -840,12 +847,14 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type12.dest_mmsi      = UBITS(40, 30);
         ais->type12.retransmit     = (bool)UBITS(70, 1);
         //ais->type12.spare        = UBITS(71, 1);
-        endchars(errout, bits, bitlen, 72, ais->type12.text);
+        endchars(errout, bits, bitlen, 72, ais->type12.text,
+                 sizeof(ais->type12.text));
         break;
     case 14:    // Safety Related Broadcast Message
         RANGE_CHECK(40, 960);
         //ais->type14.spare          = UBITS(38, 2);
-        endchars(errout, bits, bitlen, 40, ais->type14.text);
+        endchars(errout, bits, bitlen, 40, ais->type14.text,
+                 sizeof(ais->type14.text));
         break;
     case 15:    // Interrogation
         RANGE_CHECK(88, 168);
@@ -958,7 +967,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         // Per https://www.navcen.uscg.gov/ais-class-b-reports
         RANGE_CHECK(272, 368);
         ais->type21.aid_type     = UBITS(38, 5);
-        from_sixbit_untrimmed(bits, 43, 20, ais->type21.name);
+        from_sixbit_untrimmed(bits, 43, 20, ais->type21.name,
+                              sizeof(ais->type21.name));
         ais->type21.accuracy     = UBITS(163, 1);
         ais->type21.lon          = SBITS(164, 28);
         ais->type21.lat          = SBITS(192, 27);
@@ -976,7 +986,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         //ais->type21.spare      = UBITS(271, 1);
         if (20 == strnlen(ais->type21.name, 21) &&
             272 < bitlen) {
-            endchars(errout, bits, bitlen, 272, ais->type21.name + 20);
+            endchars(errout, bits, bitlen, 272, ais->type21.name + 20,
+                     sizeof(ais->type21.name) - 20);
         }
         trim_spaces_on_right_end(ais->type21.name, sizeof(ais->type21.name));
         break;
