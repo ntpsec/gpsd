@@ -75,6 +75,17 @@ static void from_sixbit(const unsigned char *bitvec, unsigned int start,
        trim_spaces_on_right_end(to, count);
 }
 
+#define UBITS(s, l)     ubits(bits, s, l, false)
+#define SBITS(s, l)     sbits(bits, s, l, false)
+#define UCHARS(s, to)   from_sixbit(bits, s, sizeof(to)-1, to)
+
+static void endchars(const struct gpsd_errout_t *errout UNUSED,
+                     const unsigned char *bits, size_t bitlen,
+                     unsigned start, char *to)
+{
+    from_sixbit(bits, start, (bitlen - start) / 6, to);
+}
+
 /* decode an AIS binary packet
  *
  * Return: True on success
@@ -87,10 +98,6 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
 {
     unsigned int u; int i;
 
-#define UBITS(s, l)     ubits(bits, s, l, false)
-#define SBITS(s, l)     sbits(bits, s, l, false)
-#define UCHARS(s, to)   from_sixbit(bits, s, sizeof(to)-1, to)
-#define ENDCHARS(s, to) from_sixbit(bits, s, (bitlen-(s))/6,to)
     ais->type = UBITS(0, 6);
     ais->repeat = UBITS(6, 2);
     ais->mmsi = UBITS(8, 30);
@@ -435,7 +442,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             case 30:    // IMO289 - Text description - addressed
                 ais->type6.dac1fid30.linkage   = UBITS(88, 10);
-                ENDCHARS(98, ais->type6.dac1fid30.text);
+                endchars(errout, bits, bitlen,
+                         98, ais->type6.dac1fid30.text);
                 ais->type6.structured = true;
                 break;
             case 32:    // IMO289 - Tidal Window
@@ -652,7 +660,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             case 29:        // IMO289 - Text Description - broadcast
                 ais->type8.dac1fid29.linkage   = UBITS(56, 10);
-                ENDCHARS(66, ais->type8.dac1fid29.text);
+                endchars(errout, bits, bitlen,
+                         66, ais->type8.dac1fid29.text);
                 ais->type8.structured = true;
                 break;
             case 31:        // IMO289 - Meteorological/Hydrological data
@@ -825,12 +834,12 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type12.dest_mmsi      = UBITS(40, 30);
         ais->type12.retransmit     = (bool)UBITS(70, 1);
         //ais->type12.spare        = UBITS(71, 1);
-        ENDCHARS(72, ais->type12.text);
+        endchars(errout, bits, bitlen, 72, ais->type12.text);
         break;
     case 14:    // Safety Related Broadcast Message
         RANGE_CHECK(40, 960);
         //ais->type14.spare          = UBITS(38, 2);
-        ENDCHARS(40, ais->type14.text);
+        endchars(errout, bits, bitlen, 40, ais->type14.text);
         break;
     case 15:    // Interrogation
         RANGE_CHECK(88, 168);
@@ -961,7 +970,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         //ais->type21.spare      = UBITS(271, 1);
         if (20 == strnlen(ais->type21.name, 21) &&
             272 < bitlen) {
-            ENDCHARS(272, ais->type21.name + 20);
+            endchars(errout, bits, bitlen, 272, ais->type21.name + 20);
         }
         trim_spaces_on_right_end(ais->type21.name, sizeof(ais->type21.name));
         break;
