@@ -2847,14 +2847,30 @@ void packet_parse(struct gps_lexer_t *lexer)
                     break;
                 }
             }
-            if (2048 < idx) {
-                idx = 0;        // can't happen, but pacify fuzzer.
+            if (idx + 3 > inbuflen ||
+                2048 < idx) {
+                GPSD_LOG(LOG_WARN, &lexer->errout,
+                         "RTCM3 preamble not found in buffer "
+                         "(idx %u inbuflen %u), dropping.\n",
+                         idx, inbuflen);
+                packet_type = BAD_PACKET;
+                acc_dis = ACCEPT;
+                lexer->state = GROUND_STATE;
+                break;
             }
-            // we assume xd3 must be in there!
             // yes, the top 6 bits should be zero, total 10 bits of length
             data_len = (lexer->inbuffer[idx + 1] << 8) |
                        lexer->inbuffer[idx + 2];
             data_len &= 0x03ff;   // truncate below 1024, so pacify fuzzer
+            if (idx + data_len + 6 > inbuflen) {
+                GPSD_LOG(LOG_WARN, &lexer->errout,
+                         "RTCM3 short buffer: idx %u data_len %u inbuflen %u, "
+                         "dropping.\n", idx, data_len, inbuflen);
+                packet_type = BAD_PACKET;
+                acc_dis = ACCEPT;
+                lexer->state = GROUND_STATE;
+                break;
+            }
             if (LOG_IO <= lexer->errout.debug) {
                 char outbuf[BUFSIZ];
                 // 12 bits of message type
