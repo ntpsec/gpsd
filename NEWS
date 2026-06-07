@@ -6,6 +6,8 @@
    ppsthread memory leak stopped
    -l option added to gpsdctl to log to stderr instead of syslog
    Erickson GRU 04 support added.
+   Default Garmin Text driver off, deprecate it.
+   Fix a lot of buffer over runs.
 
 3.27.5: 14 Jan 2026
   Correctly bump API Version to 16.1

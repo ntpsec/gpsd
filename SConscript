@@ -324,7 +324,7 @@ boolopts = (
     ("fury",          True,  "Jackson Labs Fury and Firefly support"),
     ("fv18",          True,  "San Jose Navigation FV-18 support"),
     ("garmin",        True,  "Garmin kernel driver support"),
-    ("garmintxt",     True,  "Garmin Simple Text support"),
+    ("garmintxt",     False, "Garmin Simple Text support"),
     ("geostar",       True,  "Geostar Protocol support"),
     ("greis",         True,  "Javad GREIS support"),
     ("itrax",         True,  "iTrax hardware support"),

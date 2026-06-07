@@ -23,7 +23,7 @@
  *      magnetic variation
  *      satellite information
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -118,6 +118,7 @@ invalid data.
 #include "../include/gpsd.h"
 
 #ifdef GARMINTXT_ENABLE
+#warning The Garmin Text driver is depreated 2026, and maybe never worked.
 
 // Simple text message is fixed length, 55 chars text data + 2 characters EOL
 // buffer for text processing
