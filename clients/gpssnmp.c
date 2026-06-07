@@ -388,16 +388,16 @@ static void get_one(gps_mask_t need)
     }
 
     // snmpd is impatient, it will not wait longer than 5 seconds.
-    clock_gettime(CLOCK_REALTIME, &ts_start);
+    clock_gettime(CLOCK_MONOTONIC, &ts_start);
 
     // timeout is in micro seconds.
     while (gps_waiting(&gpsdata, 2 * US_IN_SEC)) {
         int status;
 
         // wait 3 seconds, tops.
-        clock_gettime(CLOCK_REALTIME, &ts_now);
-        // use fabs(), in case time went backwards...
-        if (3 < fabs(TS_SUB_D(&ts_now, &ts_start))) {
+        clock_gettime(CLOCK_MONOTONIC, &ts_now);
+        // montonic time always goes forward.
+        if (3 < TS_SUB_D(&ts_now, &ts_start)) {
             // FIXME:  Make this configurable.
             // timeout
             (void)fputs(PROGNAME ": ERROR: timeout", logfd);
