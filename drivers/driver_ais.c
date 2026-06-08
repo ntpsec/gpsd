@@ -235,6 +235,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         (void)memset(ais->type6.bitdata, '\0', sizeof(ais->type6.bitdata));
         ais->type6.structured = false;
         // Inland AIS
+        GPSD_LOG(LOG_PROG, errout, "AIVDM: type 6 dac %u fid %u bitlen %zu\n",
+                 ais->type6.dac, ais->type6.fid, bitlen);
         if (200 == ais->type6.dac) {
             switch (ais->type6.fid) {
             case 21:    // ETA at lock/bridge/terminal
@@ -349,6 +351,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             case 15:
                 // IMO236 - Extended Ship Static and Voyage Related Data
+                RANGE_CHECK(67, 1008);
                 ais->type6.dac1fid15.airdraught = UBITS(56, 11);
                 ais->type6.structured = true;
                 break;
@@ -361,6 +364,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             case 18:    // IMO289 - Clearance time to enter port
+                // FIXME: sometimes bitlen == 168!
                 ais->type6.dac1fid18.linkage    = UBITS(88, 10);
                 ais->type6.dac1fid18.month      = UBITS(98, 4);
                 ais->type6.dac1fid18.day        = UBITS(102, 5);
@@ -374,6 +378,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             case 20:    // IMO289 - Berthing data - addressed
+                RANGE_CHECK(360, 1008);
                 ais->type6.dac1fid20.linkage      = UBITS(88, 10);
                 ais->type6.dac1fid20.berth_length = UBITS(98, 9);
                 ais->type6.dac1fid20.berth_depth  = UBITS(107, 8);
@@ -417,9 +422,14 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
             case 23:        // IMO289 - Area notice - addressed
                 break;
             case 25:    // IMO289 - Dangerous cargo indication
+                RANGE_CHECK(100, 1008);
                 ais->type6.dac1fid25.unit       = UBITS(88, 2);
                 ais->type6.dac1fid25.amount     = UBITS(90, 10);
-                for (u = 0; 100 + u*17 < bitlen; u++) {
+                if ((100 + 17 * ROWS(ais->type6.dac1fid25.cargos)) < bitlen) {
+                    bitlen = 100 + 17 * ROWS(ais->type6.dac1fid25.cargos);
+                }
+
+                for (u = 0; 100 + u * 17 < bitlen; u++) {
                     ais->type6.dac1fid25.cargos[u].code =
                         UBITS(100 + u * 17, 4);
                     ais->type6.dac1fid25.cargos[u].subtype =
@@ -451,19 +461,28 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             case 30:    // IMO289 - Text description - addressed
+                RANGE_CHECK(98, 1008);
                 ais->type6.dac1fid30.linkage   = UBITS(88, 10);
                 ENDCHARS(98, ais->type6.dac1fid30.text,
                          sizeof(ais->type6.dac1fid30.text));
                 ais->type6.structured = true;
                 break;
             case 32:    // IMO289 - Tidal Window
+                RANGE_CHECK(97, 1008);
                 ais->type6.dac1fid32.month      = UBITS(88, 4);
                 ais->type6.dac1fid32.day        = UBITS(92, 5);
 #define ARRAY_BASE 97
 #define ELEMENT_SIZE 88
-                for (u = 0; ARRAY_BASE + (ELEMENT_SIZE*u) <= bitlen; u++) {
-                    int a = ARRAY_BASE + (ELEMENT_SIZE*u);
+                if ((ARRAY_BASE +
+                     ELEMENT_SIZE * ROWS(ais->type6.dac1fid32.tidals)) <
+                    bitlen) {
+                    bitlen = ARRAY_BASE +
+                             ELEMENT_SIZE * ROWS(ais->type6.dac1fid32.tidals);
+                }
+                for (u = 0; ARRAY_BASE + (ELEMENT_SIZE * u) <= bitlen; u++) {
+                    unsigned a = ARRAY_BASE + (ELEMENT_SIZE * u);
                     struct tidal_t *tp = &ais->type6.dac1fid32.tidals[u];
+
                     tp->lon       = SBITS(a + 0, 25);
                     tp->lat       = SBITS(a + 25, 24);
                     tp->from_hour = UBITS(a + 49, 5);
@@ -520,10 +539,14 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         // not strictly required - helps stability in testing
         (void)memset(ais->type8.bitdata, '\0', sizeof(ais->type8.bitdata));
         ais->type8.structured = false;
+        GPSD_LOG(LOG_PROG, errout, "AIVDM: type 8 dac %u fid %u bitlen %zu\n",
+                 ais->type8.dac, ais->type8.fid, bitlen);
         if (1 == ais->type8.dac) {
             switch (ais->type8.fid) {
             case 11:        // IMO236 - Meteorological/Hydrological data
                 // layout is almost identical to FID=31 from IMO289
+                // FIXME: we get length 352??
+                RANGE_CHECK(346, 352);
                 ais->type8.dac1fid11.lat        = SBITS(56, 24);
                 ais->type8.dac1fid11.lon        = SBITS(80, 25);
                 ais->type8.dac1fid11.day        = UBITS(105, 5);
