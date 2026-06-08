@@ -719,20 +719,12 @@ static ssize_t throttled_write(struct subscriber_t *sub, const char *buf,
 // notify all JSON-watching clients of a given device about an event
 static void notify_watchers(struct gps_device_t *device,
                             bool onjson, bool onpps,
-                            const char *sentence, ...)
+                            const char *buf, const size_t buf_sz)
 {
-    va_list ap;
-    char buf[BUFSIZ];
     struct subscriber_t *sub;
     int len;
 
-    va_start(ap, sentence);
-    len = vsnprintf(buf, sizeof(buf), sentence, ap);
-    va_end(ap);
-    if (1 > len) {
-        // uh, oh
-        return;
-    }
+    len = strnlen(buf, buf_sz);
 
     for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
         if (0 != sub->active &&
@@ -750,10 +742,13 @@ static void notify_watchers(struct gps_device_t *device,
 // deactivate device, but leave it in the pool (do not free it)
 static void deactivate_device(struct gps_device_t *device)
 {
-    notify_watchers(device, true, false,
-                    "{\"class\":\"DEVICE\",\"path\":\"%s\","
-                    "\"activated\":0}\r\n",
-                    device->gpsdata.dev.path);
+    char buf[BUFSIZ];
+
+    (void)snprintf(buf, sizeof(buf),
+                  "{\"class\":\"DEVICE\",\"path\":\"%s\",\"activated\":0}\r\n",
+                  device->gpsdata.dev.path);
+
+    notify_watchers(device, true, false, buf, sizeof(buf));
     if (!BAD_SOCKET(device->gpsdata.gps_fd)) {
         FD_CLR(device->gpsdata.gps_fd, &all_fds);
         adjust_max_fd(device->gpsdata.gps_fd, false);
@@ -878,6 +873,8 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
     // stash devicename away for probing when the first client connects
     for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
         if (!allocated_device(devp)) {
+            char buf[BUFSIZ];
+
             gpsd_init(devp, &context, device_name);
             devp->gpsdata.update_fd = device_update_fd;
             ntpshm_session_init(devp);
@@ -890,11 +887,13 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
                 devp->gpsdata.gps_fd = UNALLOCATED_FD;
                 ret = true;
             }
-            notify_watchers(devp, true, false,
-                            "{\"class\":\"DEVICE\",\"path\":\"%s\","
-                            "\"activated\":\"%s\"}\r\n",
-                            devp->gpsdata.dev.path,
-                            now_to_iso8601(tbuf, sizeof(tbuf)));
+
+            (void)snprintf(buf, sizeof(buf),
+                          "{\"class\":\"DEVICE\",\"path\":\"%s\","
+                          "\"activated\":\"%s\"}\r\n",
+                          devp->gpsdata.dev.path,
+                          now_to_iso8601(tbuf, sizeof(tbuf)));
+            notify_watchers(devp, true, false, buf, sizeof(buf));
             break;
         }
     }
@@ -1779,10 +1778,10 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                      "when expected\n",
                      device->gpsdata.dev.path);
         } else {
-            char id2[GPS_JSON_RESPONSE_MAX];
+            char buf[GPS_JSON_RESPONSE_MAX];
 
-            json_device_dump(device, id2, sizeof(id2));
-            notify_watchers(device, true, false, id2);
+            json_device_dump(device, buf, sizeof(buf));
+            notify_watchers(device, true, false, buf, sizeof(buf));
         }
     }
 
@@ -1884,6 +1883,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
         // only serial time passes this way, so precision -1
         // maybe should be better for ttyACM and such.
         int precision  = -1;
+        char buf[BUFSIZ];
 
         ntp_latch(device, &td);
 
@@ -1910,15 +1910,17 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
         // delay and allows the PPS samples to be sent at a higher rate
         // than the message-based samples sent here
 
-        notify_watchers(device, false, true,
-                        "{\"class\":\"TOFF\",\"device\":\"%s\",\"real_sec\":"
-                        "%lld, \"real_nsec\":%ld,\"clock_sec\":%lld,"
-                        "\"clock_nsec\":%ld,\"precision\":%d,"
-                        "\"shm\":\"NTP%d\"}\r\n",
-                        device->gpsdata.dev.path,
-                        (long long)td.real.tv_sec, td.real.tv_nsec,
-                        (long long)td.clock.tv_sec, td.clock.tv_nsec,
-                        precision, device->shm_clock_unit);
+
+        (void)snprintf(buf,  sizeof(buf),
+                      "{\"class\":\"TOFF\",\"device\":\"%s\",\"real_sec\":"
+                      "%lld, \"real_nsec\":%ld,\"clock_sec\":%lld,"
+                      "\"clock_nsec\":%ld,\"precision\":%d,"
+                      "\"shm\":\"NTP%d\"}\r\n",
+                      device->gpsdata.dev.path,
+                      (long long)td.real.tv_sec, td.real.tv_nsec,
+                      (long long)td.clock.tv_sec, td.clock.tv_nsec,
+                      precision, device->shm_clock_unit);
+        notify_watchers(device, false, true, buf, sizeof(buf));
     }
 
     /*
@@ -2105,7 +2107,7 @@ static void ship_pps_message(struct gps_device_t *session, int unit,
                     session->gpsdata.qErr);
     }
     (void)strlcat(buf, "}\r\n", sizeof(buf));
-    notify_watchers(session, true, true, buf);
+    notify_watchers(session, true, true, buf, sizeof(buf));
 
     /*
      * PPS receipt resets the device's timeout.  This keeps PPS-only
