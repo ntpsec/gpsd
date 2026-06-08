@@ -1083,13 +1083,20 @@ static gps_mask_t sky_msg_DD(struct gps_device_t *session,
 
     // buf[0] os the message ID
     // Issue of data 0 - 255
-    unsigned iod = (unsigned)getub(buf, 1);
+    unsigned iod = getub(buf, 1);
     // number of measurements
-    unsigned nmeas = (unsigned)getub(buf, 2);
+    unsigned nmeas = getub(buf, 2);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "Skytraq 0xDD: iod %u, nmeas %u len %zd\n",
              iod, nmeas, len);
+
+    if (SKY_CHANNELS < nmeas) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "Skytraq 0x0D: too many measurements %d\n",
+                 nmeas);
+        nmeas = SKY_CHANNELS;
+    }
 
     if (len < (3 + (nmeas * 23))) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -1228,6 +1235,9 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
     nsvs = (unsigned)getub(buf, 2);
     // too many sats?
     if (SKY_CHANNELS < nsvs) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                "Skytraq 0xDE: too many satellites %d\n",
+                 nsvs);
         return 0;
     }
 
@@ -1292,11 +1302,11 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
     }
 
     session->gpsdata.satellites_visible = st;
-    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+    if (SKY_CHANNELS < session->gpsdata.satellites_visible) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                 "Skytraq 0xDE: too many satellites %d\n",
                  session->gpsdata.satellites_visible);
-        session->gpsdata.satellites_visible = MAXCHANNELS;
+        session->gpsdata.satellites_visible = SKY_CHANNELS;
     }
     session->gpsdata.satellites_used = nsv;
 
