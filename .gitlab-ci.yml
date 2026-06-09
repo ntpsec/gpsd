@@ -208,7 +208,7 @@ coverity:
         python-is-python3 python3-setuptools qtbase5-dev scons'
   script:
       # Coverity down June 2026
-      exit 0
+    - exit 0
     - for v in
           COVERITY_SCAN_PROJECT_NAME
           COVERITY_SCAN_TOKEN
