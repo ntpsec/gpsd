@@ -52,8 +52,6 @@ that do document their estimates are inconsistent about what they mean.
   degrees and decimal minutes. The value 's' produces degrees, minutes,
   and decimal seconds.
 *-m*, *--magtrack*::
-  Display tracks as magnetic, not true.
-*-m*, *--magtrack*::
   Display your magnetic track (as opposed to your true track). This is a
   calculated value, not a measured value. Magnetic variation is always
   potentially subject to large errors, but is usually better than two
