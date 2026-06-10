@@ -357,9 +357,9 @@ static gps_mask_t greis_msg_DP(struct gps_device_t *session,
 static gps_mask_t greis_msg_SI(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
 
-    if (len < 1) {
+    if (1 > len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "GREIS: SI bad len %zu\n", len);
         return 0;
@@ -443,7 +443,7 @@ static gps_mask_t greis_msg_SI(struct gps_device_t *session,
 static gps_mask_t greis_msg_EL(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
 
     if (!session->driver.greis.seen_si) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -489,7 +489,7 @@ static gps_mask_t greis_msg_EL(struct gps_device_t *session,
 static gps_mask_t greis_msg_AZ(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
 
     if (!session->driver.greis.seen_si) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -538,7 +538,7 @@ static gps_mask_t greis_msg_AZ(struct gps_device_t *session,
 static gps_mask_t greis_msg_DC(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
     size_t len_needed = (session->gpsdata.satellites_visible * 4) + 1;
 
     if (!session->driver.greis.seen_si) {
@@ -584,7 +584,7 @@ static gps_mask_t greis_msg_DC(struct gps_device_t *session,
 static gps_mask_t greis_msg_EC(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
 
     if (!session->driver.greis.seen_si) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -622,7 +622,7 @@ static gps_mask_t greis_msg_EC(struct gps_device_t *session,
 static gps_mask_t greis_msg_P3(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
     size_t len_needed = (session->gpsdata.satellites_visible * 8) + 1;
 
     if (!session->driver.greis.seen_si) {
@@ -661,7 +661,7 @@ static gps_mask_t greis_msg_P3(struct gps_device_t *session,
 static gps_mask_t greis_msg_PC(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
     size_t len_needed = (session->gpsdata.satellites_visible * 8) + 1;
 
     if (!session->driver.greis.seen_si) {
@@ -701,7 +701,7 @@ static gps_mask_t greis_msg_PC(struct gps_device_t *session,
 static gps_mask_t greis_msg_R3(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
     size_t len_needed = (session->gpsdata.satellites_visible * 8) + 1;
 
     if (!session->driver.greis.seen_si) {
@@ -736,7 +736,7 @@ static gps_mask_t greis_msg_R3(struct gps_device_t *session,
 static gps_mask_t greis_msg_RC(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
     size_t len_needed = (session->gpsdata.satellites_visible * 8) + 1;
 
     if (!session->driver.greis.seen_si) {
@@ -771,7 +771,7 @@ static gps_mask_t greis_msg_RC(struct gps_device_t *session,
 static gps_mask_t greis_msg_SS(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
-    int i;
+    unsigned i;
     int used_count = 0;
 
     if (!session->driver.greis.seen_si) {

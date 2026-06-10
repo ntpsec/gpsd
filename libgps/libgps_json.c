@@ -226,7 +226,7 @@ static int json_noise_read(const char *buf, struct gps_data_t *gpsdata,
 static int json_raw_read(const char *buf, struct gps_data_t *gpsdata,
                          const char **endptr)
 {
-    int measurements;
+    unsigned measurements;
     // initialized to shut up clang
     double mtime_s = 0.0, mtime_ns = 0.0;
 

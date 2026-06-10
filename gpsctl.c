@@ -453,7 +453,7 @@ int main(int argc, char **argv)
     (void)signal(SIGQUIT, onsig);
 
     if (!lowlevel) {
-        int i, devcount;
+        unsigned i, devcount;
 
         // Try to open the stream to gpsd.
         int err = gps_open(NULL, NULL, &gpsdata);
@@ -696,7 +696,7 @@ int main(int argc, char **argv)
         const int speeds[] = {4800, 9600, 19200, 38400, 57600, 115200, 230400,
                               460800, 921600};
         static struct gps_device_t      session;        // zero this too
-        int i;
+        unsigned i;
 
         if (NULL == device ||
             NULL == forcetype) {
@@ -716,7 +716,7 @@ int main(int argc, char **argv)
         (void)gpsd_set_raw(&session);
         (void)session.device_type->speed_switcher(&session, 4800, 'N', 1);
         (void)tcdrain(session.gpsdata.gps_fd);
-        for(i = 0; i < (int)(sizeof(speeds) / sizeof(speeds[0])); i++) {
+        for(i = 0; i < ROWS(speeds); i++) {
             (void)gpsd_set_speed(&session, speeds[i], 'N', 1);
             (void)session.device_type->speed_switcher(&session, 4800, 'N', 1);
             (void)tcdrain(session.gpsdata.gps_fd);

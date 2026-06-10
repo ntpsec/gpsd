@@ -1510,18 +1510,18 @@ typedef uint64_t gps_mask_t;
 #define AIS_LATLON4_DIV 600000.0
 
 struct route_info {
-    unsigned int linkage;       // Message Linkage ID
-    unsigned int sender;        // Sender Class
-    unsigned int rtype;         // Route Type
-    unsigned int month;         // Start month
-    unsigned int day;           // Start day
-    unsigned int hour;          // Start hour
-    unsigned int minute;        // Start minute
-    unsigned int duration;      // Duration
-    int waycount;               // Waypoint count
+    unsigned linkage;           // Message Linkage ID
+    unsigned sender;            // Sender Class
+    unsigned rtype;             // Route Type
+    unsigned month;             // Start month
+    unsigned day;               // Start day
+    unsigned hour;              // Start hour
+    unsigned minute;            // Start minute
+    unsigned duration;          // Duration
+    unsigned waycount;          // Waypoint count
     struct waypoint_t {
-        signed int lon;         // Longitude
-        signed int lat;         // Latitude
+        int lon;                // Longitude
+        int lat;                // Latitude
     } waypoints[16];
 };
 
@@ -1841,9 +1841,9 @@ struct ais_t
                 // *** WORK IN PROGRESS ENDS HERE ***
                 // IMO289 - Dangerous Cargo Indication
                 struct {
-                    unsigned int unit;          // Unit of Quantity
-                    unsigned int amount;        // Amount of Cargo
-                    int ncargos;
+                    unsigned unit;          // Unit of Quantity
+                    unsigned amount;        // Amount of Cargo
+                    unsigned ncargos;
                     struct cargo_t {
                         unsigned int code;      // Cargo code
                         unsigned int subtype;   // Cargo subtype
@@ -1859,9 +1859,9 @@ struct ais_t
                 } dac1fid30;
                 // IMO289 & IMO236 - Tidal Window
                 struct {
-                    unsigned int month;         // Month
-                    unsigned int day;           // Day
-                    signed int ntidals;
+                    unsigned month;         // Month
+                    unsigned day;           // Day
+                    unsigned ntidals;
                     struct tidal_t {
                         signed int lon;         // Longitude
                         signed int lat;         // Latitude
@@ -1942,7 +1942,7 @@ struct ais_t
                 } dac200fid23;
                 struct {
                     char country[2+1];          // UN Country Code
-                    signed int ngauges;
+                    unsigned ngauges;
                     struct gauge_t {
                         unsigned int id;        // Gauge ID
 #define DAC200FID24_GAUGE_ID_UNKNOWN    0
@@ -2061,7 +2061,7 @@ struct ais_t
                 } dac1fid13;
                 // IMO236 - Extended ship and voyage data
                 struct {
-                    unsigned int airdraught;    // Air Draught
+                    unsigned airdraught;         // Air Draught
                 } dac1fid15;
                 // IMO286 - Number of Persons on board
                 struct {
@@ -2069,7 +2069,7 @@ struct ais_t
                 } dac1fid16;
                 // IMO289 - VTS-generated/Synthetic Targets
                 struct {
-                    signed int ntargets;
+                    unsigned ntargets;
                     struct target_t {
 #define DAC1FID17_IDTYPE_MMSI           0
 #define DAC1FID17_IDTYPE_IMO            1
@@ -2950,8 +2950,8 @@ struct gps_data_t {
     struct dop_t dop;
 
     // satellite status -- valid when satellites_visible > 0
-    timespec_t skyview_time;    // skyview time
-    int satellites_visible;     // # of satellites in view
+    timespec_t skyview_time;        // skyview time
+    unsigned satellites_visible;    // # of satellites in view
     struct satellite_t skyview[MAXCHANNELS];
 
     struct devconfig_t dev;     // device that shipped last update
@@ -2960,7 +2960,7 @@ struct gps_data_t {
 
     struct {
         timespec_t time;
-        int ndevices;
+        unsigned ndevices;
         struct devconfig_t list[MAXUSERDEVS];
     } devices;
 

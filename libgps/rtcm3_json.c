@@ -27,9 +27,10 @@ int json_rtcm3_read(const char *buf,
                     char *path, size_t pathlen, struct rtcm3_t *rtcm3,
                     const char **endptr)
 {
+    // why static??
     static char *stringptrs[NITEMS(rtcm3->rtcmtypes.data)];
     static char stringstore[sizeof(rtcm3->rtcmtypes.data) * 2];
-    static int stringcount;
+    static unsigned stringcount;
 
 // *INDENT-OFF*
 #define RTCM3_HEADER \
@@ -38,7 +39,8 @@ int json_rtcm3_read(const char *buf,
         {"device",         t_string,   .addr.string = path, .len = pathlen}, \
         {"length",         t_uinteger, .addr.uinteger = &rtcm3->length},
 
-    int status = 0, satcount = 0;
+    int status = 0;
+    unsigned satcount = 0;
 
 #define RTCM3FIELD(type, fld)   STRUCTOBJECT(struct rtcm3_ ## type ## _t, fld)
     const struct json_attr_t rtcm1001_satellite[] = {
@@ -239,31 +241,33 @@ int json_rtcm3_read(const char *buf,
 
     if (strstr(buf, "\"type\":1001,") != NULL) {
         status = json_read_object(buf, json_rtcm1001, endptr);
-        if (status == 0)
+        if (0 == status) {
             rtcm3->rtcmtypes.rtcm3_1001.header.satcount =
                 (unsigned short)satcount;
-    } else if (strstr(buf, "\"type\":1002,") != NULL) {
+        }
+    } else if (NULL != strstr(buf, "\"type\":1002,")) {
         status = json_read_object(buf, json_rtcm1002, endptr);
-        if (status == 0)
+        if (0 == status) {
             rtcm3->rtcmtypes.rtcm3_1002.header.satcount =
                (unsigned short)satcount;
-    } else if (strstr(buf, "\"type\":1007,") != NULL) {
+        }
+    } else if (NULL != strstr(buf, "\"type\":1007,")) {
         status = json_read_object(buf, json_rtcm1007, endptr);
-    } else if (strstr(buf, "\"type\":1008,") != NULL) {
+    } else if (NULL != strstr(buf, "\"type\":1008,")) {
         status = json_read_object(buf, json_rtcm1008, endptr);
-    } else if (strstr(buf, "\"type\":1009,") != NULL) {
+    } else if (NULL != strstr(buf, "\"type\":1009,")) {
         status = json_read_object(buf, json_rtcm1009, endptr);
-    } else if (strstr(buf, "\"type\":1010,") != NULL) {
+    } else if (NULL != strstr(buf, "\"type\":1010,")) {
         status = json_read_object(buf, json_rtcm1010, endptr);
-    } else if (strstr(buf, "\"type\":1014,") != NULL) {
+    } else if (NULL != strstr(buf, "\"type\":1014,")) {
         status = json_read_object(buf, json_rtcm1014, endptr);
-    } else if (strstr(buf, "\"type\":1033,") != NULL) {
+    } else if (NULL != strstr(buf, "\"type\":1033,")) {
         status = json_read_object(buf, json_rtcm1033, endptr);
-    } else if (strstr(buf, "\"type\":1230,") != NULL) {
+    } else if (NULL != strstr(buf, "\"type\":1230,")) {
         status = json_read_object(buf, json_rtcm1230, endptr);
     } else {
         // a type we don't decode yet, grabe just the header.
-        int n;
+        unsigned n;
         status = json_read_object(buf, json_rtcm3_fallback, endptr);
         for (n = 0; n < NITEMS(rtcm3->rtcmtypes.data); n++) {
             if (n >= stringcount) {
@@ -271,10 +275,10 @@ int json_rtcm3_read(const char *buf,
             } else {
                 unsigned int u;
                 int fldcount = sscanf(stringptrs[n], "0x%02x\n", &u);
-                if (fldcount != 1)
+                if (fldcount != 1) {
                     return JSON_ERR_MISC;
-                else
-                    rtcm3->rtcmtypes.data[n] = (char)u;
+                } // else
+                rtcm3->rtcmtypes.data[n] = (char)u;
             }
         }
     }

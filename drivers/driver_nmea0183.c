@@ -390,7 +390,7 @@ static int decode_hhmmss(struct tm *date, long *nsec, const char *hhmmss,
                          struct gps_device_t *session)
 {
     int old_hour = date->tm_hour;
-    int i;
+    unsigned i;
 
     if (NULL == hhmmss ||
         '\0' == hhmmss[0]) {
@@ -1057,7 +1057,7 @@ static gps_mask_t processDTM(unsigned count UNUSED, char *field[],
      *          IHO datum code
      * 9    = checksum
      */
-    int i;
+    unsigned i;
     static struct
     {
         char *code;
@@ -2352,8 +2352,7 @@ static gps_mask_t processGSV(unsigned count, char *field[],
         struct satellite_t *sp;
         int nmea_svid;
 
-        if (MAXCHANNELS < session->gpsdata.satellites_visible ||
-            0 > session->gpsdata.satellites_visible) {
+        if (MAXCHANNELS < session->gpsdata.satellites_visible) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "NMEA0183: %s: internal error - too many "
                      "satellites [%d]!\n",
@@ -3132,7 +3131,7 @@ static gps_mask_t processPASHR(unsigned count UNUSED, char *field[],
         return mask;
     } else if (0 == strcmp("SAT", field[1])) {  // Satellite Status
         struct satellite_t *sp;
-        int i;
+        unsigned i;
         session->gpsdata.satellites_visible = atoi(field[2]);
 
         if (((NMEA_MAX_FLD - 15) / 5) < session->gpsdata.satellites_visible) {

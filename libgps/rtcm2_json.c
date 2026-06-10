@@ -8,7 +8,7 @@ DESCRIPTION
 representations to libgps structures.
 
 PERMISSIONS
-   This file is Copyright 2010 by the GPSD project
+   This file is Copyright by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -31,9 +31,10 @@ int json_rtcm2_read(const char *buf,
                     const char **endptr)
 {
 
+    // Why are these static???
     static char *stringptrs[NITEMS(rtcm2->words)];
     static char stringstore[sizeof(rtcm2->words) * 2];
-    static int stringcount;
+    static unsigned stringcount;
 
 // *INDENT-OFF*
 #define RTCM2_HEADER \
@@ -48,7 +49,8 @@ int json_rtcm2_read(const char *buf,
         {"length",         t_uinteger, .addr.uinteger = &rtcm2->length}, \
         {"station_health", t_uinteger, .addr.uinteger = &rtcm2->stathlth},
 
-    int status = 0, satcount = 0;
+    int status = 0;
+    unsigned satcount = 0;
 
     const struct json_attr_t rtcm1_satellite[] = {
         {"ident",     t_uinteger, STRUCTOBJECT(struct gps_rangesat_t, ident)},
@@ -247,7 +249,7 @@ int json_rtcm2_read(const char *buf,
         if (status == 0)
             rtcm2->glonass_ranges.nentries = (unsigned)satcount;
     } else {
-        int n;
+        unsigned n;
         status = json_read_object(buf, json_rtcm2_fallback, endptr);
         for (n = 0; n < NITEMS(rtcm2->words); n++) {
             if (n >= stringcount) {
@@ -255,10 +257,10 @@ int json_rtcm2_read(const char *buf,
             } else {
                 unsigned int u;
                 int fldcount = sscanf(stringptrs[n], "0x%08x\n", &u);
-                if (fldcount != 1)
+                if (1 != fldcount) {
                     return JSON_ERR_MISC;
-                else
-                    rtcm2->words[n] = (isgps30bits_t) u;
+                }  // else
+                rtcm2->words[n] = (isgps30bits_t) u;
             }
         }
     }

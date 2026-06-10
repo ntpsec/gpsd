@@ -286,10 +286,10 @@ static void gpsd_transit_fix_dump(struct gps_device_t *session,
 static void gpsd_binary_satellite_dump(struct gps_device_t *session,
                                        char bufp[], size_t len)
 {
-    int i;                  // index into skyview[]
-    int j;                  // index into GPGSV
+    unsigned i;             // index into skyview[]
+    unsigned j;             // index into GPGSV
     char *bufp2 = bufp;
-    int satellites_visible = 0;
+    unsigned satellites_visible = 0;
     bufp[0] = '\0';
 
     if (MAXCHANNELS < session->gpsdata.satellites_visible) {
@@ -380,8 +380,8 @@ static void gpsd_binary_quality_dump(struct gps_device_t *session,
     bufp[0] = '\0';
 
     if (NULL != session->device_type) {
-        int i, j;
-        int max_channels = session->device_type->channels;
+        unsigned i, j;
+        unsigned max_channels = session->device_type->channels;
         int mode = session->gpsdata.fix.mode;
 
         // GPGSA commonly has exactly 12 channels, enforce that as a MAX

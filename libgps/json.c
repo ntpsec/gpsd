@@ -58,7 +58,7 @@ NOTE
 reusable module; search for "microjson".
 
 PERMISSIONS
-   This file is Copyright 2010 by the GPSD project
+   This file is Copyright by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -800,11 +800,13 @@ static int json_internal_read_object(const char *cp,
 int json_read_array(const char *cp, const struct json_array_t *arr,
                     const char **end)
 {
-    int substatus, offset, arrcount;
+    int substatus;
+    unsigned offset, arrcount;
     char *tp;
 
-    if (NULL != end)
+    if (NULL != end) {
         *end = NULL;    // give it a well-defined value on parse failure
+    }
 
     json_debug_trace(1, "json: %s", "Entered json_read_array()\n");
 

@@ -108,7 +108,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                        const unsigned char *bits, size_t bitlen,
                        struct ais_type24_queue_t *type24_queue)
 {
-    unsigned int u; int i;
+    unsigned int u;
 
     ais->type = UBITS(0, 6);
     ais->repeat = UBITS(6, 2);
@@ -328,10 +328,18 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             case 14:    // IMO236 - Tidal Window
+                // similar to fid 32.
+                RANGE_CHECK(87, 1008);
                 ais->type6.dac1fid32.month      = UBITS(88, 4);
                 ais->type6.dac1fid32.day        = UBITS(92, 5);
 #define ARRAY_BASE 97
 #define ELEMENT_SIZE 93
+                if ((ARRAY_BASE +
+                     ELEMENT_SIZE * ROWS(ais->type6.dac1fid32.tidals)) <
+                    bitlen) {
+                    bitlen = ARRAY_BASE +
+                             ELEMENT_SIZE * ROWS(ais->type6.dac1fid32.tidals);
+                }
                 for (u = 0; ARRAY_BASE + (ELEMENT_SIZE*u) <= bitlen; u++) {
                     int a = ARRAY_BASE + (ELEMENT_SIZE*u);
                     struct tidal_t *tp = &ais->type6.dac1fid32.tidals[u];
@@ -439,6 +447,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             case 28:    // IMO289 - Route info - addressed
+                RANGE_CHECK(149, 1008);
                 ais->type6.dac1fid28.linkage    = UBITS(88, 10);
                 ais->type6.dac1fid28.sender     = UBITS(98, 3);
                 ais->type6.dac1fid28.rtype      = UBITS(101, 5);
@@ -450,6 +459,12 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.dac1fid28.waycount   = UBITS(144, 5);
 #define ARRAY_BASE 149
 #define ELEMENT_SIZE 55
+                if ((ARRAY_BASE +
+                     ELEMENT_SIZE * ROWS(ais->type6.dac1fid28.waypoints)) <
+                    bitlen) {
+                    bitlen = ARRAY_BASE +
+                        ELEMENT_SIZE * ROWS(ais->type6.dac1fid28.waypoints);
+                }
                 for (u = 0;
                      u < (unsigned char)ais->type6.dac1fid28.waycount; u++) {
                     int a = ARRAY_BASE + (ELEMENT_SIZE*u);
@@ -468,6 +483,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             case 32:    // IMO289 - Tidal Window
+                // similar to fid 14.
                 RANGE_CHECK(97, 1008);
                 ais->type6.dac1fid32.month      = UBITS(88, 4);
                 ais->type6.dac1fid32.day        = UBITS(92, 5);
@@ -617,8 +633,15 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 }
                 break;
             case 17:        // IMO289 - VTS-generated/synthetic targets
+                RANGE_CHECK(56, 1008);
 #define ARRAY_BASE 56
 #define ELEMENT_SIZE 122
+                if ((ARRAY_BASE +
+                     ELEMENT_SIZE * ROWS(ais->type8.dac1fid17.targets)) <
+                    bitlen) {
+                    bitlen = ARRAY_BASE +
+                             ELEMENT_SIZE * ROWS(ais->type8.dac1fid17.targets);
+                }
                 for (u = 0; ARRAY_BASE + (ELEMENT_SIZE * u) <= bitlen; u++) {
                     struct target_t *tp = &ais->type8.dac1fid17.targets[u];
                     unsigned a = ARRAY_BASE + (ELEMENT_SIZE * u);
@@ -650,6 +673,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type8.structured = true;
                 break;
             case 19:        // IMO289 - Marine Traffic Signal
+                RANGE_CHECK(258, 1008);
                 ais->type8.dac1fid19.linkage    = UBITS(56, 10);
                 UCHARS(66, ais->type8.dac1fid19.station);
                 ais->type8.dac1fid19.lon        = SBITS(186, 25);
@@ -672,6 +696,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
             case 26:        // IMO289 - Environmental
                 break;
             case 27:        // IMO289 - Route information - broadcast
+                RANGE_CHECK(117, 1008);
                 ais->type8.dac1fid27.linkage    = UBITS(56, 10);
                 ais->type8.dac1fid27.sender     = UBITS(66, 3);
                 ais->type8.dac1fid27.rtype      = UBITS(69, 5);
@@ -683,10 +708,16 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type8.dac1fid27.waycount   = UBITS(112, 5);
 #define ARRAY_BASE 117
 #define ELEMENT_SIZE 55
-                for (i = 0; i < ais->type8.dac1fid27.waycount; i++) {
-                    int a = ARRAY_BASE + (ELEMENT_SIZE*i);
-                    ais->type8.dac1fid27.waypoints[i].lon = SBITS(a + 0, 28);
-                    ais->type8.dac1fid27.waypoints[i].lat = SBITS(a + 28, 27);
+                if ((ARRAY_BASE +
+                     ELEMENT_SIZE * ROWS(ais->type8.dac1fid27.waypoints)) <
+                    bitlen) {
+                    bitlen = ARRAY_BASE +
+                         ELEMENT_SIZE * ROWS(ais->type8.dac1fid27.waypoints);
+                }
+                for (u = 0; u < ais->type8.dac1fid27.waycount; u++) {
+                    int a = ARRAY_BASE + (ELEMENT_SIZE * u);
+                    ais->type8.dac1fid27.waypoints[u].lon = SBITS(a + 0, 28);
+                    ais->type8.dac1fid27.waypoints[u].lat = SBITS(a + 28, 27);
                 }
 #undef ARRAY_BASE
 #undef ELEMENT_SIZE
@@ -801,13 +832,13 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 UCHARS(56, ais->type8.dac200fid24.country);
 #define ARRAY_BASE 68
 #define ELEMENT_SIZE 25
-                for (i = 0; ARRAY_BASE + (ELEMENT_SIZE * i) < (int)bitlen;
-                     i++) {
-                    int a = ARRAY_BASE + (ELEMENT_SIZE * i);
-                    ais->type8.dac200fid24.gauges[i].id = UBITS(a + 0,  11);
-                    ais->type8.dac200fid24.gauges[i].level = SBITS(a + 11, 14);
+                for (u = 0; ARRAY_BASE + (ELEMENT_SIZE * u) < bitlen;
+                     u++) {
+                    int a = ARRAY_BASE + (ELEMENT_SIZE * u);
+                    ais->type8.dac200fid24.gauges[u].id = UBITS(a + 0,  11);
+                    ais->type8.dac200fid24.gauges[u].level = SBITS(a + 11, 14);
                 }
-                ais->type8.dac200fid24.ngauges = i;
+                ais->type8.dac200fid24.ngauges = u;
 #undef ARRAY_BASE
 #undef ELEMENT_SIZE
                 // skip 6 bits
@@ -1092,16 +1123,16 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
             //ais->type24.b.spare           = UBITS(162, 8);
 
             // search the 24A queue for a matching MMSI
-            for (i = 0; i < MAX_TYPE24_INTERLEAVE; i++) {
-                if (type24_queue->ships[i].mmsi == ais->mmsi) {
+            for (u = 0; u < MAX_TYPE24_INTERLEAVE; u++) {
+                if (type24_queue->ships[u].mmsi == ais->mmsi) {
                     (void)strlcpy(ais->type24.shipname,
-                                  type24_queue->ships[i].shipname,
+                                  type24_queue->ships[u].shipname,
                                   sizeof(ais->type24.shipname));
                     GPSD_LOG(LOG_PROG, errout,
                              "AIVDM 24B from %09u matches a 24A.\n",
                              ais->mmsi);
                     // prevent false match if a 24B is repeated
-                    type24_queue->ships[i].mmsi = 0;
+                    type24_queue->ships[u].mmsi = 0;
                     ais->type24.part = both;
                     return true;
                 }

@@ -586,7 +586,7 @@ void libgps_dump_state(struct gps_data_t *collect)
                       collect->dev.path, collect->dev.driver);
     }
     if (DEVICELIST_SET & collect->set) {
-        int i;
+        unsigned  i;
         (void)fprintf(debugfp, "DEVICELIST:%d devices:\n",
                       collect->devices.ndevices);
         for (i = 0; i < collect->devices.ndevices; i++) {

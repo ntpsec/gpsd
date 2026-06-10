@@ -88,7 +88,7 @@ struct json_array_t {
             struct timespec *store;
         } timespecs;
     } arr;
-    int *count, maxlen;
+    unsigned *count, maxlen;
 };
 
 struct json_attr_t {
@@ -182,8 +182,8 @@ char *json_quote(const char *, char *, size_t, size_t);
  * STRUCTOBJECT takes a structure name s, and a fieldname f in s.
  *
  * STRUCTARRAY takes the name of a structure array, a pointer to a an
- * initializer defining the subobject type, and the address of an integer to
- * store the length in.
+ * initializer defining the subobject type, and the address of an unsigned
+ * integer to store the length in.
  */
 #define STRUCTOBJECT(s, f)      .addr.offset = offsetof(s, f)
 #define STRUCTARRAY(a, e, n) \

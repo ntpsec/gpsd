@@ -7,7 +7,7 @@ DESCRIPTION
    This module uses the generic JSON parser to get data from AIS
 representations to libgps structures.
 
-This file is Copyright 2010 by the GPSD project
+This file is Copyright by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 ***************************************************************************/
 

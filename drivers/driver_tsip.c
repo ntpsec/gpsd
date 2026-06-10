@@ -2106,7 +2106,7 @@ static gps_mask_t decode_x5c(struct gps_device_t *session, const char *buf)
 {
     gps_mask_t mask = 0;
     timespec_t ts_tow;
-    int i;
+    unsigned i;
     // Useless without the pseudorange...
     int PRN = getub(buf, 0);                     // PRN 1-32
     // slot unused in Lassen IQ
@@ -2215,7 +2215,7 @@ static gps_mask_t decode_x5d(struct gps_device_t *session, const char *buf)
     timespec_t ts_tow;
     char buf2[BUFSIZ];
     unsigned char u1 = getub(buf, 0);           // PRN
-    int i = getub(buf, 1);                      // chan
+    unsigned i = getub(buf, 1);                 // chan
     unsigned u3 = getub(buf, 2);                // Acquisition flag
     unsigned u4 = getub(buf, 3);                // used?
     double f1 = getbef32(buf, 4);               // SNR
@@ -4609,7 +4609,7 @@ static gps_mask_t decode_xa2_00(struct gps_device_t *session, const char *buf)
         session->gpsdata.skyview[u1 - 1].used = true;
     }
 
-    if ((int)u1 >= session->gpsdata.satellites_visible) {
+    if (u1 >= session->gpsdata.satellites_visible) {
         /* Last of the series? Assume same number of sats as
          * last cycle.
          * This will cause extra SKY if this set has more

@@ -118,7 +118,7 @@ static bool show_more_dops = false;      // tall screen, show more DOPs
 static bool silent_flag = false;         // force raw JSON data off
 static bool magnetic_flag = false;       // use magnetic, not true, heading
 static int window_ysize = 0;             // rows in datawin
-static int display_sats = 0;             // number of rows of sats to display
+static unsigned display_sats = 0;        // number of rows of sats to display
 static bool imu_flag = false;
 static bool rtk_flag = false;
 
@@ -880,8 +880,8 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
     }
 
     if (0 != (SATELLITE_SET & gpsdata->set)) {
-        int sat_no;
-        int loop_end;
+        unsigned sat_no;
+        unsigned loop_end;
 
         if (MAXCHANNELS < gpsdata->satellites_visible) {
             gpsdata->satellites_visible = MAXCHANNELS;

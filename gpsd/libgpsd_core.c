@@ -875,15 +875,12 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
     double inv[4][4] = {{0}};
     double satpos[MAXCHANNELS][4] = {{0}};
     double xdop, ydop, hdop, vdop, pdop, tdop, gdop;
-    int i, j, k, n;
-    int max_skyview;
+    unsigned i, j, k, n;
+    unsigned max_skyview;
 
     // guard against malicisous fuzzers deep linking past initialization
     // https://issues.oss-fuzz.com/issues/480975802
-    if (0 > gpsdata->satellites_visible) {
-       max_skyview = 0;
-    } else if (ROWS(gpsdata->skyview) <
-               (unsigned long)gpsdata->satellites_visible) {
+    if (ROWS(gpsdata->skyview) < gpsdata->satellites_visible) {
        max_skyview = ROWS(gpsdata->skyview);
     } else {
        max_skyview =  gpsdata->satellites_visible;

@@ -1322,7 +1322,7 @@ static gps_mask_t hnd_129540(struct gps_device_t *session)
 {
     unsigned char *bu = session->lexer.outbuffer;
     size_t len  = session->lexer.outbuflen;
-    int    l1;
+    unsigned l1;
     size_t expected_len;
     unsigned range_mode = bu[1] & 0x03;
 

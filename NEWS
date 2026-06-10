@@ -8,6 +8,7 @@
    Erickson GRU 04 support added.
    Default Garmin Text driver off, deprecate it.
    Fix a lot of buffer over runs.
+   AI bug reprots from  Mehtab zafar, "Xchg Labs", OSSFUzz, etc.
 
 3.27.5: 14 Jan 2026
   Correctly bump API Version to 16.1

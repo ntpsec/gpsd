@@ -261,15 +261,16 @@ static gps_mask_t handle1002(struct gps_device_t *session)
 static gps_mask_t handle1003(struct gps_device_t *session)
 /* skyview report */
 {
-    int i, n;
+    unsigned i, n;
     gps_mask_t mask = 0;
 
     /* The Polaris (and probably the DAGR) emit some strange variant of
      * this message which causes gpsd to crash filtering on impossible
      * number of satellites avoids this */
-    n = (int)getzword(14);
-    if ((n < 0) || (n > 12))
+    n = getzword(14);
+    if (ZODIAC_CHANNELS < n) {
         return 0;
+    }
 
     gpsd_zero_satellites(&session->gpsdata);
 

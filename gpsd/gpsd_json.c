@@ -1414,7 +1414,7 @@ static void json_subframe_dump(struct gps_device_t *session, const bool scaled,
 void json_raw_dump(const struct gps_data_t *gpsdata,
                    char *reply, size_t replylen)
 {
-    int i;
+    unsigned i;
 
     if (0 == gpsdata->raw.mtime.tv_sec) {
         // no data to dump
@@ -2528,7 +2528,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     char buf2[JSON_VAL_MAX * 2 + 1];
     char buf3[JSON_VAL_MAX * 2 + 1];
     char scratchbuf[MAX_PACKET_LENGTH * 2 + 1];
-    int i;
+    unsigned i;
 
     // "Navigation Status" in Type 1/2/3
     static char *nav_legends[] = {
@@ -3316,7 +3316,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                             ",\"unit\":%u,\"amount\":%u,\"cargos\":[",
                             ais->type6.dac1fid25.unit,
                             ais->type6.dac1fid25.amount);
-                for (i = 0; i < (int)ais->type6.dac1fid25.ncargos; i++) {
+                for (i = 0; i < ais->type6.dac1fid25.ncargos; i++) {
                     str_appendf(buf, buflen,
                                 "{\"code\":%u,\"subtype\":%u},",
                                 ais->type6.dac1fid25.cargos[i].code,
