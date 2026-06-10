@@ -1231,8 +1231,8 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
                  "Skytraq 0xDE: bad len %zu\n", len);
         return 0;
     }
-    iod = (unsigned)getub(buf, 1);
-    nsvs = (unsigned)getub(buf, 2);
+    iod = getub(buf, 1);
+    nsvs = getub(buf, 2);
     // too many sats?
     if (SKY_CHANNELS < nsvs) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -1248,11 +1248,12 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
     }
     gpsd_zero_satellites(&session->gpsdata);
     for (i = st = nsv =  0; i < nsvs; i++) {
-        int off = 3 + (10 * i);  // offset into buffer of start of this sat
+        // offset into buffer of start of this sat
+        unsigned off = 3 + (10 * i);
         bool good;               // do we have a good record ?
-        unsigned short sv_stat;
-        unsigned short chan_stat;
-        unsigned short ura;
+        unsigned sv_stat;
+        unsigned chan_stat;
+        unsigned ura;
         short PRN;
         uint8_t gnssId = 0;
         uint8_t svId = 0;
@@ -1269,14 +1270,14 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
         session->gpsdata.skyview[st].svid = svId;
         session->gpsdata.skyview[st].PRN = PRN;
 
-        sv_stat = (unsigned short)getub(buf, off + 2);
-        ura = (unsigned short)getub(buf, off + 3);
+        sv_stat = getub(buf, off + 2);
+        ura = getub(buf, off + 3);
         session->gpsdata.skyview[st].ss = (double)getub(buf, off + 4);
         session->gpsdata.skyview[st].elevation =
             (double)getbes16(buf, off + 5);
         session->gpsdata.skyview[st].azimuth =
             (double)getbes16(buf, off + 7);
-        chan_stat = (unsigned short)getub(buf, off + 9);
+        chan_stat = getub(buf, off + 9);
 
         session->gpsdata.skyview[st].used = (bool)(chan_stat & 0x30);
         good = session->gpsdata.skyview[st].PRN != 0 &&
@@ -1294,10 +1295,10 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
                  good ? '*' : ' ');
 
         if (good) {
-            st += 1;
             if (session->gpsdata.skyview[st].used) {
                 nsv++;
             }
+            st += 1;
         }
     }
 
