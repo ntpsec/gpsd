@@ -3640,9 +3640,10 @@ static gps_mask_t ubx_msg_nav_sbas(struct gps_device_t *session,
         // length check, pacify coverity
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX: NAV-SBAS: bad length %zd", data_len);
+        return 0;
     }
     for (i = 0; i < cnt; i++) {
-        int off = 12 + (12 * i);
+        unsigned off = 12 + (12 * i);
         unsigned svID = getub(buf, off);
         unsigned flags = getub(buf, off + 1);
         // User Differential Range Error (udre)
