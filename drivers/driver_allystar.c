@@ -1282,11 +1282,11 @@ static gps_mask_t msg_nav_pvt(struct gps_device_t *session,
  *
  */
 static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
-                               unsigned char *buf, size_t payload_len UNUSED)
+                               unsigned char *buf, size_t payload_len)
 {
     // char buf2[80];
     unsigned i, nsv, st;
-    long long nchan;
+    uint32_t nchan;
     timespec_t ts_tow;
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
@@ -1302,7 +1302,13 @@ static gps_mask_t msg_nav_svinfo(struct gps_device_t *session,
         return 0;
     }
 
-    // FIXME: check payload_len
+    if ((nchan * 24 + 8) > payload_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ALLY: NAV SVINFO: runt payload %d channels\n",
+                 nchan);
+        return 0;
+    }
+
     gpsd_zero_satellites(&session->gpsdata);
     nsv = 0;
     for (i = st = 0; i < nchan; i++) {
