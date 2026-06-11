@@ -1991,11 +1991,9 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 
         // this is for passing through JSON packets
         if (0 != (changed & PASSTHROUGH_IS)) {
-            (void)strlcat((char *)device->lexer.outbuffer, "\r\n",
-                          sizeof(device->lexer.outbuffer));
-            (void)throttled_write(sub,
-                                  (char *)device->lexer.outbuffer,
-                                  device->lexer.outbuflen+2);
+            (void)throttled_write(sub, (char *)device->lexer.outbuffer,
+                                  device->lexer.outbuflen);
+            (void)throttled_write(sub, "\r\n", 2);
             continue;
         }
 
