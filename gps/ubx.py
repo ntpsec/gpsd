@@ -3472,6 +3472,7 @@ class ubx(object):
                         0x08: "SFCORE",
                         0x09: "RTCM",
                         0x0c: "CFB",
+                        0x0d: "NAVCOR",
                         0x11: "NAVSPG",
                         0x14: "NAVHPG",
                         0x17: "NAV2",
