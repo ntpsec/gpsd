@@ -754,7 +754,7 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     // get ms part
     gps_tow_sub_ms = msecs % 1000;
     // add in the ns
-    gps_tow_ns.tv_nsec = (gps_tow_sub_ms * 1000000L) + getbeu32(buf, 16);
+    gps_tow_ns.tv_nsec = (gps_tow_sub_ms * 1000000LL) + getbeu32(buf, 16);
     now = gpsd_gpstime_resolv(session, gps_week, gps_tow_ns);
     /* we'll not use this time, instead the unpacked date below,
      * to get the right epoch */
@@ -1393,7 +1393,7 @@ static gps_mask_t sirf_msg_tcxo(struct gps_device_t *session,
         clock_offset = getsb(buf, 9);   // looks like leapseconds?
         temp = getub(buf, 22);
         gps_tow_ns.tv_sec = gps_tow / 100;
-        gps_tow_ns.tv_nsec = (gps_tow % 100) * 10000000L;
+        gps_tow_ns.tv_nsec = (gps_tow % 100) * 10000000LL;
         session->newdata.time = gpsd_gpstime_resolv(session, gps_week,
                                                     gps_tow_ns);
 
@@ -1556,7 +1556,7 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
 
     hsec = getbeu32(buf, 3);
     ts_tow.tv_sec = hsec / 100;
-    ts_tow.tv_nsec = (long)((hsec % 100) * 10000000L);
+    ts_tow.tv_nsec = (long)((hsec % 100) * 10000000LL);
     session->gpsdata.skyview_time = gpsd_gpstime_resolv(session,
         (unsigned short)getbes16(buf, 1), ts_tow);
 
@@ -1762,7 +1762,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
     /* Gack.  The doc says early SiRF scales iTOW by 100, later ones
      * by 1000.  But that does not seem to be true in sirfstar V. */
     tow.tv_sec = iTOW / 100;
-    tow.tv_nsec = (iTOW % 100) * 10000000L;
+    tow.tv_nsec = (iTOW % 100) * 10000000LL;
     session->newdata.time = gpsd_gpstime_resolv(session, gps_week, tow);
 
     if (MODE_NO_FIX >= session->newdata.mode) {
@@ -2105,7 +2105,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
         unpacked_date.tm_sec = msec / 1000;
         session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
         // ms to ns
-        session->newdata.time.tv_nsec = (msec % 1000) * 1000000L;
+        session->newdata.time.tv_nsec = (msec % 1000) * 1000000LL;
         if (0 == (session->driver.sirf.time_seen & TIME_SEEN_UTC_2)) {
             GPSD_LOG(LOG_RAW, &session->context->errout,
                      "SiRF: EMND 0x62 NTPD just SEEN_UTC_2\n");
