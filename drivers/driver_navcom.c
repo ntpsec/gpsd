@@ -525,7 +525,7 @@ static gps_mask_t handle_0xb1(struct gps_device_t *session)
              session->gpsdata.dop.hdop,
              session->gpsdata.dop.vdop, session->gpsdata.dop.tdop,
              gps_maskdump(mask));
-    return mask;
+    return mask | CLEAR_IS | REPORT_IS;
 }
 
 // Packed Ephemeris Data
@@ -712,7 +712,7 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
     //session->gpsdata.dop.pdop = (int)pdop / 10.0;
 
     // Satellite count
-    session->gpsdata.satellites_visible = (int)sats_visible;
+    session->gpsdata.satellites_visible = sats_visible;
     if (MAXCHANNELS < session->gpsdata.satellites_visible) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                 "NAVCOM: too many satellites %d\n",
@@ -795,10 +795,11 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
             s = session->gpsdata.skyview[i].ss =
                 (p2_snr ? p2_snr : ca_snr) / 4.0;
             session->gpsdata.skyview[i++].used = (stat == 0xff);
-            if (stat == 0xff)
+            if (0xff == stat) {
                 nsu++;
+            }
         }
-        session->gpsdata.satellites_used = (int)nsu;
+        session->gpsdata.satellites_used = nsu;
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "Navcom: prn = %3u, ele = %02u, azm = %03u, snr = %d (%s), "
                  "dgps age = %.1fs, log ch = %d, hw ch = 0x%02x\n",
@@ -902,11 +903,12 @@ static gps_mask_t handle_0xb0(struct gps_device_t *session)
                  "sL1: %u, sL2: %u\n", ch_status, ch_status & 0x0f,
                  ((ch_status & 0xf0) >> 4) + 35, l1_slips, l2_slips);
         GPSD_LOG(LOG_SPIN, &session->context->errout,
-                 "Navcom: >>> C1: %14.3f, L1: %14.3f, L2: %14.3f, P1: %14.3f, P2: %14.3f\n",
+                 "Navcom: >>> C1: %14.3f L1: %14.3f L2: %14.3f "
+                 "P1: %14.3f P2: %14.3f\n",
                  c1, l1, l2, p1, p2);
     }
 #undef LAMBDA_L1
-    return 0;                   // Raw measurements not yet implemented in gpsd
+    return 0;               // FIXME: use raw measurements
 }
 
 // Pseudorange Noise Statistics
@@ -1140,7 +1142,9 @@ gps_mask_t navcom_parse(struct gps_device_t * session, unsigned char *buf,
                         size_t len)
 {
     unsigned char cmd_id;
-    unsigned int msg_len;
+    unsigned msg_len;
+    unsigned bad_len = 0;
+    gps_mask_t mask = 0;
 
     if (7 > len) {
         // min msg: STX, 0x99, 0x66, cmd_id, msg_len(2), ..., checksum
@@ -1152,7 +1156,7 @@ gps_mask_t navcom_parse(struct gps_device_t * session, unsigned char *buf,
 
     cmd_id = (unsigned char)getub(buf, 3);
     //payload = &buf[6];
-    msg_len = (unsigned)getleu16(buf, 4);
+    msg_len = getleu16(buf, 4);
 
     if (4 > msg_len ||
         (msg_len + 4) > len) {
@@ -1164,40 +1168,108 @@ gps_mask_t navcom_parse(struct gps_device_t * session, unsigned char *buf,
     }
 
     GPSD_LOG(LOG_RAW, &session->context->errout,
-             "Navcom: packet type x%02x msg_len %u\n", cmd_id, msg_len);
+             "Navcom: packet type x%02x msg_len %u len %zu\n",
+             cmd_id, msg_len, len);
 
     session->cycle_end_reliable = true;
 
     switch (cmd_id) {
     case 0x06:
-        return handle_0x06(session);
+        if (6 > msg_len) {
+            bad_len = 6;
+            break;
+        }
+        mask = handle_0x06(session);
+        break;
     case 0x15:
-        return handle_0x15(session);
-    case 0x81:
-        return handle_0x81(session);
+        if (6 > msg_len) {
+            // 6 + n * 2
+            bad_len = 6;
+            break;
+        }
+        mask = handle_0x15(session);
+        break;
+    case 0x81:    // Packed Ephemeris Data
+        if (86 > msg_len) {
+            bad_len = 86;
+            break;
+        }
+        mask = handle_0x81(session);
+        break;
     case 0x83:
-        return handle_0x83(session);
+        if (32 > msg_len) {
+            bad_len = 32;
+            break;
+        }
+        mask = handle_0x83(session);
+        break;
     case 0x86:
-        return handle_0x86(session);
+        if (18 > msg_len) {
+            // 18 + (14 * N)
+            bad_len = 18;
+            break;
+        }
+        mask = handle_0x86(session);
+        break;
     case 0xae:
-        return handle_0xae(session);
+        if (55 > msg_len ||
+            75 > msg_len) {
+            bad_len = 55;
+            break;
+        }
+        mask = handle_0xae(session);
+        break;
     case 0xb0:
-        return handle_0xb0(session);
+        if (12 > msg_len) {
+            // 4 + 8 + (16 * N)
+            bad_len = 12;
+            break;
+        }
+        mask = handle_0xb0(session);
+        break;
     case 0xb1:
-        return handle_0xb1(session) | (CLEAR_IS | REPORT_IS);
+        if (86 > msg_len) {
+            bad_len = 86;
+            break;
+        }
+        mask = handle_0xb1(session);
+        break;
     case 0xb5:
-        return handle_0xb5(session);
+        if (66 > msg_len) {
+            bad_len = 66;
+            break;
+        }
+        mask = handle_0xb5(session);
+        break;
     case 0xd3:
-        return handle_0xd3(session);
+        if (70 > msg_len) {
+            bad_len = 70;
+            break;
+        }
+        mask = handle_0xd3(session);
+        break;
     case 0xef:
-        return handle_0xef(session);
+        if (32 > msg_len) {
+            bad_len = 32;
+            break;
+        }
+        mask = handle_0xef(session);
+        break;
+    case 0x44:    // Packed Almanac Loading
+        FALLTHROUGH
     default:
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "Navcom: received packet type 0x%02x, msg_len %d - "
                  "unknown or unimplemented\n",
                  cmd_id, msg_len);
-        return 0;
+        break;
     }
+    if (bad_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Navcom: %u: runt payload len %u s/b %zd",
+                 cmd_id, bad_len, session->lexer.outbuflen);
+    }
+    return mask;
 }
 
 
