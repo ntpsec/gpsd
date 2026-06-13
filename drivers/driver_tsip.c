@@ -1286,7 +1286,7 @@ static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
 
 // decode Packet x13
 static gps_mask_t decode_x13(struct gps_device_t *session, const char *buf,
-                             int len)
+                             unsigned len)
 {
     gps_mask_t mask = 0;
     unsigned u1 = getub(buf, 0);         // Packet ID of non-parsable packet
@@ -1314,7 +1314,7 @@ static gps_mask_t decode_x13(struct gps_device_t *session, const char *buf,
 }
 // decode Superpacket x1c-81
 static gps_mask_t decode_x1c_81(struct gps_device_t *session, const char *buf,
-                                int len)
+                                unsigned len)
 {
     gps_mask_t mask = 0;
     char buf2[BUFSIZ];
@@ -1357,7 +1357,7 @@ static gps_mask_t decode_x1c_81(struct gps_device_t *session, const char *buf,
 
 // decode Superpacket x1c-83
 static gps_mask_t decode_x1c_83(struct gps_device_t *session, const char *buf,
-                                int len)
+                                unsigned len)
 {
     gps_mask_t mask = 0;
     char buf2[BUFSIZ];
@@ -1446,7 +1446,7 @@ static gps_mask_t decode_x1c_83(struct gps_device_t *session, const char *buf,
 
 // decode Superpackets x1c-XX
 static gps_mask_t decode_x1c(struct gps_device_t *session, const char *buf,
-                             int len, int *pbad_len)
+                             unsigned len, int *pbad_len)
 {
     gps_mask_t mask = 0;
     int bad_len = 0;
@@ -1713,18 +1713,18 @@ static gps_mask_t decode_x46(struct gps_device_t *session, const char *buf)
 
 // Decode x47
 static gps_mask_t decode_x47(struct gps_device_t *session, const char *buf,
-                             int len, int *pbad_len)
+                             unsigned len, int *pbad_len)
 {
     gps_mask_t mask = 0;
     char buf2[BUFSIZ];
-    int i;
+    unsigned i;
 
     // satellite count, RES SMT 360 doc says 12 max
-    int count = getub(buf, 0);
+    unsigned count = getub(buf, 0);
 
-    if (count < TSIP_CHANNELS) {
+    if (count > TSIP_CHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIP x47: Too many satellites %d\n", count);
+                 "TSIP x47: Too many satellites %u\n", count);
         return 0;
     }
 
@@ -2300,11 +2300,11 @@ static gps_mask_t decode_x5d(struct gps_device_t *session, const char *buf)
 
 // Decode x6c
 static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
-                             int len, int *pbad_len)
+                             unsigned len, int *pbad_len)
 {
     gps_mask_t mask = 0;
     char buf2[80];
-    int i, count;
+    unsigned i, count;
     unsigned fixdm = getub(buf, 0);          // fix dimension, mode
     double pdop = getbef32(buf, 1);
     double hdop = getbef32(buf, 5);
@@ -2428,14 +2428,14 @@ static gps_mask_t decode_x6c(struct gps_device_t *session, const char *buf,
 
 // decode All-in-view Satellite Selection, x6d
 static gps_mask_t decode_x6d(struct gps_device_t *session, const char *buf,
-                             int len, int *pbad_len)
+                             unsigned len, int *pbad_len)
 {
     gps_mask_t mask = 0;
-    int i;
+    unsigned i;
     char buf2[BUFSIZ];
 
     unsigned fix_dim = getub(buf, 0);     // nsvs/dimension
-    int count = (int)((fix_dim >> 4) & 0x0f);
+    unsigned count = (fix_dim >> 4) & 0x0f;
     double pdop = getbef32(buf, 1);
     double hdop = getbef32(buf, 5);
     double vdop = getbef32(buf, 9);
@@ -2700,7 +2700,7 @@ static gps_mask_t decode_x8f_15(struct gps_device_t *session, const char *buf)
 /* decode Last Fix with Extra Information, Superpacket x8f-20
  */
 static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf,
-                                const int length)
+                                const unsigned length)
 {
     gps_mask_t mask = 0;
     double d1, d2, d3, d4;
@@ -2708,7 +2708,7 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf,
     char buf2[80];
     char buf3[160];
     char ts_buf[TIMESPEC_LEN];
-    int i;
+    unsigned i;
 
     int s1 = getbes16(buf, 2);                // east velocity
     int s2 = getbes16(buf, 4);                // north velocity
@@ -2721,7 +2721,7 @@ static gps_mask_t decode_x8f_20(struct gps_device_t *session, const char *buf,
     unsigned u1 = getub(buf, 24);             // velocity scaling
     unsigned datum = getub(buf, 26);          // Datum + 1
     unsigned fflags = getub(buf, 27);         // fix flags
-    int numSV = getub(buf, 28);               // num svs
+    unsigned numSV = getub(buf, 28);          // num svs
     unsigned ls = getub(buf, 29);             // utc offset (leap seconds)
     unsigned week = getbeu16(buf, 30);        // tsip.gps_week
 
@@ -2994,7 +2994,7 @@ static gps_mask_t decode_x8f_a6(struct gps_device_t *session, const char *buf)
  *
  */
 static gps_mask_t decode_x8f_a7(struct gps_device_t *session, const char *buf,
-                                const int length)
+                                const unsigned length)
 {
     gps_mask_t mask = 0;
 
@@ -3344,7 +3344,7 @@ static gps_mask_t decode_x8f_ac(struct gps_device_t *session, const char *buf)
 
 // decode Superpackets x8f-XX
 static gps_mask_t decode_x8f(struct gps_device_t *session, const char *buf,
-                             int len, int *pbad_len, time_t now)
+                             unsigned len, int *pbad_len, time_t now)
 {
     gps_mask_t mask = 0;
     int bad_len = 0;
@@ -4083,7 +4083,7 @@ static gps_mask_t decode_x90_00(struct gps_device_t *session, const char *buf)
  * Received in response to TSIPv1 probe
  */
 static gps_mask_t decode_x90_01(struct gps_device_t *session, const char *buf,
-                                int len)
+                                unsigned len)
 {
     gps_mask_t mask = 0;
     char buf2[BUFSIZ];
@@ -4100,7 +4100,7 @@ static gps_mask_t decode_x90_01(struct gps_device_t *session, const char *buf,
     session->driver.tsip.hardware_code = u7;
     // check for valid module name length
     // RES720 is 27 long
-    if ((int)u8 > (len - 13)) {
+    if ((len - 13) < u8) {
         u8 = len - 13;
     }
     // check for valid module name length, again
@@ -4328,7 +4328,7 @@ static gps_mask_t decode_x93_00(struct gps_device_t *session, const char *buf)
 
 // Decode xa0-00
 static gps_mask_t decode_xa0_00(struct gps_device_t *session, const char *buf,
-                                int len)
+                                unsigned len)
 {
     gps_mask_t mask = 0;
     unsigned u1, u2, u3;
@@ -4896,7 +4896,7 @@ static gps_mask_t decode_xd0_01(struct gps_device_t *session, const char *buf)
 * return: mask
 */
 static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
-                                const char *buf, int len)
+                                const char *buf, unsigned len)
 {
     gps_mask_t mask = 0;
     unsigned sub_id, length, mode;
@@ -5167,9 +5167,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
  */
 static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 {
-    int i, len;
+    unsigned i, len;
     gps_mask_t mask = 0;
-    unsigned int id;
+    unsigned id;
     time_t now;
     char buf[sizeof(session->lexer.outbuffer)];
     char buf2[BUFSIZ];
@@ -5207,7 +5207,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
     memset(buf, 0, sizeof(buf));
     len = 0;
-    for (i = 2; i < (int)session->lexer.outbuflen; i++) {
+    for (i = 2; i < session->lexer.outbuflen; i++) {
         if (0x10 == session->lexer.outbuffer[i] &&
             0x03 == session->lexer.outbuffer[++i]) {
                 // DLE, STX.  end of packet, we know the length
