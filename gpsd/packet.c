@@ -379,7 +379,7 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
 {
     bool checksum_ok = true;
     const char *end;
-    unsigned int n, csum = 0;
+    unsigned n, csum = 0;
     char csum_s[3] = { '0', '0', '0' };
 
     /* These have no checksum:
@@ -410,6 +410,11 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
 
     if ('*' != *end) {
         // no asterisk found
+        return false;
+    }
+
+    if (end + 2 >= endp) {
+        // not enough room for the two-hex-digit checksum
         return false;
     }
 
@@ -2795,8 +2800,8 @@ void packet_parse(struct gps_lexer_t *lexer)
 
         case NMEA_RECOGNIZED:
             if (nmea_checksum(&lexer->errout,
-                               (const char *)lexer->inbuffer,
-                               (const char *)lexer->inbufptr)) {
+                              (const char *)lexer->inbuffer,
+                              (const char *)lexer->inbufptr)) {
                 packet_type = NMEA_PACKET;
 #ifdef STASH_ENABLE
                 unstash = true;
