@@ -3485,8 +3485,8 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
 {
     char buf2[80];
-    unsigned int i, nchan, ver;
-    int seen = 0, used_tot = 0;
+    unsigned i, nchan, ver;
+    unsigned seen = 0, used_tot = 0;
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
 
@@ -3501,19 +3501,26 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
     session->gpsdata.skyview_time =
         gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
 
-    ver = (unsigned int)getub(buf, 4);
+    ver = getub(buf, 4);
     if (1 != ver) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV-SAT unknown version %d", ver);
+                 "UBX: NAV-SAT unknown version %d\n", ver);
         return 0;
     }
-    nchan = (unsigned int)getub(buf, 5);
+    nchan = getub(buf, 5);
     if (nchan > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV-SAT: runt >%d reported visible",
-                 MAXCHANNELS);
+                 "UBX: NAV-SAT: too many channels %d\n",
+                 nchan);
         return 0;
     }
+    if ((8 + 12 * nchan) > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: NAV-SAT: runt payload %zd channels %u\n",
+                 data_len, nchan);
+        return 0;
+    }
+
 
 #ifdef __UNUSED__    // debug
     GPSD_LOG(LOG_SHOUT, &session->context->errout,
@@ -3522,7 +3529,7 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
     gpsd_zero_satellites(&session->gpsdata);
 
     for (i = 0; i < nchan; i++) {
-        unsigned int off = 8 + 12 * i;
+        unsigned off = 8 + 12 * i;
         short nmea_PRN = 0;
         uint8_t gnssId = getub(buf, off + 0);
         uint8_t svId = getub(buf, off + 1);
@@ -4152,8 +4159,14 @@ static gps_mask_t ubx_msg_nav_svinfo(struct gps_device_t *session,
     nchan = getub(buf, 4);
     if (nchan > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV SVINFO: runt >%d reported visible",
-                 MAXCHANNELS);
+                 "UBX: NAV SVINFO: too many channels %u\n",
+                 nchan);
+        return 0;
+    }
+    if ((8 + 12 * nchan) > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: NAV-SVINFO: runt payload %zd channels %u\n",
+                 data_len, nchan);
         return 0;
     }
     globalFlags = getub(buf, 5);
