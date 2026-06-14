@@ -3521,7 +3521,6 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
         return 0;
     }
 
-
 #ifdef __UNUSED__    // debug
     GPSD_LOG(LOG_SHOUT, &session->context->errout,
              "UBX: NAV-SAT: gpsd_zero_satellites()\n");
@@ -3727,6 +3726,13 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
                  nchan, MAXCHANNELS);
         return 0;
     }
+    if ((8 + 16 * nchan) > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: NAV-SIS: runt payload %zd channels %u\n",
+                 data_len, nchan);
+        return 0;
+    }
+
     // two "unused" bytes at buf[6:7]
 
     /* elevation and azimuth are in NAV-SAT, make a copy of any NAV-SAT
