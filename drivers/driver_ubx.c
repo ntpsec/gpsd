@@ -3728,7 +3728,7 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
     }
     if ((8 + 16 * nchan) > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: NAV-SIS: runt payload %zd channels %u\n",
+                 "UBX: NAV-SIG: runt payload %zd channels %u\n",
                  data_len, nchan);
         return 0;
     }
