@@ -202,7 +202,7 @@ size_t strlcat(char *dst, const char *src, size_t siz)
 {
     size_t slen = strlen(src);
     size_t dlen = strlen(dst);
-    if (0 != siz) {
+    if (0 != siz && dlen < siz) {
         if (dlen + slen < siz) {
             memcpy(dst + dlen, src, slen + 1);
         } else {
