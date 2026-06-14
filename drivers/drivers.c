@@ -1461,6 +1461,8 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
     }
 
     /* wacky 6-bit encoding, shades of FIELDATA
+     * See IEC 61162-1, Table 7.
+     * All 64 values that can fit in 6 bits are valid.
      * Max 256 data chars is a guess, to pacify Codacy
      * IEC61993.pdf implies 84.
      * Max bitlen is likely 1008, max see is 776 */
@@ -1477,7 +1479,7 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
 #endif  // __UNUSED_DEBUG__
         if (sizeof(ais_context->bits) <=
             (ais_context->bitlen + 6)) {
-            // FIXME?  Maybe move above the previsou for() ??
+            // FIXME?  Maybe move above the previous for() ??
             GPSD_LOG(LOG_INF, &session->context->errout,
                      "overlong AIVDM payload ignored.\n");
             (void)memset(ais_context->bits, '\0',
