@@ -183,46 +183,82 @@ static struct hextest_t hextests[] = {
 
 struct le16test_t
 {
-    const unsigned char buf[3];       // 4 bytes to decode
-    const int ress;                   // signed result
-    const unsigned resu;              // unsigned result
+    unsigned char buf[3];       // 4 bytes to decode
+    int ress;                   // le signed result
+    unsigned resu;              // le unsigned result
+    int be_ress;                // be signed result
+    unsigned be_resu;           // be unsigned result
 };
-static struct le16test_t le16tests[] = {
-    {"\x01\x02", 513, 513},
-    {"\x00\x80", -32768, 32768},
-    {"\x00\x40", 16384, 16384},
-    {"\xff\xff", -1, 65535},
+static const struct le16test_t le16tests[] = {
+    {"\x01\x02", 513, 513, 258, 258},
+    {"\x00\x40", 16384, 16384, 64, 64},
+    {"\x00\x80", -32768, 32768, 128, 128},
+    {"\x00\xff", -256, 65280, 255, 255},
+    {"\x40\x00", 64, 64, 16384, 16384},
+    {"\x80\x00", 128, 128, -32768, 32768},
+    {"\xff\x00", 255, 255, -256, 65280},
+    {"\xff\xff", -1, 65535, -1, 65535},
     {{0}, 0},
 };
 
 struct le32test_t
 {
-    const unsigned char buf[5];            // 4 bytes to decode
-    const long ress;                       // signed result
-    const unsigned long resu;              // unsigned result
+    unsigned char buf[5];            // 4 bytes to decode
+    long ress;                       // le signed result
+    unsigned long resu;              // le unsigned result
+    long be_ress;                    // be signed result
+    unsigned long be_resu;           // be unsigned result
 };
-static struct le32test_t le32tests[] = {
-    {"\x01\x02\x03\x84", -2080177663L, 2214789633UL},
-    {"\x00\x00\x00\x80", -2147483648L, 2147483648UL},
-    {"\x00\x00\x00\x40", 1073741824L, 1073741824UL},
-    {"\xff\xff\xff\xff", -1, 4294967295UL},
+static const struct le32test_t le32tests[] = {
+    {"\x01\x02\x03\x84", -2080177663L, 2214789633UL, 16909188L, 16909188UL},
+    {"\x00\x00\x00\x40", 1073741824L, 1073741824UL, 64, 64},
+    {"\x00\x00\x00\x80", -2147483648L, 2147483648UL, 128, 128},
+    {"\x00\x00\x80\x00", 8388608L, 8388608UL, 32768, 32768},
+    {"\x00\x80\x00\x00", 32768, 32768, 8388608, 8388608},
+    {"\x80\x00\x00\x00", 128, 128, -2147483648L, 2147483648UL},
+    {"\x84\x03\x02\x01", 16909188UL, 16909188L, -2080177663L, 2214789633UL},
+    {"\xff\xff\xff\xff", -1, 4294967295UL, -1, 4294967295UL},
     {{0}, 0},
 };
 
 struct le64test_t
 {
-    const unsigned char buf[9];            // 8 bytes to decode
-    const long long ress;                  // signed result
-    const unsigned long long resu;         // unsigned result
+    unsigned char buf[9];            // 8 bytes to decode
+    long long ress;                  // le signed result
+    unsigned long long resu;         // le unsigned result
+    long long be_ress;               // be signed result
+    unsigned long long be_resu;      // be unsigned result
 };
-static struct le64test_t le64tests[] = {
-    {"\x01\x02\x04\x08\x10\x20\x40\x80",
-     -9205322385119247871LL, 9241421688590303745ULL},
-    {"\x01\x00\x00\x00\x00\x00\x00\x80",
-     -9223372036854775807LL, 9223372036854775809ULL},
+static const struct le64test_t le64tests[] = {
     {"\x00\x00\x00\x00\x00\x00\x00\x40",
-      4611686018427387904LL, 4611686018427387904ULL},
-    {"\xff\xff\xff\xff\xff\xff\xff\xff", -1, 18446744073709551615ULL},
+      4611686018427387904LL, 4611686018427387904ULL, 64, 64},
+    {"\x01\x00\x00\x00\x00\x00\x00\x80",
+     -9223372036854775807LL, 9223372036854775809ULL,
+     72057594037928064LL, 72057594037928064ULL},
+    {"\x01\x00\x00\x00\x00\x00\x80\x00",
+     36028797018963969LL, 36028797018963969ULL,
+     72057594037960704LL, 72057594037960704ULL},
+    {"\x01\x00\x00\x00\x00\x80\x00\x00",
+     140737488355329LL, 140737488355329ULL,
+     72057594046316544LL, 72057594046316544ULL},
+    {"\x01\x00\x00\x00\x80\x00\x00\x00",
+     549755813889LL, 549755813889ULL,
+     72057596185411584LL, 72057596185411584ULL},
+    {"\x01\x00\x00\x80\x00\x00\x00\x00",
+     2147483649LL, 2147483649ULL,
+     72058143793741824LL, 72058143793741824ULL},
+    {"\x01\x00\x80\x00\x00\x00\x00\x00",
+     8388609LL, 8388609LL, 72198331526283264LL, 72198331526283264ULL},
+    {"\x01\x02\x04\x08\x10\x20\x40\x80",
+     -9205322385119247871LL, 9241421688590303745ULL,
+     72624976668147840LL, 72624976668147840ULL},
+    {"\x01\x80\x00\x00\x00\x00\x00\x00",
+     32769, 32769, 108086391056891904LL, 108086391056891904ULL},
+    {"\x08\x00\x00\x00\x00\x00\x00\x01",
+     72057594037927944LL, 72057594037927944ULL,
+     576460752303423489LL, 576460752303423489ULL},
+    {"\xff\xff\xff\xff\xff\xff\xff\xff", -1, 18446744073709551615ULL,
+     -1, 18446744073709551615ULL},
     {{0}, 0, 0},
 };
 
@@ -257,9 +293,9 @@ int main(int argc, char *argv[])
     struct bitmask *bitm = bitmask_tests;
     struct uint2int *uint2 = uint2_tests;
     struct hextest_t *hextest = hextests;
-    struct le16test_t *le16test = le16tests;
-    struct le32test_t *le32test = le32tests;
-    struct le64test_t *le64test = le64tests;
+    const struct le16test_t *le16test = le16tests;
+    const struct le32test_t *le32test = le32tests;
+    const struct le64test_t *le64test = le64tests;
     char hexbuf[BUFSIZ];
 
     if (!quiet) {
@@ -436,69 +472,130 @@ int main(int argc, char *argv[])
         uint2++;
     }
 
-    // getles16(), getleu16() tests
+    // getles16(), getleu16(), getbes16(), getbeu16() tests
     while (0 != le16test->ress) {
-        if (le16test->ress != getles16(le16test->buf, 0)) {
+        unsigned resu;
+        int ress;
+
+        ress = getles16(le16test->buf, 0);
+        if (le16test->ress != ress) {
             failures++;
             printf("getles16(x%02x%02x, 0) FAILED: %d s/b %d\n",
-                   le16test->buf[0], le16test->buf[1],
-		   getles16(le16test->buf, 0),
+                   le16test->buf[0], le16test->buf[1], ress,
 		   le16test->ress);
         }
-        if (le16test->resu != getleu16(le16test->buf, 0)) {
+        resu = getleu16(le16test->buf, 0);
+        if (le16test->resu != resu) {
             failures++;
             printf("getleu16(x%02x%02x, 0) FAILED: %u s/b %u\n",
-                   le16test->buf[0], le16test->buf[1],
-		   getleu16(le16test->buf, 0),
+                   le16test->buf[0], le16test->buf[1], resu,
 		   le16test->resu);
+        }
+        ress = getbes16(le16test->buf, 0);
+        if (le16test->be_ress != ress) {
+            failures++;
+            printf("getles16(x%02x%02x, 0) FAILED: %d s/b %d\n",
+                   le16test->buf[0], le16test->buf[1], ress,
+		   le16test->be_ress);
+        }
+        resu = getbeu16(le16test->buf, 0);
+        if (le16test->be_resu != resu) {
+            failures++;
+            printf("getleu16(x%02x%02x, 0) FAILED: %u s/b %u\n",
+                   le16test->buf[0], le16test->buf[1], resu,
+		   le16test->be_resu);
         }
         le16test++;
     }
 
-    // getles32(), getleu32() tests
+    // getles32(), getleu32(), getbes32(), getbeu32() tests
     while (0 != le32test->ress) {
-        if (le32test->ress != getles32(le32test->buf, 0)) {
+        long ress;
+        unsigned long resu;
+
+        ress = getles32(le32test->buf, 0);
+        if (le32test->ress != ress) {
             failures++;
             printf("getles32(x%02x%02x%02x%02x, 0) FAILED: %ld s/b %ld\n",
                    le32test->buf[0], le32test->buf[1],
                    le32test->buf[2], le32test->buf[3],
-		   getles32(le32test->buf, 0),
-		   le32test->ress);
+		   ress, le32test->ress);
         }
-        if (le32test->resu != getleu32(le32test->buf, 0)) {
+        resu = getleu32(le32test->buf, 0);
+        if (le32test->resu != resu) {
             failures++;
             printf("getleu32(x%02x%02x%02x%02x, 0) FAILED: %lu s/b %lu\n",
                    le32test->buf[0], le32test->buf[1],
                    le32test->buf[2], le32test->buf[3],
-		   getleu32(le32test->buf, 0),
-		   le32test->resu);
+		   resu, le32test->resu);
+        }
+        ress = getbes32(le32test->buf, 0);
+        if (le32test->be_ress != ress) {
+            failures++;
+            printf("getbes32(x%02x%02x%02x%02x, 0) FAILED: %ld s/b %ld\n",
+                   le32test->buf[0], le32test->buf[1],
+                   le32test->buf[2], le32test->buf[3],
+		   ress, le32test->be_ress);
+        }
+        resu = getbeu32(le32test->buf, 0);
+        if (le32test->be_resu != resu) {
+            failures++;
+            printf("getbeu32(x%02x%02x%02x%02x, 0) FAILED: %lu s/b %lu\n",
+                   le32test->buf[0], le32test->buf[1],
+                   le32test->buf[2], le32test->buf[3],
+		   resu, le32test->be_resu);
         }
         le32test++;
     }
 
     // getles64(), getleu64() tests
     while (0 != le64test->ress) {
-        if (le64test->ress != getles64(le64test->buf, 0)) {
+        int64_t ress;
+        uint64_t resu;
+
+        ress = getles64(le64test->buf, 0);
+        if (le64test->ress != ress) {
             failures++;
             printf("getles64(x%02x%02x%02x%02x%02x%02x%02x%02x, 0) "
                    "FAILED: %lld s/b %lld\n",
                    le64test->buf[0], le64test->buf[1],
                    le64test->buf[2], le64test->buf[3],
                    le64test->buf[4], le64test->buf[5],
-                   le64test->buf[8], le64test->buf[7],
-		   getles64(le64test->buf, 0),
-		   le64test->ress);
+                   le64test->buf[6], le64test->buf[7],
+		   ress, le64test->ress);
         }
-        if (le64test->resu != getleu64(le64test->buf, 0)) {
+        resu = getleu64(le64test->buf, 0);
+        if (le64test->resu != resu) {
             failures++;
             printf("getleu64(x%02x%02x%02x%02x%02x%02x%02x%02x, 0) "
                    "FAILED: %llu s/b %llu\n",
                    le64test->buf[0], le64test->buf[1],
                    le64test->buf[2], le64test->buf[3],
                    le64test->buf[4], le64test->buf[5],
-                   le64test->buf[8], le64test->buf[7],
-		   getleu64(le64test->buf, 0),
-		   le64test->resu);
+                   le64test->buf[6], le64test->buf[7],
+		   resu, le64test->resu);
+        }
+        ress = getbes64(le64test->buf, 0);
+        if (le64test->be_ress != ress) {
+            failures++;
+            printf("getbes64(x%02x%02x%02x%02x%02x%02x%02x%02x, 0) "
+                   "FAILED: %lld s/b %lld\n",
+                   le64test->buf[0], le64test->buf[1],
+                   le64test->buf[2], le64test->buf[3],
+                   le64test->buf[4], le64test->buf[5],
+                   le64test->buf[6], le64test->buf[7],
+		   ress, le64test->be_ress);
+        }
+        resu = getbeu64(le64test->buf, 0);
+        if (le64test->be_resu != resu) {
+            failures++;
+            printf("getbeu64(x%02x%02x%02x%02x%02x%02x%02x%02x, 0) "
+                   "FAILED: %llu s/b %llu\n",
+                   le64test->buf[0], le64test->buf[1],
+                   le64test->buf[2], le64test->buf[3],
+                   le64test->buf[4], le64test->buf[5],
+                   le64test->buf[6], le64test->buf[7],
+		   resu, le64test->be_resu);
         }
         le64test++;
     }
