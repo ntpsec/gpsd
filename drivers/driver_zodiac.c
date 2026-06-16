@@ -22,13 +22,6 @@
 #include "../include/bits.h"
 #include "../include/strfuncs.h"
 
-// Zodiac protocol description uses 1-origin indexing by little-endian word
-#define get16z(buf, n)   ((buf[2*(n)-2]) | (buf[2*(n)-1] << 8))
-#define getu16z(buf, n)  (uint16_t)((buf[2*(n)-2]) | (buf[2*(n)-1] << 8))
-#define get32z(buf, n)   ((buf[2*(n)-2]) | (buf[2*(n)-1] << 8) | \
-                          (buf[2*(n)+0] << 16) | (buf[2*(n)+1] << 24))
-#define getu32z(buf, n)  (uint32_t)((buf[2*(n)-2]) | (buf[2*(n)-1] << 8) | \
-                                    (buf[2*(n)+0] << 16) | (buf[2*(n)+1] << 24))
 #define getstringz(to, from, s, e)                      \
     (void)memcpy(to, from+2*(s)-2, 2*((e)-(s)+1))
 
@@ -134,10 +127,12 @@ static ssize_t zodiac_send_rtcm(struct gps_device_t *session,
     return 1;
 }
 
-#define getzword(n)     get16z(session->lexer.outbuffer, n)
-#define getzu16(n)      getu16z(session->lexer.outbuffer, n)
-#define getzlong(n)     get32z(session->lexer.outbuffer, n)
-#define getzu32(n)      getu32z(session->lexer.outbuffer, n)
+// Zodiac protocol description uses 1-origin indexing by little-endian word
+// Why call get*() macros?  Because they are well tested.
+#define getzword(n)      (getles16(session->lexer.outbuffer, 2 * (n) - 2))
+#define getzu16(n)       (getleu16(session->lexer.outbuffer, 2 * (n) - 2))
+#define getzlong(n)      (getles32(session->lexer.outbuffer, 2 * (n) - 2))
+#define getzu32(n)       (getleu32(session->lexer.outbuffer, 2 * (n) - 2))
 
 // time-position-velocity report
 static gps_mask_t handle1000(struct gps_device_t *session)
@@ -349,7 +344,6 @@ static gps_mask_t handle1011(struct gps_device_t *session)
              session->subtype);
     return DEVICEID_SET;
 }
-
 
 // leap-second correction report
 static gps_mask_t handle1108(struct gps_device_t *session)
