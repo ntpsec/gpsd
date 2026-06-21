@@ -2,53 +2,119 @@
 # Give this a commit-ID specification.  It will edit the associated comment.
 # Usual caveats apply; the edited one and all commits after will change IDs,
 # and pushing them to a repo with the old commits will wreak havoc.
-# Note also that this cavalierly overwrites refs/original.
+# Requires git-filter-repo.
 #
-# This script by Eric S. Raymond, March 2010, all rites perverted. It's based 
 # on an idea by thiago from #git, but debugged and with a safety check.
 # It contains porcelain and porcelain byproducts.
+#
+# SPDX-FileCopyrightText: (C) Eric S. Raymond <esr@thyrsus.com>
+# SPDX-License-Identifier: BSD-2-Clause
 
-topdir=`git rev-parse --show-cdup`
-test -n "$topdir" && cd "$topdir"
 
-my_commit=`git rev-parse $1` || exit $?
+if test -n "${GIT_EXEC_PATH-}" && ! test -d "$GIT_EXEC_PATH"
+then
+    unset GIT_EXEC_PATH
+fi
+
+if test $# -ne 1
+then
+    echo "usage: editcomment <commit>" >&2
+    exit 2
+fi
+
+topdir=$(git rev-parse --show-toplevel) || exit $?
+cd "$topdir" || exit $?
+
+if ! git filter-repo -h >/dev/null 2>&1
+then
+    echo "editcomment: git-filter-repo is required." >&2
+    exit 1
+fi
+
+my_commit=$(git rev-parse --verify "$1^{commit}") || exit $?
+
+if ! git merge-base --is-ancestor "$my_commit" HEAD
+then
+    echo "editcomment: $1 is not an ancestor of HEAD." >&2
+    exit 1
+fi
 
 # Run a safety check before edits that could hose remotes.
-if test -n "`git branch -r --contains $mycommit`"
+if test -n "$(git branch -r --contains "$my_commit")"
 then
-    echo -n "Commit has been pushed.  Really edit? "
-    read yn
+    printf '%s' "Commit has been pushed.  Really edit? "
+    read -r yn
     if test "$yn" != 'y'
     then
 	exit 0
     fi
 fi
 
-my_file=COMMIT_EDITMSG
-test -d .git && myfile=.git/COMMIT_EDITMSG
+my_file=$(git rev-parse --git-path COMMIT_EDITMSG) || exit $?
+orig_file=$(mktemp) || exit $?
+tag_file=
+trap 'rm -f "$orig_file" "$tag_file"' EXIT HUP INT TERM
 
-# This effort to invoke the user's normal editor fails.
-# the problem is that anything the editor writes to stdout on the
-# controlling terminal becomes part of the commit message.  So
-# the editor needs to actually run inside another window.
-#test -z "$GIT_EDITOR" && GIT_EDITOR=$EDITOR
-#test -z "$GIT_EDITOR" && GIT_EDITOR=vi
-#my_editor=$GIT_EDITOR
+git log -1 --format=%B "$my_commit" >"$my_file" || exit $?
+cp "$my_file" "$orig_file" || exit $?
 
-# xterm -e vi should also work.
-my_editor=emacsclient
+test -z "$GIT_EDITOR" && GIT_EDITOR=$EDITOR
+test -z "$GIT_EDITOR" && GIT_EDITOR=emacsclient
+my_editor=$GIT_EDITOR
 
-export my_file my_commit my_editor
+$my_editor "$my_file" >/dev/null || exit $?
 
-FILTER_BRANCH_SQUELCH_WARNING=1
-export FILTER_BRANCH_SQUELCH_WARNING
-exec git filter-branch -f --tag-name-filter cat --msg-filter '
-if test "$GIT_COMMIT" = "$my_commit"; then
-    cat > $my_file;
-    $my_editor $my_file >/dev/null;
-    cat $my_file
+if cmp -s "$orig_file" "$my_file"
+then
+    echo "editcomment: commit message unchanged." >&2
+    exit 0
+fi
+
+rm -f "$orig_file"
+orig_file=
+
+if git rev-parse --verify "$my_commit^" >/dev/null 2>&1
+then
+    rewrite_base="$my_commit^"
+    rewrite_refs="$my_commit^..HEAD"
 else
-    cat
-fi' "$1~.."
+    rewrite_base=
+    rewrite_refs=HEAD
+fi
+
+tag_file=$(mktemp) || exit $?
+git for-each-ref --format='%(refname)' refs/tags >"$tag_file" || exit $?
+
+set -- "$rewrite_refs"
+while IFS= read -r tag_ref
+do
+    peeled=$(git rev-parse --verify "$tag_ref^{}" 2>/dev/null) || continue
+    git cat-file -e "$peeled^{commit}" 2>/dev/null || continue
+    git merge-base --is-ancestor "$peeled" HEAD || continue
+    if test -n "$rewrite_base" && git merge-base --is-ancestor "$peeled" "$rewrite_base"
+    then
+        continue
+    fi
+    set -- "$@" "$tag_ref"
+done <"$tag_file"
+
+rm -f "$tag_file"
+tag_file=
+trap - EXIT HUP INT TERM
+
+EDITCOMMENT_COMMIT=$my_commit
+EDITCOMMENT_MESSAGE_FILE=$my_file
+export EDITCOMMENT_COMMIT EDITCOMMENT_MESSAGE_FILE
+
+exec git filter-repo --force \
+    --refs "$@" \
+    --preserve-commit-hashes \
+    --preserve-commit-encoding \
+    --commit-callback '
+import os
+if commit.original_id == os.environ["EDITCOMMENT_COMMIT"].encode("ascii"):
+    with open(os.environ["EDITCOMMENT_MESSAGE_FILE"], "rb") as source:
+        commit.message = source.read()
+'
 
 # End

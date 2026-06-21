@@ -52,7 +52,7 @@ suitable for testing a matrix-inversion algorithm.
 Give this a commit-ID specification.  It will edit the associated comment.
 Usual caveats apply; the edited one and all commits after will change IDs,
 and pushing them to a repo with the old commits will wreak havoc.
-Note also that this cavalierly overwrites refs/original.
+Requires git-filter-repo.
 
 == fakeserver
 
