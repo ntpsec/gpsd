@@ -4631,10 +4631,10 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
     double rcvTow;
     uint16_t week;
     int8_t leapS;
-    uint8_t numMeas;
+    unsigned numMeas;
     uint8_t recStat;
     uint8_t version;
-    int i;
+    unsigned i;
     const char * obs_code;
     timespec_t ts_tow;
 
@@ -4679,6 +4679,13 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
                  numMeas);
         return 0;
     }
+    if ((16 + 32 * numMeas) > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: RXM-RAWX: runt payload %zu numMeas %u\n",
+                 data_len, numMeas);
+        return 0;
+    }
+
     for (i = 0; i < numMeas; i++) {
         int off = 32 * i;
         // pseudorange in meters
