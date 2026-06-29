@@ -165,7 +165,7 @@ static const char *json_str3 = "[\"foo\",\"bar\",\"baz\"]";
 
 static char *stringptrs[3];
 static char stringstore[256];
-static int stringcount;
+static unsigned stringcount;
 
 static const struct json_array_t json_array_3 = {
     .element_type = t_string,
@@ -246,7 +246,7 @@ struct dumbstruct_t {
     int count;
 };
 static struct dumbstruct_t dumbstruck[5];
-static int dumbcount;
+static unsigned dumbcount;
 
 static const struct json_attr_t json_attrs_6_subtype[] = {
     {"name",  t_string,  .addr.offset = offsetof(struct dumbstruct_t, name),
@@ -403,20 +403,21 @@ static const struct json_attr_t json_attrs_20[] = {
 // Case 21: Read array of integers
 
 static const char *json_strInt = "[23,-17,5]";
-static int intstore[4], intcount;
+static int intstore[4];
+static unsigned  intcount;
 
 static const struct json_array_t json_array_Int = {
     .element_type = t_integer,
     .arr.integers.store = intstore,
     .count = &intcount,
-    .maxlen = sizeof(intstore)/sizeof(intstore[0]),
+    .maxlen = ROWS(intstore),
 };
 
 // Case 22: Read array of booleans
 
 static const char *json_strBool = "[true,false,true]";
 static bool boolstore[4];
-static int boolcount;
+static unsigned boolcount;
 
 static const struct json_array_t json_array_Bool = {
     .element_type = t_boolean,
@@ -429,7 +430,7 @@ static const struct json_array_t json_array_Bool = {
 
 static const char *json_strReal = "[23.1,-17.2,5.3]";
 static double realstore[4];
-static int realcount;
+static unsigned realcount;
 
 static const struct json_array_t json_array_Real = {
     .element_type = t_real,
