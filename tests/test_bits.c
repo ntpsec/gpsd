@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
                    le64test->buf[2], le64test->buf[3],
                    le64test->buf[4], le64test->buf[5],
                    le64test->buf[6], le64test->buf[7],
-		   ress, le64test->ress);
+		   (long long)ress, le64test->ress);
         }
         resu = getleu64(le64test->buf, 0);
         if (le64test->resu != resu) {
@@ -573,7 +573,7 @@ int main(int argc, char *argv[])
                    le64test->buf[2], le64test->buf[3],
                    le64test->buf[4], le64test->buf[5],
                    le64test->buf[6], le64test->buf[7],
-		   resu, le64test->resu);
+		   (unsigned long long)resu, le64test->resu);
         }
         ress = getbes64(le64test->buf, 0);
         if (le64test->be_ress != ress) {
@@ -584,7 +584,7 @@ int main(int argc, char *argv[])
                    le64test->buf[2], le64test->buf[3],
                    le64test->buf[4], le64test->buf[5],
                    le64test->buf[6], le64test->buf[7],
-		   ress, le64test->be_ress);
+		   (long long)ress, le64test->be_ress);
         }
         resu = getbeu64(le64test->buf, 0);
         if (le64test->be_resu != resu) {
@@ -595,7 +595,7 @@ int main(int argc, char *argv[])
                    le64test->buf[2], le64test->buf[3],
                    le64test->buf[4], le64test->buf[5],
                    le64test->buf[6], le64test->buf[7],
-		   resu, le64test->be_resu);
+		   (unsigned long long)resu, le64test->be_resu);
         }
         le64test++;
     }
