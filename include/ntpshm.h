@@ -1,5 +1,5 @@
 /*
- * This file is Copyright 2015 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -39,23 +39,11 @@ struct shmTime
                  *       clear valid
                  */
     volatile int count;
-#if defined(_TIME_BITS) && 64 == _TIME_BITS
-    /* libc default time_t is 32-bits, but we are using 64-bits.
-     * glibc 2.34 and later.
-     * Lower 31 bits, no sign bit, are here. */
-    unsigned clockTimeStampSec;
-#else
+    // time_t may be 32 or 64-bit, depending
     time_t clockTimeStampSec;
-#endif
     int clockTimeStampUSec;
-#if defined(_TIME_BITS) && 64 == _TIME_BITS
-    /* libc default time_t is 32-bits, but we are using 64-bits.
-     * glibc 2.34 and later.
-     * Lower 31 bits, no sign bit, are here. */
-    unsigned receiveTimeStampSec;
-#else
+    // time_t may be 32 or 64-bit, depending
     time_t receiveTimeStampSec;
-#endif
     int receiveTimeStampUSec;
     int leap;                   // not leapsecond offset, a notification code
     int precision;              // log(2) of source jitter
