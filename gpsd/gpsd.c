@@ -213,6 +213,8 @@ static void typelist(void)
 #endif
 #ifdef MAGIC_HAT_ENABLE
     (void)printf("# Magic Hat enabled.\n");
+#else
+    (void)printf("# Magic Hat DIS-abled.\n");
 #endif
     (void)printf("# Netfeed enabled.\n"
                  "# NTRIP enabled.\n");
@@ -262,7 +264,6 @@ The following driver types are compiled into this gpsd instance:\n",
         (void)printf("\nWARNING: This system has a 32-bit time_t.\n"
                      "WARNING: This gpsd will fail at 2038-01-19T03:14:07Z.\n");
     }
-
 }
 
 #ifdef CONTROL_SOCKET_ENABLE
@@ -2241,7 +2242,6 @@ int main(int argc, char *argv[])
     const char *sudo = getenv("SUDO_COMMAND");
     int uid;
 
-
     gps_context_init(&context, "gpsd");
 
 #ifdef CONTROL_SOCKET_ENABLE
@@ -2387,9 +2387,10 @@ int main(int argc, char *argv[])
         GPSD_LOG(LOG_WARN, &context.errout,
                  "This system has a 32-bit time_t.  "
                  "This gpsd will fail at 2038-01-19T03:14:07Z.\n");
+    } else {
+        GPSD_LOG(LOG_INF, &context.errout,
+                 "This system has 64-bit time_t.\n");
     }
-
-
 
 #ifdef FLT_EVAL_METHOD
     if (0 != FLT_EVAL_METHOD) {
