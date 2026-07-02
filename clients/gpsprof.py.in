@@ -198,6 +198,10 @@ class plotter(object):
         if 'subtype' in self.device:
             desc += "\\n%s" % self.device['subtype']
 
+        # escape ", and \n, for gnuplot, to not break strings
+        desc = desc.replace('"', '\\042')
+        desc = desc.replace('\n', '')
+
         return desc
 
     def collect(self, verb, log_fp=None):
@@ -1262,10 +1266,10 @@ if __name__ == '__main__':
         # Ship the plot to standard output
         if not options.title:
             options.title = plot.whatami()
-            # escape " for gnuplot
-            options.title = options.title.replace('"', '\\"')
         if options.subtitle:
             options.title += '\\n' + options.subtitle
+        # escape " for gnuplot, to not break strings
+        options.title = options.title.replace('"', '\\042')
         term_opts = ""
         truecolor_terms = ['png', 'sixelgd', 'wxt']
         if options.terminal in truecolor_terms:
