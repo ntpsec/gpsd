@@ -172,6 +172,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     // FIXME!! I really doubt this is Big Endian compatible
     uint8_t preamble;
     struct subframe_t *subp = &session->gpsdata.subframe;
+    gps_mask_t mask = 0;
     init_subframe(&session->gpsdata.subframe, gnssId, (uint8_t)tSVID);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -892,9 +893,16 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         break;
     default:
         // unknown/illegal subframe
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "SUB,GPS: unknwon subframe num %u\n",
+                 subp->subframe_num);
         return 0;
     }
-    return SUBFRAME_SET;
+    mask = SUBFRAME_SET;
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "SUB: gpsd_interpret_subframe() mask %s\n",
+             gps_maskdump(mask));
+    return mask;
 }
 
 static gps_mask_t almanac_bds(uint32_t words[], struct subframe_t *subp)
@@ -1486,6 +1494,9 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit.sqrtA = tmp * pow(2.0, -19);
         if (2600 > subp->orbit.sqrtA) {
             // Sanity check: A must be greater than Earth radius
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "SUB,GAL: bad sqrtA %f\n",
+                     subp->orbit.sqrtA);
             mask = 0;
         }
 
@@ -1621,7 +1632,8 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit.WN = (words[0] >> 18) & BITMASK(2);       // WNa
         subp->orbit.toa = ((words[0] >> 8) & BITMASK(10)) * 600;   // toa
         subp->orbit.sv = (words[0] >> 2) & BITMASK(6);        // SVN1
-        if (0 == subp->orbit.sv || 36 < subp->orbit.sv) {
+        if (0 == subp->orbit.sv ||
+            36 < subp->orbit.sv) {
             // dummy, or reserved, almanac
             mask = 0;
             break;
@@ -1864,8 +1876,10 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     session->last_word_gal = word_type;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SUB,GAL: len %u even %u page_type %u word_type %u (%s)\n",
-             numwords, even, page_type, word_type, word_desc);
+             "SUB,GAL: len %u even %u page_type %u word_type %u (%s) "
+             "mask %s\n",
+             numwords, even, page_type, word_type, word_desc,
+             gps_maskdump(mask));
 
     return mask;
 }
@@ -1988,7 +2002,7 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         break;
     case GNSSID_SBAS:
         GPSD_LOG(LOG_INFO, &session->context->errout,
-                 "SUB,SBAS: subframe protocol is not publicly documented");
+                 "SUB,SBAS: subframe protocol is not publicly documented\n");
         return 0;
     case GNSSID_GAL:
         numwords_expected = 8;

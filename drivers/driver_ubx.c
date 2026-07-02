@@ -4805,6 +4805,7 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     unsigned i;
     uint32_t words[33];
     char *chn_s;
+    gps_mask_t mask = 0;
 
     gnssid_t gnssId = getub(buf, 0);
     unsigned svId = getub(buf, 1);
@@ -4854,8 +4855,12 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     }
 
     // do we need freqId or chn?
-    return gpsd_interpret_subframe_raw(session, gnssId, sigId,
+    mask = gpsd_interpret_subframe_raw(session, gnssId, sigId,
                                        svId, words, numWords);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+	     "UBX: RXM-SFRBX: mask %s\n",
+	     gps_maskdump(mask));
+    return mask;
 }
 
 /**
