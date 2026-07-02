@@ -1428,6 +1428,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     unsigned word_type;
     struct subframe_t *subp;
     long tmp;
+    unsigned long tmpu;
 
     if (8 > numwords) {
         // Later on there will be different lengths than 8.
@@ -1489,9 +1490,10 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         tmp = words[2] & BITMASK(32);                         // e
         subp->orbit.eccentricity = tmp * pow(2.0, -33);
 
-        tmp = ((words[3] >> 14) & BITMASK(18)) << 14;         // sqrtA
-        tmp |= (words[4] >> 16) & BITMASK(14);
-        subp->orbit.sqrtA = tmp * pow(2.0, -19);
+        // sqrtA
+        tmpu = ((words[3] >> 14) & BITMASK(18)) << 14;
+        tmpu |= (words[4] >> 16) & BITMASK(14);
+        subp->orbit.sqrtA = tmpu * pow(2.0, -19);
         if (2600 > subp->orbit.sqrtA) {
             // Sanity check: A must be greater than Earth radius
             GPSD_LOG(LOG_PROG, &session->context->errout,
