@@ -200,7 +200,7 @@ class plotter(object):
 
         # escape ", `, and \n, for gnuplot, to not break strings
         desc = desc.replace('"', '\\042')
-        desc = desc.replace('`', '\\140')
+        desc = desc.replace("\x60", '\\140')
         desc = desc.replace('\n', '')
 
         return desc
@@ -1271,13 +1271,19 @@ if __name__ == '__main__':
             options.title += '\\n' + options.subtitle
         # escape ",  and`, for gnuplot, to not break strings
         options.title = options.title.replace('"', '\\042')
-        options.title = options.title.replace('"', '\\140')
+        options.title = options.title.replace("\x60", '\\140')
         term_opts = ""
         truecolor_terms = ['png', 'sixelgd', 'wxt']
         if options.terminal in truecolor_terms:
             term_opts = 'truecolor'
-        sys.stdout.write("set terminal %s size 800,950 %s\n"
-                         "set termoption enhanced\n"
+
+        # escape ", `, and \n, for gnuplot, to not break strings
+        options.terminal = options.terminal.replace('"', '\\042')
+        options.terminal = options.terminal.replace("\x60", '\\140')
+        options.terminal = options.terminal.replace('\n', '')
+
+        sys.stdout.write('set terminal "%s" size 800,950 %s\n'
+                         'set termoption enhanced\n'
                          % (options.terminal, term_opts))
         # double quotes on title so \n is parsed by gnuplot
         sys.stdout.write('set title noenhanced "%s\\n\\n"\n' % options.title)
