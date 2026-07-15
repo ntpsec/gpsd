@@ -92,7 +92,7 @@ and watches all devices opened by *gpsd*.
   seconds. OPUS then reduces the data to 30 second intervals. Default is
   30.000.
 *-n COUNT*, *--count COUNT*::
-  Causes COUNT epochs to be output. OPUS requires a minimum af 15
+  Causes COUNT epochs to be output. OPUS requires a minimum of 15
   minutes, and a maximum of 48 hours, of data.
 *-V*, *--version*::
   makes *gpsrinex* print its version and exit.
