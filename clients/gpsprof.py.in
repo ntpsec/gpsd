@@ -334,8 +334,11 @@ class spaceplot(plotter):
             # get sat used count
             sats_used = 0
             for sat in self.session.satellites:
-                if sat.used:
+                if sat.used is True:
                     sats_used += 1
+                else:
+                    # ensure it is boolean.
+                    sat.used = False
 
             if 'altHAE' not in self.session.data:
                 self.session.data['altHAE'] = gps.NaN
@@ -783,6 +786,10 @@ class polarplot(plotter):
                     used += 1
                     if 'polarunused' == self.name:
                         continue
+                else:
+                    # ensure it is boolean.
+                    sat['used'] = False;
+
                 if (('polarused' == self.name and
                      sat['used'] is False)):
                     continue
