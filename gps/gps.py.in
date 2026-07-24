@@ -780,9 +780,13 @@ Return: less than zero on error or disconnect
         if 0 >= status:
             return status
         if self.response.startswith("{") and self.response.endswith("}\r\n"):
-            self.unpack(self.response)
-            self._oldstyle_shim()
-            self.valid |= PACKET_SET
+            try:
+                self.unpack(self.response)
+                self._oldstyle_shim()
+                self.valid |= PACKET_SET
+            except json_error as e:
+                if VERB_NONE <= self.verbose:
+                    print("caught %r from %r" % (e.explanation, e.data))
         return 0
 
     def stream(self, flags=0, devpath=None):

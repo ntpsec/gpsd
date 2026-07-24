@@ -241,7 +241,7 @@ class gpsjson(object):
             # json.loads(,encoding=) deprecated Python 3.1.  Gone in 3.9
             # like it or not, data is now UTF-8
             self.data = dictwrapper(json.loads(buf.strip()))
-        except ValueError as e:
+        except (ValueError, json.decoder.JSONDecodeError) as e:
             raise json_error(buf, e.args[0])
         # Should be done for any other array-valued subobjects, too.
         # This particular logic can fire on SKY or RTCM2 objects.
