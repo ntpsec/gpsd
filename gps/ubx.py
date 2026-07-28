@@ -2420,10 +2420,10 @@ class ubx(object):
         # CFG-NAVCOR-
         ("CFG-NAVCOR", 0x100dffff, "", 0, "",
          "get all CFG-NAV2"),
-        ("CFG-NAVCOR-ENABLE_GAL_HAS", 0x100d0002, "L", 1, "",
-         "Enable/disable Galileo HAS corrections"),
         ("CFG-NAVCOR-ENABLE_HOST", 0x100d0001, "L", 1, "",
          "Enable/disable HOST corrections"),
+        ("CFG-NAVCOR-ENABLE_GAL_HAS", 0x100d0002, "L", 1, "",
+         "Enable/disable Galileo HAS corrections"),
 
         # CFG-NAVHPG-
         ("CFG-NAVHPG", 0x2014ffff, "", 0, "",
@@ -2697,10 +2697,6 @@ class ubx(object):
          "Inactivity time out on EXTINT pin if enabled"),
         ("CFG-PM-LIMITPEAKCURR", 0x10d00010, "L", 1, "",
          "Limit peak current"),
-
-        # CFG-PMP--
-        ("CFG-PMP", 0x10b1FFFF, "", 0, "",
-         "get all CFG-PMP"),
 
         # CFG-QZSS-
         ("CFG-QZSS", 0x3037ffff, "", 0, "s",
@@ -7868,15 +7864,13 @@ Use UBX-NAV-PVT instead
         return s
 
     nav_status_fixStat = {
-        1: "diffCorr",
-        2: "carrSolnValid",
-        }
-
-    nav_status_mapMatching = {
-        0: "None",
-        0x40: "Too old",
-        0x80: "Valid10",
-        0xC0: "Valid11",
+        (1, 1, "diffCorr"),
+        (2, 2, "carrSolnValid"),
+        (4, 4, "indoorDet"),           # protVer >= 52
+        (0, 0xc0, "No Map"),
+        (0x40, 0xc0, "Map Too old"),
+        (0x80, 0xc0, "Map Used0"),
+        (0xC0, 0xc0, "Map Used1"),
         }
 
     nav_status_psmState = {
@@ -7902,12 +7896,11 @@ Use UBX-NAV-PVT instead
         if gps.VERB_DECODE <= self.verbosity:
             s += ("\n   gpsfix (%s)"
                   "\n   flags (%s)"
-                  "\n   fixStat (%s) mapMatching (%s)"
+                  "\n   fixStat (%s)"
                   "\n   flags2 (psmState %s spoofDetState %s carrSoln %s)" %
                   (index_s(u[1], self.nav_pvt_fixType),
                    flag_s(u[2], self.nav_sol_flags),
-                   flag_s(0x3f & u[3], self.nav_status_fixStat),
-                   index_s(0xc0 & u[3], self.nav_status_mapMatching),
+                   flagm_s(u[3], self.nav_status_fixStat),
                    index_s(3 & u[4], self.nav_status_psmState),
                    index_s(3 & (u[4] >> 3), self.nav_status_spoofDetState),
                    index_s(3 & (u[4] >> 6), self.carrSoln)))
