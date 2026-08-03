@@ -533,8 +533,8 @@ class SkyView(Gtk.DrawingArea):
         self.cr.set_line_width(2)
         self.sat_xy = []
         for sat in self.satellites:
-            if not 1 <= sat.PRN <= 437:
-                # Bad PRN, skip.  NMEA uses up to 437
+            if not 1 <= sat.PRN <= 999:
+                # Bad PRN, skip.  NMEA uses up to 437, ALLYSTAR up to 918
                 continue
             if not 0 <= sat.az <= 359:
                 # Bad azimuth, skip.
@@ -618,8 +618,8 @@ class SkyView(Gtk.DrawingArea):
         for sat_type in satellites:
             if sat_type.gnssid in Legend_Done:
                 continue
-            if not 1 <= sat_type.PRN <= 437:
-                # Bad PRN, skip.  NMEA uses up to 437
+            if not 1 <= sat_type.PRN <= 999:
+                # Bad PRN, skip.  NMEA uses up to 437, ALLYSTAR up to 918
                 continue
             if not 0 <= sat_type.az <= 359:
                 # Bad azimuth, skip.
@@ -1751,9 +1751,9 @@ frame * {
                     s = "      "
                 self.set_satlist_field(i, 2, s)
 
-                # NMEA uses PRN up to 437
+                # NMEA uses PRN up to 437, ALLYSTAR up to 918
                 self.set_satlist_field(i, 3,
-                                       self._int_to_str(satellite.PRN, 1, 437))
+                                       self._int_to_str(satellite.PRN, 1, 999))
                 # allow satellites 10 degree below horizon
                 self.set_satlist_field(i, 4,
                                        self._tenth_to_str(satellite.el,
