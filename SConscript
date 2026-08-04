@@ -1017,7 +1017,7 @@ if not cleaning and not helping:
     # confdefs.append('#endif\n')
     # Reinstated for FreeBSD (below) 16-Aug-2019
 
-    if config.env['target_platform'].startswith('linux'):
+    if config.env['target_platform'].startswith(('linux', 'gnu')):
         # for cfmakeraw(), strsep(), etc. on CentOS 7
         # glibc 2.19 and before
         # sets __USE_MISC
