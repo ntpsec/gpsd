@@ -2144,6 +2144,11 @@ if env["timeservice"] or env["gpsdclients"]:
 test_bits = env.Program('tests/test_bits',
                         [libgps_static, 'tests/test_bits.c'],
                         LIBS=[libgps_static])
+test_casic = env.Program('tests/test_casic',
+                         [libgpsd_static, libgps_static,
+                          'tests/test_casic.c'],
+                         LIBS=[libgpsd_static, libgps_static],
+                         parse_flags=gpsdflags)
 test_crc = env.Program('tests/test_crc',
                        [libgpsd_static, libgps_static,
                         'tests/test_crc.c'],
@@ -2193,6 +2198,7 @@ test_gpsmm = env.Program('tests/test_gpsmm',
                          LIBS=[libgps_static],
                          parse_flags=mathlibs + rtlibs + dbusflags)
 testprogs = [test_bits,
+             test_casic,
              test_crc,
              test_float,
              test_geoid,
@@ -2896,6 +2902,11 @@ bits_regress = Utility('bits-regress', [test_bits], [
     '"${SRCDIR}/tests/test_bits" --quiet'
 ])
 
+# Unit-test the CASIC driver
+casic_regress = Utility('casic-regress', [test_casic], [
+    '"${SRCDIR}/tests/test_casic" --quiet'
+])
+
 # Unit-test the deg_to_str() converter
 deg_regress = Utility('deg-regress', [test_gpsdclient], [
     '"${SRCDIR}/tests/test_gpsdclient"'
@@ -3162,6 +3173,7 @@ testclean = Utility('testclean', [], 'rm -fr %s/tests' % variantdir)
 test_nondaemon = [
     aivdm_regress,
     bits_regress,
+    casic_regress,
     crc_regress,
     deg_regress,
     describe,

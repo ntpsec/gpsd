@@ -835,6 +835,28 @@ struct gps_device_t {
             unsigned char protver;              // u-blox protocol version
             unsigned char last_protver;         // last protocol version
         } ubx;
+        // driver_casic.c
+        struct {
+            /* A CFG-PRT poll answers once per port.  portID is a U1,
+             * but 0xff is the "current port" sentinel, never an index.
+             * Documented parts have two UARTs, 8 is headroom.
+             */
+#define CASIC_MAX_PORTS 8
+            struct {
+                unsigned int baud;          // baudRate this port reported
+                unsigned char proto_mask;   // ProtoMask this port reported
+                bool valid;                 // this port has answered
+            } port[CASIC_MAX_PORTS];
+            unsigned char last_commanded;   // last ProtoMask we Set
+            bool last_commanded_valid;
+            // run time, in ms, used for cycle end detect.
+            int64_t last_tow;
+            unsigned int end_msgid;         // cycle ender class/ID
+            // last class/ID seen, becomes end_msgid at a boundary
+            unsigned int last_msgid;
+            // false when NMEA owns this epoch's sky, so NAV-*INFO is skipped
+            bool sky_valid;
+        } casic;
 #ifdef NAVCOM_ENABLE
         struct {
             uint8_t physical_port;
