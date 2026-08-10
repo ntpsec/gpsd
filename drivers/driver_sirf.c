@@ -1181,7 +1181,7 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
                  sat_info, gnssId, svId, other_info, PRN, azimuth,
                  elevation, ss);
         st++;
-        if (st == MAXCHANNELS) {
+        if (st >= MAXCHANNELS) {
             // filled up skyview
             break;
         }
