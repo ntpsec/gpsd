@@ -2352,7 +2352,7 @@ static gps_mask_t processGSV(unsigned count, char *field[],
         struct satellite_t *sp;
         int nmea_svid;
 
-        if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+        if (MAXCHANNELS <= session->gpsdata.satellites_visible) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "NMEA0183: %s: internal error - too many "
                      "satellites [%d]!\n",
