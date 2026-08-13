@@ -7161,6 +7161,30 @@ protVer 34 and up
                 '  velCovNN %f velCovNE  %f velCovND %f\n'
                 '  velCovEE %f velCovED  %f velCovDD %f\n' % u)
 
+    def nav_daheading(self, buf):
+        """UBX-NAV-DAHEDING decode, Dual Antenna Status
+
+protVer 57, ZED-X20D
+"""
+        # at least protver 15
+        if 57 > self.protver:
+            self.protver = 57
+
+        u = struct.unpack_from('<BBHLlllllLLLLLLLL', buf, 0)
+        if 2 != u[0]:
+            s += "\n    WARNING: unknown version %u" % u[0]
+            return s
+
+        s = ('  version %u reserved0 %u %u iTOW %u \n'
+             '  relpos N %d E %d D %d Length %d Heading %d reserved1 %u\n'
+             '  acc N %d E %d D %d Length %d Heading %d reserved2 %u\n'
+             '  flags x%x'
+             % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += "\n   flags (%s)" % flagm_s(u[6], self.nav_pvt_flags)
+
+        return s
+
     def nav_dgps(self, buf):
         """UBX-NAV-DGPS decode, DGPS Data used for NAV"""
 
@@ -7402,13 +7426,15 @@ Partial decode."""
         5: 'Surveyed',
         }
 
-    # NAV-PVT and NAV-PVAT
+    # NAV-PVT, NAV-PVAT and NAV-DAHEADING
     nav_pvt_flags = {
         (1, 1, "gnssFixOK,"),
         (2, 2, "diffSoln,"),
+        (4, 4, "relPosValid,"),                     # protVer 57, NAV-DAHEADING
         (8, 8, "vehRollValid,"),
         (0x10, 0x10, "vehPitchValid,"),
         (0x20, 0x20, "vehHeadingValid,"),
+        (0x40, 0x40, "relPosHeadingValid,"),        # protVer 57, NAV-DAHEADING
         (0, 0xc0, "No Carrier Phase solution,"),    # not before protVer 20
         (0x40, 0xc0, "Carrier Phase float,"),
         (0x80, 0xc0, "Carrier Phase fixed,"),
@@ -8280,6 +8306,8 @@ protVer 34 and up
                       'name': 'UBX-NAV-SLAS'},
                0x43: {'str': 'SIG', 'dec': nav_sig, 'minlen': 8,
                       'name': 'UBX-NAV-SIG'},
+               0x45: {'str': 'DAHEADING', 'dec': nav_daheading, 'minlen': 60,
+                      'name': 'UBX-NAV-DAHEADING'},
                0x50: {'str': 'IMES', 'minlen': 4 ,'name': 'UBX-NAV-IMES'},
                0x60: {'str': 'AOPSTATUS', 'dec': nav_aopstatus, 'minlen': 16,
                       'name': 'UBX-NAV-AOPSTATUS'},
