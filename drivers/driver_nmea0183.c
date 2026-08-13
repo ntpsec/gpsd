@@ -2176,7 +2176,8 @@ static gps_mask_t processGSV(unsigned count, char *field[],
      * (L1C/L2C/etc.)
      */
 
-    unsigned n, fldnum;
+    unsigned n;
+    unsigned recnum;
     unsigned char  nmea_sigid = 0;
     int nmea_gnssid = 0;
     unsigned char  ubx_sigid = 0;
@@ -2348,30 +2349,56 @@ static gps_mask_t processGSV(unsigned count, char *field[],
              field[0], session->nmea.part, session->nmea.await,
              nmea_gnssid, nmea_sigid, ubx_sigid);
 
-    for (fldnum = 4; fldnum < count / 4 * 4;) {
+    for (recnum = 1; recnum < count / 4; recnum++) {
         struct satellite_t *sp;
         int nmea_svid;
+        unsigned fldnum = recnum * 4;
+
+        // Quectel querk: EL and AZ, but no PRN...
+        if ('\0' == field[fldnum][0]) {
+            continue;
+        }
+        // mtk-3301 has PRN and ss, but no az or el
+        nmea_svid = atoi(field[fldnum]);
+        if (0 == nmea_svid) {
+            // skip bogus fields
+            GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                     "NMEA0183: %s bad svid %d\n",
+                     field[0], nmea_svid);
+            continue;
+        }
 
         if (MAXCHANNELS <= session->gpsdata.satellites_visible) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "NMEA0183: %s: internal error - too many "
-                     "satellites [%d]!\n",
+                     "NMEA0183: %s: error - too many satellites [%d]!\n",
                      field[0], session->gpsdata.satellites_visible);
             gpsd_zero_satellites(&session->gpsdata);
             break;
         }
         sp = &session->gpsdata.skyview[session->gpsdata.satellites_visible];
-        nmea_svid = atoi(field[fldnum++]);
-        if (0 == nmea_svid) {
-            // skip bogus fields
-            continue;
-        }
         sp->PRN = (short)nmeaid_to_prn(field[0], nmea_svid, nmea_gnssid,
                                        &sp->gnssid, &sp->svid);
 
-        sp->elevation = (double)atoi(field[fldnum++]);
-        sp->azimuth = (double)atoi(field[fldnum++]);
-        sp->ss = (double)atoi(field[fldnum++]);
+        // both al/az, or neither. ericsson-gru04 can report only el!
+        if ('\0' != field[fldnum + 1][0] &&
+            '\0' != field[fldnum + 2][0]) {
+            int el = atoi(field[fldnum + 1]);
+            int az = atoi(field[fldnum + 2]);
+            if (90 >= abs(el)) {
+                sp->elevation = (double)el;
+            }
+            if (360 == az) {
+                az = 0;
+            }
+            if (360 > az ||
+                0 <= az) {
+                sp->azimuth = (double)az;
+            }
+        }
+        if ('\0' != field[fldnum + 3][0]) {
+            int ss = atoi(field[fldnum + 3]);
+            sp->ss = (double)ss;
+        }
         sp->used = false;
         sp->sigid = ubx_sigid;
 
