@@ -2580,6 +2580,74 @@ static gps_mask_t ubx_msg_nav_clock(struct gps_device_t *session,
     return 0;
 }
 
+ /**
+ * UBX-NAV-DAHEADING, Class 1, ID x45
+ * protver 57+
+ */
+static gps_mask_t ubx_msg_nav_daheading(struct gps_device_t *session,
+                                        unsigned char *buf, size_t data_len)
+{
+    int version;
+    unsigned flags;
+    double accN = NAN, accE = NAN, accD = NAN, accL = NAN, accH = NAN;
+    gps_mask_t mask = 0;
+
+    if (60 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: NAV-DAHEADING: runt payload len %zd",
+                 data_len);
+        return mask;
+    }
+    version = getub(buf, 0);
+    if (2 != version) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX: NAV-DAHEADING: unknown version %u s/b 2", version);
+        return mask;
+    }
+    session->driver.ubx.iTOW = getleu32(buf, 4);
+    flags = getleu32(buf, 56);
+    if (1 != (1 & flags)) {
+        // not gnssFixOK
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "UBX: NAV-DAHEADING: no fix");
+        return mask;
+    }
+
+    if (4 & flags) {
+        // rePosValid
+        session->newdata.NED.relPosN = getles32(buf, 8) * 1e-4;
+        session->newdata.NED.relPosE = getles32(buf, 12) * 1e-4;
+        session->newdata.NED.relPosD = getles32(buf, 16) * 1e-4;
+        session->newdata.NED.relPosL = getles32(buf, 20) * 1e-4;
+        if (0x100 & flags) {
+            // relPosHeadingValid
+            session->newdata.NED.relPosH = 1e-5 * getles32(buf, 24);
+        }
+
+        accN = 1e-4 * getles32(buf, 36);
+        accE = 1e-4 * getles32(buf, 40);
+        accD = 1e-4 * getles32(buf, 44);
+        accL = 1e-4 * getles32(buf, 48);
+        accH = 1e-4 * getles32(buf, 52);
+        mask |= NED_SET;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+        "UBX: NAV-DAHEADING: version %d iTOW %lld flags x%x"
+        " relPos N %.4f E %.4f D %.4f L %.4f D %.4f"
+        " acc N %.4f E %.4f D %.4f L %.4f H %.4f\n",
+        version,
+        (long long)session->driver.ubx.iTOW,
+        flags,
+        session->newdata.NED.relPosN,
+        session->newdata.NED.relPosE,
+        session->newdata.NED.relPosD,
+        session->newdata.NED.relPosL,
+        session->newdata.NED.relPosH,
+        accN, accE, accD, accL, accH);
+
+    return mask;
+}
 /**
  * DGPS Data Used for NAV
  *
@@ -5348,6 +5416,9 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_NAV_CLOCK:
         mask = ubx_msg_nav_clock(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_NAV_DAHEADING:
+        mask = ubx_msg_nav_daheading(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_DGPS:
         mask = ubx_msg_nav_dgps(session, &buf[UBX_PREFIX_LEN], data_len);
