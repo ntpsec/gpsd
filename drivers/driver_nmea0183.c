@@ -2390,7 +2390,7 @@ static gps_mask_t processGSV(unsigned count, char *field[],
             if (360 == az) {
                 az = 0;
             }
-            if (360 > az ||
+            if (360 > az &&
                 0 <= az) {
                 sp->azimuth = (double)az;
             }
