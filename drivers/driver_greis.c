@@ -452,19 +452,14 @@ static gps_mask_t greis_msg_EL(struct gps_device_t *session,
     }
 
     // check against number of satellites + checksum
-    if (len < session->gpsdata.satellites_visible + 1U) {
+    if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+        len != session->gpsdata.satellites_visible + 1) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "GREIS: EL bad len %zu, needed at least %d\n", len,
-                 session->gpsdata.satellites_visible + 1);
+                 "GREIS: EL bad len %zu, visible %d\n", len,
+                 session->gpsdata.satellites_visible);
         return 0;
     }
 
-    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                "GREIS: EL too many satellites %d\n",
-                 session->gpsdata.satellites_visible);
-        session->gpsdata.satellites_visible = MAXCHANNELS;
-    }
     for (i = 0; i < session->gpsdata.satellites_visible; i++) {
         short elevation;
 
@@ -498,16 +493,11 @@ static gps_mask_t greis_msg_AZ(struct gps_device_t *session,
     }
 
     // check against number of satellites + checksum
-    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+    if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+        len != session->gpsdata.satellites_visible + 1) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                "GREIS: AZ too many satellites %d\n",
+                 "GREIS: AZ bad len %zu, visible %d\n", len,
                  session->gpsdata.satellites_visible);
-        session->gpsdata.satellites_visible = MAXCHANNELS;
-    }
-    if (len < session->gpsdata.satellites_visible + 1U) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "GREIS: AZ bad len %zu, needed at least %d\n", len,
-                 session->gpsdata.satellites_visible + 1);
         return 0;
     }
 
@@ -548,19 +538,14 @@ static gps_mask_t greis_msg_DC(struct gps_device_t *session,
     }
 
     // check against number of satellites + checksum
-    if (len < len_needed) {
+    if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+        len != len_needed) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "GREIS: DC bad len %zu, needed at least %zu\n", len,
-                 len_needed);
+                 "GREIS: DC bad len %zu, visible %d\n", len,
+                 session->gpsdata.satellites_visible);
         return 0;
     }
 
-    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                "GREIS: DC too many satellites %d\n",
-                 session->gpsdata.satellites_visible);
-        session->gpsdata.satellites_visible = MAXCHANNELS;
-    }
     for (i = 0; i < session->gpsdata.satellites_visible; i++) {
         long int_doppler = getles32((char *)buf, i * 4);
         if (0x7fffffff == int_doppler) {
@@ -593,21 +578,17 @@ static gps_mask_t greis_msg_EC(struct gps_device_t *session,
     }
 
     // check against number of satellites + checksum
-    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
+    if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+        len != session->gpsdata.satellites_visible + 1) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                "GREIS: EC too many satellites %d\n",
+                 "GREIS: EC bad len %zu, visible %d\n", len,
                  session->gpsdata.satellites_visible);
-        session->gpsdata.satellites_visible = MAXCHANNELS;
-    }
-    if (len < session->gpsdata.satellites_visible + 1U) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "GREIS: EC bad len %zu, needed at least %d\n", len,
-                 session->gpsdata.satellites_visible + 1);
         return 0;
     }
 
-    for (i = 0; i < session->gpsdata.satellites_visible; i++)
+    for (i = 0; i < session->gpsdata.satellites_visible; i++) {
         session->gpsdata.skyview[i].ss = getub(buf, i);
+    }
 
     session->driver.greis.seen_ec = true;
     GPSD_LOG(LOG_DATA, &session->context->errout, "GREIS: EC\n");
@@ -632,19 +613,14 @@ static gps_mask_t greis_msg_P3(struct gps_device_t *session,
     }
 
     // check against number of satellites + checksum
-    if (len < len_needed) {
+    if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+        len != len_needed) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "GREIS: P3 bad len %zu, needed at least %zu\n", len,
-                 len_needed);
+                 "GREIS: P3 bad len %zu, visible %d\n", len,
+                 session->gpsdata.satellites_visible);
         return 0;
     }
 
-    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                "GREIS: P3 too many satellites %d\n",
-                 session->gpsdata.satellites_visible);
-        session->gpsdata.satellites_visible = MAXCHANNELS;
-    }
     for (i = 0; i < session->gpsdata.satellites_visible; i++) {
         session->gpsdata.raw.meas[i].l2c = getled64((char *)buf, i * 8);
     }
@@ -671,19 +647,14 @@ static gps_mask_t greis_msg_PC(struct gps_device_t *session,
     }
 
     // check against number of satellites + checksum
-    if (len < len_needed) {
+    if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+        len != len_needed) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "GREIS: PC bad len %zu, needed at least %zu\n", len,
-                 len_needed);
+                 "GREIS: PC bad len %zu, visible %d\n", len,
+                 session->gpsdata.satellites_visible);
         return 0;
     }
 
-    if (MAXCHANNELS < session->gpsdata.satellites_visible) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                "GREIS: PC too many satellites %d\n",
-                 session->gpsdata.satellites_visible);
-        session->gpsdata.satellites_visible = MAXCHANNELS;
-    }
     for (i = 0; i < session->gpsdata.satellites_visible; i++) {
         session->gpsdata.raw.meas[i].carrierphase = getled64((char *)buf,
                                                             i * 8);
@@ -711,10 +682,11 @@ static gps_mask_t greis_msg_R3(struct gps_device_t *session,
     }
 
     // check against number of satellites + checksum
-    if (len < len_needed) {
+    if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+        len != len_needed) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "GREIS: R3 bad len %zu, needed at least %zu\n", len,
-                 len_needed);
+                 "GREIS: R3 bad len %zu, visible %d\n", len,
+                 session->gpsdata.satellites_visible);
         return 0;
     }
 
@@ -746,10 +718,11 @@ static gps_mask_t greis_msg_RC(struct gps_device_t *session,
     }
 
     // check against number of satellites + checksum
-    if (len < len_needed) {
+    if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+        len != len_needed) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "GREIS: RC bad len %zu, needed at least %zu\n", len,
-                 len_needed);
+                 "GREIS: RC bad len %zu, visible %d\n", len,
+                 session->gpsdata.satellites_visible);
         return 0;
     }
 
@@ -781,10 +754,11 @@ static gps_mask_t greis_msg_SS(struct gps_device_t *session,
     }
 
     // check against number of satellites + solution type + checksum
-    if (len < session->gpsdata.satellites_visible + 2U) {
+    if (MAXCHANNELS < session->gpsdata.satellites_visible ||
+        len != session->gpsdata.satellites_visible + 2) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "GREIS: SI bad len %zu, needed at least %d\n", len,
-                 session->gpsdata.satellites_visible + 2);
+                 "GREIS: SS bad len %zu, visible %d\n", len,
+                 session->gpsdata.satellites_visible);
         return 0;
     }
 
@@ -804,8 +778,9 @@ static gps_mask_t greis_msg_SS(struct gps_device_t *session,
             (nav_status >= 40 && nav_status <= 62) ||
             (nav_status >= 64);
 
-        if (session->gpsdata.skyview[i].used)
+        if (session->gpsdata.skyview[i].used) {
             used_count++;
+        }
     }
     session->gpsdata.satellites_used = used_count;
 
