@@ -235,13 +235,35 @@ static unsigned short casic_mode_bits(char parity, int stopbits)
  */
 static unsigned int casic_our_baud(const struct gps_device_t *session)
 {
+    // list all cases for -Wswitch-enum
     switch (session->sourcetype) {
     case SOURCE_RS232:
         FALLTHROUGH
-    case SOURCE_USB:
-        FALLTHROUGH
     case SOURCE_BLUETOOTH:
+        FALLTHROUGH
+    case SOURCE_USB:
         return (unsigned int)gpsd_get_speed(session);
+
+    case SOURCE_ACM:
+        FALLTHROUGH
+    case SOURCE_BLOCKDEV:
+        FALLTHROUGH
+    case SOURCE_CAN:
+        FALLTHROUGH
+    case SOURCE_GPSD:
+        FALLTHROUGH
+    case SOURCE_PIPE:
+        FALLTHROUGH
+    case SOURCE_PPS:
+        FALLTHROUGH
+    case SOURCE_PTY:
+        FALLTHROUGH
+    case SOURCE_TCP:
+        FALLTHROUGH
+    case SOURCE_UDP:
+        FALLTHROUGH
+    case SOURCE_UNKNOWN:
+        FALLTHROUGH
     default:
         return 0;
     }
@@ -639,7 +661,8 @@ static struct vlist_t vfix_valid[] = {
  */
 static double casic_sigma(double variance)
 {
-    if (!(0 < variance)) {
+    if (!isfinite(variance) ||
+        0 >= variance) {
         return NAN;
     }
     return sqrt(variance);
@@ -686,7 +709,6 @@ static gps_mask_t msg_nav_pv(struct gps_device_t *session,
     unsigned numSV;
     // dimensions each solution has: 0 none, 2 horizontal, 3 with height
     unsigned pos_dims, vel_dims;
-    char where[96] = "";
 
     if (CASIC_LEN_PV > payload_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -816,23 +838,28 @@ static gps_mask_t msg_nav_pv(struct gps_device_t *session,
     session->gpsdata.satellites_used = (int)numSV;
     mask |= USED_IS;
 
-    // no solution means no numbers, only NANs worth no line width
-    if (0 != pos_dims) {
-        str_appendf(where, sizeof(where), " lat %.7f lon %.7f",
-                    session->newdata.latitude, session->newdata.longitude);
+    if (LOG_PROG <= session->context->errout.debug) {
+        char where[96] = "";
+
+        // no solution means no numbers, only NANs worth no line width
+        if (0 != pos_dims) {
+            str_appendf(where, sizeof(where), " lat %.7f lon %.7f",
+                        session->newdata.latitude, session->newdata.longitude);
+        }
+        if (3 == pos_dims) {
+            str_appendf(where, sizeof(where), " altHAE %.2f",
+                        session->newdata.altHAE);
+        }
+        if (0 != vel_dims) {
+            str_appendf(where, sizeof(where), " track %.2f speed %.2f",
+                        session->newdata.track, session->newdata.speed);
+        }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "CASIC: NAV-PV: posValid %u(%s) velValid %u(%s) numSV %u%s\n",
+                 (unsigned)posValid, val2str(posValid, vfix_valid),
+                 (unsigned)velValid, val2str(velValid, vfix_valid), numSV,
+                 where);
     }
-    if (3 == pos_dims) {
-        str_appendf(where, sizeof(where), " altHAE %.2f",
-                    session->newdata.altHAE);
-    }
-    if (0 != vel_dims) {
-        str_appendf(where, sizeof(where), " track %.2f speed %.2f",
-                    session->newdata.track, session->newdata.speed);
-    }
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "CASIC: NAV-PV: posValid %u(%s) velValid %u(%s) numSV %u%s\n",
-             (unsigned)posValid, val2str(posValid, vfix_valid),
-             (unsigned)velValid, val2str(velValid, vfix_valid), numSV, where);
     return mask;
 }
 
@@ -1099,15 +1126,15 @@ static gps_mask_t msg_decode(struct gps_device_t *session,
     gps_mask_t (* p_decode)(struct gps_device_t *, unsigned char *, size_t);
 
     switch (msgid) {
-    case CASIC_ACK_NAK:
-        needed_len = CASIC_LEN_ACK;
-        msg_name = "ACK-NAK";
-        p_decode = msg_ack_nak;
-        break;
     case CASIC_ACK_ACK:
         needed_len = CASIC_LEN_ACK;
         msg_name = "ACK-ACK";
         p_decode = msg_ack_ack;
+        break;
+    case CASIC_ACK_NAK:
+        needed_len = CASIC_LEN_ACK;
+        msg_name = "ACK-NAK";
+        p_decode = msg_ack_nak;
         break;
     case CASIC_CFG_PRT:
         msg_name ="CFG-PRT";
@@ -1119,10 +1146,25 @@ static gps_mask_t msg_decode(struct gps_device_t *session,
         needed_len = CASIC_LEN_VER;
         p_decode = msg_mon_ver;
         break;
+    case CASIC_NAV_BDSINFO:
+        msg_name = "NAV-BDSINFO";
+        needed_len = CASIC_LEN_SVINFO;
+        p_decode = msg_nav_bdsinfo;
+        break;
     case CASIC_NAV_DOP:
         msg_name ="NAV-DOP";
         needed_len = CASIC_LEN_DOP;
         p_decode = msg_nav_dop;
+        break;
+    case CASIC_NAV_GLNINFO:
+        msg_name = "NAV-GLNINFO";
+        needed_len = CASIC_LEN_SVINFO;
+        p_decode = msg_nav_glninfo;
+        break;
+    case CASIC_NAV_GPSINFO:
+        msg_name = "NAV-GPSINFO";
+        needed_len = CASIC_LEN_SVINFO;
+        p_decode = msg_nav_gpsinfo;
         break;
     case CASIC_NAV_PV:
         msg_name = "NAV-PV";
@@ -1133,21 +1175,6 @@ static gps_mask_t msg_decode(struct gps_device_t *session,
         msg_name = "NAV-TIMEUTC";
         needed_len = CASIC_LEN_TIMEUTC;
         p_decode = msg_nav_timeutc;
-        break;
-    case CASIC_NAV_GPSINFO:
-        msg_name = "NAV-GPSINFO";
-        needed_len = CASIC_LEN_SVINFO;
-        p_decode = msg_nav_gpsinfo;
-        break;
-    case CASIC_NAV_BDSINFO:
-        msg_name = "NAV-BDSINFO";
-        needed_len = CASIC_LEN_SVINFO;
-        p_decode = msg_nav_bdsinfo;
-        break;
-    case CASIC_NAV_GLNINFO:
-        msg_name = "NAV-GLNINFO";
-        needed_len = CASIC_LEN_SVINFO;
-        p_decode = msg_nav_glninfo;
         break;
     default:
         msg_name ="UNK-UNK";
@@ -1228,17 +1255,17 @@ static gps_mask_t casic_parse(struct gps_device_t * session,
      * word is a comparable run time.
      */
     switch (CASIC_MSGID(class, id)) {
+    case CASIC_NAV_BDSINFO:
+        FALLTHROUGH
     case CASIC_NAV_DOP:
+        FALLTHROUGH
+    case CASIC_NAV_GLNINFO:
+        FALLTHROUGH
+    case CASIC_NAV_GPSINFO:
         FALLTHROUGH
     case CASIC_NAV_PV:
         FALLTHROUGH
     case CASIC_NAV_TIMEUTC:
-        FALLTHROUGH
-    case CASIC_NAV_GPSINFO:
-        FALLTHROUGH
-    case CASIC_NAV_BDSINFO:
-        FALLTHROUGH
-    case CASIC_NAV_GLNINFO:
         if (4 <= payload_len) {
             tow = (int64_t)getleu32(&buf[CASIC_PREFIX_LEN], 0);
         }
