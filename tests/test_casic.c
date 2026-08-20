@@ -37,23 +37,19 @@ extern const struct gps_type_t driver_casic;
 /* Classes and IDs come from the driver's header, so they cannot drift.
  * feed() wants them apart, the header keeps them joined.
  */
-#define CLS_OF(msgid)   CASIC_CLS_OF(msgid)
-#define ID_OF(msgid)    CASIC_ID_OF(msgid)
-#define MSGID_OF(cls, id)       CASIC_MSGID(cls, id)
-
-#define CLS_NAV         CLS_OF(CASIC_NAV_PV)
-#define CLS_ACK         CLS_OF(CASIC_ACK_ACK)
-#define CLS_CFG         CLS_OF(CASIC_CFG_PRT)
-#define ID_DOP          ID_OF(CASIC_NAV_DOP)
+#define CLS_NAV         CASIC_CLS_OF(CASIC_NAV_PV)
+#define CLS_ACK         CASIC_CLS_OF(CASIC_ACK_ACK)
+#define CLS_CFG         CASIC_CLS_OF(CASIC_CFG_PRT)
+#define ID_DOP          CASIC_ID_OF(CASIC_NAV_DOP)
 // no decoder in this driver
-#define ID_SOL          ID_OF(CASIC_NAV_SOL)
-#define ID_PV           ID_OF(CASIC_NAV_PV)
-#define ID_TIMEUTC      ID_OF(CASIC_NAV_TIMEUTC)
-#define ID_GPSINFO      ID_OF(CASIC_NAV_GPSINFO)
-#define ID_BDSINFO      ID_OF(CASIC_NAV_BDSINFO)
-#define ID_ACK          ID_OF(CASIC_ACK_ACK)
-#define ID_PRT          ID_OF(CASIC_CFG_PRT)
-#define ID_RATE         ID_OF(CASIC_CFG_RATE)
+#define ID_SOL          CASIC_ID_OF(CASIC_NAV_SOL)
+#define ID_PV           CASIC_ID_OF(CASIC_NAV_PV)
+#define ID_TIMEUTC      CASIC_ID_OF(CASIC_NAV_TIMEUTC)
+#define ID_GPSINFO      CASIC_ID_OF(CASIC_NAV_GPSINFO)
+#define ID_BDSINFO      CASIC_ID_OF(CASIC_NAV_BDSINFO)
+#define ID_ACK          CASIC_ID_OF(CASIC_ACK_ACK)
+#define ID_PRT          CASIC_ID_OF(CASIC_CFG_PRT)
+#define ID_RATE         CASIC_ID_OF(CASIC_CFG_RATE)
 
 /* ProtoMask values the tests use, section 3.2.2.1 Table 9.  Built from
  * the driver's own bits; the wire value is in the comment, for reading
@@ -1278,12 +1274,12 @@ static int check_epoch(void)
     mask = feed_nav(&session, CLS_NAV, ID_DOP, 2000, NULL, CASIC_LEN_DOP);
     if (0 == (mask & CLEAR_IS) ||
         0 != (mask & REPORT_IS) ||
-        MSGID_OF(CLS_NAV, ID_PV) != session.driver.casic.end_msgid) {
+        CASIC_MSGID(CLS_NAV, ID_PV) != session.driver.casic.end_msgid) {
         (void)printf("epoch 2 start: mask x%llx ender x%04x, expected "
                      "CLEAR_IS, no REPORT_IS, ender x%04x\n",
                      (unsigned long long)mask,
                      session.driver.casic.end_msgid,
-                     MSGID_OF(CLS_NAV, ID_PV));
+                     CASIC_MSGID(CLS_NAV, ID_PV));
         errors++;
     }
     // the boundary also clears the sky the previous epoch accumulated
@@ -1336,7 +1332,7 @@ static int check_epoch(void)
     mask = feed_nav(&session, CLS_NAV, ID_SOL, 987654, NULL, CASIC_LEN_SVINFO);
     if (0 != (mask & (CLEAR_IS | REPORT_IS)) ||
         3000 != session.driver.casic.last_tow ||
-        MSGID_OF(CLS_NAV, ID_GPSINFO) !=
+        CASIC_MSGID(CLS_NAV, ID_GPSINFO) !=
             (int)session.driver.casic.last_msgid) {
         (void)printf("undecoded NAV-SOL: mask x%llx last_tow %lld last_msgid "
                      "x%04x, expected the epoch state untouched\n",
@@ -1374,11 +1370,11 @@ static int check_epoch(void)
         errors++;
     }
     (void)feed_nav(&session, CLS_NAV, ID_DOP, 5000, NULL, CASIC_LEN_DOP);
-    if (MSGID_OF(CLS_NAV, ID_GPSINFO) != session.driver.casic.end_msgid) {
+    if (CASIC_MSGID(CLS_NAV, ID_GPSINFO) != session.driver.casic.end_msgid) {
         (void)printf("epoch 5 start: ender x%04x, expected it relearned as "
                      "x%04x\n",
                      session.driver.casic.end_msgid,
-                     MSGID_OF(CLS_NAV, ID_GPSINFO));
+                     CASIC_MSGID(CLS_NAV, ID_GPSINFO));
         errors++;
     }
     mask = feed_nav(&session, CLS_NAV, ID_GPSINFO, 5000, sky, skylen);
