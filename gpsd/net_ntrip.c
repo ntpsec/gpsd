@@ -35,6 +35,8 @@
 
 // NTRIP 2.0 caster responses.  Based on HTTP 1.1
 #define NTRIP_SOURCETABLE2      "Content-Type: gnss/sourcetable\r\n"
+// Also accept Non-standard reply.
+#define NTRIP_SOURCETABLE2BAD   "Content-Type: text/plain"
 #define NTRIP_BODY              "\r\n\r\n"
 #define NTRIP_HTTP              "HTTP/1.1 200 OK\r\n"
 
@@ -338,6 +340,11 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
              *     "SOURCETABLE 200 OK\r\n"
              * For ntrip v2, the header should contain:
              *     "Content-Type: gnss/sourcetable\r\n"
+             *
+             * Of course Australis has is backwards:
+             * http://ntrip.data.gnss.ga.gov.au:2101
+             *
+             *     Content-Type: text/plain; charset=utf-8
              */
 
             if (str_starts_with(line, NTRIP_SOURCETABLE)) {
@@ -345,6 +352,9 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 device->ntrip.sourcetable_parsed = true;
             } else if (NULL != strstr(line, NTRIP_SOURCETABLE2)) {
                 // parse sourcetable, NTRIP 2.0
+                device->ntrip.sourcetable_parsed = true;
+            } else if (NULL != strstr(line, NTRIP_SOURCETABLE2BAD)) {
+                // parse sourcetable, NTRIP 2.0 ???
                 device->ntrip.sourcetable_parsed = true;
             } else {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
