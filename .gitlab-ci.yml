@@ -214,7 +214,7 @@ coverity:
       do
           test -z $(eval "echo \"\${$v}\"")
           && echo Fix $v && f=1;
-      done; test "$f" -eq 1 && exit 0
+      done; test "$f" -eq 1 && exit 255
     - apt update
     - apt -y install --no-install-recommends eatmydata
     - eatmydata -- apt -y install --no-install-recommends ${PACKAGES}
@@ -222,6 +222,7 @@ coverity:
       https://scan.coverity.com/download/linux64
       --form project=$COVERITY_SCAN_PROJECT_NAME
       --form token=$COVERITY_SCAN_TOKEN
+      || exit 255
     - eatmydata -- tar xfz /tmp/cov-analysis-linux64.tgz
     - eatmydata -- .ci-build/build.sh
     - eatmydata -- tar cfz cov-int.tar.gz cov-int
@@ -230,6 +231,9 @@ coverity:
       https://scan.coverity.com/builds?project=$COVERITY_SCAN_PROJECT_NAME
       --form token=$COVERITY_SCAN_TOKEN --form email=$COVERITY_USER_EMAIL
       --form description="`git describe --tags` / $CI_COMMIT_TITLE"
+  allow_failure:
+    exit_codes:
+      - 255
   artifacts:
     paths:
       - cov-int
