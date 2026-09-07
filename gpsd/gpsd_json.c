@@ -785,7 +785,7 @@ void json_device_dump(const struct gps_device_t *device,
         (void)strlcat(reply, "\"", replylen);
     }
     if (device->context->readonly) {
-        (void)strlcat(reply, ",\"readonly\":\"true\"", replylen);
+        (void)strlcat(reply, ",\"readonly\":true", replylen);
     }
     /*
      * There's an assumption here: Anything that we type SERVICE_SENSOR is
