@@ -3701,6 +3701,13 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
                 break;
             }
         }
+    } else {
+        // too short to be RTCM3
+        GPSD_LOG(LOG_IO, &lexer->errout,
+                 "PACKET: packet_get1_chunked(fd %d) RTCM3 too short "
+                 "inbuflen %zu\n",
+                 fd, lexer->inbuflen);
+        return 1;   // not right, close enough
     }
     if (0xd3 != lexer->inbuffer[idx]) {
         // start of RTCM3 not found.
@@ -3717,6 +3724,13 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
      * packet_parse() works much better is the start (0xd3) of
      * messages is at inbuffer[0]
      */
+    if (lexer->inbuflen <= idx) {
+        GPSD_LOG(LOG_ERROR, &lexer->errout,
+                 "PACKET: packet_get1_chunked(fd %d) lexer->inbuflen (%zu) "
+                 "<= idx (%zu)\n",
+                 fd, lexer->inbuflen, idx);
+        return -1;  // unrecoverable error
+    }
     memmove(lexer->inbuffer, &lexer->inbuffer[idx], lexer->inbuflen - idx);
     lexer->inbufptr = lexer->inbuffer;
     lexer->inbuflen -= idx;
