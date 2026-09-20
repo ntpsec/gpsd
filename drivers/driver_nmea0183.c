@@ -2620,6 +2620,7 @@ static gps_mask_t processHDG(unsigned count UNUSED, char *field[],
      *  1)   Magnetic sensor heading, degrees
      *  2,3) Magnetic deviation, degrees E/W
      *  4,5) Magnetic variation, degrees, E/W
+     *  6) checksum
      *
      *  1. To obtain Magnetic Heading:
      *  Add Easterly deviation (E) to Magnetic Sensor Reading
@@ -2700,7 +2701,8 @@ static gps_mask_t processHDG(unsigned count UNUSED, char *field[],
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: $SDHDG heading %lf var %.1f dev %.1f, true %.1f\n",
+             "NMEA0183: %s heading %lf var %.1f dev %.1f, true %.1f\n",
+             field[0],
              session->newdata.magnetic_track,
              session->newdata.magnetic_var,
              session->newdata.magnetic_dev,
@@ -2720,7 +2722,7 @@ static gps_mask_t processHDM(unsigned count UNUSED, char *field[],
      *
      * 1) Magnetic heading
      * 2) M == Magnetic
-     * )  checksum
+     * 3)  checksum
      *
      */
     gps_mask_t mask = ONLINE_SET;
