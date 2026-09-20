@@ -121,6 +121,7 @@ extern "C" {
  *       MAXUSERDEVS is setable
  *       Add gnssid_t to limit gnssid to valid values.
  *       MAXCHANNELS bumped 230, for SkyTraq
+ *       add magnetic_dev, true_track to gps_data_t.
  */
 
 // API version should match in SConscript
@@ -269,7 +270,13 @@ struct gps_fix_t {
     double geoid_sep;
 
     double magnetic_track;  // Course (relative to Magnetic North)
-    double magnetic_var;    // magnetic variation in degrees
+    /* magnetic deviation in degrees
+     * The error caused by magnetic influences aboard the vessel itself. */
+    double magnetic_dev;
+    /* magnetic variation in degrees
+     * The angular difference between true north and
+     * magnetic north at any given location on Earth. */
+    double magnetic_var;
     // depth in meters, probably depth of water under the keel
     double depth;
     double wtemp;           // water temp, degrees C

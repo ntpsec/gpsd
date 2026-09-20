@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 23 January 2026
+:date: 19 September 2026
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -225,6 +225,11 @@ off as much as 12 meters.
 |leapseconds |No |integer |Current leap seconds.
 
 |lon |No |numeric |Longitude in degrees: +/- signifies East/West.
+
+|magdev |No |numeric |Magnetic deviation, degrees.
+It is the error in a compass reading due to local magnetic
+influences from the vessel or aircraft itself.  Positive is West
+deviation. Negative is East deviation.
 
 |magtrack |No |numeric |Course over ground, degrees magnetic.
 

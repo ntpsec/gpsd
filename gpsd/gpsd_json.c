@@ -326,6 +326,10 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
         if (0 != isfinite(gpsdata->fix.track)) {
             str_appendf(reply, replylen, ",\"track\":%.4f", gpsdata->fix.track);
         }
+        if (0 != isfinite(gpsdata->fix.magnetic_dev)) {
+                str_appendf(reply, replylen, ",\"magdev\":%.1f",
+                            gpsdata->fix.magnetic_dev);
+        }
         if (0 != isfinite(gpsdata->fix.magnetic_track)) {
                 str_appendf(reply, replylen, ",\"magtrack\":%.4f",
                             gpsdata->fix.magnetic_track);

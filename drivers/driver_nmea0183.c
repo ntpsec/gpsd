@@ -2617,9 +2617,9 @@ static gps_mask_t processHDG(unsigned count UNUSED, char *field[],
      *  $SDHDG,234.6,,,1.3,E*34
      *
      *  $--HDG,h.h,d.d,a,v.v,a*hh<CR><LF>
-     *  Magnetic sensor heading, degrees
-     *  Magnetic deviation, degrees E/W
-     *  Magnetic variation, degrees, E/W
+     *  1)   Magnetic sensor heading, degrees
+     *  2,3) Magnetic deviation, degrees E/W
+     *  4,5) Magnetic variation, degrees, E/W
      *
      *  1. To obtain Magnetic Heading:
      *  Add Easterly deviation (E) to Magnetic Sensor Reading
@@ -2632,7 +2632,6 @@ static gps_mask_t processHDG(unsigned count UNUSED, char *field[],
 
     gps_mask_t mask = ONLINE_SET;
     double sensor_heading;
-    double magnetic_deviation;
 
     if ('\0' == field[1][0]) {
         // no data
@@ -2644,54 +2643,68 @@ static gps_mask_t processHDG(unsigned count UNUSED, char *field[],
         // bad data */
         return mask;
     }
-    magnetic_deviation = safe_atof(field[2]);
-    if ((0.0 > magnetic_deviation) ||
-        (360.0 < magnetic_deviation)) {
-        // bad data
-        return mask;
-    }
-    switch (field[2][0]) {
-    case 'E':
-        sensor_heading += magnetic_deviation;
-        break;
-    case 'W':
-        sensor_heading += magnetic_deviation;
-        break;
-    default:
-        // ignore
-        break;
-    }
-
-    // good data
-    session->newdata.magnetic_track = sensor_heading;
-    mask |= MAGNETIC_TRACK_SET;
-
-    // get magnetic variation
-    if ('\0' != field[3][0] &&
-        '\0' != field[4][0]) {
-        session->newdata.magnetic_var = safe_atof(field[3]);
-
-        switch (field[4][0]) {
+    if ('\0' != field[2][0] &&
+        '\0' != field[3][0]) {
+        /* sensor heading is heading uncorrected for deviation,
+         * calculate magnetic heading */
+        double mag_dev = safe_atof(field[2]);
+        if ((0.0 > mag_dev) ||
+            (360.0 < mag_dev)) {
+            // bad data
+            return mask;
+        }
+        switch (field[2][0]) {
         case 'E':
-            // no change
-            mask |= MAGNETIC_TRACK_SET;
+            sensor_heading += mag_dev;
             break;
         case 'W':
-            session->newdata.magnetic_var = -session->newdata.magnetic_var;
-            mask |= MAGNETIC_TRACK_SET;
+            mag_dev = -mag_dev;
+            sensor_heading += mag_dev;
             break;
         default:
             // huh?
-            session->newdata.magnetic_var = NAN;
+            mag_dev = NAN;
             break;
         }
+        session->newdata.magnetic_dev = mag_dev;
+    }
+    session->newdata.magnetic_track = sensor_heading;
+    mask |= MAGNETIC_TRACK_SET;
+
+    if ('\0' != field[4][0] &&
+        '\0' != field[5][0]) {
+        // sensor heading is magnetic heading, calculate true heading
+        double mag_var = safe_atof(field[4]);
+
+        if ((0.0 > mag_var) ||
+            (360.0 < mag_var)) {
+            // bad data
+            return mask;
+        }
+        switch (field[5][0]) {
+        case 'E':
+            // no change
+            session->newdata.track = sensor_heading + mag_var;
+            break;
+        case 'W':
+            mag_var = -mag_var;
+            session->newdata.track = sensor_heading + mag_var;
+            break;
+        default:
+            // huh?
+            mag_var = NAN;
+            break;
+        }
+        session->newdata.magnetic_var = mag_var;
+        mask |= TRACK_SET;
     }
 
-
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: $SDHDG heading %lf var %.1f\n",
+             "NMEA0183: $SDHDG heading %lf var %.1f dev %.1f, true %.1f\n",
              session->newdata.magnetic_track,
-             session->newdata.magnetic_var);
+             session->newdata.magnetic_var,
+             session->newdata.magnetic_dev,
+             session->newdata.track);
     return mask;
 }
 
@@ -6377,7 +6390,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"INFO", NULL, 14,  false, processINFO},
         {"HCR", NULL, 0,  false, NULL},        // Heading Correction, 4.10+
         // Heading, Deviation and Variation
-        {"HDG", NULL, 0,  false, processHDG},
+        {"HDG", NULL, 6,  false, processHDG},
         {"HDM", NULL, 3,  false, processHDM},   // $APHDM, Magnetic Heading
         {"HDT", NULL, 1,  false, processHDT},   // Heading true
         // Hell Andle, Roll Period, Roll Amplitude.  NMEA 4.10+
