@@ -2,7 +2,7 @@
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <math.h>
 #include <stdbool.h>
@@ -68,7 +68,7 @@ static gps_mask_t superstar2_msg_ack(struct gps_device_t *session,
  */
 
 
-/* Navigation Data (User Coordinates) ID# 20 */
+// Navigation Data (User Coordinates) ID# 20
 static gps_mask_t superstar2_msg_navsol_lla(struct gps_device_t *session,
                                            unsigned char *buf, size_t data_len)
 {
@@ -87,14 +87,14 @@ static gps_mask_t superstar2_msg_navsol_lla(struct gps_device_t *session,
     mask = 0;
 
     flags = (unsigned char)getub(buf, 72);
-    if ((flags & 0x0f) != 0x03) /* mode 3 is navigation */
+    if ((flags & 0x0f) != 0x03) // mode 3 is navigation
         return mask;
 
-    /* extract time data */
+    // extract time data
     (void)memset(&tm, '\0', sizeof(tm));
     tm.tm_hour = (int)getub(buf, 4) & 0x1f;
     tm.tm_min = (int)getub(buf, 5);
-    d = getled64((char *)buf, 6);           /* seconds as a double */
+    d = getled64((char *)buf, 6);           // seconds as a double
     session->newdata.time.tv_nsec = (long)(modf(d, &int_part) * 1e9);
     tm.tm_sec = (int)int_part;
     tm.tm_mday = (int)getub(buf, 14);
@@ -104,10 +104,10 @@ static gps_mask_t superstar2_msg_navsol_lla(struct gps_device_t *session,
     session->newdata.time.tv_sec = mkgmtime(&tm);
     mask |= TIME_SET | NTPTIME_IS;
 
-    /* extract the local tangential plane (ENU) solution */
+    // extract the local tangential plane (ENU) solution
     session->newdata.latitude = getled64((char *)buf, 18) * RAD_2_DEG;
     session->newdata.longitude = getled64((char *)buf, 26) * RAD_2_DEG;
-    /* unclear if this is MSL or WGS84.  Assume WGS84 */
+    // unclear if this is MSL or WGS84.  Assume WGS84
     session->newdata.altHAE = getlef32((char *)buf, 34);
     session->newdata.speed = getlef32((char *)buf, 38);
     session->newdata.track = getlef32((char *)buf, 42) * RAD_2_DEG;
@@ -117,7 +117,7 @@ static gps_mask_t superstar2_msg_navsol_lla(struct gps_device_t *session,
     session->gpsdata.satellites_used = (int)getub(buf, 71) & 0x0f;
     session->gpsdata.dop.hdop = getleu16(buf, 66) * 0.1;
     session->gpsdata.dop.vdop = getleu16(buf, 68) * 0.1;
-    /* other DOP if available */
+    // other DOP if available
     mask |= DOP_SET | USED_IS;
 
     flags = (unsigned char)getub(buf, 70);
@@ -181,9 +181,9 @@ superstar2_msg_svinfo(struct gps_device_t *session,
 
     nchan = 12;
     gpsd_zero_satellites(&session->gpsdata);
-    nsv = 0;                    /* number of actually used satellites */
+    nsv = 0;                    // number of actually used satellites
     for (i = st = 0; i < nchan; i++) {
-        /* get info for one channel/satellite */
+        // get info for one channel/satellite
         int off = i * 5 + 5;
         unsigned int porn;
         bool used = (getub(buf, off) & 0x60) == 0x60;
@@ -220,7 +220,7 @@ superstar2_msg_version(struct gps_device_t *session,
 #define SZ 16
     char main_sw[SZ], hw_part[SZ], boot_sw[SZ], ser_num[SZ];
 
-    /* byte 98 is device type, value = 3 means superstar2 */
+    // byte 98 is device type, value = 3 means superstar2
     if ((data_len != 101) || ((getub(buf, 98) & 0x0f) != 3))
         return 0;
 
@@ -260,7 +260,7 @@ superstar2_msg_timing(struct gps_device_t *session, unsigned char *buf,
         mask = 0;
     else {
         double d;
-        /* extract time data */
+        // extract time data
         (void)memset(&tm, '\0', sizeof(tm));
         tm.tm_mday = (int)getsb(buf, 37);
         tm.tm_mon = (int)getsb(buf, 38) - 1;
@@ -296,27 +296,28 @@ superstar2_msg_measurement(struct gps_device_t *session, unsigned char *buf,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "superstar2 #23 - measurement block\n");
 
-    n = (int)getub(buf, 6);     /* number of measurements */
+    n = (int)getub(buf, 6);     // number of measurements
     if ((n < 1) || (n > MAXCHANNELS)) {
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "too many measurements\n");
         return 0;
     }
-    t = getled64((char *)buf, 7);               /* measurement time */
+    t = getled64((char *)buf, 7);               // measurement time
     DTOTS(&session->gpsdata.raw.mtime, t);
 
-    /* this is so we can tell which never got set */
+    // this is so we can tell which never got set
     for (i = 0; i < MAXCHANNELS; i++)
         session->gpsdata.raw.meas[i].svid = 0;
     for (i = 0; i < n; i++) {
         unsigned long ul;
+        unsigned off = 11 * i + 15;
         session->gpsdata.skyview[i].PRN =
-            (short)(getub(buf, 11 * i + 15) & 0x1f);
+            (short)(getub(buf, off) & 0x1f);
         session->gpsdata.skyview[i].ss =
-            (double)getub(buf, 11 * i * 15 + 1) / 4.0;
+            (double)getub(buf, off+ 1) / 4.0;
         session->gpsdata.raw.meas[i].codephase =
-            (double)getleu32(buf, 11 * i * 15 + 2);
-        ul = (unsigned long)getleu32(buf, 11 * i * 15 + 6);
+            (double)getleu32(buf, off+ 2);
+        ul = (unsigned long)getleu32(buf, off+ 6);
 
         session->gpsdata.raw.meas[i].satstat = (unsigned int)(ul & 0x03L);
         session->gpsdata.raw.meas[i].carrierphase =
@@ -324,12 +325,12 @@ superstar2_msg_measurement(struct gps_device_t *session, unsigned char *buf,
         session->gpsdata.raw.meas[i].pseudorange = (double)(ul >> 12);
     }
 
-    /*The above decode does not look correct, do not report */
-    /* mask |= RAW_IS; */
+    //The above decode does not look correct, do not report
+    // mask |= RAW_IS;
     return mask;
 }
 
-/* request for ionospheric and utc time data #75 */
+// request for ionospheric and utc time data #75
 static unsigned char iono_utc_msg[] = { 0x01, 0x4b, 0xb4, 0x00, 0x00, 0x01 };
 
 
@@ -366,7 +367,7 @@ superstar2_msg_ephemeris(struct gps_device_t *session, unsigned char *buf,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "superstar2 #22 - ephemeris data - prn %u\n", prn);
 
-    /* ephemeris data updates fairly slowly, but when it does, poll UTC */
+    // ephemeris data updates fairly slowly, but when it does, poll UTC
     if ((time(NULL) - session->driver.superstar2.last_iono) > 60)
         (void)superstar2_write(session, (char *)iono_utc_msg,
                                sizeof(iono_utc_msg));
@@ -379,10 +380,11 @@ static ssize_t
 superstar2_write(struct gps_device_t *session, char *msg, size_t msglen)
 {
     unsigned short c = 0;
-    ssize_t i;
+    size_t i;
 
-    for (i = 0; i < (ssize_t) (msglen - 2); i++)
+    for (i = 0; i <  (msglen - 2); i++) {
         c += (unsigned short)msg[i];
+    }
     c += 0x100;
     msg[(int)msg[3] + 4] = (char)((c >> 8) & 0xff);
     msg[(int)msg[3] + 5] = (char)(c & 0xff);
@@ -408,18 +410,18 @@ superstar2_dispatch(struct gps_device_t * session, unsigned char *buf,
     session->cycle_end_reliable = true;
 
     switch (type) {
-    case SUPERSTAR2_ACK:        /* Message Acknowledgement */
+    case SUPERSTAR2_ACK:        // Message Acknowledgement
         return superstar2_msg_ack(session, buf, len);
-    case SUPERSTAR2_SVINFO:     /* Satellite Visibility Data */
+    case SUPERSTAR2_SVINFO:     // Satellite Visibility Data
         return superstar2_msg_svinfo(session, buf, len);
-    case SUPERSTAR2_NAVSOL_LLA: /* Navigation Data */
+    case SUPERSTAR2_NAVSOL_LLA: // Navigation Data
         return superstar2_msg_navsol_lla(session, buf,
                                          len) | (CLEAR_IS | REPORT_IS);
-    case SUPERSTAR2_VERSION:    /* Hardware/Software Version */
+    case SUPERSTAR2_VERSION:    // Hardware/Software Version
         return superstar2_msg_version(session, buf, len);
-    case SUPERSTAR2_TIMING:     /* Timing Parameters */
+    case SUPERSTAR2_TIMING:     // Timing Parameters
         return superstar2_msg_timing(session, buf, len);
-    case SUPERSTAR2_MEASUREMENT:        /* Timing Parameters */
+    case SUPERSTAR2_MEASUREMENT:        // Timing Parameters
         return superstar2_msg_measurement(session, buf, len);
     case SUPERSTAR2_IONO_UTC:
         return superstar2_msg_iono_utc(session, buf, len);
@@ -506,7 +508,7 @@ static ssize_t superstar2_control_send(struct gps_device_t *session, char *msg,
 static bool superstar2_set_speed(struct gps_device_t *session,
                                  speed_t speed, char parity, int stopbits)
 {
-    /* parity and stopbit switching aren't available on this chip */
+    // parity and stopbit switching aren't available on this chip
     if (parity != session->gpsdata.dev.parity
         || stopbits != (int)session->gpsdata.dev.stopbits) {
         return false;
@@ -514,7 +516,7 @@ static bool superstar2_set_speed(struct gps_device_t *session,
         unsigned char speed_msg[] =
             { 0x01, 0x48, 0xB7, 0x01, 0x00, 0x00, 0x00 };
 
-        /* high bit 0 in the mode word means set NMEA mode */
+        // high bit 0 in the mode word means set NMEA mode
         speed_msg[4] = (unsigned char)(speed / 300);
         return (superstar2_write(session, (char *)speed_msg, 7) == 7);
     }
@@ -526,50 +528,50 @@ static void superstar2_set_mode(struct gps_device_t *session, int mode)
         unsigned char mode_msg[] =
             { 0x01, 0x48, 0xB7, 0x01, 0x00, 0x00, 0x00 };
 
-        /* high bit 0 in the mode word means set NMEA mode */
+        // high bit 0 in the mode word means set NMEA mode
         mode_msg[4] = (unsigned char)(session->gpsdata.dev.baudrate / 300);
         (void)superstar2_write(session, (char *)mode_msg, 7);
     }
 }
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 const struct gps_type_t driver_superstar2 = {
-    /* Full name of type */
+    // Full name of type
     .type_name          = "SuperStarII",
-    /* Associated lexer packet type */
+    // Associated lexer packet type
     .packet_type        = SUPERSTAR2_PACKET,
-    /* Driver type flags */
+    // Driver type flags
     .flags               = DRIVER_STICKY,
-    /* Response string that identifies device (not active) */
+    // Response string that identifies device (not active)
     .trigger            = NULL,
-    /* Number of satellite channels supported by the device */
+    // Number of satellite channels supported by the device
     .channels           = 12,
-    /* Startup-time device detector */
+    // Startup-time device detector
     .probe_detect       = NULL,
-    /* Packet getter (using default routine) */
+    // Packet getter (using default routine)
     .get_packet         = packet_get1,
-    /* Parse message packets */
+    // Parse message packets
     .parse_packet       = superstar2_parse_input,
-    /* RTCM handler (using default routine) */
+    // RTCM handler (using default routine)
     .rtcm_writer        = gpsd_write,
-    /* non-perturbing initial query */
+    // non-perturbing initial query
     .init_query         = NULL,
-    /* Fire on various lifetime events */
+    // Fire on various lifetime events
     .event_hook         = superstar2_event_hook,
-    /* Speed (baudrate) switch */
+    // Speed (baudrate) switch
     .speed_switcher     = superstar2_set_speed,
-    /* Switch to NMEA mode */
+    // Switch to NMEA mode
     .mode_switcher      = superstar2_set_mode,
-    /* Message delivery rate switcher (not active) */
+    // Message delivery rate switcher (not active)
     .rate_switcher      = NULL,
-    /* Minimum cycle time (not used) */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    /* Control string sender - should provide checksum and trailer */
+    // Minimum cycle time (not used)
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    // Control string sender - should provide checksum and trailer
     .control_send       = superstar2_control_send,
-    .time_offset     = NULL,            /* no method for NTP fudge factor */
+    .time_offset     = NULL,            // no method for NTP fudge factor
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 #endif  // defined(SUPERSTAR2_ENABLE)
 
 // vim: set expandtab shiftwidth=4
