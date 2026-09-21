@@ -2742,6 +2742,10 @@ static gps_mask_t processHDM(unsigned count UNUSED, char *field[],
     return mask;
 }
 
+/* precessHDT() - process heading true
+ *
+ * Deprecated by NMEA in 2008
+ */
 static gps_mask_t processHDT(unsigned count UNUSED, char *field[],
                              struct gps_device_t *session)
 {

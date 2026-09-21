@@ -1583,6 +1583,8 @@ Field Number:
 Actual vessel heading in degrees true produced by any device or system
 producing true heading.
 
+Deprecated 2008.
+
 ------------------------------------------------------------------------------
         1   2 3
         |   | |
