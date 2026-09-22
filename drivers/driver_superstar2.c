@@ -171,10 +171,12 @@ static gps_mask_t
 superstar2_msg_svinfo(struct gps_device_t *session,
                       unsigned char *buf, size_t data_len)
 {
-    int i, st, nchan, nsv;
+    size_t i;
+    unsigned st, nchan, nsv;
 
-    if (data_len != 67)
+    if (67 != data_len) {
         return 0;
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "superstar2 #33 - satellite data\n");
@@ -184,11 +186,15 @@ superstar2_msg_svinfo(struct gps_device_t *session,
     nsv = 0;                    // number of actually used satellites
     for (i = st = 0; i < nchan; i++) {
         // get info for one channel/satellite
-        int off = i * 5 + 5;
-        unsigned int porn;
+        unsigned off = i * 5 + 5;
+        unsigned porn;
         bool used = (getub(buf, off) & 0x60) == 0x60;
-        if ((porn = (unsigned int)getub(buf, off) & 0x1f) == 0)
+        if (ROWS(session->gpsdata.skyview) <= i) {
+            break;
+        }
+        if ((porn = (unsigned int)getub(buf, off) & 0x1f) == 0) {
             porn = (unsigned int)(getub(buf, off + 3) >> 1) + 87;
+        }
 
         session->gpsdata.skyview[i].PRN = (short)porn;
         session->gpsdata.skyview[i].ss = (double)getub(buf, off + 4);
@@ -196,11 +202,13 @@ superstar2_msg_svinfo(struct gps_device_t *session,
         session->gpsdata.skyview[i].azimuth = (double)getub(buf, off + 2) +
             (short)((unsigned short)(getub(buf, off + 3) & 0x1) << 1);
         session->gpsdata.skyview[i].used = used;
-        if (used)
+        if (used) {
             nsv++;
+        }
 
-        if (session->gpsdata.skyview[i].PRN)
+        if (session->gpsdata.skyview[i].PRN) {
             st++;
+        }
     }
     session->gpsdata.skyview_time.tv_sec = 0;
     session->gpsdata.skyview_time.tv_nsec = 0;
@@ -221,8 +229,10 @@ superstar2_msg_version(struct gps_device_t *session,
     char main_sw[SZ], hw_part[SZ], boot_sw[SZ], ser_num[SZ];
 
     // byte 98 is device type, value = 3 means superstar2
-    if ((data_len != 101) || ((getub(buf, 98) & 0x0f) != 3))
+    if ((101 != data_len) ||
+        (3 != (getub(buf, 98) & 0x0f))) {
         return 0;
+    }
 
     (void)snprintf(main_sw, 15, "%s", (char *)buf + 4);
     (void)snprintf(hw_part, 15, "%s", (char *)buf + 18);
@@ -251,14 +261,15 @@ superstar2_msg_timing(struct gps_device_t *session, unsigned char *buf,
     gps_mask_t mask;
     struct tm tm = {0};
 
-    if (data_len != 65)
+    if (65 != data_len) {
         return 0;
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "superstar2 #113 - timing status\n");
-    if ((getub(buf, 55) & 0x30) != 0)
+    if (0 != (getub(buf, 55) & 0x30)) {
         mask = 0;
-    else {
+    } else {
         double d;
         // extract time data
         (void)memset(&tm, '\0', sizeof(tm));
@@ -290,7 +301,8 @@ superstar2_msg_measurement(struct gps_device_t *session, unsigned char *buf,
                            size_t data_len UNUSED)
 {
     gps_mask_t mask = 0;
-    int i, n;
+    size_t i;
+    unsigned n;
     double t;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -306,11 +318,15 @@ superstar2_msg_measurement(struct gps_device_t *session, unsigned char *buf,
     DTOTS(&session->gpsdata.raw.mtime, t);
 
     // this is so we can tell which never got set
-    for (i = 0; i < MAXCHANNELS; i++)
+    for (i = 0; i < ROWS(session->gpsdata.raw.meas); i++) {
         session->gpsdata.raw.meas[i].svid = 0;
+    }
     for (i = 0; i < n; i++) {
         unsigned long ul;
         unsigned off = 11 * i + 15;
+        if (ROWS(session->gpsdata.skyview) <= i) {
+            break;
+        }
         session->gpsdata.skyview[i].PRN =
             (short)(getub(buf, off) & 0x1f);
         session->gpsdata.skyview[i].ss =
@@ -342,10 +358,10 @@ static gps_mask_t
 superstar2_msg_iono_utc(struct gps_device_t *session, unsigned char *buf,
                         size_t data_len UNUSED)
 {
-    unsigned int i, u;
+    unsigned i, u;
 
-    i = (unsigned int)getub(buf, 12);
-    u = (unsigned int)getub(buf, 21);
+    i = getub(buf, 12);
+    u = getub(buf, 21);
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "superstar2 #75 - ionospheric & utc data: iono %s utc %s\n",
              i ? "ok" : "bad", u ? "ok" : "bad");
@@ -368,9 +384,10 @@ superstar2_msg_ephemeris(struct gps_device_t *session, unsigned char *buf,
              "superstar2 #22 - ephemeris data - prn %u\n", prn);
 
     // ephemeris data updates fairly slowly, but when it does, poll UTC
-    if ((time(NULL) - session->driver.superstar2.last_iono) > 60)
+    if ((time(NULL) - session->driver.superstar2.last_iono) > 60) {
         (void)superstar2_write(session, (char *)iono_utc_msg,
                                sizeof(iono_utc_msg));
+    }
 
     return ONLINE_SET;
 }
@@ -403,8 +420,9 @@ superstar2_dispatch(struct gps_device_t * session, unsigned char *buf,
 {
     int type;
 
-    if (len == 0)
+    if (0 == len) {
         return 0;
+    }
 
     type = (int)buf[SUPERSTAR2_TYPE_OFFSET];
     session->cycle_end_reliable = true;
@@ -449,7 +467,7 @@ static void superstar2_event_hook(struct gps_device_t *session, event_t event)
         return;
     }
 
-    if (event == EVENT_IDENTIFIED) {
+    if (EVENT_IDENTIFIED == event) {
         unsigned char version_msg[]    = { 0x01, 0x2d, 0xd2, 0x00, 0x00, 0x01 };
         unsigned char svinfo_msg[]     = { 0x01, 0xa1, 0x5e, 0x00, 0x00, 0x01 };
         unsigned char timing_msg[]     = { 0x01, 0xf1, 0x0e, 0x00, 0x00, 0x01 };
@@ -509,8 +527,8 @@ static bool superstar2_set_speed(struct gps_device_t *session,
                                  speed_t speed, char parity, int stopbits)
 {
     // parity and stopbit switching aren't available on this chip
-    if (parity != session->gpsdata.dev.parity
-        || stopbits != (int)session->gpsdata.dev.stopbits) {
+    if (parity != session->gpsdata.dev.parity ||
+        stopbits != (int)session->gpsdata.dev.stopbits) {
         return false;
     } else {
         unsigned char speed_msg[] =
@@ -524,7 +542,7 @@ static bool superstar2_set_speed(struct gps_device_t *session,
 
 static void superstar2_set_mode(struct gps_device_t *session, int mode)
 {
-    if (mode == MODE_NMEA) {
+    if (MODE_NMEA == mode) {
         unsigned char mode_msg[] =
             { 0x01, 0x48, 0xB7, 0x01, 0x00, 0x00, 0x00 };
 
