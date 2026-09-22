@@ -1,6 +1,6 @@
 = gpsdecode(1)
 :author: Eric S. Raymond
-:date: 19 January 2021
+:date: 21 September 2026
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, gpsdecode
 :manmanual: GPSD Documentation
@@ -46,7 +46,7 @@ services, RTCM feeds from RTCM receivers or NTRIP broadcasters.
 
 *-?*, *-h*, *--help*::
   Output a usage mssage, then exit.
-*-c*, *--json*::
+*-c*, *--nojson*::
   Sets the AIS dump format to separate fields with an ASCII pipe symbol.
   Fields are dumped in the order they occur in the AIS packet. Numerics
   are not scaled (*-u* is forced). Strings are unpacked from six-bit

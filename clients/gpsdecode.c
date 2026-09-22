@@ -765,6 +765,7 @@ static void usage(void)
           "  --json             JSON.\n"
           "  --minlength        Minimum length, no JSON.\n"
           "  --nmea             pseudo NMEA\n"
+          "  --nojson           AIS dump format with an ASCII pipe separator.\n"
           "  --spartn           SPARTN enable.\n"
           "  --split24          split24\n"
           "  --types TYPES      Types\n"
