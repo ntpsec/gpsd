@@ -2882,13 +2882,13 @@ void packet_parse(struct gps_lexer_t *lexer)
                 pkt_id = (lexer->inbuffer[idx + 3] << 4) |
                          (lexer->inbuffer[idx + 4] >> 4);
 
-                // print the inbuffer packet, +3 to peek ahead. (maybe)
+                // print the inbuffer packet
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "RTCM3 data_len %u type %u idx %u inbufflen %u "
                          " buf %s\n",
                          data_len, pkt_id, idx, inbuflen,
                          gps_hexdump(outbuf, sizeof(outbuf),
-                                     &lexer->inbuffer[idx], data_len + 6 + 3));
+                                     &lexer->inbuffer[idx], data_len + 6));
             }
 
             // The CRC includes the preamble, and data.
@@ -2899,9 +2899,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                          "RTCM3 data crc failure, "
                          "%0x against %02x %02x %02x\n",
                          crc24q_hash(&lexer->inbuffer[idx], data_len + 3),
-                         lexer->inbufptr[idx + data_len + 1],
-                         lexer->inbufptr[idx + data_len + 2],
-                         lexer->inbufptr[idx + data_len + 3]);
+                         lexer->inbufptr[idx + data_len + 3],
+                         lexer->inbufptr[idx + data_len + 4],
+                         lexer->inbufptr[idx + data_len + 5]);
                 packet_type = BAD_PACKET;
             }
             acc_dis = ACCEPT;
