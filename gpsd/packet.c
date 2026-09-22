@@ -698,6 +698,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             'L' == c ||      // $GL, GLONASS only
             'N' == c ||      // $GN, mixed
             'P' == c ||      // $GP, GPS
+            'Q' == c ||      // $GQ, QZSS
             'Y' == c) {      // $GY, Gyro  (IMU)
             lexer->state = NMEA_LEADER_END;
         } else {
