@@ -123,6 +123,7 @@ extern "C" {
  *      remove unused gps_device_t.driver.nmea2000.pgnlist
  *      add const to gps_device_t.driver.nmea2000.workpgn
  *      gps_device_t.driver.nmea2000.unit to source_addr
+ *      add obfuscate_uri()
  *
  */
 
@@ -1110,6 +1111,7 @@ extern unsigned int ais_binary_encode(struct ais_t *ais, unsigned char *bits,
                                       int flag);
 
 extern void ntrip_close(struct gps_device_t *);
+extern const char *obfuscate_uri(const char *);
 extern int ntrip_parse_url(const struct gpsd_errout_t *,
                            struct ntrip_stream_t *, const char *);
 extern void ntp_latch(struct gps_device_t *device,  struct timedelta_t *td);

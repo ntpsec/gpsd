@@ -463,6 +463,50 @@ void gpsd_clear(struct gps_device_t *session)
     session->opentime = time(NULL);
 }
 
+/* FiXME: should be done once in parse_uri_dest() or close by
+ * strip "user@example.com:password@" from a uri.
+ * better not be an @ after the host name.
+ *
+ * Needs proper tests.
+ * NOT thread safe.
+ */
+const char *obfuscate_uri(const char *uri)
+{
+    static char buf[GPS_PATH_MAX];
+    char *p;
+    const char *at = NULL;
+    const char *last_at = NULL;
+
+    // Find the protocol separator
+    const char* proto_end = strstr(uri, "://");
+    if (!proto_end) {
+        // none
+        return uri;
+    }
+
+    at = proto_end + 3;
+    last_at = NULL;
+    while (at &&
+           '\0' != *at) {
+        at = strchr(at, '@');
+        if (!at) {
+            break;
+        }
+        last_at = at;
+        at++;
+    }
+    if (!last_at) {
+        return uri;   // No credentials,
+    }
+
+    // grab prefix
+    p = stpncpy(buf, uri, 3 + proto_end - uri);
+    // p = stpcpy(p, "XXXX:XXXX");  // just strip, not obfuscae.
+    (void)stpcpy(p, last_at + 1);
+
+    return buf;
+}
+
 /* split s into host and service parts
  * if service is not specified, *service is assigned to NULL
  * device is currently always assigned to NULL

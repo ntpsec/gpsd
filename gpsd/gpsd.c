@@ -565,7 +565,9 @@ struct subscriber_t
     pthread_mutex_t mutex;        // serialize access to fd
 };
 
-#define subscribed(sub, devp)    (sub->policy.watcher && (sub->policy.devpath[0]=='\0' || strcmp(sub->policy.devpath, devp->gpsdata.dev.path)==0))
+#define subscribed(sub, devp)    (sub->policy.watcher &&  \
+    (sub->policy.devpath[0]=='\0' || \
+     0 == strcmp(sub->policy.devpath, devp->gpsdata.dev.path)))
 
 // indexed by client file descriptor
 static struct subscriber_t subscribers[MAX_CLIENTS];
@@ -747,7 +749,7 @@ static void deactivate_device(struct gps_device_t *device)
 
     (void)snprintf(buf, sizeof(buf),
                   "{\"class\":\"DEVICE\",\"path\":\"%s\",\"activated\":0}\r\n",
-                  device->gpsdata.dev.path);
+                  obfuscate_uri(device->gpsdata.dev.path));
 
     notify_watchers(device, true, false, buf, sizeof(buf));
     if (!BAD_SOCKET(device->gpsdata.gps_fd)) {
@@ -779,7 +781,7 @@ static struct gps_device_t *find_device(const char *device_name)
     }
     for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
         if (allocated_device(devp) &&
-            0 == strcmp(devp->gpsdata.dev.path, device_name)) {
+            0 == strcmp(obfuscate_uri(devp->gpsdata.dev.path), device_name)) {
             return devp;
         }
     }
@@ -801,7 +803,7 @@ static bool open_device( struct gps_device_t *device)
     // cast for 32-bit intptr_t
     GPSD_LOG(LOG_PROG, &context.errout,
              "CORE: open_device(%s) fd %ld\n",
-             device->gpsdata.dev.path,
+             obfuscate_uri(device->gpsdata.dev.path),
              (long)device->gpsdata.gps_fd);
 
     activated = gpsd_activate(device, O_OPTIMIZE);
@@ -839,7 +841,8 @@ static bool open_device( struct gps_device_t *device)
             GPSD_LOG(LOG_INF, &context.errout,
                      "SHM: ntpshm_link_activate(%s):%.4s%.4s "
                      "activated %d\n",
-                     device->gpsdata.dev.path, buf1, buf2, activated);
+                     obfuscate_uri(device->gpsdata.dev.path),
+                     buf1, buf2, activated);
         }
 
         if (PLACEHOLDING_FD == activated) {
@@ -892,7 +895,7 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
             (void)snprintf(buf, sizeof(buf),
                           "{\"class\":\"DEVICE\",\"path\":\"%s\","
                           "\"activated\":\"%s\"}\r\n",
-                          devp->gpsdata.dev.path,
+                          obfuscate_uri(devp->gpsdata.dev.path),
                           now_to_iso8601(tbuf, sizeof(tbuf)));
             notify_watchers(devp, true, false, buf, sizeof(buf));
             break;
@@ -1069,9 +1072,11 @@ static void handle_control(int sfd, char *buf)
     } else if (strstr(buf, "?devices") == buf) {
         // write back devices list followed by OK
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
-            ignore_return(write(sfd, devp->gpsdata.dev.path,
-                                strnlen(devp->gpsdata.dev.path,
-                                        sizeof(devp->gpsdata.dev.path))));
+            char buf1[BUFSIZ];
+
+            (void)strlcpy(buf1, obfuscate_uri(devp->gpsdata.dev.path),
+                          sizeof(buf1));
+            ignore_return(write(sfd, buf1, strnlen(buf1, sizeof(buf1))));
             ignore_return(write(sfd, "\n", 1));
         }
         ignore_return(write(sfd, OK, sizeof(OK) - 1));
@@ -1095,13 +1100,14 @@ static bool awaken(struct gps_device_t *device)
     GPSD_LOG(LOG_PROG, &context.errout,
              "awaken(%d) fd %ld, path %s\n",
              (int)(device - devices),
-             (long)device->gpsdata.gps_fd, device->gpsdata.dev.path);
+             (long)device->gpsdata.gps_fd,
+             obfuscate_uri(device->gpsdata.dev.path));
 
     // open that device
     if ((!initialized_device(device) &&
          !open_device(device))) {
         GPSD_LOG(LOG_WARN, &context.errout, "%s: open failed\n",
-                 device->gpsdata.dev.path);
+                 obfuscate_uri(device->gpsdata.dev.path));
         free_device(device);
         return false;
     }
@@ -1111,7 +1117,8 @@ static bool awaken(struct gps_device_t *device)
         GPSD_LOG(LOG_PROG, &context.errout,
                  "device %d (fd=%ld, path %s) already active.\n",
                  (int)(device - devices),
-                 (long)device->gpsdata.gps_fd, device->gpsdata.dev.path);
+                 (long)device->gpsdata.gps_fd,
+                 obfuscate_uri(device->gpsdata.dev.path));
         return true;
     }
 
@@ -1128,7 +1135,7 @@ static bool awaken(struct gps_device_t *device)
         // failed to open device, and not a /dev/ppsX or ntrip://, etc.
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "%s: device activation failed, freeing device.\n",
-                 device->gpsdata.dev.path);
+                 obfuscate_uri(device->gpsdata.dev.path));
         // FIXME: works around a crash bug, but prevents retries
         free_device(device);
         return false;
@@ -1198,7 +1205,7 @@ static void set_serial(struct gps_device_t *device,
 
     GPSD_LOG(LOG_PROG, &context.errout,
              "SER: set_serial(%s,%u,%s) %c%d\n",
-             device->gpsdata.dev.path,
+             obfuscate_uri(device->gpsdata.dev.path),
              (unsigned int)speed, modestring, parity, stopbits);
     // no support for other word sizes yet
     if (wordsize == (int)(9 - stopbits) &&
@@ -1246,7 +1253,8 @@ static void json_devicelist_dump(char *reply, size_t replylen)
 
     for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
         size_t reply_len = strnlen(reply, GPS_JSON_RESPONSE_MAX - 3);
-        size_t path_len = strnlen(devp->gpsdata.dev.path, GPS_PATH_MAX);
+        size_t path_len = strnlen(obfuscate_uri(devp->gpsdata.dev.path),
+                                  GPS_PATH_MAX);
         if (allocated_device(devp) &&
             (reply_len + path_len + 3) < (replylen - 1)) {
             char *cp;
@@ -1471,7 +1479,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
                                    "{\"class\":\"ERROR\","
                                    "\"message\":\"Type of %s is unknown.\""
                                    "}\r\n",
-                                   device->gpsdata.dev.path);
+                                   obfuscate_uri(device->gpsdata.dev.path));
                 } else {
                     timespec_t delta1, delta2;
                     const struct gps_type_t *dt = device->device_type;
@@ -1548,7 +1556,8 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
                 continue;
             }
             if ('\0' != devconf.path[0] &&
-                0 != strcmp(devp->gpsdata.dev.path, devconf.path)) {
+                0 != strcmp(obfuscate_uri(devp->gpsdata.dev.path),
+                            devconf.path)) {
                 continue;
             }
             json_device_dump(devp, reply + len, replylen - len);
@@ -1715,7 +1724,8 @@ static void pseudonmea_report(struct subscriber_t *sub,
             nmea_tpv_dump(device, buf, sizeof(buf));
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= GPS (binary tpv) %s: %s\n",
-                     device->gpsdata.dev.path, buf);
+                     obfuscate_uri(device->gpsdata.dev.path),
+                     buf);
             (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
         }
 
@@ -1723,7 +1733,8 @@ static void pseudonmea_report(struct subscriber_t *sub,
             nmea_sky_dump(device, buf, sizeof(buf));
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= GPS (binary sky) %s: %s\n",
-                     device->gpsdata.dev.path, buf);
+                     obfuscate_uri(device->gpsdata.dev.path),
+                     buf);
             (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
         }
 
@@ -1731,7 +1742,8 @@ static void pseudonmea_report(struct subscriber_t *sub,
             nmea_subframe_dump(device, buf, sizeof(buf));
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= GPS (binary subframe) %s: %s\n",
-                     device->gpsdata.dev.path, buf);
+                     obfuscate_uri(device->gpsdata.dev.path),
+                     buf);
             (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
         }
 #ifdef AIVDM_ENABLE
@@ -1739,7 +1751,8 @@ static void pseudonmea_report(struct subscriber_t *sub,
             nmea_ais_dump(device, buf, sizeof(buf));
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= AIS (binary ais) %s: %s\n",
-                     device->gpsdata.dev.path, buf);
+                     obfuscate_uri(device->gpsdata.dev.path),
+                     buf);
             (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
         }
 #endif  // AIVDM_ENABLE
@@ -1777,7 +1790,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "internal error - device type of %s not set "
                      "when expected\n",
-                     device->gpsdata.dev.path);
+                     obfuscate_uri(device->gpsdata.dev.path));
         } else {
             char buf[GPS_JSON_RESPONSE_MAX];
 
@@ -1917,7 +1930,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                       "%lld, \"real_nsec\":%ld,\"clock_sec\":%lld,"
                       "\"clock_nsec\":%ld,\"precision\":%d,"
                       "\"shm\":\"NTP%d\"}\r\n",
-                      device->gpsdata.dev.path,
+                      obfuscate_uri(device->gpsdata.dev.path),
                       (long long)td.real.tv_sec, td.real.tv_nsec,
                       (long long)td.clock.tv_sec, td.clock.tv_nsec,
                       precision, device->shm_clock_unit);
@@ -2095,7 +2108,7 @@ static void ship_pps_message(struct gps_device_t *session, int unit,
                    "{\"class\":\"PPS\",\"device\":\"%s\",\"real_sec\":%lld,"
                    "\"real_nsec\":%ld,\"clock_sec\":%lld,\"clock_nsec\":%ld,"
                    "\"precision\":%d,\"shm\":\"NTP%d\"",
-                   session->gpsdata.dev.path,
+                   obfuscate_uri(session->gpsdata.dev.path),
                    (long long)td->real.tv_sec, td->real.tv_nsec,
                    (long long)td->clock.tv_sec, td->clock.tv_nsec,
                    precision, unit);
@@ -3257,7 +3270,7 @@ int main(int argc, char *argv[])
                     GPSD_LOG(LOG_INF, &context.errout,
                              "reconnection attempt on device %d, %s\n",
                              (int)(device - devices),
-                             device->gpsdata.dev.path);
+                             obfuscate_uri(device->gpsdata.dev.path));
                     (void)awaken(device);
                 }
             } else {
