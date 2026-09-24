@@ -2900,9 +2900,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                          "RTCM3 data crc failure, "
                          "%0x against %02x %02x %02x\n",
                          crc24q_hash(&lexer->inbuffer[idx], data_len + 3),
-                         lexer->inbufptr[idx + data_len + 3],
-                         lexer->inbufptr[idx + data_len + 4],
-                         lexer->inbufptr[idx + data_len + 5]);
+                         lexer->inbuffer[idx + data_len + 3],
+                         lexer->inbuffer[idx + data_len + 4],
+                         lexer->inbuffer[idx + data_len + 5]);
                 packet_type = BAD_PACKET;
             }
             acc_dis = ACCEPT;
