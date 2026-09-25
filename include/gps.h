@@ -122,6 +122,7 @@ extern "C" {
  *       Add gnssid_t to limit gnssid to valid values.
  *       MAXCHANNELS bumped 230, for SkyTraq
  *       add magnetic_dev, true_track to gps_data_t.
+ *       add path_obf devconfig_t.
  */
 
 // API version should match in SConscript
@@ -2749,6 +2750,7 @@ struct version_t {
 #define HEXDATA_MAX 512                 // hex encoded command buffer, max
 struct devconfig_t {
     char path[GPS_PATH_MAX];
+    char path_obf[GPS_PATH_MAX];        // obfuscated path
     int flags;
 #define SEEN_GPS        0x01
 #define SEEN_RTCM2      0x02

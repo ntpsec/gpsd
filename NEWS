@@ -12,6 +12,7 @@
       and more.
    CASIC driver: decode time and satellites, add speed, rate and mode
       switchers.  Regression for the Quectel L76K (AT6558).
+   Do a better job of obfuscating USER:PASS in URIs (device path).
 
 3.27.5: 14 Jan 2026
   Correctly bump API Version to 16.1

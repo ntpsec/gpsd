@@ -591,9 +591,6 @@ static void decode(FILE *fpin, FILE *fpout)
     char buf[GPS_JSON_RESPONSE_MAX * 4];
     size_t i;
 
-    //This looks like a good idea, but it breaks regression tests
-    //(void)strlcpy(session.gpsdata.dev.path, "stdin",
-    //              sizeof(session.gpsdata.dev.path));
     memset(&policy, '\0', sizeof(policy));
     policy.json = json;
     policy.scaled = scaled;
@@ -613,7 +610,10 @@ static void decode(FILE *fpin, FILE *fpout)
     (void)strlcpy(session.gpsdata.dev.path,
                   "stdin",
                   sizeof(session.gpsdata.dev.path));
-    for (i = 0; i < (sizeof(minima) / sizeof(minima[0])); i++) {
+    (void)strlcpy(session.gpsdata.dev.path_obf,
+                  session.gpsdata.dev.path,
+                  sizeof(session.gpsdata.dev.path_obf));
+    for (i = 0; i < ROWS(minima); i++) {
         minima[i] = MAX_PACKET_LENGTH + 1;
     }
 
@@ -722,6 +722,9 @@ static void encode(FILE *fpin, FILE *fpout)
     (void)strlcpy(session.gpsdata.dev.path,
                   "stdin",
                   sizeof(session.gpsdata.dev.path));
+    (void)strlcpy(session.gpsdata.dev.path_obf,
+                  session.gpsdata.dev.path,
+                  sizeof(session.gpsdata.dev.path_obf));
     policy.json = true;
     policy.nmea = pseudonmea;
     /* Parsing is always made in unscaled mode,

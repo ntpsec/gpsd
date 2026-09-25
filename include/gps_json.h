@@ -15,8 +15,6 @@ struct gps_device_t;
 
 int json_ais_read(const char *, char *, size_t, struct ais_t *,
                   const char **);
-void json_aivdm_dump(const struct ais_t *, const char *, bool,
-                     char *, size_t);
 void json_att_dump(const struct gps_data_t *, char *, size_t,
                    const struct attitude_t *, const char *);
 void json_data_report(const gps_mask_t, struct gps_device_t *,

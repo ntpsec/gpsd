@@ -983,11 +983,7 @@ extern unsigned int isgps_parity(isgps30bits_t);
 extern void isgps_output_magnavox(const isgps30bits_t *, unsigned int, FILE *);
 
 extern enum isgpsstat_t rtcm2_decode(struct gps_lexer_t *, unsigned int);
-extern void json_rtcm2_dump(struct rtcm2_t *,
-                            const char *, char[], size_t);
 extern void rtcm2_unpack(struct gps_device_t *, struct rtcm2_t *, char *);
-extern void json_rtcm3_dump(const struct rtcm3_t *,
-                            const char *, char[], size_t);
 extern void rtcm3_unpack(const struct gps_context_t *,
                          struct rtcm3_t *, const unsigned char *);
 
@@ -1111,7 +1107,7 @@ extern unsigned int ais_binary_encode(struct ais_t *ais, unsigned char *bits,
                                       int flag);
 
 extern void ntrip_close(struct gps_device_t *);
-extern const char *obfuscate_uri(const char *);
+extern const char *obfuscate_uri(char *, const char *, size_t);
 extern int ntrip_parse_url(const struct gpsd_errout_t *,
                            struct ntrip_stream_t *, const char *);
 extern void ntp_latch(struct gps_device_t *device,  struct timedelta_t *td);

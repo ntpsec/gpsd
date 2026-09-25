@@ -312,13 +312,19 @@ void gps_context_init(struct gps_context_t *context,
 
 // initialize GPS polling
 void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
-               const char *device)
+               const char *device_path)
 {
     (void)memset(session, 0, sizeof(struct gps_device_t));
 
-    if (device != NULL) {
-        (void)strlcpy(session->gpsdata.dev.path, device,
+    if (NULL != device_path) {
+        (void)strlcpy(session->gpsdata.dev.path, device_path,
                       sizeof(session->gpsdata.dev.path));
+        obfuscate_uri(session->gpsdata.dev.path_obf, device_path,
+                      sizeof(session->gpsdata.dev.path_obf));
+    } else {
+        // should fail??
+        session->gpsdata.dev.path[0] = '\0';
+        session->gpsdata.dev.path_obf[0] = '\0';
     }
 
     /* with memset(), no need to set NULLs, or zeros
@@ -463,16 +469,14 @@ void gpsd_clear(struct gps_device_t *session)
     session->opentime = time(NULL);
 }
 
-/* FiXME: should be done once in parse_uri_dest() or close by
- * strip "user@example.com:password@" from a uri.
+/*
+ * strip "user@example.com:password@" from a uri (device path).
  * better not be an @ after the host name.
  *
  * Needs proper tests.
- * NOT thread safe.
  */
-const char *obfuscate_uri(const char *uri)
+const char *obfuscate_uri(char *dest, const char *uri, size_t dest_sz)
 {
-    static char buf[GPS_PATH_MAX];
     char *p;
     const char *at = NULL;
     const char *last_at = NULL;
@@ -481,7 +485,7 @@ const char *obfuscate_uri(const char *uri)
     const char* proto_end = strstr(uri, "://");
     if (!proto_end) {
         // none
-        return uri;
+        return stpncpy(dest, uri, dest_sz);
     }
 
     at = proto_end + 3;
@@ -496,15 +500,16 @@ const char *obfuscate_uri(const char *uri)
         at++;
     }
     if (!last_at) {
-        return uri;   // No credentials,
+        // No credentials,
+        return stpncpy(dest, uri, dest_sz);
     }
 
     // grab prefix
-    p = stpncpy(buf, uri, 3 + proto_end - uri);
+    p = stpncpy(dest, uri, 3 + proto_end - uri);
     // p = stpcpy(p, "XXXX:XXXX");  // just strip, not obfuscae.
     (void)stpcpy(p, last_at + 1);
 
-    return buf;
+    return dest;
 }
 
 /* split s into host and service parts

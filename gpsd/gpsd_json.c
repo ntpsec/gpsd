@@ -253,9 +253,10 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
     struct gps_data_t *gpsdata = &session->gpsdata;
 
     (void)strlcpy(reply, "{\"class\":\"TPV\"", replylen);
-    if (gpsdata->dev.path[0] != '\0')
+    if (gpsdata->dev.path_obf[0] != '\0')
         // Note: Assumes /dev paths are always plain ASCII
-        str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
+        str_appendf(reply, replylen, ",\"device\":\"%s\"",
+                    gpsdata->dev.path_obf);
     if (STATUS_DGPS <= gpsdata->fix.status) {
         // to save rebuilding all the regressions, skip UNK and GPS
         str_appendf(reply, replylen, ",\"status\":%d", gpsdata->fix.status);
@@ -560,8 +561,9 @@ void json_noise_dump(const struct gps_data_t *gpsdata,
     size_t header_len;       // a guard to prevent sending empty messages
 
     (void)strlcpy(reply, "{\"class\":\"GST\"", replylen);
-    if ('\0' != gpsdata->dev.path[0]) {
-        str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
+    if ('\0' != gpsdata->dev.path_obf[0]) {
+        str_appendf(reply, replylen, ",\"device\":\"%s\"",
+                    gpsdata->dev.path_obf);
     }
     if (0 < gpsdata->gst.utctime.tv_sec) {
         char tbuf[JSON_DATE_MAX+1];
@@ -606,8 +608,9 @@ void json_sky_dump(const struct gps_device_t *session,
     size_t header_len;       // a guard to prevent sending empty messages
 
     (void)strlcpy(reply, "{\"class\":\"SKY\"", replylen);
-    if ('\0' != datap->dev.path[0]) {
-        str_appendf(reply, replylen, ",\"device\":\"%s\"", datap->dev.path);
+    if ('\0' != datap->dev.path_obf[0]) {
+        str_appendf(reply, replylen, ",\"device\":\"%s\"",
+                    datap->dev.path_obf);
     }
     if (0 < datap->skyview_time.tv_sec) {
         char tbuf[JSON_DATE_MAX+1];
@@ -745,7 +748,7 @@ void json_device_dump(const struct gps_device_t *device,
     char buf1[JSON_VAL_MAX * 2 + 1];
 
     (void)strlcpy(reply, "{\"class\":\"DEVICE\",\"path\":\"", replylen);
-    (void)strlcat(reply, obfuscate_uri(device->gpsdata.dev.path), replylen);
+    (void)strlcat(reply, device->gpsdata.dev.path_obf, replylen);
     (void)strlcat(reply, "\"", replylen);
     if (NULL != device->device_type) {
         (void)strlcat(reply, ",\"driver\":\"", replylen);
@@ -1008,7 +1011,7 @@ static void json_subframe_dump(struct gps_device_t *session, const bool scaled,
 
     (void)snprintf(buf, buflen, "{\"class\":\"SUBFRAME\",\"device\":\"%s\","
                    "\"gnssId\":%u,\"tSV\":%u,\"frame\":%u",
-                   datap->dev.path, subframe->gnssId, subframe->tSVID,
+                   datap->dev.path_obf, subframe->gnssId, subframe->tSVID,
                    subframe->subframe_num);
 
     if (0 <= subframe->WN) {
@@ -1383,7 +1386,8 @@ void json_raw_dump(const struct gps_data_t *gpsdata,
     }
     (void)strlcpy(reply, "{\"class\":\"RAW\"", replylen);
     if ('\0' != gpsdata->dev.path[0]) {
-        str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
+        str_appendf(reply, replylen, ",\"device\":\"%s\"",
+                    gpsdata->dev.path_obf);
     }
 
     str_appendf(reply, replylen, ",\"time\":%lld,\"nsec\":%ld,\"rawdata\":[",
@@ -1455,9 +1459,9 @@ static int rtk_sat_cmp(const void *a, const void *b)
 }
 
 // dump the contents of a parsed RTCM104 message as JSON
-void json_rtcm2_dump(struct rtcm2_t *rtcm,
-                     const char *device,
-                     char buf[], size_t buflen)
+static void json_rtcm2_dump(struct rtcm2_t *rtcm,
+                            const char *dev_path,
+                           char buf[], size_t buflen)
 {
     char buf1[JSON_VAL_MAX * 2 + 1];
     unsigned int n;
@@ -1468,9 +1472,9 @@ void json_rtcm2_dump(struct rtcm2_t *rtcm,
     }
 
     (void)snprintf(buf, buflen, "{\"class\":\"RTCM2\",");
-    if (NULL != device &&
-        '\0' != device[0]) {
-        str_appendf(buf, buflen, "\"device\":\"%s\",", device);
+    if (NULL != dev_path &&
+        '\0' != dev_path[0]) {
+        str_appendf(buf, buflen, "\"device\":\"%s\",", dev_path);
     }
     str_appendf(buf, buflen,
                 "\"type\":%u,\"station_id\":%u,\"zcount\":%0.1f,"
@@ -1747,9 +1751,9 @@ void json_rtcm2_dump(struct rtcm2_t *rtcm,
  *
  * return: void
  */
-void json_rtcm3_dump(const struct rtcm3_t *rtcm,
-                     const char *device,
-                     char buf[], size_t buflen)
+static void json_rtcm3_dump(const struct rtcm3_t *rtcm,
+                           const char *dev_path,
+                           char buf[], size_t buflen)
 {
     char buf1[JSON_VAL_MAX * 2 + 1];
     char buf2[JSON_VAL_MAX * 2 + 1];
@@ -1763,9 +1767,9 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
         return;
     }
     (void)snprintf(buf, buflen, "{\"class\":\"RTCM3\",");
-    if (NULL != device &&
-        '\0' != device[0]) {
-        str_appendf(buf, buflen, "\"device\":\"%s\",", device);
+    if (NULL != dev_path &&
+        '\0' != dev_path[0]) {
+        str_appendf(buf, buflen, "\"device\":\"%s\",", dev_path);
     }
     str_appendf(buf, buflen, "\"type\":%u,", rtcm->type);
     str_appendf(buf, buflen, "\"length\":%u,", rtcm->length);
@@ -2481,9 +2485,9 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
  *
  * return: void
  */
-void json_aivdm_dump(const struct ais_t *ais,
-                     const char *device, bool scaled,
-                     char *buf, size_t buflen)
+static void json_aivdm_dump(const struct ais_t *ais,
+                            const char *dev_path, bool scaled,
+                            char *buf, size_t buflen)
 {
     char buf1[JSON_VAL_MAX * 2 + 1];
     char buf2[JSON_VAL_MAX * 2 + 1];
@@ -2803,9 +2807,9 @@ void json_aivdm_dump(const struct ais_t *ais,
     };
 
     (void)snprintf(buf, buflen, "{\"class\":\"AIS\"");
-    if (NULL != device &&
-        '\0' != device[0]) {
-        str_appendf(buf, buflen, ",\"device\":\"%s\"", device);
+    if (NULL != dev_path &&
+        '\0' != dev_path[0]) {
+        str_appendf(buf, buflen, ",\"device\":\"%s\"", dev_path);
     }
     str_appendf(buf, buflen,
                 ",\"type\":%u,\"repeat\":%u,\"mmsi\":%u,\"scaled\":%s",
@@ -4646,7 +4650,7 @@ void json_att_dump(const struct gps_data_t *gpsdata,
                    const struct attitude_t *att, const char *class)
 {
     (void)snprintf(reply, replylen, "{\"class\":\"%s\",\"device\":\"%s\"",
-                   class, gpsdata->dev.path);
+                   class, gpsdata->dev.path_obf);
 
     if (0 < att->mtime.tv_sec) {
         char tbuf[JSON_DATE_MAX+1];
@@ -4761,7 +4765,7 @@ void json_oscillator_dump(const struct gps_data_t *datap,
     (void)snprintf(reply, replylen,
                    "{\"class\":\"OSC\",\"device\":\"%s\",\"running\":%s,"
                    "\"reference\":%s,\"disciplined\":%s,\"delta\":%d}\r\n",
-                   datap->dev.path,
+                   datap->dev.path_obf,
                    JSON_BOOL(datap->osc.running),
                    JSON_BOOL(datap->osc.reference),
                    JSON_BOOL(datap->osc.disciplined),
@@ -4833,20 +4837,20 @@ void json_data_report(const gps_mask_t changed,
 
     if (0 != (changed & RTCM2_SET)) {
         buf_len = strnlen(buf, MAX_PACKET_LENGTH);
-        json_rtcm2_dump(&datap->rtcm2, datap->dev.path,
+        json_rtcm2_dump(&datap->rtcm2, datap->dev.path_obf,
                         buf + buf_len, buflen - buf_len);
     }
 
     if (0 != (changed & RTCM3_SET)) {
         buf_len = strnlen(buf, MAX_PACKET_LENGTH);
-        json_rtcm3_dump(&datap->rtcm3, datap->dev.path,
+        json_rtcm3_dump(&datap->rtcm3, datap->dev.path_obf,
                         buf + buf_len, buflen - buf_len);
     }
 
 #ifdef AIVDM_ENABLE
     if (0 != (changed & AIS_SET)) {
         buf_len = strnlen(buf, MAX_PACKET_LENGTH);
-        json_aivdm_dump(&datap->ais, datap->dev.path,
+        json_aivdm_dump(&datap->ais, datap->dev.path_obf,
                         policy->scaled,
                         buf + buf_len, buflen - buf_len);
     }
