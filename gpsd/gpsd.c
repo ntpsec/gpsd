@@ -1750,7 +1750,7 @@ static void pseudonmea_report(struct subscriber_t *sub,
             nmea_ais_dump(device, buf, sizeof(buf));
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= AIS (binary ais) %s: %s\n",
-                     device->gpsdata.dev.path, buf);
+                     device->gpsdata.dev.path_obf, buf);
             (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
         }
 #endif  // AIVDM_ENABLE

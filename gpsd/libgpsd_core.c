@@ -477,7 +477,6 @@ void gpsd_clear(struct gps_device_t *session)
  */
 const char *obfuscate_uri(char *dest, const char *uri, size_t dest_sz)
 {
-    char *p;
     const char *at = NULL;
     const char *last_at = NULL;
 
@@ -504,10 +503,8 @@ const char *obfuscate_uri(char *dest, const char *uri, size_t dest_sz)
         return stpncpy(dest, uri, dest_sz);
     }
 
-    // grab prefix
-    p = stpncpy(dest, uri, 3 + proto_end - uri);
-    // p = stpcpy(p, "XXXX:XXXX");  // just strip, not obfuscae.
-    (void)stpcpy(p, last_at + 1);
+    (void)snprintf(dest, dest_sz, "%.*sUSER:PASS@%s",
+                   (int)(3 + proto_end - uri), uri, last_at + 1);
 
     return dest;
 }

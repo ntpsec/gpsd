@@ -3016,26 +3016,25 @@ rtcm2_logs = ['test/sample.rtcm2', 'test/sample.rtcm2.chk']
 rtcm_regress = Utility('rtcm-regress', [gpsdecode, rtcm2_logs], [
     '@echo "Testing RTCM decoding..."',
     '@for f in "${SRCDIR}/test/"*.rtcm2; do '
-    '    echo "\tTesting $${f}..."; '
-    '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-    '    "${SRCDIR}/clients/gpsdecode" -u -j <"$${f}" >$${TMPFILE}; '
-    '    diff -ub "$${f}".chk $${TMPFILE} || echo "Test FAILED!"; '
-    '    rm -f $${TMPFILE}; '
+    '  echo "\tTesting $${f}..."; '
+    ' "${SRCDIR}/clients/gpsdecode" -u -j <"$${f}" | diff -ub "$${f}".chk - ;'
     'done;',
     '@echo "Testing idempotency of JSON dump/decode for RTCM2"',
     '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
     '"${SRCDIR}/clients/gpsdecode" -u -e -j <test/synthetic-rtcm2.json '
     ' >$${TMPFILE}; '
     '    grep -v "^#" test/synthetic-rtcm2.json | diff -ub - $${TMPFILE} '
-    '    || echo "Test FAILED!"; '
+    '    || exit 1; '
     '    rm -f $${TMPFILE}; ',
+    # FIXME: this leaves TMPFILE on test failures.
 ])
 
 # Rebuild the RTCM regression tests.
 Utility('rtcm-makeregress', [gpsdecode], [
     'for f in "${SRCDIR}/test/"*.rtcm2; do '
-    '    "${SRCDIR}/clients/gpsdecode" -j <"$${f}" >"$${f}".chk; '
-    'done'
+    '    "${SRCDIR}/clients/gpsdecode" -u -j <"$${f}" >"$${f}".chk; '
+    'done;'
+    '@echo "You must rebuild test/synthetic-rtcm2.json by hand."',
 ])
 
 # Regression-test the AIVDM decoder.
