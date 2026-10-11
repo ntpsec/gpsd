@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"   // must be before all includes
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -30,11 +30,11 @@
  */
 
 // beginning at bitvec bit start, unpack count sixbit characters
-static void from_sixbit_untrimmed(const struct gpsd_errout_t *errout,
-                                  const unsigned char *bitvec,
+static void from_sixbit_untrimmed(const struct gpsd_errout_t* errout,
+                                  const unsigned char* bitvec,
                                   const size_t bitlen,
                                   const unsigned start,
-                                  unsigned count, char *to,
+                                  unsigned count, char* to,
                                   const size_t to_sz)
 {
     const char sixchr[65] =
@@ -81,32 +81,34 @@ static void trim_spaces_on_right_end(char* to, size_t max)
 
 /* beginning at bitvec bit start, unpack count sixbit characters
  * and remove trailing spaces */
-static void from_sixbit(const struct gpsd_errout_t *errout,
-                        const unsigned char *bitvec, const size_t bitlen,
+static void from_sixbit(const struct gpsd_errout_t* errout,
+                        const unsigned char* bitvec, const size_t bitlen,
                         const unsigned start,
-                        const unsigned count, char *to, const size_t to_sz)
+                        const unsigned count, char* to, const size_t to_sz)
 {
-       from_sixbit_untrimmed(errout, bitvec, bitlen, start, count, to, to_sz);
-       trim_spaces_on_right_end(to, count);
+    from_sixbit_untrimmed(errout, bitvec, bitlen, start, count, to, to_sz);
+    trim_spaces_on_right_end(to, count);
 }
 
 #define UBITS(s, l)     ubits(bits, s, l, false)
 #define SBITS(s, l)     sbits(bits, s, l, false)
 #define UCHARS(start, to)  \
-    from_sixbit(errout, bits, bitlen, start, sizeof(to) - 1, to, sizeof(to))
+        from_sixbit(errout, bits, bitlen, start, sizeof(to) - 1, \
+                    to, sizeof(to))
 
 #define ENDCHARS(start, to, to_sz)  \
-    from_sixbit(errout, bits, bitlen, start, (bitlen - start) / 6, to, to_sz)
+        from_sixbit(errout, bits, bitlen, start, (bitlen - start) / 6, \
+                    to, to_sz)
 
 /* decode an AIS binary packet
  *
  * Return: True on success
  *         False on failure
  */
-bool ais_binary_decode(const struct gpsd_errout_t *errout,
-                       struct ais_t *ais,
-                       const unsigned char *bits, size_t bitlen,
-                       struct ais_type24_queue_t *type24_queue)
+bool ais_binary_decode(const struct gpsd_errout_t* errout,
+                       struct ais_t* ais,
+                       const unsigned char* bits, size_t bitlen,
+                       struct ais_type24_queue_t* type24_queue)
 {
     unsigned int u;
     size_t bytelen = BITS_TO_BYTES(bitlen);
@@ -115,7 +117,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
     ais->repeat = UBITS(6, 2);
     ais->mmsi = UBITS(8, 30);
     GPSD_LOG(LOG_INF, errout,
-              "AIVDM message type %d, MMSI %09d bitlen %zu bytelen %zu\n",
+             "AIVDM message type %d, MMSI %09d bitlen %zu bytelen %zu\n",
              ais->type, ais->mmsi, bitlen, bytelen);
 
 #define PERMISSIVE_LENGTH_CHECK(correct) \
@@ -131,7 +133,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         }
 
 #define RANGE_CHECK(min, max) \
-        if (bitlen < min || bitlen > max) { \
+        if (bitlen < min || \
+            bitlen > max) { \
             GPSD_LOG(LOG_ERROR, errout, \
                      "AIVDM message type %d size is out of range: " \
                      " %u <= (%zu) <= %u.\n", \
@@ -140,7 +143,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         }
 
 #define RANGE_CHECK6(min, max) \
-        if (bitlen < min || bitlen > max) { \
+        if (bitlen < min || \
+            bitlen > max) { \
             GPSD_LOG(LOG_ERROR, errout, \
                      "AIVDM message type %d dac %u fid %u size is out of " \
                      "range %u <= (%zu) <= %u.\n", \
@@ -150,7 +154,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         }
 
 #define RANGE_CHECK8(min, max) \
-        if (bitlen < min || bitlen > max) { \
+        if (bitlen < min || \
+            bitlen > max) { \
             GPSD_LOG(LOG_ERROR, errout, \
                      "AIVDM message type %d dac %u fid %u size is out of " \
                      "range %u <= (%zu) <= %u.\n", \
