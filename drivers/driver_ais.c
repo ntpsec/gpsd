@@ -1186,61 +1186,89 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
         }
         // break;
     case 25:    // Binary Message, Single Slot
-        // this check and the following one reject line noise
-        RANGE_CHECK(40, 168);
+        // this check and the following ones reject line noise
+        // ITU-R M1371-5 Table 80
+        RANGE_CHECK(80, 168);
         ais->type25.addressed   = (bool)UBITS(38, 1);
-        ais->type25.structured  = (bool)UBITS(39, 1);
+        ais->type25.structured  = (bool)UBITS(39, 1);  // binary data flag
 
-        if (bitlen < (unsigned)(40 + (16 * ais->type25.structured) +
-                                (30 * ais->type25.addressed))) {
-            GPSD_LOG(LOG_WARN, errout,
-                     "AIVDM message type 25 too short for mode.\n");
+        u = 40U + (32U * ais->type25.addressed) +
+                 (16U * ais->type25.structured);
+        if (bitlen < u) {
+            GPSD_LOG(LOG_SHOUT, errout,
+            // GPSD_LOG(LOG_WARN, errout,
+                     "AIVDM type 25 bitlen %zu wrong want %u.\n",
+                    bitlen, u);
             return false;
-        }
-        if (ais->type25.addressed) {
-            ais->type25.dest_mmsi   = UBITS(40, 30);
-        }
-        if (ais->type25.structured) {
-            ais->type25.app_id      = UBITS(40 + ais->type25.addressed * 30,16);
         }
         ais->type25.bitcount        = bitlen - 40 - 16 * ais->type25.structured;
+        if (ais->type25.addressed) {
+            ais->type25.bitcount -= 32;
+            ais->type25.dest_mmsi   = UBITS(40, 30);
+            // plus 2 bits of padding
+            if (98 < ais->type25.bitcount) {
+                // ITU-R M.1371-5 Table 80
+                ais->type25.bitcount  = 98;
+            }
+        } else {
+            if (128 < ais->type25.bitcount) {
+                // ITU-R M.1371-5 Table 80
+                ais->type25.bitcount  = 128;
+            }
+        }
+        if (ais->type25.structured) {
+            ais->type25.bitcount -= 16;
+            ais->type25.app_id = UBITS(40 + ais->type25.addressed * 32, 16);
+        }
+        u = BITS_TO_BYTES(ais->type25.bitcount);
+        if (sizeof(ais->type25.bitdata) < u) {
+            u = sizeof(ais->type25.bitdata);
+        }
         // bit 40 is exactly 5 bytes in; 2 bytes is 16 bits
         (void)memcpy(ais->type25.bitdata,
-                     bits + 5 + 2 * ais->type25.structured,
-                     BITS_TO_BYTES(ais->type25.bitcount));
-        // discard MMSI if addressed
-        if (ais->type25.addressed) {
-            shiftleft((unsigned char *)ais->type25.bitdata,
-                      ais->type25.bitcount, 30);
-            ais->type25.bitcount -= 30;
-        }
+                     bits + 5 + 2 * ais->type25.structured +
+                     4 * ais->type25.addressed, u);
         break;
     case 26:    // Binary Message, Multiple Slot
-        RANGE_CHECK(60, 1004);
+        // ITU-R M1371-5 Tables 28 and 82
+        RANGE_CHECK(96, 1064);
         ais->type26.addressed   = (bool)UBITS(38, 1);
-        ais->type26.structured  = (bool)UBITS(39, 1);
-        if ((signed)bitlen < 40 + 16 * ais->type26.structured +
-                30 * ais->type26.addressed + 20) {
-            GPSD_LOG(LOG_WARN, errout,
-                     "AIVDM message type 26 too short for mode.\n");
+        ais->type26.structured  = (bool)UBITS(39, 1);  // binary data flag
+        u =  40U + (16U * ais->type26.structured) +
+                (32U * ais->type26.addressed) + 20;
+        if (bitlen < u) {
+            // GPSD_LOG(LOG_WARN, errout,
+            GPSD_LOG(LOG_SHOUT, errout,
+                     "AIVDM type 26 %zu wrong, want %u.\n", bitlen, u);
             return false;
         }
+        ais->type26.bitcount      = bitlen - 60 - 16 * ais->type26.structured;
         if (ais->type26.addressed) {
+            ais->type26.bitcount -= 30;
             ais->type26.dest_mmsi = UBITS(40, 30);
+            if (72 < ais->type26.bitcount) {
+                // ITU-R M.1371-5 Table 28
+                ais->type26.bitcount  = 72;
+            }
+        } else {
+            // broadcast
+            if (104 < ais->type26.bitcount) {
+                // ITU-R M.1371-5 Table 28
+                ais->type26.bitcount  = 104;
+            }
         }
         if (ais->type26.structured) {
-            ais->type26.app_id    = UBITS(40 + ais->type26.addressed * 30, 16);
+            ais->type26.bitcount -= 16;
+            ais->type26.app_id = UBITS(40 + ais->type26.addressed * 32, 16);
         }
-        ais->type26.bitcount      = bitlen - 60 - 16 * ais->type26.structured;
+        u = BITS_TO_BYTES(ais->type26.bitcount);
+        if (sizeof(ais->type26.bitdata) < u) {
+            u = sizeof(ais->type26.bitdata);
+        }
+        // bit 40 is exactly 5 bytes in; 2 bytes is 16 bits
         (void)memcpy(ais->type26.bitdata,
-                     bits + 5 + 2 * ais->type26.structured,
-                     BITS_TO_BYTES(ais->type26.bitcount));
-        // discard MMSI if addressed
-        if (ais->type26.addressed) {
-            shiftleft((unsigned char *)ais->type26.bitdata,
-                      ais->type26.bitcount, 30);
-            ais->type26.bitcount -= 30;
-        }
+                     bits + 5 + 2 * ais->type26.structured +
+                     4 * ais->type26.addressed, u);
         break;
     case 27:    // Long Range AIS Broadcast message
         RANGE_CHECK(96, 168);

@@ -2440,6 +2440,7 @@ struct ais_t
         } type24;
         // Type 25 - Addressed Binary Message
         struct {
+            // ITU-R M.1371-5
             bool addressed;             // addressed-vs.broadcast flag
             bool structured;            // structured-binary flag
             unsigned int dest_mmsi;     // destination MMSI
