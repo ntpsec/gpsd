@@ -1630,7 +1630,6 @@ struct ais_t
 #define AIS_TYPE6_BINARY_MAX    920     // 920 bits
             size_t bitcount;            // bit count of the data
             union {
-                // cppcheck-suppress arrayIndexOutOfBounds
                 char bitdata[(AIS_TYPE6_BINARY_MAX + 7) / 8];
                 // Inland AIS - ETA at lock/bridge/terminal
                 struct {
