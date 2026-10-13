@@ -203,7 +203,7 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
         break;
     case 4:  // Base Station Report
         FALLTHROUGH
-    case 11: // UTC/Date Response
+    case 11:  // UTC/Date Response
         PERMISSIVE_LENGTH_CHECK(168)
         ais->type4.year = UBITS(38, 14);
         ais->type4.month = UBITS(52, 4);
@@ -302,7 +302,8 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
                 // skip 2 bits
                 ais->type6.structured = true;
                 break;
-            case 55:  // Number of Persons On Board
+            case 55:
+                // Number of Persons On Board
                 RANGE_CHECK6(168, 168);
                 ais->type6.dac200fid55.crew = UBITS(88, 8);
                 ais->type6.dac200fid55.passengers = UBITS(96, 13);
@@ -355,7 +356,8 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
                 }
                 ais->type6.structured = true;
                 break;
-            case 14:  // IMO236 - Tidal Window
+            case 14:
+                // IMO236 - Tidal Window
                 // similar to fid 32.
                 RANGE_CHECK6(87, 1008);
                 ais->type6.dac1fid32.month = UBITS(88, 4);
@@ -389,22 +391,18 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
                 ais->type6.dac1fid15.airdraught = UBITS(56, 11);
                 ais->type6.structured = true;
                 break;
-            case 16:                                              // IMO236 -
-                                                                  // Number of
-                                                                  // persons on
-                                                                  // board
+            case 16:
+                // IMO236 - Number of persons on board
                 RANGE_CHECK6(236, 289);
                 if (136 == ais->type6.bitcount) {
-                    ais->type6.dac1fid16.persons = UBITS(88, 13); // 289
+                    ais->type6.dac1fid16.persons = UBITS(88, 13);  // 289
                 } else {
-                    ais->type6.dac1fid16.persons = UBITS(55, 13); // 236
+                    ais->type6.dac1fid16.persons = UBITS(55, 13);  // 236
                 }
                 ais->type6.structured = true;
                 break;
-            case 18:                                              // IMO289 -
-                                                                  // Clearance
-                                                                  // time to
-                                                                  // enter port
+            case 18:
+                // IMO289 - Clearance time to enter port
                 // sometimes bitlen == 168!
                 RANGE_CHECK6(168, 1008);
                 ais->type6.dac1fid18.linkage = UBITS(88, 10);
@@ -552,13 +550,17 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
             }
         }
         if (!ais->type6.structured) {
-            (void)memcpy(ais->type6.bitdata, bits + (88 / CHAR_BIT),
-                         BITS_TO_BYTES(ais->type6.bitcount));
+            u = BITS_TO_BYTES(ais->type6.bitcount);
+            if (sizeof(ais->type6.bitdata) < u) {
+                u = sizeof(ais->type6.bitdata);
+                ais->type6.bitcount = u * 8;
+            }
+            (void)memcpy(ais->type6.bitdata, bits + (88 / CHAR_BIT), u);
         }
         break;
     case 7:  // Binary acknowledge
         FALLTHROUGH
-    case 13: // Safety Related Acknowledge
+    case 13:  // Safety Related Acknowledge
     {
         unsigned int mmsi[4];
         unsigned seqno[4];
@@ -661,31 +663,29 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
                 // skip 4 bits
                 ais->type8.structured = true;
                 break;
-            case 15:                                              // IMO236 -
-                                                                  // Extended
-                                                                  // ship and
-                                                                  // voyage
+            case 15:  // IMO236 -
+                      // Extended
+                      // ship and
+                      // voyage
                 RANGE_CHECK8(67, 72);
                 ais->type8.dac1fid15.airdraught = UBITS(56, 11);
                 // skip 5 bits
                 ais->type8.structured = true;
                 break;
-            case 16:                                              // Number of
-                                                                  // Persons On
-                                                                  // Board
+            case 16:
+                // Number of Persons On Board
                 // dac 1, fid 18.  bitlen = 776 ???
                 RANGE_CHECK8(72, 776);
                 if (136 == ais->type8.bitcount) {
-                    ais->type8.dac1fid16.persons = UBITS(88, 13); // 289
+                    ais->type8.dac1fid16.persons = UBITS(88, 13);  // 289
                     ais->type8.structured = true;
                 } else if (72 == ais->type8.bitcount) {
-                    ais->type8.dac1fid16.persons = UBITS(55, 13); // 236
+                    ais->type8.dac1fid16.persons = UBITS(55, 13);  // 236
                     ais->type8.structured = true;
                 }
                 break;
-            case 17:                                              // IMO289 -
-                                                                  // VTS-generated/synthetic
-                                                                  // targets
+            case 17:
+                // IMO289 - VTS-generated/synthetic targets
                 RANGE_CHECK8(56, 1008);
 #define ARRAY_BASE 56
 #define ELEMENT_SIZE 122
@@ -911,12 +911,17 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
         }
         // land here if we failed to match a known DAC/FID
         if (!ais->type8.structured) {
-            size_t number_of_bytes = BITS_TO_BYTES(ais->type8.bitcount);
-            (void)memcpy(ais->type8.bitdata, bits + (56 / CHAR_BIT),
-                         number_of_bytes);
+            u = BITS_TO_BYTES(ais->type8.bitcount);
+            if (sizeof(ais->type8.bitdata) < u) {
+                u = sizeof(ais->type8.bitdata);
+                ais->type8.bitcount = u * 8;
+            }
+            (void)memcpy(ais->type8.bitdata, bits + (56 / CHAR_BIT), u);
+
             size_t valid_bits_in_last_byte = ais->type8.bitcount % CHAR_BIT;
             if (valid_bits_in_last_byte > 0) {
-                ais->type8.bitdata[number_of_bytes - 1] &=
+                // huh??
+                ais->type8.bitdata[u - 1] &=
                     (0xFF << (8 - valid_bits_in_last_byte));
             }
         }
@@ -956,7 +961,8 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
         // ais->type14.spare          = UBITS(38, 2);
         ENDCHARS(40, ais->type14.text, sizeof(ais->type14.text));
         break;
-    case 15:  // Interrogation
+    case 15:
+        // Interrogation
         RANGE_CHECK(88, 168);
         (void)memset(&ais->type15, '\0', sizeof(ais->type15));
         // ais->type14.spare         = UBITS(38, 2);
@@ -976,28 +982,39 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
             }
         }
         break;
-    case 16:  // Assigned Mode Command
+    case 16:
+        // Assigned Mode Command
         RANGE_CHECK(96, 168);
         ais->type16.mmsi1 = UBITS(40, 30);
         ais->type16.offset1 = UBITS(70, 12);
         ais->type16.increment1 = UBITS(82, 10);
         if (144 > bitlen) {
-            ais->type16.mmsi2 = ais->type16.offset2 = ais->type16.increment2 = 0;
+            ais->type16.mmsi2 = ais->type16.offset2 = 0;
+            ais->type16.increment2 = 0;
         } else {
             ais->type16.mmsi2 = UBITS(92, 30);
             ais->type16.offset2 = UBITS(122, 12);
             ais->type16.increment2 = UBITS(134, 10);
         }
         break;
-    case 17:  // GNSS Broadcast Binary Message
+    case 17:
+        // GNSS Broadcast Binary Message
+        // ITU-R M1371-5 Table 68
         RANGE_CHECK(80, 816);
         // ais->type17.spare     = UBITS(38, 2);
         ais->type17.lon = SBITS(40, 18);
         ais->type17.lat = SBITS(58, 17);
         // ais->type17.spare     = UBITS(75, 5);
         ais->type17.bitcount = bitlen - 80;
-        (void)memcpy(ais->type17.bitdata, bits + (80 / CHAR_BIT),
-                     BITS_TO_BYTES(ais->type17.bitcount));
+        if (736 < ais->type17.bitcount) {
+            ais->type17.bitcount = 736;
+        }
+        u = BITS_TO_BYTES(ais->type17.bitcount);
+        if (sizeof(ais->type17.bitdata) < u) {
+            u = sizeof(ais->type17.bitdata);
+            ais->type17.bitcount = u * 8;
+        }
+        (void)memcpy(ais->type17.bitdata, bits + (80 / CHAR_BIT), u);
         break;
     case 18:  // Standard Class B CS Position Report
         // Per https://www.navcen.uscg.gov/ais-class-b-reports
@@ -1197,20 +1214,18 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
             return false;
         }
     // break;
-    case 25:                                         // Binary Message, Single
-                                                     // Slot
+    case 25:
+        // Binary Message, Single Slot
         // this check and the following ones reject line noise
         // ITU-R M1371-5 Table 80
         RANGE_CHECK(80, 168);
         ais->type25.addressed = (bool)UBITS(38, 1);
-        ais->type25.structured = (bool)UBITS(39, 1); // binary data flag
+        ais->type25.structured = (bool)UBITS(39, 1);  // binary data flag
 
         u = 40U + (32U * ais->type25.addressed) +
             (16U * ais->type25.structured);
         if (bitlen < u) {
-            GPSD_LOG(LOG_SHOUT, errout,
-                                                     // GPSD_LOG(LOG_WARN,
-                                                     // errout,
+            GPSD_LOG(LOG_WARN, errout,
                      "AIVDM type 25 bitlen %zu wrong want %u.\n",
                      bitlen, u);
             return false;
@@ -1237,23 +1252,23 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
         u = BITS_TO_BYTES(ais->type25.bitcount);
         if (sizeof(ais->type25.bitdata) < u) {
             u = sizeof(ais->type25.bitdata);
+            ais->type25.bitcount = u * 8;
         }
         // bit 40 is exactly 5 bytes in; 2 bytes is 16 bits
         (void)memcpy(ais->type25.bitdata,
                      bits + 5 + 2 * ais->type25.structured +
                      4 * ais->type25.addressed, u);
         break;
-    case 26:                                         // Binary Message, Multiple
-                                                     // Slot
+    case 26:
+        // Binary Message, Multiple Slot
         // ITU-R M1371-5 Tables 28 and 82
         RANGE_CHECK(96, 1064);
         ais->type26.addressed = (bool)UBITS(38, 1);
-        ais->type26.structured = (bool)UBITS(39, 1); // binary data flag
+        ais->type26.structured = (bool)UBITS(39, 1);  // binary data flag
         u = 40U + (16U * ais->type26.structured) +
             (32U * ais->type26.addressed) + 20;
         if (bitlen < u) {
-            // GPSD_LOG(LOG_WARN, errout,
-            GPSD_LOG(LOG_SHOUT, errout,
+            GPSD_LOG(LOG_WARN, errout,
                      "AIVDM type 26 %zu wrong, want %u.\n", bitlen, u);
             return false;
         }
@@ -1279,6 +1294,7 @@ bool ais_binary_decode(const struct gpsd_errout_t* errout,
         u = BITS_TO_BYTES(ais->type26.bitcount);
         if (sizeof(ais->type26.bitdata) < u) {
             u = sizeof(ais->type26.bitdata);
+            ais->type26.bitcount = 8 * u;
         }
         // bit 40 is exactly 5 bytes in; 2 bytes is 16 bits
         (void)memcpy(ais->type26.bitdata,
