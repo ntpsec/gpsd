@@ -2285,7 +2285,7 @@ env.Command(target="libgps/gps_maskdump.c",
             source=["maskaudit.py", "include/gps.h", "include/gpsd.h"],
             action='''
     rm -f $TARGET &&\
-        $SC_PYTHON $SOURCE -c "${SRCDIR}" > $TARGET &&\
+        $SC_PYTHON $SOURCE "${SRCDIR}" > $TARGET &&\
         chmod a-w $TARGET''')
 
 env.Command(target="libgps/ais_json.i", source="libgps/jsongen.py",

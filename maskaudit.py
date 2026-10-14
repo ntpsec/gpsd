@@ -33,53 +33,25 @@ class SourceExtractor(object):
 
     """SourceExtractor Class."""
 
-    def __init__(self, sourcefile, clientside):
+    def __init__(self, sourcefiles):
         """Init for SourceExtractor."""
-        self.sourcefile = sourcefile
-        self.clientside = clientside
-        self.daemonfiles = [
-            "gpsd.c",
-            "libgpsd_core.c",
-            "pseudonmea.c",
-            "drivers.c",
-            "gpsmon/gpsmon.c",
-            "subframe.c"
-        ] + glob.glob("driver_*.c") + glob.glob("gpsmon/monitor_*.c")
+        self.sourcefiles = sourcefiles
         self.masks = []
         self.primitive_masks = []
-        for line in open(self.sourcefile):
-            if (((line.startswith("#define") and
-                 ("_SET" in line or "_IS" in line)))):
-                fields = line.split()
-                self.masks.append((fields[1], fields[2]))
-                if ((fields[2].startswith("(1llu<<") or
-                     fields[2].startswith("INTERNAL_SET"))):
-                    self.primitive_masks.append((fields[1], fields[2]))
-
-    def in_library(self, flg):
-        """Grep in library."""
-        (status, _output) = getstatusoutput(
-            "grep '%s' libgps/libgps_core.c libgps/libgps_json.c gpsctl.c" %
-            flg)
-        return status == 0
-
-    def in_daemon(self, flg):
-        """Grep in daemon."""
-        (status, _output) = getstatusoutput(
-            "grep '%s' %s" % (flg, " ".join(self.daemonfiles)))
-        return status == 0
-
-    def relevant(self, flg):
-        """Relevant??"""
-        if self.clientside:
-            return self.in_library(flg)
-
-        return self.in_daemon(flg)
+        for file in self.sourcefiles:
+            for line in open(file):
+                if (((line.startswith("#define") and
+                     ("_SET" in line or "_IS" in line)))):
+                    fields = line.split()
+                    self.masks.append((fields[1], fields[2]))
+                    if ((fields[2].startswith("(1llu<<") or
+                         fields[2].startswith("INTERNAL_SET"))):
+                        self.primitive_masks.append((fields[1], fields[2]))
 
 
 if __name__ == '__main__':
     description = 'Tool for reporting gpsd status masks.'
-    usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
+    usage = '%(prog)s [OPTIONS]'
     epilog = ('BSD terms apply: see the file COPYING in the distribution root'
               ' for details.')
 
@@ -99,8 +71,7 @@ if __name__ == '__main__':
         action="store_true",
         default=False,
         dest='daemongen',
-        help=('Generate C code to dump masks for debugging'
-              ' [Default %(default)s]'),
+        help=('Obsolete.  Ignered'),
     )
     parser.add_argument(
         '-c',
@@ -108,8 +79,7 @@ if __name__ == '__main__':
         action="store_true",
         default=False,
         dest='clientgen',
-        help=('Generate C code to dump masks for debugging'
-              ' [Default %(default)s]'),
+        help=('Obsolete.  Ignered'),
     )
     parser.add_argument(
         '-p',
@@ -146,44 +116,31 @@ if __name__ == '__main__':
     else:
         srcdir = options.arguments
 
-    # FIXME: this does gps.h, or gpsd.h, and adds up max lenght
-    # but later both lists are used, so length wrong!
-    clientside = SourceExtractor(srcdir + "/include/gps.h",
-                                 clientside=True)
-    daemonside = SourceExtractor(srcdir + "/include/gpsd.h",
-                                 clientside=False)
-    if options.clientgen:
-        source = clientside
-        banner = "Library"
-    elif options.daemongen:
-        source = daemonside
-        banner = "Daemon"
-    else:
-        sys.stderr.write("maskaudit: need -c or -d option\n")
-        sys.exit(1)
+    sources = SourceExtractor((srcdir + "/include/gps.h",
+                               srcdir + "/include/gpsd.h"))
 
     try:
-        source.masks.sort()  # I like sorted lists
-        source.primitive_masks.sort(key=lambda m: m[0])  # I like sorted lists
+        sources.masks.sort()  # I like sorted lists
+        sources.primitive_masks.sort(key=lambda m: m[0])  # I like sorted lists
         if options.tabulate:
-            print("%-14s        %8s" % (" ", banner))
-            for (flag, value) in source.masks:
-                print("%-14s    %8s" % (flag, source.relevant(flag)))
+            print("%-14s        %8s" % (" ", "All"))
+            for (flag, value) in sources.masks:
+                print("%-14s    %8s" % (flag, value))
         if options.pythonize:
-            for (d, v) in source.masks:
+            for (d, v) in sources.masks:
                 if v[-1] == 'u':
                     v = v[:-1]
                 print("%-15s\t= %s" % (d, v))
         if not options.pythonize and not options.tabulate:
             maxout = 0
-            for (d, v) in source.primitive_masks:
-                if source.relevant(d):
-                    stem = d
-                    if stem.endswith("_SET"):
-                        stem = stem[:-4]
-                    if stem.endswith("_IS"):
-                        stem = stem[:-3]
-                    maxout += len(stem) + 1
+            # print(sources.primitive_masks)
+            for (d, v) in sources.primitive_masks:
+                stem = d
+                if stem.endswith("_SET"):
+                    stem = stem[:-4]
+                elif stem.endswith("_IS"):
+                    stem = stem[:-3]
+                maxout += len(stem) + 1
             print("""
 // This code is generated by maskaudit.py.  Do not hand-hack it!
 
@@ -206,32 +163,30 @@ if __name__ == '__main__':
 const char *gps_maskdump(gps_mask_t set)
 {
     static char buf[%d];
+    size_t index;
     const struct {
-        gps_mask_t      mask;
-        const char      *name;
-    } *sp, names[] = {""" % ((maxout * 3) + 3,))
-            # KLUDGE: maxout * 3 is kludge!
-            # FIXME: above added up just gps.h or gpsd.h but now do BOTH!!!
-            # length is WRONG!
-            masks = clientside.primitive_masks + daemonside.primitive_masks
+        gps_mask_t mask;
+        const char *name;
+    } names[] = {""" % (maxout + 3,))
+            masks = sources.primitive_masks
             for (flag, value) in sorted(masks):
                 stem = flag
                 if stem.endswith("_SET"):
                     stem = stem[:-4]
-                if stem.endswith("_IS"):
+                elif stem.endswith("_IS"):
                     stem = stem[:-3]
-                print("        {%s,\t\"%s\"}," % (flag, stem))
+                print("        {%s, \"%s\"}," % (flag, stem))
             print('''\
     };
 
-    memset(buf, '\\0', sizeof(buf));
     buf[0] = '{';
-    for (sp = names; sp < (names + sizeof(names)/sizeof(names[0])); sp++) {
-        if ((gps_mask_t)0 != (set & sp->mask)) {
+    buf[1] = '\\0';
+    for (index = 0; index < ROWS(names); index++) {
+        if ((gps_mask_t)0 != (set & names[index].mask)) {
             if (\'\\0\' != buf[1]) {
                 (void)strlcat(buf, "|", sizeof(buf));
             }
-            (void)strlcat(buf, sp->name, sizeof(buf));
+            (void)strlcat(buf, names[index].name, sizeof(buf));
         }
     }
     (void)strlcat(buf, "}", sizeof(buf));

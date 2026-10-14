@@ -151,7 +151,7 @@ python_binary_host {
 genrule {
 	name: "gps_maskdump_c",
 	tools: ["maskaudit"],
-	cmd: "$(location maskaudit) -c $(in) > $(out)",
+	cmd: "$(location maskaudit) $(in) > $(out)",
 	out: ["gps_maskdump.c"],
 	srcs: [""]
 }
