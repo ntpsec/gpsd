@@ -1,9 +1,19 @@
 This subdirectory contains the project web pages.
 
-To upload them after modifying, run rge web upload production from the
-main SConstruct file.  You must have xmlto, the docbook DTD (Ver
-4.1.2), installed for this to work.
+Build them with AsciiDoctor (the asciidoctor command, or a versioned
+name such as asciidoctor34):
 
-To convert .adoc files you need AsciiDoc (Ver 8.5.1+), or AsciiDoctor.
+    scons www
 
+SCons writes the pages under the versioned build directory,
+gpsd-$VERSION/www/. It also symlinks that directory as buildtmp, so
+the same tree is buildtmp/www/.
 
+Publish a local copy with:
+
+    scons website
+
+That rsyncs buildtmp/www/ to the directory named by the WEBSITE
+environment variable, or to .public when WEBSITE is unset. The
+GitLab Pages job sets WEBSITE=.public, runs scons website, and moves
+.public to public. See the pages job in .gitlab-ci.yml.
