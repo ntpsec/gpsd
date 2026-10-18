@@ -1017,6 +1017,15 @@ static const struct gps_type_t driver_garmintxt = {
  *
  * SIMCom DIM68M appears to be an MTK3333.
  *
+ * AXN_1.36 reports the fix as differential whenever SBAS is enabled and
+ * an SBAS satellite is tracked, including outside that SBAS service area.
+ * GGA quality is 2 and the RMC FAA mode is 'D', so gpsd reports
+ * STATUS_DGPS.  The DGPS age and station ID stay 0000, and the SBAS
+ * satellite is not listed as used in GSA.  Seen 2026-10-18 in Singapore
+ * while tracking GAGAN GSAT-15 (PRN 132); Singapore is outside the GAGAN
+ * service volume.  This driver requests that mode with $PMTK301,2 and
+ * $PMTK313,1.
+ *
  **************************************************************************/
 
 static void mtk3301_event_hook(struct gps_device_t *session, event_t event)
