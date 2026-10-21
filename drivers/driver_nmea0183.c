@@ -5478,7 +5478,9 @@ static gps_mask_t processPSTMVER(unsigned count UNUSED, char *field[],
     */
 
     gps_mask_t mask = ONLINE_SET;
-    size_t m_len =  strnlen(field[1], 40) + 2;
+    // room needed: "STM," or ",", the version, and the NUL
+    // codacy does not like strlen()
+    size_t m_len =  strnlen(field[1], NMEA_MAX) + 5;
     size_t st_left =  (sizeof(session->subtype) -
                        strnlen(session->subtype, sizeof(session->subtype)));
     size_t st1_left =  (sizeof(session->subtype1) -
@@ -5490,22 +5492,22 @@ static gps_mask_t processPSTMVER(unsigned count UNUSED, char *field[],
     } else if (m_len < st_left) {
         // room in subtype
         if ('\0' == session->subtype[0]) {
-            (void)strncat(session->subtype, "STM,",
-                          sizeof(session->subtype) - 1);
+            (void)strlcat(session->subtype, "STM,",
+                          sizeof(session->subtype));
         } else {
-            (void)strncat(session->subtype, ",",
-                          sizeof(session->subtype) - 1);
+            (void)strlcat(session->subtype, ",",
+                          sizeof(session->subtype));
         }
-        (void)strncat(session->subtype, field[1],
-                      sizeof(session->subtype) - 1);
+        (void)strlcat(session->subtype, field[1],
+                      sizeof(session->subtype));
     } else if (m_len < st1_left) {
         // room in subtype1
         if ('\0' != session->subtype1[0]) {
-            (void)strncat(session->subtype1, ",",
-                          sizeof(session->subtype1) - 1);
+            (void)strlcat(session->subtype1, ",",
+                          sizeof(session->subtype1));
         }
-        (void)strncat(session->subtype1, field[1],
-                      sizeof(session->subtype1) - 1);
+        (void)strlcat(session->subtype1, field[1],
+                      sizeof(session->subtype1));
     } else {
         // else no room.  log it
         GPSD_LOG(LOG_WARN, &session->context->errout,
