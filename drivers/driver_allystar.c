@@ -1085,15 +1085,15 @@ static gps_mask_t msg_nav_pverr(struct gps_device_t *session,
     // latitude, millimeters
     session->gpsdata.gst.lat_err_deviation = getles32(buf, 4)/ 1000.0;
     // longitude, millimeters
-    session->gpsdata.gst.lon_err_deviation = getles32(buf, 4)/ 1000.0;
+    session->gpsdata.gst.lon_err_deviation = getles32(buf, 8)/ 1000.0;
     // altitude, millimeters
-    session->gpsdata.gst.alt_err_deviation = getles32(buf, 4)/ 1000.0;
+    session->gpsdata.gst.alt_err_deviation = getles32(buf, 12)/ 1000.0;
     // velocity east, millimeters / second
-    session->gpsdata.gst.ve_err_deviation  = getles32(buf, 4)/ 1000.0;
+    session->gpsdata.gst.ve_err_deviation  = getles32(buf, 16)/ 1000.0;
     // velocity north, millimeters / second
-    session->gpsdata.gst.vn_err_deviation = getles32(buf, 4)/ 1000.0;
+    session->gpsdata.gst.vn_err_deviation = getles32(buf, 20)/ 1000.0;
     // velocity up, millimeters / second
-    session->gpsdata.gst.vu_err_deviation = getles32(buf, 4)/ 1000.0;
+    session->gpsdata.gst.vu_err_deviation = getles32(buf, 24)/ 1000.0;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
         "ALLY: NAV-PVERR: iTOW %lld stdlat %.3f stdlon %.3f stdalt %.3f "
