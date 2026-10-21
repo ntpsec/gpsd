@@ -1306,7 +1306,7 @@ static bool navcom_speed(struct gps_device_t *session,
 {
     // parity and stopbit switching aren't implemented
     if (parity != session->gpsdata.dev.parity
-        || stopbits != (int)session->gpsdata.dev.parity) {
+        || stopbits != (int)session->gpsdata.dev.stopbits) {
         return false;
     } else {
         uint8_t port, port_selection;
