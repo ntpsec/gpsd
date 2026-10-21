@@ -310,10 +310,10 @@ char *socka2a(sockaddr_t *fsin, char *buf, size_t buflen)
 
     switch (fsin->sa.sa_family) {
     case AF_INET:
-        FALLTHROUGH
+        r = inet_ntop(AF_INET, &(fsin->sa_in.sin_addr), buf, buflen);
+        break;
     case AF_INET6:
-        r = inet_ntop(fsin->sa.sa_family, &(fsin->sa_in.sin_addr),
-                      buf, buflen);
+        r = inet_ntop(AF_INET6, &(fsin->sa_in6.sin6_addr), buf, buflen);
         break;
     default:
         (void)strlcpy(buf, "<unknown AF>", buflen);

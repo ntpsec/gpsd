@@ -1,6 +1,6 @@
 /*
  * Unit test for timespec's
- * Also for parse_uri_dest(), and ntrip_parse_url
+ * Also for parse_uri_dest(), ntrip_parse_url, and socka2a()
  *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
@@ -932,6 +932,48 @@ static int test_ntrip_parse_url(int verbose)
     return fail_count;
 }
 
+// socka2a() tests
+static int test_socka2a(int verbose)
+{
+    int fail_count = 0;
+    char buf[INET6_ADDRSTRLEN];
+    sockaddr_t fsin;
+    // 2001:db8::1, documentation prefix
+    static const unsigned char addr6[16] = {
+        0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+
+    printf("\n\nTest socka2a()\n");
+
+    memset(&fsin, 0, sizeof(fsin));
+    fsin.sa_in.sin_family = AF_INET;
+    fsin.sa_in.sin_addr.s_addr = htonl(0x7f000001);   // 127.0.0.1
+    (void)socka2a(&fsin, buf, sizeof(buf));
+    if (0 != strcmp(buf, "127.0.0.1")) {
+        printf("socka2a(AF_INET) = %s s/b 127.0.0.1\n", buf);
+        fail_count++;
+    } else if (verbose) {
+        printf("socka2a(AF_INET) = %s\n", buf);
+    }
+
+    memset(&fsin, 0, sizeof(fsin));
+    fsin.sa_in6.sin6_family = AF_INET6;
+    memcpy(&fsin.sa_in6.sin6_addr, addr6, sizeof(addr6));
+    (void)socka2a(&fsin, buf, sizeof(buf));
+    if (0 != strcmp(buf, "2001:db8::1")) {
+        printf("socka2a(AF_INET6) = %s s/b 2001:db8::1\n", buf);
+        fail_count++;
+    } else if (verbose) {
+        printf("socka2a(AF_INET6) = %s\n", buf);
+    }
+
+    if (fail_count) {
+        printf("socka2a() test failed %d tests\n", fail_count);
+    } else {
+        puts("socka2a() test succeeded\n");
+    }
+    return fail_count;
+}
+
 int main(int argc, char *argv[])
 {
     int fail_count = 0;
@@ -965,6 +1007,7 @@ int main(int argc, char *argv[])
     fail_count += test_gpsd_gpstime_resolv(verbose);
     fail_count += test_parse_uri_dest(verbose);
     fail_count += test_ntrip_parse_url(verbose);
+    fail_count += test_socka2a(verbose);
 
     if ( fail_count ) {
         printf("timespec tests failed %d tests\n", fail_count );
