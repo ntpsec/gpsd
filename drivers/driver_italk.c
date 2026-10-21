@@ -50,7 +50,7 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "ITALK: bad NAV_FIX (len %zu, should be 296)\n",
                  len);
-        return -1;
+        return 0;
     }
 
     flags = (unsigned short) getleu16(buf, 7 + 4);
@@ -354,7 +354,11 @@ static gps_mask_t italk_parse(struct gps_device_t *session,
     case ITALK_NAV_FIX:
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "iTalk NAV_FIX len %zu\n", len);
-        mask = decode_itk_navfix(session, buf, len) | (CLEAR_IS | REPORT_IS);
+        mask = decode_itk_navfix(session, buf, len);
+        if (0 != mask) {
+            // not a rejected packet
+            mask |= CLEAR_IS | REPORT_IS;
+        }
         break;
     case ITALK_PRN_STATUS:
         GPSD_LOG(LOG_DATA, &session->context->errout,
