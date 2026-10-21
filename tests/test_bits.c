@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../include/bits.h"
-#include "../include/gps.h"           // for gps_hexdump()
+#include "../include/gpsd.h"          // for gps_hexdump(),  for hex_escapes()
 
 // test array of 640 bits
 static unsigned char buf[80];
@@ -181,6 +181,14 @@ static struct hextest_t hextests[] = {
     {NULL, NULL, 0},
 };
 
+// hex_escapes() tests, ascii is the escaped input
+static struct hextest_t escapetests[] = {
+    {"A\\tB", "A\tB", 3},
+    {"\\b\\e\\f\\n\\r\\t\\v", "\b\x1b\f\n\r\t\v", 7},
+    {"\\x00\\x41\\xfF\\\\", "\x00\x41\xff\\", 4},
+    {NULL, NULL, 0},
+};
+
 struct le16test_t
 {
     unsigned char buf[3];       // 4 bytes to decode
@@ -323,6 +331,37 @@ int main(int argc, char *argv[])
                           hextest->binlen, hextest->ascii,
                           gps_visibilize(hexbuf3, sizeof(hexbuf3), hexbuf,
                                          strnlen(hexbuf, sizeof(hexbuf))));
+        }
+    }
+
+    if (!quiet) {
+        (void)printf("Testing hex_escapes()\n");
+    }
+    for (hextest = escapetests; NULL != hextest->ascii; hextest++) {
+        char cooked[BUFSIZ];
+        ssize_t len;
+        bool fail;
+
+        len = hex_escapes(cooked, hextest->ascii);
+        fail = (len != (ssize_t)hextest->binlen ||
+                0 != memcmp(cooked, hextest->bin, hextest->binlen));
+        if (fail) {
+            failures++;
+        }
+        if (!quiet ||
+            fail) {
+            char hexbuf2[BUFSIZ];
+
+            (void)printf("hex_escapes(%s) got %zd %s s/b %zu %s\n",
+                         hextest->ascii, len,
+                         0 > len ? "" :
+                             gps_hexdump(hexbuf, sizeof(hexbuf),
+                                         (const unsigned char *)cooked,
+                                         (size_t)len),
+                         hextest->binlen,
+                         gps_hexdump(hexbuf2, sizeof(hexbuf2),
+                                     (const unsigned char *)hextest->bin,
+                                     hextest->binlen));
         }
     }
 

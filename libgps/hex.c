@@ -165,7 +165,7 @@ ssize_t hex_escapes(char *cooked, const char *raw)
             *cookend++ = '\r';
             break;
         case 't':
-            *cookend++ = '\r';
+            *cookend++ = '\t';
             break;
         case 'v':
             *cookend++ = '\v';
