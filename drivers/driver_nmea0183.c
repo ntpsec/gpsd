@@ -2654,7 +2654,7 @@ static gps_mask_t processHDG(unsigned count UNUSED, char *field[],
             // bad data
             return mask;
         }
-        switch (field[2][0]) {
+        switch (field[3][0]) {
         case 'E':
             sensor_heading += mag_dev;
             break;
@@ -2697,7 +2697,9 @@ static gps_mask_t processHDG(unsigned count UNUSED, char *field[],
             break;
         }
         session->newdata.magnetic_var = mag_var;
-        mask |= TRACK_SET;
+        if (0 != isfinite(mag_var)) {
+            mask |= TRACK_SET;
+        }
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
