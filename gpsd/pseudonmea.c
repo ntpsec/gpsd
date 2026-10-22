@@ -207,7 +207,8 @@ int gpsd_position_fix_dump(struct gps_device_t *session,
     dbl_to_str("%.2f,", session->gpsdata.fix.altMSL, bufp, len, "M,");
     dbl_to_str("%.3f,", session->gpsdata.fix.geoid_sep, bufp, len, "M,");
     // Age of correction data, and Differential base station ID
-    if (0.0 > session->gpsdata.fix.dgps_age ||
+    if (0 == isfinite(session->gpsdata.fix.dgps_age) ||
+        0.0 > session->gpsdata.fix.dgps_age ||
         0 > session->gpsdata.fix.dgps_station) {
         // n/a
         (void)strlcat(bufp, ",", len);
@@ -218,6 +219,7 @@ int gpsd_position_fix_dump(struct gps_device_t *session,
         (void)snprintf(dgps_str, BUF_SZ, "%.1f,%04d",
                        session->gpsdata.fix.dgps_age,
                        session->gpsdata.fix.dgps_station);
+        (void)strlcat(bufp, dgps_str, len);
     }
     nmea_add_checksum(bufp);
 
