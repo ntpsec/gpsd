@@ -98,7 +98,7 @@ static void display_itk_navfix(unsigned char *buf, size_t len)
     mon = (unsigned short) getleu16(buf, 7 + 78);
     day = (unsigned short) getleu16(buf, 7 + 80);
     gps_week = (unsigned short) getles16(buf, 7 + 82);
-    tow = (unsigned short) getleu32(buf, 7 + 84);
+    tow = getleu32(buf, 7 + 84);     // time of week, ms
 
     epx = (double)(getles32(buf, 7 + 96) / 100.0);
     epy = (double)(getles32(buf, 7 + 100) / 100.0);
@@ -143,9 +143,9 @@ static void display_itk_navfix(unsigned char *buf, size_t len)
     (void)wmove(navfixwin, 8, 33);
     d = (tow / 1000) / 86400;
     tod = (tow / 1000) - (d * 86400);
-    sec = (unsigned short)tod % 60;
-    min = (unsigned short)(tod / 60) % 60;
-    hour = (unsigned short)tod / 3600;
+    sec = (unsigned short)(tod % 60);
+    min = (unsigned short)((tod / 60) % 60);
+    hour = (unsigned short)(tod / 3600);
     (void)wprintw(navfixwin, "%1d %02d:%02d:%02d", d, hour, min, sec);
 
     (void)wmove(navfixwin, 10, 9);
