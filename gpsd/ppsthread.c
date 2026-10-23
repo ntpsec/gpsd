@@ -1396,7 +1396,7 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
 void pps_thread_deactivate(volatile struct pps_thread_t *pps_thread)
 {
     pps_thread->report_hook = NULL;
-    if (pthread_self() != pps_thread->thread_id ||
+    if (pthread_self() != pps_thread->thread_id &&
         0 != pps_thread->thread_id) {
         // Send signal to interrupt ioctl(TIOCMIWAIT)
         if (0 != pthread_kill(pps_thread->thread_id, PPS_THREAD_SIGNAL)) {
