@@ -1716,7 +1716,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         tmp = UINT2INT(tmp, 13);
         // Table 1 from ICD
         subp->orbit1.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
-        if (2600 > subp->orbit.sqrtA) {
+        if (2600 > subp->orbit1.sqrtA) {
             // Sanity check: A must be greater than Earth radius
             mask = 0;
         }
@@ -1788,7 +1788,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         tmp = UINT2INT(tmp, 13);
         // Table 1 from ICD
         subp->orbit1.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
-        if (2600 > subp->orbit.sqrtA) {
+        if (2600 > subp->orbit1.sqrtA) {
             // Sanity check: A must be greater than Earth radius
             mask = 0;
         }
