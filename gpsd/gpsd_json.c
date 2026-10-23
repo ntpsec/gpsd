@@ -1849,7 +1849,7 @@ static void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                         "\"L1\":{\"ind\":%u,\"prange\":%.2f,"
                         "\"delta\":%.4f,\"lockt\":%u},"
                         "\"L2\":{\"ind\":%u,\"prange\":%.2f,"
-                        "\"delta\":%.4f,\"lockt\":%u},"
+                        "\"delta\":%.4f,\"lockt\":%u}"
                         "},",
                         R1003.ident,
                         CODE(R1003.L1.indicator),
@@ -2050,16 +2050,21 @@ static void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                         "{\"ident\":%u,\"channel\":%u,"
                         "\"L1\":{\"ind\":%u,"
                         "\"prange\":%.2f,\"delta\":%.4f,\"lockt\":%u},"
-                        "\"L2:{\"ind\":%u,\"prange\":%.2f,"
-                        "\"delta\":%.4f,\"lockt\":%u}"
-                        "}",
+                        "\"L2\":{\"ind\":%u,",
                         R1011.ident,R1011.L1.channel,
                         CODE(R1011.L1.indicator),
                         R1011.L1.pseudorange,
                         R1011.L1.rangediff,
                         INT(R1011.L1.locktime),
-                        CODE(R1011.L2.indicator),
-                        R1011.L2.pseudorange,
+                        CODE(R1011.L2.indicator));
+            // NaN when the L2-L1 pseudorange difference is invalid
+            if (0 != isfinite(R1011.L2.pseudorange)) {
+                str_appendf(buf, buflen, "\"prange\":%.2f,",
+                            R1011.L2.pseudorange);
+            }
+            str_appendf(buf, buflen,
+                        "\"delta\":%.4f,\"lockt\":%u}"
+                        "},",
                         R1011.L2.rangediff,
                         INT(R1011.L2.locktime));
 #undef R1011

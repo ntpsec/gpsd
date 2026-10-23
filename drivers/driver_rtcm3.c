@@ -529,7 +529,8 @@ void rtcm3_unpack(const struct gps_context_t *context,
             RANGEDIFF(R1003.L1, 20);
             R1003.L1.locktime = (unsigned char)sgrab(7);
             R1003.L2.indicator = ugrab(2);
-            GPS_PSEUDORANGE(R1003.L2, 24);
+            // DF017, L2-L1 Pseudorange Difference, 14 bits
+            GPS_PSEUDORANGE(R1003.L2, 14);
             temp = (long)sgrab(20);
             if (temp == GPS_INVALID_PSEUDORANGE) {
                 R1003.L2.rangediff = 0;
@@ -730,9 +731,9 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1011.header.tow = ugrab(27);
         rtcm->rtcmtypes.rtcm3_1011.header.sync = (bool)ugrab(1);
         n = ugrab(5);
-        bad_len = ceil(7.625 + (13.325 * n));
+        bad_len = ceil(7.625 + (13.375 * n));
         if (bad_len != rtcm->length) {
-            // exactly: 7.625 + (13.325 * n)
+            // exactly: 7.625 + (13.375 * n)
             break;
         }
         bad_len = 0;
@@ -741,21 +742,26 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1011.header.interval = ugrab(3);
 #define R1011 rtcm->rtcmtypes.rtcm3_1011.rtk_data[i]
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1011.header.satcount; i++) {
+            unsigned rangeincr;
+
             R1011.ident = (unsigned short)ugrab(6);
             R1011.L1.indicator = (bool)ugrab(1);
             R1011.L1.channel = (short)ugrab(5) - GLONASS_CHANNEL_BASE;
             R1011.L1.pseudorange = ugrab(25) * GLONASS_PSEUDORANGE_RESOLUTION;
             RANGEDIFF(R1011.L1, 20);
             R1011.L1.locktime = (unsigned char)sgrab(7);
-            R1011.L1.ambiguity = (unsigned char)ugrab(7);
-            R1011.L1.CNR = ugrab(8) * CARRIER_NOISE_RATIO_UNITS;
-            R1011.L2.indicator = (bool)ugrab(1);
-            R1011.L2.channel = (short)ugrab(5) - GLONASS_CHANNEL_BASE;
-            R1011.L2.pseudorange = ugrab(25) * GLONASS_PSEUDORANGE_RESOLUTION;
+            /* Same as 1012, without the ambiguity and CNR fields:
+             * DF046 (2), DF047 (14), DF048 (20), DF049 (7) */
+            R1011.L2.indicator = ugrab(2);
+            rangeincr = ugrab(14);
+            if (GLONASS_INVALID_RANGEINCR == rangeincr) {
+                R1011.L2.pseudorange = NAN;
+            } else {
+                R1011.L2.pseudorange = rangeincr *
+                                       GLONASS_PSEUDORANGE_RESOLUTION;
+            }
             RANGEDIFF(R1011.L2, 20);
             R1011.L2.locktime = (unsigned char)sgrab(7);
-            R1011.L2.ambiguity = (unsigned char)ugrab(7);
-            R1011.L2.CNR = ugrab(8) * CARRIER_NOISE_RATIO_UNITS;
         }
 #undef R1011
         unknown = false;
