@@ -100,6 +100,21 @@ static void from_sixbit(const struct gpsd_errout_t *errout,
         from_sixbit(errout, bits, bitlen, start, (bitlen - start) / 6, \
                     to, to_sz)
 
+static const struct vlist_t vdacs[] = {
+     {1, "International"},
+     {200, "Inland Waterways"},
+     {210, "Cyprus"},
+     {219, "Denmark"},
+     {232, "UK"},
+     {235, "UK/Republic Of Ireland"},
+     {248, "Malta"},
+     {250, "UK/Republic Of Ireland"},
+     {316, "St. Lawrence Seaway/Canada"},
+     {353, "Panama"},
+     {366, "St. Lawrence Seaway/USA"},
+    {0, NULL},
+};
+
 /* decode an AIS binary packet
  *
  * Return: True on success
@@ -110,6 +125,26 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                        const unsigned char *bits, size_t bitlen,
                        struct ais_type24_queue_t *type24_queue)
 {
+    /* Differeent areas (Designated Area Codes or DACs) use slightly
+     * different messages.  Always verify the DACs before changing.
+     * https://arundaleais.github.io/docs/ais/ais_decoder_binary.html
+     *
+     * DAC:
+     *   1 - International
+     *   200 - Inland Waterways (UN?)
+     *   210 - Cyprus
+     *   219 - Denmark
+     *   232 - UK
+     *   235 - UK, Republic Of Ireland
+     *   248 - Malta
+     *   250 - UK, Republic Of Ireland
+     *   316 - St. Lawrence Seaway/Canada
+     *   353 - Panama
+     *   366 - St. Lawrence Seaway/USA
+     *
+     * Message types, see:
+     *    https://arundaleais.github.io/docs/ais/ais_message_types.html
+     */
     unsigned int u;
     size_t bytelen = BITS_TO_BYTES(bitlen);
 
@@ -146,10 +181,11 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         if (bitlen < min || \
             bitlen > max) { \
             GPSD_LOG(LOG_ERROR, errout, \
-                     "AIVDM message type %d dac %u fid %u size is out of " \
+                     "AIVDM message type %d dac %u(%s) fid %u size out of " \
                      "range %u <= (%zu) <= %u.\n", \
-                     ais->type, ais->type6.dac, ais->type6.fid, \
-                     min, bitlen, max);  \
+                     ais->type, ais->type6.dac, \
+                     val2str(ais->type6.dac, vdacs), \
+                     ais->type6.fid, min, bitlen, max);  \
             return false; \
         }
 
@@ -157,10 +193,11 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         if (bitlen < min || \
             bitlen > max) { \
             GPSD_LOG(LOG_ERROR, errout, \
-                     "AIVDM message type %d dac %u fid %u size is out of " \
+                     "AIVDM message type %d dac %u(%s) fid %u size out of " \
                      "range %u <= (%zu) <= %u.\n", \
-                     ais->type, ais->type8.dac, ais->type8.fid, \
-                     min, bitlen, max);  \
+                     ais->type, ais->type8.dac, \
+                     val2str(ais->type8.dac, vdacs), \
+                     ais->type8.fid, min, bitlen, max);  \
             return false; \
         }
 
@@ -267,8 +304,10 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type6.structured = false;
         // Inland AIS
         GPSD_LOG(LOG_PROG, errout,
-                 "AIVDM: type 6 dac %u fid %u bitlen %zu\n",
-                 ais->type6.dac, ais->type6.fid, bitlen);
+                 "AIVDM: type 6 dac %u(%s) fid %u bitlen %zu\n",
+                 ais->type6.dac,
+                 val2str(ais->type6.dac, vdacs),
+                 ais->type6.fid, bitlen);
         switch (ais->type6.dac) {
         case 1:
             // International
@@ -489,7 +528,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             }
             break;
-        case  200:
+        case  200:        // Inland Waterways
             switch (ais->type6.fid) {
             case 21:  // ETA at lock/bridge/terminal
                 RANGE_CHECK6(248, 248);
@@ -553,6 +592,20 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             }
             break;
+        case 210:   // Cyprus
+            FALLTHROUGH
+        case 219:   // Denmark
+            FALLTHROUGH
+        case 232:   // UK
+            FALLTHROUGH
+        case 248:   // Malta
+            FALLTHROUGH
+        case 316:   // St. Lawrence Seaway/Canada
+            FALLTHROUGH
+        case 353:   // Panama
+            FALLTHROUGH
+        case 366:   // St. Lawrence Seaway/USA
+            FALLTHROUGH
         default:
             break;
         }
@@ -564,8 +617,10 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
             }
             (void)memcpy(ais->type6.bitdata, bits + (88 / CHAR_BIT), u);
             GPSD_LOG(LOG_WARN, errout,
-                     "AIVDM: type 6 unknown dac %u fid %u bitlen %zu\n",
-                     ais->type6.dac, ais->type6.fid, bitlen);
+                     "AIVDM: type 6 unknown dac %u(%s) fid %u bitlen %zu\n",
+                     ais->type6.dac,
+                     val2str(ais->type6.dac, vdacs),
+                     ais->type6.fid, bitlen);
         }
         break;
     case 7:  // Binary acknowledge
@@ -609,8 +664,11 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         // not strictly required - helps stability in testing
         (void)memset(ais->type8.bitdata, '\0', sizeof(ais->type8.bitdata));
         ais->type8.structured = false;
-        GPSD_LOG(LOG_PROG, errout, "AIVDM: type 8 dac %u fid %u bitlen %zu\n",
-                 ais->type8.dac, ais->type8.fid, bitlen);
+        GPSD_LOG(LOG_PROG, errout,
+                 "AIVDM: type 8 dac %u(%s) fid %u bitlen %zu\n",
+                 ais->type8.dac,
+                 val2str(ais->type8.dac, vdacs),
+                 ais->type8.fid, bitlen);
         switch (ais->type8.dac) {
         case 1:
             // International
@@ -837,7 +895,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             }
             break;
-        case 200:
+        case 200:        // Inland Waterways
             switch (ais->type8.fid) {
             case 10:  // Inland ship static and voyage related data
                 // bitlen = 424??
@@ -922,6 +980,20 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             }
             break;
+        case 210:   // Cyprus
+            FALLTHROUGH
+        case 219:   // Denmark
+            FALLTHROUGH
+        case 232:   // UK
+            FALLTHROUGH
+        case 248:   // Malta
+            FALLTHROUGH
+        case 316:   // St. Lawrence Seaway/Canada
+            FALLTHROUGH
+        case 353:   // Panama
+            FALLTHROUGH
+        case 366:   // St. Lawrence Seaway/USA
+            FALLTHROUGH
         default:
             break;
         }
@@ -941,8 +1013,10 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                     (0xFF << (8 - valid_bits_in_last_byte));
             }
             GPSD_LOG(LOG_WARN, errout,
-                     "AIVDM: type 8 unknown dac %u fid %u bitlen %zu\n",
-                     ais->type8.dac, ais->type8.fid, bitlen);
+                     "AIVDM: type 8 unknown dac %u(%s) fid %u bitlen %zu\n",
+                     ais->type8.dac,
+                     val2str(ais->type8.dac, vdacs),
+                     ais->type8.fid, bitlen);
         }
         break;
     case 9:  // Standard SAR Aircraft Position Report
