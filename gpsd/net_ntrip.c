@@ -1263,7 +1263,7 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
             // leave FD so deactivate_device() can remove from the
             // select() loop
         } else {
-            GPSD_LOG(LOG_ERROR, &device->context->errout,
+            GPSD_LOG(LOG_INFO, &device->context->errout,
                      "NTRIP: stream write success get request\n");
             device->ntrip.conn_state = NTRIP_CONN_SENT_GET;
         }
