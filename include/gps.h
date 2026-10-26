@@ -2239,8 +2239,8 @@ struct ais_t
         // Type 14 - Safety-Related Broadcast Message
         struct {
             // unsigned int spare;      // spare bit(s)
-            // 960 bits of six-bit, plus NUL (960 / 6 = 160 chars)
-            char text[161];
+            // 966 bits of six-bit text, plus NUL (966 / 6 = 161 chars)
+            char text[162];
         } type14;
         // Type 15 - Interrogation
         struct {

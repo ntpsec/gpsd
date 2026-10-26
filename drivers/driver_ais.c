@@ -1050,7 +1050,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ENDCHARS(72, ais->type12.text, sizeof(ais->type12.text));
         break;
     case 14:  // Safety Related Broadcast Message
-        RANGE_CHECK(40, 960);
+        RANGE_CHECK(40, 1008);
         // ais->type14.spare          = UBITS(38, 2);
         ENDCHARS(40, ais->type14.text, sizeof(ais->type14.text));
         break;
