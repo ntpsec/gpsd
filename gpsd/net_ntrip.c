@@ -9,7 +9,7 @@
  * NTRIP is not an open protocol.  So this file is based on guesswork.
  */
 
-#include "../include/gpsd_config.h"  // must be before all includes
+#include "../include/gpsd_config.h"    // must be before all includes
 
 #include <errno.h>
 #include <fcntl.h>
@@ -65,7 +65,7 @@ static const char *ntrip_state(unsigned state)
         "INPROGRESS",
         "UNKNOWN",
     };
-    unsigned num_states = sizeof(ntrip_states)/sizeof(ntrip_states[0]);
+    unsigned num_states = sizeof(ntrip_states) / sizeof(ntrip_states[0]);
 
     if (num_states <= state) {
         // huh?
@@ -95,14 +95,14 @@ static struct ntrip_fmt_s {
     {"RTCM 3.1", FMT_RTCM3_1},
     {"RTCM3.1", FMT_RTCM3_1},
     {"RTCM 3.2", FMT_RTCM3_2},
-    {"RTCM3.2", FMT_RTCM3_2},       // for http://sapos.geonord-od.de:2101/
+    {"RTCM3.2", FMT_RTCM3_2},    // for http://sapos.geonord-od.de:2101/
     {"RTCM32", FMT_RTCM3_2},
     {"RTCM 3.3", FMT_RTCM3_3},
     {"RTCM 3.4", FMT_RTCM3_4},
     {"RTCM 3", FMT_RTCM3_0},
     {"RTCM3", FMT_RTCM3_0},
     // {"SPARTN", FMT_SPARTN},     // u-blox, SPAARTN v1  // UNSUPPORTED!
-    {"SPARTN 2.0", FMT_SPARTN_2},  // u-blox, SPAARTN v2
+    {"SPARTN 2.0", FMT_SPARTN_2},    // u-blox, SPAARTN v2
     {NULL, FMT_UNKNOWN},
 };
 
@@ -273,7 +273,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
     struct ntrip_stream_t hold;
     ssize_t llen, len = 0;
     char *line;
-    char buf[BUFSIZ / 2];   // half of BUFSIZE, so we can GPSD_LOG() it
+    char buf[BUFSIZ / 2];    // half of BUFSIZE, so we can GPSD_LOG() it
     socket_t fd = (socket_t)device->gpsdata.gps_fd;
 
     for (;;) {
@@ -292,7 +292,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             buf_avail = sizeof(buf) - len;
         }
         memset(&buf[len], 0, buf_avail);
-        errno = 0;         // paranoia
+        errno = 0;    // paranoia
         // read, leave room for trailing NUL
         rlen = read(fd, &buf[len], buf_avail - 1);
         // cast for 32-bit ints
@@ -314,7 +314,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                      strerror(errno), errno, (long)fd);
             return -1;
         }
-        if (0 == rlen) {     // server closed the connection
+        if (0 == rlen) {    // server closed the connection
             // cast for 32-bit ints
             GPSD_LOG(LOG_ERROR, &device->context->errout,
                      "NTRIP: stream unexpected close %s(%d) on fd %ld "
@@ -333,7 +333,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
         GPSD_LOG(LOG_IO, &device->context->errout,
                  "NTRIP: source table buffer >%.*s<\n", (int)rlen, buf);
 
-        line[rlen] = '\0';      // pacify coverity that this is NUL terminated
+        line[rlen] = '\0';    // pacify coverity that this is NUL terminated
 
         if (!device->ntrip.sourcetable_parsed) {
             /* For ntrip v1 the very first line s/b:
@@ -364,9 +364,9 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             }
             line = strstr(line, NTRIP_BODY);
             if (NULL == line) {
-                return  -4;
+                return -4;
             }
-            line += 4;        // point to 1st line of body
+            line += 4;    // point to 1st line of body
             len = rlen - (line - buf);
         }
 
@@ -380,7 +380,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             }
 
             eol = strstr(line, NTRIP_BR);
-            if (NULL == eol){
+            if (NULL == eol) {
                 // no full line in the buffer
                 break;
             }
@@ -423,7 +423,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
                                  "NTRIP. stream %s authentication method "
                                  "not supported\n",
-                                line);
+                                 line);
                         return -8;
                     }
                     // no memcpy, so we can keep the other infos
@@ -455,8 +455,8 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             // else ???
 
             llen += sizeof(NTRIP_BR) - 1;
-            line += llen;        // point to start of next line
-            len -= llen;         // calculate remaining data in buf.
+            line += llen;   // point to start of next line
+            len -= llen;    // calculate remaining data in buf.
             GPSD_LOG(LOG_IO, &device->context->errout,
                      "NTRIP: Remaining source table buffer len %zd\n", len);
         }
@@ -551,7 +551,7 @@ static int ntrip_stream_req(const struct ntrip_stream_t *stream,
  */
 static int ntrip_auth_encode(struct ntrip_stream_t *stream)
 {
-    char authenc[64];       // base 64 encoding of auth (username:password)
+    char authenc[64];    // base 64 encoding of auth (username:password)
     int ret = 0;
 
     memset(stream->authStr, 0, sizeof(stream->authStr));
@@ -584,7 +584,7 @@ static int ntrip_auth_encode(struct ntrip_stream_t *stream)
     case AUTH_DIGEST:
         // TODO: support digest authentication, who needs it?
         // Possibly:  RFC 2617
-        //     HTTP Authentication: Basic and Digest Access Authentication)
+        // HTTP Authentication: Basic and Digest Access Authentication)
         /* WWW-Authenticate: Digest realm="testrealm@host.com",
          *              qop="auth,auth-int",
          *              nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
@@ -687,7 +687,7 @@ static void lexer_getline(struct gps_lexer_t *lexer)
         unsigned char u;
 
         if (0 == lexer->inbuflen ||
-            sizeof(lexer->inbuffer) <= lexer->inbuflen) {  // paranoia
+            sizeof(lexer->inbuffer) <= lexer->inbuflen) {    // paranoia
             // nothing left to read,  ending not found
             break;
         }
@@ -705,7 +705,7 @@ static void lexer_getline(struct gps_lexer_t *lexer)
             break;
         }
     }
-    lexer->outbuffer[i] = '\0';  // Ensure a NUL
+    lexer->outbuffer[i] = '\0';    // Ensure a NUL
     lexer->outbuflen = i;
 }
 
@@ -722,9 +722,9 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     int opts;
     const struct ntrip_stream_t *stream = &device->ntrip.stream;
     // (int) to shut up cadacy about USE_QT.
-    const int dsock  = (int)device->gpsdata.gps_fd;
+    const int dsock = (int)device->gpsdata.gps_fd;
     const struct gpsd_errout_t *errout = &device->context->errout;
-    ssize_t read_ret;         // value retuend from read()
+    ssize_t read_ret;    // value retuend from read()
     struct gps_lexer_t *lexer = &device->lexer;
     char *ibuf = (char *)lexer->inbuffer;
     char *obuf = (char *)lexer->outbuffer;
@@ -735,9 +735,9 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     lexer_init(lexer, &device->context->errout);
     if (FMT_SPARTN_2 == device->ntrip.stream.format) {
         // Allow the cursed protocol
-        device->lexer.type_mask &=  ~PACKET_TYPEMASK(SPARTN_PACKET);
+        device->lexer.type_mask &= ~PACKET_TYPEMASK(SPARTN_PACKET);
     } else {
-        device->lexer.type_mask |=  PACKET_TYPEMASK(SPARTN_PACKET);
+        device->lexer.type_mask |= PACKET_TYPEMASK(SPARTN_PACKET);
     }
 
     /* We expect the header comes in as one TCP packet.
@@ -751,7 +751,7 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
                  strerror(errno), errno, dsock);
         return -1;
     }
-    ibuf[read_ret] = '\0';   // Make a nice NUL terminated string.
+    ibuf[read_ret] = '\0';    // Make a nice NUL terminated string.
     lexer->inbuflen = (size_t)read_ret;
     lexer_getline(lexer);
     GPSD_LOG(LOG_IO, errout,
@@ -767,7 +767,7 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
      * HTTP/1.1 200 OK\r\n      -- NTRIP v2
      *
      * Anything else is not understood.
-    */
+     */
 
     if (0 == strncmp(obuf, NTRIP_UNAUTH, sizeof(NTRIP_UNAUTH))) {
         GPSD_LOG(LOG_ERROR, errout,
@@ -855,7 +855,7 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
              "NTRIP: ntrip_stream_get_parse(), %zu leftover bytes\n",
              lexer->inbuflen);
     if (0 == lexer->inbuflen ||
-        sizeof(lexer->inbuffer) <= lexer->inbuflen) {  // paranoia
+        sizeof(lexer->inbuffer) <= lexer->inbuflen) {    // paranoia
         packet_reset(lexer);
     } else {
         /* The "leftover" is the start of the datastream. Chunked or
@@ -886,16 +886,16 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
 int ntrip_parse_url(const struct gpsd_errout_t *errout,
                     struct ntrip_stream_t *stream, const char *fullurl)
 {
-    char dup[sizeof(stream->url)];       // working copy of url
-    char *at;                            // pointer to at
-    char *colon;                         // pointer to colon
-    char *slash;                         // pointer to slash
-    char *lsb;                           // pointer to left square bracket ([)
-    char *rsb;                           // pointer to right square bracket (])
-    char *auth = NULL;                   // user:pass
-    char *host = NULL;                   // hostname, IPv4 or IPv6
+    char dup[sizeof(stream->url)];    // working copy of url
+    char *at;                // pointer to at
+    char *colon;             // pointer to colon
+    char *slash;             // pointer to slash
+    char *lsb;               // pointer to left square bracket ([)
+    char *rsb;               // pointer to right square bracket (])
+    char *auth = NULL;       // user:pass
+    char *host = NULL;       // hostname, IPv4 or IPv6
     char *port = NULL;
-    char *mountpoint = NULL;             // mount point
+    char *mountpoint = NULL; // mount point
 
     // save original URL
     strlcpy(stream->url, fullurl, sizeof(stream->url) - 1);
@@ -924,10 +924,10 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
 
     // dup now contains in order any of  username, password, host and port
     // we know "host" has a dot (hostname or IPv4) or a ] (IPv6)
-    at = strrchr(dup, '@');         // user@pass
-    colon = strrchr(dup, ':');      // pass:host:port, pass:host, host:port
-    rsb = strrchr(dup, ']');        // host is IPv6 literal
-    lsb = strrchr(dup, '[');        // host is IPv6 literal
+    at = strrchr(dup, '@');    // user@pass
+    colon = strrchr(dup, ':');    // pass:host:port, pass:host, host:port
+    rsb = strrchr(dup, ']');   // host is IPv6 literal
+    lsb = strrchr(dup, '[');   // host is IPv6 literal
 
     if (NULL == colon) {
         // no port (:2101), no auth (user:pass@), not IPv6 [fe80::]
@@ -1051,7 +1051,7 @@ static int ntrip_reconnect(struct gps_device_t *device)
 {
 #if defined(SOCK_NONBLOCK)
     socket_t dsock = -1;
-    char addrbuf[50];         // INET6_ADDRSTRLEN
+    char addrbuf[50];    // INET6_ADDRSTRLEN
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_reconnect() %.60s\n",
@@ -1114,7 +1114,7 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
              device->ntrip.conn_state);
 
     switch (device->ntrip.conn_state) {
-    case NTRIP_CONN_INIT:     // state = 0
+    case NTRIP_CONN_INIT:    // state = 0
         /* this has to be done here,
          * because it is needed for multi-stage connection */
         // strlcpy() ensures dup is NUL terminated.
@@ -1152,7 +1152,7 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
         device->gpsdata.gps_fd = (gps_fd_t)ret;
         device->ntrip.conn_state = NTRIP_CONN_SENT_PROBE;
         return ret;
-    case NTRIP_CONN_SENT_PROBE:     // state = 1
+    case NTRIP_CONN_SENT_PROBE:    // state = 1
         ret = ntrip_sourcetable_parse(device);
         // cast for 32-bit intptr_t
         GPSD_LOG(LOG_PROG, &device->context->errout,
@@ -1204,7 +1204,7 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
         }
         device->ntrip.conn_state = NTRIP_CONN_SENT_GET;
         break;
-    case NTRIP_CONN_SENT_GET:          // state = 2
+    case NTRIP_CONN_SENT_GET:    // state = 2
         ret = ntrip_stream_get_parse(device);
         if (-1 == ret) {
             (void)close(device->gpsdata.gps_fd);
@@ -1213,9 +1213,9 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
             return -1;
         }
         device->ntrip.conn_state = NTRIP_CONN_ESTABLISHED;
-        device->ntrip.works = true;   // we know, this worked.
+        device->ntrip.works = true;    // we know, this worked.
         break;
-    case NTRIP_CONN_CLOSED:           // state = 5
+    case NTRIP_CONN_CLOSED:    // state = 5
         if (6 > llabs((time(NULL) - device->ntrip.stream.stream_time.tv_sec))) {
             // wait a bit longer
             ret = PLACEHOLDING_FD;
@@ -1227,7 +1227,7 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
             device->gpsdata.update_fd(ret, true);
         }
         break;
-    case NTRIP_CONN_INPROGRESS:      // state = 6
+    case NTRIP_CONN_INPROGRESS:    // state = 6
         // Need to send GET within about 40 seconds or caster times out.
         // FIXME: partially duplicates  ntrip_stream_get_req()
         // try a write, it will fail if connection still in process, or failed.
@@ -1251,7 +1251,7 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
 
         GPSD_LOG(LOG_IO, &device->context->errout,
                  "NTRIP: ntrip_open() sending >%s<\n",
-                  gps_visibilize(outbuf, sizeof(outbuf), buf, blen));
+                 gps_visibilize(outbuf, sizeof(outbuf), buf, blen));
 
         if (blen != write(device->gpsdata.gps_fd, buf, blen)) {
             // cast for 32-bit intptr_t
@@ -1269,9 +1269,9 @@ socket_t ntrip_open(struct gps_device_t *device, char *orig)
         }
         ret = (int)device->gpsdata.gps_fd;
         break;
-    case NTRIP_CONN_ESTABLISHED:     // state = 3
+    case NTRIP_CONN_ESTABLISHED:    // state = 3
         FALLTHROUGH
-    case NTRIP_CONN_ERR:             // state = 4
+    case NTRIP_CONN_ERR:    // state = 4
         return -1;
     }
     return ret;
@@ -1287,7 +1287,7 @@ void ntrip_report(struct gps_context_t *context,
     ssize_t blen;
 
     if (0 == caster->ntrip.stream.nmea) {
-        return;   // no need to be here...
+        return;    // no need to be here...
     }
     // cast for 32-bit intptr_t
     GPSD_LOG(LOG_IO, &context->errout,
@@ -1298,7 +1298,7 @@ void ntrip_report(struct gps_context_t *context,
      * fixes before reporting usage to our NTRIP caster.
      */
     if (10 > context->fixcnt) {
-        return;   // no good fix to send...
+        return;    // no good fix to send...
     }
 
     /* count % 5 is as arbitrary a number as the fix dump delay.
@@ -1306,10 +1306,10 @@ void ntrip_report(struct gps_context_t *context,
      */
     count++;
     if (0 != (count % 5)) {
-        return;   // wait some more
+        return;    // wait some more
     }
     if (0 > caster->gpsdata.gps_fd) {
-        return;   // huh?  No NTRIP fd to write to??
+        return;    // huh?  No NTRIP fd to write to??
     }
 
     blen = gpsd_position_fix_dump(gps, buf, sizeof(buf));
