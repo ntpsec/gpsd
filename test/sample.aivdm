@@ -960,6 +960,11 @@
 # Broadcast and not structured
 !AIVDM,1,1,,A,J0@00@370>t0Lh3P0000200H:2rN92,4*14
 #
+# Type 26:
+# Short broadcast, unstructured message from libais test/data/test.aivdm:295
+# Receiver/capture metadata: d-124,S0551,t230840.00,T40.46909169,r09SLOR1,1272455020
+!AIVDM,1,1,,A,J4qrtbSov`t,2*11
+#
 # Type 27:
 # From Christian Gagneraud via aishub
 # The only message 27 in more than 25 millions messages that is 96 bits long!

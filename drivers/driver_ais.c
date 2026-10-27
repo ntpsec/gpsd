@@ -1355,7 +1355,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
     case 26:
         // Binary Message, Multiple Slot
         // ITU-R M1371-5 Tables 28 and 82
-        RANGE_CHECK(96, 1064);
+        RANGE_CHECK(60, 1064);
         ais->type26.addressed = (bool)UBITS(38, 1);
         ais->type26.structured = (bool)UBITS(39, 1);  // binary data flag
         u = 40U + (16U * ais->type26.structured) +
@@ -1365,6 +1365,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                      "AIVDM type 26 %zu wrong, want %u.\n", bitlen, u);
             return false;
         }
+        ais->type26.radio = UBITS(bitlen - 20, 20);
         ais->type26.bitcount = bitlen - 60 - 16 * ais->type26.structured;
         if (ais->type26.addressed) {
             ais->type26.bitcount -= 30;
@@ -1381,7 +1382,6 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
             }
         }
         if (ais->type26.structured) {
-            ais->type26.bitcount -= 16;
             ais->type26.app_id = UBITS(40 + ais->type26.addressed * 32, 16);
         }
         u = BITS_TO_BYTES(ais->type26.bitcount);
