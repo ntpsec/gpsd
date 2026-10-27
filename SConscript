@@ -2175,6 +2175,11 @@ test_packet = env.Program('tests/test_packet',
                            'tests/test_packet.c'],
                           LIBS=[libgpsd_static, libgps_static],
                           parse_flags=gpsdflags)
+test_passthrough = env.Program('tests/test_passthrough',
+                               [libgpsd_static, libgps_static,
+                                'tests/test_passthrough.c'],
+                               LIBS=[libgpsd_static, libgps_static],
+                               parse_flags=gpsdflags)
 test_timespec = env.Program('tests/test_timespec', ['tests/test_timespec.c'],
                             LIBS=[libgpsd_static, libgps_static],
                             parse_flags=gpsdflags)
@@ -2208,6 +2213,7 @@ testprogs = [test_bits,
              test_matrix,
              test_mktime,
              test_packet,
+             test_passthrough,
              test_timespec,
              test_trig]
 if env["libgpsmm"] or cleaning:
@@ -2917,6 +2923,11 @@ matrix_regress = Utility('matrix-regress', [test_matrix], [
     '"${SRCDIR}/tests/test_matrix" --quiet'
 ])
 
+# Unit-test the JSON passthrough driver
+passthrough_regress = Utility('passthrough-regress', [test_passthrough], [
+    '"${SRCDIR}/tests/test_passthrough" --quiet'
+])
+
 # MIB test
 if have_smilint:
     mib_regress = Utility('mib-regress', [mib_lint], [
@@ -3183,6 +3194,7 @@ test_nondaemon = [
     method_regress,
     mib_regress,
     packet_regress,
+    passthrough_regress,
     rtcm_regress,
     test_xgps_deps,
     time_regress,

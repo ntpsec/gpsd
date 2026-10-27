@@ -1590,41 +1590,44 @@ static void path_rewrite(struct gps_device_t *session, char *prefix)
      * beginning of the path attribute, followed by a # to separate it
      * from the device.
      */
+    char *outbuf = (char *)session->lexer.outbuffer;
     char *prefloc;
+    // only the path before any '#', to avoid accumulating device names
+    size_t pathlen = strcspn(session->gpsdata.dev.path, "#");
 
     assert(prefix != NULL && session->lexer.outbuffer != NULL);
 
     // possibly the rewrite has been done already, this comw up in gpsmon
-    if (strstr((char *)session->lexer.outbuffer,
-               session->gpsdata.dev.path) != NULL) {
+    if (strstr(outbuf, session->gpsdata.dev.path) != NULL) {
         return;
     }
 
-    for (prefloc = (char *)session->lexer.outbuffer;
-         prefloc < (char *)session->lexer.outbuffer+session->lexer.outbuflen;
+    for (prefloc = outbuf;
+         prefloc < outbuf + session->lexer.outbuflen;
          prefloc++) {
         if (str_starts_with(prefloc, prefix)) {
-            char *sfxloc;
-            char copy[sizeof(session->lexer.outbuffer)+1];
-            (void)strlcpy(copy,
-                          (char *)session->lexer.outbuffer,
-                          sizeof(copy));
+            size_t sfxlen;
+
             prefloc += strlen(prefix);
-            (void)strlcpy(prefloc,
-                          session->gpsdata.dev.path,
-                          sizeof(session->gpsdata.dev.path));
-            sfxloc = strchr(prefloc, '#');
-            if (sfxloc) {
-                *sfxloc = '\0';  // Avoid accumulating multiple device names
+            sfxlen = strlen(prefloc);
+            // the path, the '#', the rest and the NUL must all fit
+            if (sizeof(session->lexer.outbuffer) <=
+                (size_t)(prefloc - outbuf) + pathlen + 1 + sfxlen) {
+                GPSD_LOG(LOG_WARN, &session->context->errout,
+                         "JSON: no room for %zu more bytes, "
+                         "rest passed as is\n", pathlen + 1);
+                break;
             }
-            (void)strlcat((char *)session->lexer.outbuffer, "#",
-                          sizeof(session->lexer.outbuffer));
-            (void)strlcat((char *)session->lexer.outbuffer,
-                          copy + (prefloc-(char *)session->lexer.outbuffer),
-                          sizeof(session->lexer.outbuffer));
+            memmove(prefloc + pathlen + 1, prefloc, sfxlen + 1);
+            memcpy(prefloc, session->gpsdata.dev.path, pathlen);
+            prefloc += pathlen;
+            *prefloc = '#';
+            // keep scanning to the end of the grown packet
+            session->lexer.outbuflen = (size_t)(prefloc - outbuf) +
+                                       1 + sfxlen;
         }
     }
-    session->lexer.outbuflen = strnlen((char *)session->lexer.outbuffer,
+    session->lexer.outbuflen = strnlen(outbuf,
                                        sizeof(session->lexer.outbuffer));
 }
 
