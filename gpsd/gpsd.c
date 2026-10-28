@@ -1644,23 +1644,28 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         json_version_dump(reply, replylen);
     } else {
         const char *errend;
+        const char *consumed;
         // a buffer to put the "quoted" bad json into
         char quoted_error[GPS_JSON_RESPONSE_MAX];
 
-        errend = buf + strnlen(buf, bufsize);
-        while (isspace(*errend) &&
-               errend > buf) {
+        /* Quote the request text.  errend used to start on the
+         * terminating NUL, so the whitespace trim never ran. */
+        consumed = buf + strnlen(buf, bufsize);
+        errend = consumed;
+        while (errend > buf &&
+               isspace(errend[-1])) {
             --errend;
         }
-        len = snprintf(reply, replylen,
+        (void)snprintf(reply, replylen,
                        "{\"class\":\"ERROR\",\"message\":"
                        "\"Unrecognized request '%s'\"}\r\n",
                        json_quote(buf, quoted_error, errend - buf,
                                   sizeof(quoted_error)));
         GPSD_LOG(LOG_ERROR, &context.errout, "ERROR response: %s\n", reply);
-        if (0 < len) {
-            buf += len;
-        }
+        /* Consume the request, not the generated reply.  snprintf()'s
+         * return value includes the JSON wrapper and is larger than the
+         * input, so using it walked off the receive buffer. */
+        buf = consumed;
     }
   bailout:
     *after = buf;
@@ -2068,18 +2073,24 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf,
                                size_t bufsize)
 {
     char reply[GPS_JSON_RESPONSE_MAX + 1];
+    const char *limit = buf + bufsize;
 
     reply[0] = '\0';
     if ('?' == buf[0]) {
         const char *end;
 
-        for (end = buf; *buf != '\0'; buf = end) {
+        for (end = buf; buf < limit && '\0' != *buf; buf = end) {
             if (isspace(*buf)) {
                 end = buf + 1;
             } else {
                 size_t len = strnlen(reply, sizeof(reply));
-                handle_request(sub, buf, bufsize, &end,
+                handle_request(sub, buf, (size_t)(limit - buf), &end,
                                reply + len, sizeof(reply) - len);
+                // Do not follow a cursor that left this command.
+                if (end < buf ||
+                    end > limit) {
+                    break;
+                }
             }
         }
     }
@@ -3208,7 +3219,11 @@ int main(int argc, char *argv[])
                     GPSD_LOG(LOG_CLIENT, &context.errout,
                              "<= client(%d): eof read\n", sub_index(sub));
                 } else {
-                    if ('\n' != buf[buflen - 1]) {
+                    /* buf[sizeof - 1] is reserved for the NUL.  Appending a
+                     * newline on a full read used to store that NUL one past
+                     * the buffer. */
+                    if ('\n' != buf[buflen - 1] &&
+                        (size_t)buflen < (sizeof(buf) - 1)) {
                         buf[buflen++] = '\n';
                     }
                     buf[buflen] = '\0';
@@ -3222,7 +3237,7 @@ int main(int argc, char *argv[])
                      * COMMAND_TIMEOUT useful.
                      */
                     sub->active = time(NULL);
-                    if (0 > handle_gpsd_request(sub, buf, sizeof(buf))) {
+                    if (0 > handle_gpsd_request(sub, buf, (size_t)buflen)) {
                         detach_client(sub);
                     }
                 }

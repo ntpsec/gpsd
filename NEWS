@@ -8,6 +8,7 @@
    Erickson GRU 04 support added.
    Default Garmin Text driver off, deprecate it.
    Fix a lot of buffer over runs.
+   Fix a stack overread on a long unrecognized client command.
    AI bug reprots from  Mehtab zafar, "Xchg Labs", OSSFUzz, security@mzfr.me
       and more.
    CASIC driver: decode time and satellites, add speed, rate and mode
