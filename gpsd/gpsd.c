@@ -736,7 +736,8 @@ static void notify_watchers(struct gps_device_t *device,
             subscribed(sub, device)) {
             if ((onjson &&
                  sub->policy.json) ||
-                (onpps && sub->policy.pps)) {
+                (onpps &&
+                 sub->policy.pps)) {
                 // codacy hates strlen()
                 (void)throttled_write(sub, buf, len);
             }
@@ -953,8 +954,8 @@ static char *snarfline(char *p, char **out)
     static char stash[BUFSIZ];
 
     for (q = p;
-         isprint((unsigned char) *p) &&
-         !isspace((unsigned char) *p) &&
+         isprint(*p) &&
+         !isspace(*p) &&
          (p - q < (ssize_t)(sizeof(stash) - 1));
          p++) {
         continue;
@@ -1185,7 +1186,7 @@ static void set_serial(struct gps_device_t *device,
     struct timespec delay;
 
 #ifndef __clang_analyzer__
-    while (isspace((unsigned char) *modestring)) {
+    while (isspace(*modestring)) {
         modestring++;
     }
     if (*modestring &&
@@ -1194,7 +1195,7 @@ static void set_serial(struct gps_device_t *device,
         if (*modestring &&
             NULL != strchr("NOE", *modestring)) {
             parity = *modestring++;
-            while (isspace((unsigned char) *modestring)) {
+            while (isspace(*modestring)) {
                 modestring++;
             }
             if (*modestring &&
@@ -1278,7 +1279,7 @@ static void rstrip(char *str, size_t replylen)
     char *strend;
 
     strend = str + strnlen(str, replylen) - 1;
-    while (isspace((unsigned char)*strend)) {
+    while (isspace(*strend)) {
         *strend = '\0';
         --strend;
     }
@@ -1570,7 +1571,8 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
 
         buf += 6;
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
-            if (allocated_device(devp) && subscribed(sub, devp)) {
+            if (allocated_device(devp) &&
+                subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
                     active++;
                 }
@@ -1582,7 +1584,8 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
                        "\"tpv\":[",
                        now_to_iso8601(tbuf, sizeof(tbuf)), active);
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
-            if (allocated_device(devp) && subscribed(sub, devp)) {
+            if (allocated_device(devp) &&
+                subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
                     size_t rlen = strnlen(reply, replylen);
 
@@ -1600,7 +1603,8 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         str_rstrip_char(reply, ',');
         (void)strlcat(reply, "],\"gst\":[", replylen);
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
-            if (allocated_device(devp) && subscribed(sub, devp)) {
+            if (allocated_device(devp) &&
+                subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
                     size_t rlen = strnlen(reply, replylen);
 
@@ -1618,7 +1622,8 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         str_rstrip_char(reply, ',');
         (void)strlcat(reply, "],\"sky\":[", replylen);
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
-            if (allocated_device(devp) && subscribed(sub, devp)) {
+            if (allocated_device(devp) &&
+                subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
                     size_t rlen = strnlen(reply, replylen);
 
@@ -1643,7 +1648,8 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         char quoted_error[GPS_JSON_RESPONSE_MAX];
 
         errend = buf + strnlen(buf, bufsize);
-        while (isspace((unsigned char) *errend) && errend > buf) {
+        while (isspace(*errend) &&
+               errend > buf) {
             --errend;
         }
         len = snprintf(reply, replylen,
@@ -2068,7 +2074,7 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf,
         const char *end;
 
         for (end = buf; *buf != '\0'; buf = end) {
-            if (isspace((unsigned char)*buf)) {
+            if (isspace(*buf)) {
                 end = buf + 1;
             } else {
                 size_t len = strnlen(reply, sizeof(reply));
@@ -2496,7 +2502,8 @@ int main(int argc, char *argv[])
     } while(0);
 #endif  // HAVE_LIBCAP
 
-#if defined(SYSTEMD_ENABLE) && defined(CONTROL_SOCKET_ENABLE)
+#if defined(SYSTEMD_ENABLE) && \
+    defined(CONTROL_SOCKET_ENABLE)
     sd_socket_count = sd_get_socket_count();
     if (0 < sd_socket_count &&
         NULL == control_socket) {
@@ -2525,7 +2532,8 @@ int main(int argc, char *argv[])
      * avoid a race condition in which hotplug scripts can try opening
      * the socket before it's created.
      */
-#if defined(SYSTEMD_ENABLE) && defined(CONTROL_SOCKET_ENABLE)
+#if defined(SYSTEMD_ENABLE) && \
+    defined(CONTROL_SOCKET_ENABLE)
     if (0 < sd_socket_count) {
         csock = SD_SOCKET_FDS_START;
         FD_SET(csock, &all_fds);
