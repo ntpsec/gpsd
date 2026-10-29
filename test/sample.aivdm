@@ -1079,6 +1079,16 @@ AIVDM,2,2,1,B,00000000000,2*26
 !AIVDM,3,3,0,A,Ghm4utWw2P,4*27
 # 8|0|002711009|1|16|720:00025e8d136025bd890d5520b2ff0ac000000070202580430d4bbf003f000001027cc3302597b60d4b15003f000000c5c4a9802584cf0d3f45803f000000f47ba58025cdf40d4391003f0000010272bb00258e5f0d44f7c9ff0a
 #
+# Synthetic type 8, DAC 1, FID 27 (IMO 289 Route information - broadcast),
+# 3 waypoints
+!AIVDM,1,1,,A,83KIkj00Fi=AJfqp0;@HLRRh8Vok@>B4?4CGV079jB29aL4,0*48
+# Same, but the waypoint count says 31.  Only the 3 waypoints sent
+# may be reported.
+!AIVDM,1,1,,A,83KIkj00Fi=AJfqp0;CpLRRh8Vok@>B4?4CGV079jB29aL4,0*73
+# Synthetic type 6, DAC 1, FID 28 (IMO 289 Route information - addressed),
+# the waypoint count says 31, but only 2 waypoints are sent.
+!AIVDM,1,1,,B,63KIkj0o4d5005hCDFcfN02lv78`d29etl3TQ3i4mqP0,5*0A
+#
 # Extra long type 21 message
 # from AISHub sample data
 # has data length of 368

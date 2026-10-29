@@ -486,6 +486,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                     ais->type6.dac1fid28.waypoints[u].lon = SBITS(off + 0, 28);
                     ais->type6.dac1fid28.waypoints[u].lat = SBITS(off + 28, 27);
                 }
+                ais->type6.dac1fid28.waycount = u;
 #undef ARRAY_BASE
 #undef ELEMENT_SIZE
                 ais->type6.structured = true;
@@ -839,6 +840,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                     ais->type8.dac1fid27.waypoints[u].lon = SBITS(off + 0, 28);
                     ais->type8.dac1fid27.waypoints[u].lat = SBITS(off + 28, 27);
                 }
+                ais->type8.dac1fid27.waycount = u;
 #undef ARRAY_BASE
 #undef ELEMENT_SIZE
                 ais->type8.structured = true;
