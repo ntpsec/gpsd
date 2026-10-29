@@ -1,44 +1,44 @@
 /*****************************************************************************
-
-This is a decoder for RTCM-104 3.x, a serial protocol used for
-broadcasting pseudorange corrections from differential-GPS reference
-stations.  The applicable specification is RTCM 10403.1: RTCM Paper
-177-2006-SC104-STD.  This obsolesces the earlier RTCM-104 2.x
-specifications. The specification document is proprietary; ordering
-instructions are accessible from <http://www.rtcm.org/>
-under "Publications".
-
-Unike the RTCM 2.x protocol, RTCM3.x does not use the strange
-sliding-bit-window IS-GPS-200 protocol as a transport layer, but is a
-self-contained byte-oriented packet protocol.  Packet recognition is
-handled in the GPSD packet-getter state machine; this code is
-concerned with unpacking the packets into well-behaved C structures,
-coping with odd field lengths and fields that may overlap byte
-boundaries.  These report structures live in gps.h.
-
-Note that the unpacking this module does is probably useful only for
-RTCM reporting and diagnostic tools.  It is not necessary when
-passing RTCM corrections to a GPS, which normally should just be
-passed an entire correction packet for processing by their internal
-firmware.
-
-Decodes of the following types have been verified: 1004, 1005, 1006,
-1008, 1012, 1013, 1029. There is good reason to believe the 1007 code
-is correct, as it's identical to 1008 up to where it ends.
-
-The 1033 decode was arrived at by looking at an rtcminspect dump and noting
-that it carries an information superset of the 1008.  There are additional
-Receiver and Firmware fields we're not certain to decode without access
-to an RTCM3 standard at revision 4 or later, but the guess in the code
-has been observed to correctly analyze a message with a nonempty Receiver
-field.
-
-This file is Copyright 2010 by the GPSD project
-SPDX-License-Identifier: BSD-2-clause
-
+*
+*   This is a decoder for RTCM-104 3.x, a serial protocol used for
+*   broadcasting pseudorange corrections from differential-GPS reference
+*   stations.  The applicable specification is RTCM 10403.1: RTCM Paper
+*   177-2006-SC104-STD.  This obsolesces the earlier RTCM-104 2.x
+*   specifications. The specification document is proprietary; ordering
+*   instructions are accessible from <http://www.rtcm.org/>
+*   under "Publications".
+*
+*   Unike the RTCM 2.x protocol, RTCM3.x does not use the strange
+*   sliding-bit-window IS-GPS-200 protocol as a transport layer, but is a
+*   self-contained byte-oriented packet protocol.  Packet recognition is
+*   handled in the GPSD packet-getter state machine; this code is
+*   concerned with unpacking the packets into well-behaved C structures,
+*   coping with odd field lengths and fields that may overlap byte
+*   boundaries.  These report structures live in gps.h.
+*
+*   Note that the unpacking this module does is probably useful only for
+*   RTCM reporting and diagnostic tools.  It is not necessary when
+*   passing RTCM corrections to a GPS, which normally should just be
+*   passed an entire correction packet for processing by their internal
+*   firmware.
+*
+*   Decodes of the following types have been verified: 1004, 1005, 1006,
+*   1008, 1012, 1013, 1029. There is good reason to believe the 1007 code
+*   is correct, as it's identical to 1008 up to where it ends.
+*
+*   The 1033 decode was arrived at by looking at an rtcminspect dump and noting
+*   that it carries an information superset of the 1008.  There are additional
+*   Receiver and Firmware fields we're not certain to decode without access
+*   to an RTCM3 standard at revision 4 or later, but the guess in the code
+*   has been observed to correctly analyze a message with a nonempty Receiver
+*   field.
+*
+*   This file is Copyright 2010 by the GPSD project
+*   SPDX-License-Identifier: BSD-2-clause
+*
 *****************************************************************************/
 
-#include "../include/gpsd_config.h"  // must be before all includes
+#include "../include/gpsd_config.h"    // must be before all includes
 
 #include <string.h>
 
@@ -72,7 +72,6 @@ SPDX-License-Identifier: BSD-2-clause
 #define GLONASS_CHANNEL_BASE            7       // DF040
 
 // Large case statements make GNU indent very confused
-// *INDENT-OFF*
 
 /* good source on message types:
  * https://software.rtcm-ntrip.org/export/HEAD/ntrip/trunk/BNC/src/bnchelp.html
@@ -81,9 +80,11 @@ SPDX-License-Identifier: BSD-2-clause
  */
 
 #define ugrab(width)    (bitcount += width, ubits(buf, \
-                         bitcount - width, width, false))
+                                                  bitcount - width, \
+                                                  width, false))
 #define sgrab(width)    (bitcount += width, sbits(buf,  \
-                         bitcount - width, width, false))
+                                                  bitcount - width, width, \
+                                                  false))
 
 /* copy strings safely.
  * RTCM 3.3 says most strings are 31 chars, or less, of ISO 8859-1
@@ -113,7 +114,7 @@ static void rtcm3_copy_string_field(char *dst, size_t dstlen,
 static bool rtcm3_101567(const struct gps_context_t *context,
                          struct rtcm3_t *rtcm, const unsigned char *buf)
 {
-    int bitcount = 36;  // 8 preamble, 6 zero, 10 length, 12 type
+    int bitcount = 36;    // 8 preamble, 6 zero, 10 length, 12 type
 
     // 1015, 1016, and 1017 all use the 1015 struct
     rtcm->rtcmtypes.rtcm3_1015.header.network_id = ugrab(12);
@@ -147,9 +148,9 @@ static bool rtcm3_101567(const struct gps_context_t *context,
  *         true if runt or undecoded
  */
 static bool rtcm3_4076(const struct gps_context_t *context,
-                         struct rtcm3_t *rtcm, const unsigned char *buf)
+                       struct rtcm3_t *rtcm, const unsigned char *buf)
 {
-    int bitcount = 36;         // 8 preamble, 6 zero, 10 length, 12 type
+    int bitcount = 36;    // 8 preamble, 6 zero, 10 length, 12 type
 
     rtcm->rtcmtypes.rtcm3_4076.ssr_vers = ugrab(3);
     rtcm->rtcmtypes.rtcm3_4076.igs_num = ugrab(8);
@@ -184,7 +185,7 @@ static bool rtcm3_4076(const struct gps_context_t *context,
 static bool rtcm3_decode_msm(const struct gps_context_t *context,
                              struct rtcm3_t *rtcm, const unsigned char *buf)
 {
-    int bitcount = 36;  // 8 preamble, 6 zero, 10 length, 12 type
+    int bitcount = 36;    // 8 preamble, 6 zero, 10 length, 12 type
     unsigned n_sig = 0, n_sat = 0, n_cell = 0;
     uint64_t sat_mask;
     uint32_t sig_mask;
@@ -192,7 +193,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
 
     if (22 > rtcm->length) {
         // need 169 bits, 21.125 bytes
-        rtcm->length = 0;          // set to zero to prevent JSON decode
+        rtcm->length = 0;    // set to zero to prevent JSON decode
         GPSD_LOG(LOG_WARN, &context->errout,
                  "RTCM3: rtcm3_decode_msm() type %d runt length %u ",
                  rtcm->type, rtcm->length);
@@ -203,7 +204,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     rtcm->rtcmtypes.rtcm3_msm.tow = ugrab(30);
     rtcm->rtcmtypes.rtcm3_msm.sync = ugrab(1);
     rtcm->rtcmtypes.rtcm3_msm.IODS = ugrab(3);
-    bitcount += 7;             // skip 7 reserved bits, DF001
+    bitcount += 7;    // skip 7 reserved bits, DF001
     rtcm->rtcmtypes.rtcm3_msm.steering = ugrab(2);
     rtcm->rtcmtypes.rtcm3_msm.ext_clk = ugrab(2);
     rtcm->rtcmtypes.rtcm3_msm.smoothing = ugrab(1);
@@ -279,7 +280,8 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     // Decode DF398 (MSM 1-7)
     for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_sat; i++) {
         rtcm->rtcmtypes.rtcm3_msm.sat[i].rr_m1 = ugrab(10);
-    };
+    }
+    ;
 
     // Decode DF399 (MSM 5+7)
     if (5 == rtcm->rtcmtypes.rtcm3_msm.msm ||
@@ -402,29 +404,30 @@ void rtcm3_unpack(const struct gps_context_t *context,
     int bitcount = 0;
     unsigned i;
     long temp;
-    bool unknown = true;               // we don't know how to decode
-    const char *msg_name = "Unknown";  // we know the name
-    unsigned preamble, mbz;            // preamble 0xd3, and must be zero
+    bool unknown = true;              // we don't know how to decode
+    const char *msg_name = "Unknown"; // we know the name
+    unsigned preamble, mbz;           // preamble 0xd3, and must be zero
     unsigned bad_len = 0;
 
 #define GPS_PSEUDORANGE(fld, len) \
-    {temp = ugrab(len);                         \
-    if (temp == GPS_INVALID_PSEUDORANGE) {      \
-        fld.pseudorange = 0;                    \
-    } else {                                    \
-        fld.pseudorange = temp * GPS_PSEUDORANGE_RESOLUTION;} \
-    }
+        temp = ugrab(len);                          \
+        if (temp == GPS_INVALID_PSEUDORANGE) {      \
+            fld.pseudorange = 0;                    \
+        } else {                                    \
+            fld.pseudorange = temp * GPS_PSEUDORANGE_RESOLUTION; \
+        }
+
 #define RANGEDIFF(fld, len) \
-    temp = (long)sgrab(len);                    \
-    if (temp == GPS_INVALID_PSEUDORANGE) {      \
-        fld.rangediff = 0;                      \
-    } else {                                    \
-        fld.rangediff = temp * PSEUDORANGE_DIFF_RESOLUTION; \
-    }
+        temp = (long)sgrab(len);                    \
+        if (temp == GPS_INVALID_PSEUDORANGE) {      \
+            fld.rangediff = 0;                      \
+        } else {                                    \
+            fld.rangediff = temp * PSEUDORANGE_DIFF_RESOLUTION; \
+        }
 
     memset(rtcm, 0, sizeof(struct rtcm3_t));
 
-    // check preamble and zero bits
+// check preamble and zero bits
     preamble = ugrab(8);
     mbz = ugrab(6);
     if (0xD3 != preamble ||
@@ -451,7 +454,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
              "RTCM3: type %d payload length %u bitcount %d\n",
              rtcm->type, rtcm->length, bitcount);
 
-    // RTCM3 message type numbers start at 1001
+// RTCM3 message type numbers start at 1001
     switch (rtcm->type) {
     case 1001:
         msg_name = "GPS Basic RTK, L1 Only";
@@ -549,7 +552,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1004.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1004.header.sync = (bool)ugrab(1);
         n = ugrab(5);
-        bad_len = ceil(8.0 + (15.625* n));
+        bad_len = ceil(8.0 + (15.625 * n));
         if (bad_len != rtcm->length) {
             // exactly: 8 + (15.625 * n)
             break;
@@ -586,7 +589,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         }
 #define R1005 rtcm->rtcmtypes.rtcm3_1005
         R1005.station_id = ugrab(12);
-        ugrab(6);               // reserved
+        ugrab(6);    // reserved
         R1005.system = ugrab(3);
         R1005.reference_station = (bool)ugrab(1);
         R1005.ecef_x = sgrab(38) * ANTENNA_POSITION_RESOLUTION;
@@ -608,7 +611,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         }
 #define R1006 rtcm->rtcmtypes.rtcm3_1006
         R1006.station_id = ugrab(12);
-        (void)ugrab(6);         // reserved
+        (void)ugrab(6);    // reserved
         R1006.system = ugrab(3);
         R1006.reference_station = (bool)ugrab(1);
         R1006.ecef_x = sgrab(38) * ANTENNA_POSITION_RESOLUTION;
@@ -900,7 +903,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         unknown = rtcm3_101567(context, rtcm, buf);
         unknown = rtcm3_101567(context, rtcm, buf);
         msg_name = "GPS Combined Geometric and Ionospheric "
-                       "Correction Differences";
+                   "Correction Differences";
         break;
 
     case 1018:
@@ -908,7 +911,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * Reserved for alternative Ionospheric Correction Difference Message
          */
         msg_name = "Reserved for alternative Ionospheric Correction "
-                       "Differences";
+                   "Differences";
         break;
 
     case 1019:
@@ -942,7 +945,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * Helmert / Abridged Molodenski Transformation parameters
          */
         msg_name = "Helmert / Abridged Molodenski Transformation "
-                       "parameters";
+                   "parameters";
         if (51 > rtcm->length) {
             // actually 51.5 + n + m
             bad_len = 51;
@@ -979,34 +982,41 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1021.computation_id = ugrab(4);
         rtcm->rtcmtypes.rtcm3_1021.height_id = ugrab(2);
         rtcm->rtcmtypes.rtcm3_1021.lat_origin = sgrab(19) *
-            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                                VALIDITY_RESOLUTION /
+                                                DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.lon_origin = sgrab(20) *
-            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                                VALIDITY_RESOLUTION /
+                                                DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.lat_extension = sgrab(14) *
-            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                                   VALIDITY_RESOLUTION /
+                                                   DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.lon_extension = sgrab(14) *
-            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                                   VALIDITY_RESOLUTION /
+                                                   DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.x_trans = sgrab(23) *
-            TRANSLATION_MM_RESOLUTION;
+                                             TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.y_trans = sgrab(23) *
-            TRANSLATION_MM_RESOLUTION;
+                                             TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.z_trans = sgrab(23) *
-            TRANSLATION_MM_RESOLUTION;
+                                             TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.x_rot = sgrab(32) *
-            ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                           ROTATION_ARCSEC_RESOLUTION /
+                                           DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.y_rot = sgrab(32) *
-            ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                           ROTATION_ARCSEC_RESOLUTION /
+                                           DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.z_rot = sgrab(32) *
-            ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                           ROTATION_ARCSEC_RESOLUTION /
+                                           DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.ds = sgrab(25) * SCALE_PPM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.add_as = sgrab(24) *
-            TRANSLATION_MM_RESOLUTION;
+                                            TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.add_bs = sgrab(25) *
-            TRANSLATION_MM_RESOLUTION;
+                                            TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.add_at = sgrab(24) *
-            TRANSLATION_MM_RESOLUTION;
+                                            TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.add_bt = sgrab(25) *
-            TRANSLATION_MM_RESOLUTION;
+                                            TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.quality_hori = ugrab(3);
         rtcm->rtcmtypes.rtcm3_1021.quality_vert = ugrab(3);
 
@@ -1039,17 +1049,21 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1023.shift_id_hori = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1023.shift_id_vert = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1023.lat_origin = sgrab(21) *
-            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                                PHASE_CORRECTION_RESOLUTION /
+                                                DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.lon_origin = sgrab(22) *
-            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                                PHASE_CORRECTION_RESOLUTION /
+                                                DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.lat_extension = ugrab(12) *
-            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                                   PHASE_CORRECTION_RESOLUTION /
+                                                   DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.lon_extension = ugrab(12) *
-            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+                                                   PHASE_CORRECTION_RESOLUTION /
+                                                   DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.lat_mean = sgrab(8) *
-            TRANSLATION_MM_RESOLUTION;
+                                              TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.lon_mean = sgrab(8) *
-            TRANSLATION_MM_RESOLUTION;
+                                              TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.hgt_mean = sgrab(15) * CM_RESOLUTION;
 #define R1023 rtcm->rtcmtypes.rtcm3_1023.residuals[i]
         for (i = 0; i < RTCM3_GRID_SIZE; i++) {
@@ -1083,7 +1097,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * Projection Parameters, Projection Types other than LCC2SP
          */
         msg_name = "Projection Parameters, Projection Types other "
-                       "than LCC2SP";
+                   "than LCC2SP";
         if (24 > rtcm->length) {
             // actually 24.5
             bad_len = 24;
@@ -1092,15 +1106,15 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1025.sys_id_num = ugrab(8);
         rtcm->rtcmtypes.rtcm3_1025.projection_type = ugrab(6);
         rtcm->rtcmtypes.rtcm3_1025.lat_origin = sgrab(34) *
-            PROJ_ORIGIN_RESOLUTION;
+                                                PROJ_ORIGIN_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1025.lon_origin = sgrab(35) *
-            PROJ_ORIGIN_RESOLUTION;
+                                                PROJ_ORIGIN_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1025.add_sno = ugrab(30) *
-            SCALE_PPM_RESOLUTION;
+                                             SCALE_PPM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1025.false_east = ugrab(36) *
-            TRANSLATION_MM_RESOLUTION;
+                                                TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1025.false_north = ugrab(35) *
-            TRANSLATION_MM_RESOLUTION;
+                                                 TRANSLATION_MM_RESOLUTION;
         unknown = false;
         break;
 
@@ -1194,8 +1208,8 @@ void rtcm3_unpack(const struct gps_context_t *context,
         }
         break;
 
-    case 1033:                  // see note in header
-        msg_name ="Receiver and Antenna Descriptor";
+    case 1033:    // see note in header
+        msg_name = "Receiver and Antenna Descriptor";
         /* Type1033 is a combined Message Types 1007 and 1008
          * and hence contains antenna descriptor and serial number
          * as well as receiver descriptor and serial number.
@@ -2081,7 +2095,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         }
         rtcm->rtcmtypes.rtcm3_1230.station_id = ugrab(12);
         rtcm->rtcmtypes.rtcm3_1230.bias_indicator = ugrab(1);
-        (void)ugrab(1);         // reserved
+        (void)ugrab(1);    // reserved
         rtcm->rtcmtypes.rtcm3_1230.signals_mask = ugrab(3);
         // actual mask order is undocumented...
         if (1 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
@@ -2098,7 +2112,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         }
         break;
 
-    // Message Types 4001 — 4060 Are Reserved
+// Message Types 4001 — 4060 Are Reserved
 
     case 4062:
         /* RTCM 3.3
@@ -2146,7 +2160,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * China Transport telecommunications & Information Center Proprietary
          */
         msg_name = "China Transport telecommunications & Information "
-                       "Center Proprietary";
+                   "Center Proprietary";
         break;
 
     case 4068:
@@ -2255,7 +2269,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * Cooperative Research Centre for Spatial Information Proprietary
          */
         msg_name = "Cooperative Research Centre for Spatial Information "
-                       "Proprietary";
+                   "Proprietary";
         break;
 
     case 4083:
@@ -2360,11 +2374,11 @@ void rtcm3_unpack(const struct gps_context_t *context,
 #undef sgrab
 #undef ugrab
     if (0 != bad_len) {
-            GPSD_LOG(LOG_WARN, &context->errout,
-                     "RTCM3: type %d (%s) bad n %u length %u s/b %u\n",
-                     rtcm->type,  msg_name, n, rtcm->length, bad_len);
-            rtcm->length = 0;          // set to zero to prevent JSON decode
-            return;
+        GPSD_LOG(LOG_WARN, &context->errout,
+                 "RTCM3: type %d (%s) bad n %u length %u s/b %u\n",
+                 rtcm->type,  msg_name, n, rtcm->length, bad_len);
+        rtcm->length = 0;              // set to zero to prevent JSON decode
+        return;
     }
     if (unknown) {
         /*
@@ -2383,7 +2397,5 @@ void rtcm3_unpack(const struct gps_context_t *context,
                  rtcm->type, msg_name, rtcm->length);
     }
 }
-
-// *INDENT-ON*
 
 // vim: set expandtab shiftwidth=4
