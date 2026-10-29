@@ -473,7 +473,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
             R1001.L1.indicator = ugrab(1);
             GPS_PSEUDORANGE(R1001.L1, 24);
             RANGEDIFF(R1001.L1, 20);
-            R1001.L1.locktime = (unsigned char)sgrab(7);
+            R1001.L1.locktime = ugrab(7);
         }
 #undef R1001
         unknown = false;
@@ -499,7 +499,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
             R1002.L1.indicator = ugrab(1);
             GPS_PSEUDORANGE(R1002.L1, 24);
             RANGEDIFF(R1002.L1, 20);
-            R1002.L1.locktime = (unsigned char)sgrab(7);
+            R1002.L1.locktime = ugrab(7);
             R1002.L1.ambiguity = ugrab(8);
             R1002.L1.CNR = (ugrab(8)) * CARRIER_NOISE_RATIO_UNITS;
         }
@@ -527,7 +527,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
             R1003.L1.indicator = ugrab(1);
             GPS_PSEUDORANGE(R1003.L1, 24);
             RANGEDIFF(R1003.L1, 20);
-            R1003.L1.locktime = (unsigned char)sgrab(7);
+            R1003.L1.locktime = ugrab(7);
             R1003.L2.indicator = ugrab(2);
             // DF017, L2-L1 Pseudorange Difference, 14 bits
             GPS_PSEUDORANGE(R1003.L2, 14);
@@ -537,7 +537,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
             } else {
                 R1003.L2.rangediff = temp * PSEUDORANGE_DIFF_RESOLUTION;
             }
-            R1003.L2.locktime = (unsigned char)sgrab(7);
+            R1003.L2.locktime = ugrab(7);
         }
 #undef R1003
         unknown = false;
@@ -564,13 +564,13 @@ void rtcm3_unpack(const struct gps_context_t *context,
             R1004.L1.indicator = (bool)ugrab(1);
             GPS_PSEUDORANGE(R1004.L1, 24);
             RANGEDIFF(R1004.L1, 20);
-            R1004.L1.locktime = (unsigned char)sgrab(7);
+            R1004.L1.locktime = ugrab(7);
             R1004.L1.ambiguity = ugrab(8);
             R1004.L1.CNR = ugrab(8) * CARRIER_NOISE_RATIO_UNITS;
             R1004.L2.indicator = ugrab(2);
             GPS_PSEUDORANGE(R1004.L2, 14);
             RANGEDIFF(R1004.L2, 20);
-            R1004.L2.locktime = (unsigned char)sgrab(7);
+            R1004.L2.locktime = ugrab(7);
             R1004.L2.CNR = ugrab(8) * CARRIER_NOISE_RATIO_UNITS;
         }
 #undef R1004
@@ -687,7 +687,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
             R1009.L1.channel = (short)ugrab(5) - GLONASS_CHANNEL_BASE;
             R1009.L1.pseudorange = ugrab(25) * GLONASS_PSEUDORANGE_RESOLUTION;
             RANGEDIFF(R1009.L1, 20);
-            R1009.L1.locktime = (unsigned char)sgrab(7);
+            R1009.L1.locktime = ugrab(7);
         }
 #undef R1009
         unknown = false;
@@ -711,13 +711,13 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1010.header.interval = ugrab(3);
 #define R1010 rtcm->rtcmtypes.rtcm3_1010.rtk_data[i]
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1010.header.satcount; i++) {
-            R1010.ident = (unsigned short)ugrab(6);
+            R1010.ident = ugrab(6);
             R1010.L1.indicator = (bool)ugrab(1);
             R1010.L1.channel = (short)ugrab(5) - GLONASS_CHANNEL_BASE;
             R1010.L1.pseudorange = ugrab(25) * GLONASS_PSEUDORANGE_RESOLUTION;
             RANGEDIFF(R1010.L1, 20);
-            R1010.L1.locktime = (unsigned char)sgrab(7);
-            R1010.L1.ambiguity = (unsigned char)ugrab(7);
+            R1010.L1.locktime = ugrab(7);
+            R1010.L1.ambiguity = ugrab(7);
             R1010.L1.CNR = ugrab(8) * CARRIER_NOISE_RATIO_UNITS;
         }
 #undef R1010
@@ -744,12 +744,12 @@ void rtcm3_unpack(const struct gps_context_t *context,
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1011.header.satcount; i++) {
             unsigned rangeincr;
 
-            R1011.ident = (unsigned short)ugrab(6);
+            R1011.ident = ugrab(6);
             R1011.L1.indicator = (bool)ugrab(1);
             R1011.L1.channel = (short)ugrab(5) - GLONASS_CHANNEL_BASE;
             R1011.L1.pseudorange = ugrab(25) * GLONASS_PSEUDORANGE_RESOLUTION;
             RANGEDIFF(R1011.L1, 20);
-            R1011.L1.locktime = (unsigned char)sgrab(7);
+            R1011.L1.locktime = ugrab(7);
             /* Same as 1012, without the ambiguity and CNR fields:
              * DF046 (2), DF047 (14), DF048 (20), DF049 (7) */
             R1011.L2.indicator = ugrab(2);
@@ -761,7 +761,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
                                        GLONASS_PSEUDORANGE_RESOLUTION;
             }
             RANGEDIFF(R1011.L2, 20);
-            R1011.L2.locktime = (unsigned char)sgrab(7);
+            R1011.L2.locktime = ugrab(7);
         }
 #undef R1011
         unknown = false;
@@ -803,7 +803,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
                                         GLONASS_PSEUDORANGE_RESOLUTION);
             }
             RANGEDIFF(R1012.L2, 20);
-            R1012.L2.locktime = (unsigned char)sgrab(7);
+            R1012.L2.locktime = ugrab(7);
             R1012.L2.CNR = ugrab(8) * CARRIER_NOISE_RATIO_UNITS;
         }
 #undef R1012
