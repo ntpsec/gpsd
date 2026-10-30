@@ -1078,6 +1078,15 @@ AIVDM,2,2,1,B,00000000000,2*26
 !AIVDM,3,2,0,A,ePm;5@0w0000iLBaP2F4khlwAH0w0000u7fUP2G=u0m3T@0w00010W:s02F>,0*72
 !AIVDM,3,3,0,A,Ghm4utWw2P,4*27
 # 8|0|002711009|1|16|720:00025e8d136025bd890d5520b2ff0ac000000070202580430d4bbf003f000001027cc3302597b60d4b15003f000000c5c4a9802584cf0d3f45803f000000f47ba58025cdf40d4391003f0000010272bb00258e5f0d44f7c9ff0a
+# Type 6 DAC 1 FID 16, number of persons on board, 104 bits.
+# From line 199991 of samples/NMEAStream.sample.txt, an AIS feed
+# captured 2019-04-24, in https://github.com/ThierryGandilhon/ais-decoder
+# at commit babee9e97266da86854dfd9071cfcc6e96367f3e:
+# https://github.com/ThierryGandilhon/ais-decoder/blob/babee9e97266da86854dfd9071cfcc6e96367f3e/samples/NMEAStream.sample.txt#L199991
+# Ship 230628000 off Tallinn answers a DAC 1
+# FID 2 request for FID 16 from Estonian base station 2766140.
+# persons = 929.
+!AIVDM,1,1,,B,63KtJ`80b=Ch050M20,4*37
 #
 # Synthetic type 8, DAC 1, FID 27 (IMO 289 Route information - broadcast),
 # 3 waypoints

@@ -372,8 +372,11 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             case 16:
                 // IMO236 - Number of persons on board
-                RANGE_CHECK6(236, 289);
-                if (136 == ais->type6.bitcount) {
+                // Real traffic also has a 104 bit reply, persons at bit 88.
+                RANGE_CHECK6(104, 289);
+                if (104 == bitlen) {
+                    ais->type6.dac1fid16.persons = UBITS(88, 13);
+                } else if (136 == ais->type6.bitcount) {
                     ais->type6.dac1fid16.persons = UBITS(88, 13);  // 289
                 } else {
                     ais->type6.dac1fid16.persons = UBITS(55, 13);  // 236

@@ -3173,7 +3173,7 @@ static void json_aivdm_dump(const struct ais_t *ais,
                             ",\"airdraught\":%u}\r\n",
                             ais->type6.dac1fid15.airdraught);
                 break;
-            case 16:    // IMO236 - Number of persons on board
+            case 16:    // IMO236/IMO289 - Number of persons on board
                 str_appendf(buf, buflen,
                             ",\"persons\":%u}\r\n",
                             ais->type6.dac1fid16.persons);
@@ -3605,10 +3605,10 @@ static void json_aivdm_dump(const struct ais_t *ais,
                             ",\"airdraught\":%u}\r\n",
                             ais->type8.dac1fid15.airdraught);
                 break;
-            case 16:    // IMO289 - Number of persons on board
+            case 16:    // IMO236 - Number of persons on board
                 str_appendf(buf, buflen,
                             ",\"persons\":%u}\r\n",
-                            ais->type6.dac1fid16.persons);
+                            ais->type8.dac1fid16.persons);
                 break;
             case 17:        // IMO289 - VTS-generated/synthetic targets
                 (void)strlcat(buf, ",\"targets\":[", buflen);
