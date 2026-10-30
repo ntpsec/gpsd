@@ -101,17 +101,17 @@ static void from_sixbit(const struct gpsd_errout_t *errout,
                     to, to_sz)
 
 static const struct vlist_t vdacs[] = {
-     {1, "International"},
-     {200, "Inland Waterways"},
-     {210, "Cyprus"},
-     {219, "Denmark"},
-     {232, "UK"},
-     {235, "UK/Republic Of Ireland"},
-     {248, "Malta"},
-     {250, "UK/Republic Of Ireland"},
-     {316, "St. Lawrence Seaway/Canada"},
-     {353, "Panama"},
-     {366, "St. Lawrence Seaway/USA"},
+    {1, "International"},
+    {200, "Inland Waterways"},
+    {210, "Cyprus"},
+    {219, "Denmark"},
+    {232, "UK"},
+    {235, "UK/Republic Of Ireland"},
+    {248, "Malta"},
+    {250, "UK/Republic Of Ireland"},
+    {316, "St. Lawrence Seaway/Canada"},
+    {353, "Panama"},
+    {366, "St. Lawrence Seaway/USA"},
     {0, NULL},
 };
 
@@ -532,7 +532,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             }
             break;
-        case  200:        // Inland Waterways
+        case  200:    // Inland Waterways
             switch (ais->type6.fid) {
             case 21:  // ETA at lock/bridge/terminal
                 RANGE_CHECK6(248, 248);
@@ -900,7 +900,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 break;
             }
             break;
-        case 200:        // Inland Waterways
+        case 200:     // Inland Waterways
             switch (ais->type8.fid) {
             case 10:  // Inland ship static and voyage related data
                 // bitlen = 424??
