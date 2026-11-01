@@ -1448,8 +1448,8 @@ const struct gps_type_t driver_isync = {
         data = field[5];
 
         pad = 0;
-        if (isdigit(field[6][0])) {
-            pad = field[6][0] - '0';     // number of padding bits ASCII encoded
+        if (isdigit((unsigned char)field[6][0])) {
+            pad = field[6][0] - '0';     // number padding bits ASCII encoded
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "nfrags %d ifrag %d decoded_frags %d data %s pad %d "
