@@ -493,7 +493,7 @@ static int json_internal_read_object(const char *cp,
 
                     cp++;                   // skip the 'u'
                     // NetBSD 6 wants the cast
-                    for (n = 0; n < 4 && isxdigit((int)*cp); n++) {
+                    for (n = 0; n < 4 && isxdigit((unsigned char)*cp); n++) {
                         uescape[n] = *cp++;
                     }
                     uescape[n] = '\0';      // terminate
