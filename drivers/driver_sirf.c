@@ -456,7 +456,7 @@ static gps_mask_t sirf_msg_debug(struct gps_device_t *device,
         }
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "SiRF: MID 0xe1 (225) SID %#0x %s\n", buf[1], msgbuf);
-    } else if (0xff == (unsigned char)buf[0]) {  // Debug messages
+    } else if (0xff == buf[0]) {  // Debug messages
         for (i = 1; i < (int)len; i++) {
             if (isprint(buf[i])) {
                 str_appendf(msgbuf, sizeof(msgbuf), "%c", buf[i]);
