@@ -956,8 +956,8 @@ static const char *write_gps(char *device, char *hex, size_t len)
         static char stash[BUFSIZ];
 
         for (q = p;
-             isprint(*p) &&
-             !isspace(*p) &&
+             isprint((unsigned char)*p) &&
+             !isspace((unsigned char)*p) &&
              (p - q < (ssize_t)(sizeof(stash) - 1));
              p++) {
             continue;
@@ -1189,7 +1189,7 @@ static void set_serial(struct gps_device_t *device,
     struct timespec delay;
 
 #ifndef __clang_analyzer__
-        while (isspace(*modestring)) {
+        while (isspace((unsigned char)*modestring)) {
             modestring++;
         }
         if (*modestring &&
@@ -1198,7 +1198,7 @@ static void set_serial(struct gps_device_t *device,
             if (*modestring &&
                 NULL != strchr("NOE", *modestring)) {
                 parity = *modestring++;
-                while (isspace(*modestring)) {
+                while (isspace((unsigned char)*modestring)) {
                     modestring++;
                 }
                 if (*modestring &&
@@ -1282,7 +1282,7 @@ static void rstrip(char *str, size_t replylen)
     char *strend;
 
     strend = str + strnlen(str, replylen) - 1;
-    while (isspace(*strend)) {
+    while (isspace((unsigned char)*strend)) {
         *strend = '\0';
         --strend;
     }
@@ -1658,7 +1658,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         consumed = buf + strnlen(buf, bufsize);
         errend = consumed;
         while (errend > buf &&
-               isspace(errend[-1])) {
+               isspace((unsigned char)errend[-1])) {
             --errend;
         }
         (void)snprintf(reply, replylen,
@@ -2087,7 +2087,7 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf,
         const char *end;
 
         for (end = buf; buf < limit && '\0' != *buf; buf = end) {
-            if (isspace(*buf)) {
+            if (isspace((unsigned char)*buf)) {
                 end = buf + 1;
             } else {
                 size_t len = strnlen(reply, sizeof(reply));
