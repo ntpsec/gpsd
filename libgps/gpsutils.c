@@ -7,7 +7,8 @@
 /* The strptime prototype is not provided unless explicitly requested.
  * We also need to set the value high enough to signal inclusion of
  * newer features (like clock_gettime).  See the POSIX spec for more info:
- * http://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html#tag_15_02_01_02 */
+ * http://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html#tag_15_02_01_02
+ */
 
 #include "../include/gpsd_config.h"    // must be before all includes
 
@@ -37,9 +38,9 @@
 // ant_stat
 const struct vlist_t vant_status[] = {
     {ANT_UNK, "UNK"},     // 0
-    {ANT_OK, "OK"},     // 1
-    {ANT_OPEN, "OPEN"},    // 2
-    {ANT_SHORT, "SHORT"},   // 3
+    {ANT_OK, "OK"},       // 1
+    {ANT_OPEN, "OPEN"},   // 2
+    {ANT_SHORT, "SHORT"}, // 3
     {0, NULL},
 };
 
@@ -123,74 +124,74 @@ const char *flags2str(unsigned long flags, const struct flist_t *flist,
  */
 #define SIGID_NUM 16
 struct sig_xlate_t {
-    const char *name;          // plain name
-    const char *obs;           // RINEX observation code
-    uint8_t nmea_sigid;        // NMEA 4.10 signal id.  0 == None
+    const char *name;           // plain name
+    const char *obs;            // RINEX observation code
+    uint8_t nmea_sigid;         // NMEA 4.10 signal id.  0 == None
 } const sig_xlate[GNSSID_CNT][SIGID_NUM] = {
-    {   // 0 - GPS
+    {                           // 0 - GPS
         {"L1 C/A",   "C1C", 1},
         {NULL,       NULL},
         {NULL,       NULL},
         {"L2 CL",    "C2L", 6},
         {"L2 CM",    "C2S", 5},
-        {NULL,       NULL},        // 5
+        {NULL,       NULL},     // 5
         {"L5 I",     "C5I", 7},
         {"L5 Q",     "C5Q", 8},
     },
-    {   // 1- SBAS
+    {                           // 1- SBAS
         {"L1C",      "C1C", 1},
         // {1, "L5I", "C5I"},  // ??
     },
-    {   // 2 - Galileo
+    {                           // 2 - Galileo
         {"E1 C",     "C1C", 7},
         {"E1 B",     "C1B", 7},
         {NULL,       NULL},
-        {"E5 aI",    "C5I", 1},  // 3
+        {"E5 aI",    "C5I", 1}, // 3
         {"E5 aQ",    "C5Q", 1},
         {"E5 bI",    "C7I", 2},
         {"E5 bQ",    "C7Q", 2},
         {NULL,       NULL},
-        {"E6 B",     "C6B", 5},   // 8
+        {"E6 B",     "C6B", 5}, // 8
         {"E6 C",     "C6C", 5},
         {"E6 A",     "C6A", 4},
     },
-    {   // 3 - BeiDou
+    {                           // 3 - BeiDou
         {"B1I D1",   "C2I", 1},
         {"B1I D2",   "C2I", 1},
         {"B2I D1",   "C7I", 0xb},
         {"B2I D2",   "C7I", 0xb},
         {"B3I D1",   "C6I", 0xb},
-        {"B1 Cp",    "C1P", 3},  // 5
+        {"B1 Cp",    "C1P", 3}, // 5
         {"B1 Cd",    "C1D", 3},
         {"B2 ap",    "C5P", 5},
         {"B2 ad",    "C5P", 5},
-        {NULL,       NULL},       // 9
+        {NULL,       NULL},     // 9
         {"B3I D2",   "C6I", 0xb},
     },
-    {   // 4 - IMES
+    {                           // 4 - IMES
         {"L5 A",     NULL, 0},
     },
-    {   // 5 - QZSS
+    {                           // 5 - QZSS
         {"L1 C/A",   "C1C", 1},
         {"L1 S",     "C1Z", 4},
         {NULL,       NULL},
         {NULL,       NULL},
         {"L2 CM",    "C2S", 5},
-        {"L2 CL",    "C2L", 6},   // 5
+        {"L2 CL",    "C2L", 6}, // 5
         {NULL,       NULL},
         {NULL,       NULL},
         {"L5 I",     "C5I", 7},
         {"L5 Q",     "C5Q", 8},
-        {NULL,       NULL},    //  10
+        {NULL,       NULL},     // 10
         {NULL,       NULL},
         {"L1 C/B",   "C1E", 0},
     },
-    {   // 6 - GLONASS
+    {                           // 6 - GLONASS
         {"L1 OF",    "C1C", 1},
         {NULL,       NULL},
         {"L2 OF",    "C2C", 3},
     },
-    {   // 8 - IRNSS (NavIC)
+    {                           // 8 - IRNSS (NavIC)
         {"L5 A",     "C5A", 1},
     },
 };
@@ -378,7 +379,7 @@ double safe_atof(const char *string)
      * they can't affect the value anyway.
      */
 
-    pExp  = p;
+    pExp = p;
     p -= mantSize;
     if (decPt < 0) {
         decPt = mantSize;
@@ -406,7 +407,7 @@ double safe_atof(const char *string)
                 c = *p;
                 p += 1;
             }
-            frac1 = 10*frac1 + (c - '0');
+            frac1 = 10 * frac1 + (c - '0');
         }
         frac2 = 0;
         for (; mantSize > 0; mantSize -= 1) {
@@ -416,7 +417,7 @@ double safe_atof(const char *string)
                 c = *p;
                 p += 1;
             }
-            frac2 = 10*frac2 + (c - '0');
+            frac2 = 10 * frac2 + (c - '0');
         }
         fraction = (1.0e9 * frac1) + frac2;
     }
@@ -608,16 +609,16 @@ void gps_clear_dop( struct dop_t *dop)
 void gps_clear_gst( struct gst_t *gst)
 {
     memset(&gst->utctime, 0, sizeof(gst->utctime));
-    gst-> rms_deviation =  NAN;
-    gst-> smajor_deviation =  NAN;
-    gst-> sminor_deviation =  NAN;
-    gst-> smajor_orientation =  NAN;
-    gst-> lat_err_deviation =  NAN;
-    gst-> lon_err_deviation =  NAN;
-    gst-> alt_err_deviation =  NAN;
-    gst-> ve_err_deviation =  NAN;
-    gst-> vn_err_deviation =  NAN;
-    gst-> vu_err_deviation =  NAN;
+    gst->rms_deviation = NAN;
+    gst->smajor_deviation = NAN;
+    gst->sminor_deviation = NAN;
+    gst->smajor_orientation = NAN;
+    gst->lat_err_deviation = NAN;
+    gst->lon_err_deviation = NAN;
+    gst->alt_err_deviation = NAN;
+    gst->ve_err_deviation = NAN;
+    gst->vn_err_deviation = NAN;
+    gst->vu_err_deviation = NAN;
 }
 
 // stuff a log structure with recognizable out-of-band values
@@ -845,12 +846,12 @@ void gps_merge_fix(struct gps_fix_t *to,
  *
  * Return: -1 on error, set errno to EOVERFLOW
  */
-time_t mkgmtime(struct tm * t)
+time_t mkgmtime(struct tm *t)
 {
     int year;
     time_t result;
     static const int cumdays[MONTHSPERYEAR] =
-        { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
     // check ranges, ignore tm_isdst and max tm_year
     if (0 > t->tm_sec ||
@@ -904,51 +905,54 @@ timespec_t iso8601_to_timespec(const char *isotime)
 
 #ifdef USE_QT
   #ifndef __clang_analyzer__
-    double usec = 0;
+            double usec = 0;
 
-    QString t(isotime);
-    QDateTime d = QDateTime::fromString(isotime, Qt::ISODate);
-    QStringList sl = t.split(".");
-    if (1 < sl.size()) {
-        usec = sl[1].toInt() / pow(10., (double)sl[1].size());
-    }
+            QString t(isotime);
+            QDateTime d = QDateTime::fromString(isotime, Qt::ISODate);
+            QStringList sl = t.split(".");
+            if (1 < sl.size()) {
+                usec = sl[1].toInt() / pow(10., (double)sl[1].size());
+            }
 // toSecsSinceEpoch wasn't introduced until 5.8
 #if QT_VERSION < QT_VERSION_CHECK(5,8,0)
-    ret.tv_sec = d.toTime_t();
+                ret.tv_sec = d.toTime_t();
 #else
-    ret.tv_sec = d.toSecsSinceEpoch();
+                ret.tv_sec = d.toSecsSinceEpoch();
 #endif
-    ret.tv_nsec = usec * 1e9;
+            ret.tv_nsec = usec * 1e9;
   #endif  // __clang_analyzer__
 #else  // USE_QT
-    double usec = 0;
-    struct tm tm = {0};
+        double usec = 0;
+        struct tm tm = {0};
 
-    {
-        char *dp = NULL;
-        dp = strptime(isotime, "%Y-%m-%dT%H:%M:%S", &tm);
-        if (NULL != dp &&
-            '.' == *dp) {
-            usec = strtod(dp, NULL);
+        {
+            char *dp = NULL;
+            dp = strptime(isotime, "%Y-%m-%dT%H:%M:%S", &tm);
+            if (NULL != dp &&
+                '.' == *dp) {
+                usec = strtod(dp, NULL);
+            }
         }
-    }
 
-    /*
-     * It would be nice if we could say mktime(&tm) - timezone + usec instead,
-     * but timezone is not available at all on some BSDs. Besides, when working
-     * with historical dates the value of timezone after an ordinary tzset(3)
-     * can be wrong; you have to do a redirect through the IANA historical
-     * timezone database to get it right.
-     */
-    ret.tv_sec = mkgmtime(&tm);
-    ret.tv_nsec = usec * 1e9;
+        /*
+         * It would be nice if we could say mktime(&tm) - timezone + usec
+         * instead,
+         * but timezone is not available at all on some BSDs. Besides, when
+         * working
+         * with historical dates the value of timezone after an ordinary
+         * tzset(3)
+         * can be wrong; you have to do a redirect through the IANA historical
+         * timezone database to get it right.
+         */
+        ret.tv_sec = mkgmtime(&tm);
+        ret.tv_nsec = usec * 1e9;
 #endif  // USE_QT
 
 #if 4 < SIZEOF_TIME_T
-    if (253402300799LL < ret.tv_sec) {
-        // enforce max "9999-12-31T23:59:59.999Z"
-        ret.tv_sec = 253402300799LL;
-    }
+        if (253402300799LL < ret.tv_sec) {
+            // enforce max "9999-12-31T23:59:59.999Z"
+            ret.tv_sec = 253402300799LL;
+        }
 #endif
     return ret;
 }
@@ -975,10 +979,10 @@ char *timespec_to_iso8601(timespec_t fixtime, char isotime[], size_t len)
     }
 
 #if 4 < SIZEOF_TIME_T
-    if (253402300799LL < fixtime.tv_sec) {
-        // enforce max "9999-12-31T23:59:59.999Z"
-        fixtime.tv_sec = 253402300799LL;
-    }
+        if (253402300799LL < fixtime.tv_sec) {
+            // enforce max "9999-12-31T23:59:59.999Z"
+            fixtime.tv_sec = 253402300799LL;
+        }
 #endif
 
     (void)gmtime_r(&fixtime.tv_sec, &when);
@@ -1063,7 +1067,7 @@ double earth_distance_and_bearings(double lat1, double lon1,
         C = f / 16 * c_SqA * (4 + f * (4 - 3 * c_SqA));
         L_P = lambda;
         lambda = L + (1 - C) * f * s_A *
-            (S + C * s_S * (c_2SM + C * c_S * (2 * c_2SM * c_2SM - 1)));
+                 (S + C * s_S * (c_2SM + C * c_S * (2 * c_2SM * c_2SM - 1)));
     } while ((fabs(lambda - L_P) > 1.0e-12) &&
              (0 < --i));
 
@@ -1267,7 +1271,8 @@ short ubx2_to_prn(int gnssId, int svId)
     case 7:
         // NavIC (IRNSS), 1 - 14 -> 801 - 814
         if (14 >= svId) {
-            nmea_PRN = svId + 800;;
+            nmea_PRN = svId + 800;
+            ;
         }
         break;
     default:
