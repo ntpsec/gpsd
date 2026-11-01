@@ -1,82 +1,82 @@
 /****************************************************************************
-
-NAME
-   json.c - parse JSON into fixed-extent data structures
-
-DESCRIPTION
-   This module parses a large subset of JSON (JavaScript Object
-Notation).  Unlike more general JSON parsers, it doesn't use malloc(3)
-and doesn't support polymorphism; you need to give it a set of
-template structures describing the expected shape of the incoming
-JSON, and it will error out if that shape is not matched.  When the
-parse succeeds, attribute values will be extracted into static
-locations specified in the template structures.
-
-   The "shape" of a JSON object in the type signature of its
-attributes (and attribute values, and so on recursively down through
-all nestings of objects and arrays).  This parser is indifferent to
-the order of attributes at any level, but you have to tell it in
-advance what the type of each attribute value will be and where the
-parsed value will be stored. The template structures may supply
-default values to be used when an expected attribute is omitted.
-
-   The preceding paragraph told one fib.  A single attribute may
-actually have a span of multiple specifications with different
-syntactically distinguishable types (e.g. string vs. real vs. integer
-vs. boolean, but not signed integer vs. unsigned integer).  The parser
-will match the right spec against the actual data.
-
-   The dialect this parses has some limitations.  First, it cannot
-recognize the JSON "null" value.  Secondly, arrays may not have
-character values as elements (this limitation could be easily removed
-if required). Third, all elements of an array must be of the same
-type.  Fourth, it can not handle NaN's in doubles (Issue 53150).
-
-   There are separate entry points for beginning a parse of either
-JSON object or a JSON array. JSON "float" quantities are actually
-stored as doubles.
-
-   This parser processes object arrays in one of two different ways,
-defending on whether the array subtype is declared as object or
-structobject.
-
-   Object arrays take one base address per object subfield, and are
-mapped into parallel C arrays (one per subfield).  Strings are not
-supported in this kind of array, as they don't have a "natural" size
-to use as an offset multiplier.
-
-   Structobjects arrays are a way to parse a list of objects to a set
-of modifications to a corresponding array of C structs.  The trick is
-that the array object initialization has to specify both the C struct
-array's base address and the stride length (the size of the C struct).
-If you initialize the offset fields with the correct offsetof calls,
-everything will work. Strings are supported but all string storage
-has to be inline in the struct.
-
-NOTE
-   This code has been spun out, packaged, and documented as a
-reusable module; search for "microjson".
-
-PERMISSIONS
-   This file is Copyright by the GPSD project
-   SPDX-License-Identifier: BSD-2-clause
-
-***************************************************************************/
-#include "../include/gpsd_config.h"  // must be before all includes
+ *
+ *  NAME
+ *  json.c - parse JSON into fixed-extent data structures
+ *
+ *  DESCRIPTION
+ *  This module parses a large subset of JSON (JavaScript Object
+ *  Notation).  Unlike more general JSON parsers, it doesn't use malloc(3)
+ *  and doesn't support polymorphism; you need to give it a set of
+ *  template structures describing the expected shape of the incoming
+ *  JSON, and it will error out if that shape is not matched.  When the
+ *  parse succeeds, attribute values will be extracted into static
+ *  locations specified in the template structures.
+ *
+ *  The "shape" of a JSON object in the type signature of its
+ *  attributes (and attribute values, and so on recursively down through
+ *  all nestings of objects and arrays).  This parser is indifferent to
+ *  the order of attributes at any level, but you have to tell it in
+ *  advance what the type of each attribute value will be and where the
+ *  parsed value will be stored. The template structures may supply
+ *  default values to be used when an expected attribute is omitted.
+ *
+ *  The preceding paragraph told one fib.  A single attribute may
+ *  actually have a span of multiple specifications with different
+ *  syntactically distinguishable types (e.g. string vs. real vs. integer
+ *  vs. boolean, but not signed integer vs. unsigned integer).  The parser
+ *  will match the right spec against the actual data.
+ *
+ *  The dialect this parses has some limitations.  First, it cannot
+ *  recognize the JSON "null" value.  Secondly, arrays may not have
+ *  character values as elements (this limitation could be easily removed
+ *  if required). Third, all elements of an array must be of the same
+ *  type.  Fourth, it can not handle NaN's in doubles (Issue 53150).
+ *
+ *  There are separate entry points for beginning a parse of either
+ *  JSON object or a JSON array. JSON "float" quantities are actually
+ *  stored as doubles.
+ *
+ *  This parser processes object arrays in one of two different ways,
+ *  defending on whether the array subtype is declared as object or
+ *  structobject.
+ *
+ *  Object arrays take one base address per object subfield, and are
+ *  mapped into parallel C arrays (one per subfield).  Strings are not
+ *  supported in this kind of array, as they don't have a "natural" size
+ *  to use as an offset multiplier.
+ *
+ *  Structobjects arrays are a way to parse a list of objects to a set
+ *  of modifications to a corresponding array of C structs.  The trick is
+ *  that the array object initialization has to specify both the C struct
+ *  array's base address and the stride length (the size of the C struct).
+ *  If you initialize the offset fields with the correct offsetof calls,
+ *  everything will work. Strings are supported but all string storage
+ *  has to be inline in the struct.
+ *
+ *  NOTE
+ *  This code has been spun out, packaged, and documented as a
+ *  reusable module; search for "microjson".
+ *
+ *  PERMISSIONS
+ *  This file is Copyright by the GPSD project
+ *  SPDX-License-Identifier: BSD-2-clause
+ *
+ ***************************************************************************/
+#include "../include/gpsd_config.h" // must be before all includes
 
 #include <ctype.h>
-#include <math.h>       // for HUGE_VAL
-#include <stdarg.h>     // for va_arg(), etc.
+#include <math.h>                   // for HUGE_VAL
+#include <stdarg.h>                 // for va_arg(), etc.
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/compiler.h"   // for FALLTHROUGH
+#include "../include/compiler.h"    // for FALLTHROUGH
 #include "../include/os_compat.h"
 #include "../include/json.h"
 
-#include "../include/gps.h"                // for safe_atof() prototype
+#include "../include/gps.h"         // for safe_atof() prototype
 #include "../include/strfuncs.h"
 #include "../include/timespec.h"
 
@@ -84,7 +84,7 @@ static int debuglevel = 0;
 static FILE *debugjsfp = NULL;
 
 // control the level and destination of debug trace messages
-void json_enable_debug(int level, FILE * fp)
+void json_enable_debug(int level, FILE *fp)
 {
     debuglevel = level;
     debugjsfp = fp;
@@ -105,12 +105,12 @@ static void json_trace(const char *fmt, ...)
 // HOTCODE!  Do not change without profiling.
 // major speedup by checking debuglvl before callin json_trace()
 #define json_debug_trace(lvl, fmt, ...)                \
-    do {                                              \
-        if (unlikely((lvl) <= debuglevel &&           \
-                      NULL != debugjsfp) ) {            \
-            json_trace(fmt, __VA_ARGS__);              \
-        }                                             \
-    } while (0)
+        do {                                              \
+            if (unlikely((lvl) <= debuglevel &&           \
+                         NULL != debugjsfp) ) {            \
+                json_trace(fmt, __VA_ARGS__);              \
+            }                                             \
+        } while (0)
 
 
 static char *json_target_address(const struct json_attr_t *cursor,
@@ -186,7 +186,7 @@ static char *json_target_address(const struct json_attr_t *cursor,
             cursor->addr.offset;
     }
     json_debug_trace(1, "json: Target address for %s (offset %d) is %p\n",
-                      cursor->attribute, offset, targetaddr);
+                     cursor->attribute, offset, targetaddr);
     return targetaddr;
 }
 
@@ -197,8 +197,8 @@ static int json_internal_read_object(const char *cp,
                                      int offset,
                                      const char **end)
 {
-    enum
-    { init, await_attr, in_attr, await_value, in_val_string,
+    enum {
+        init, await_attr, in_attr, await_value, in_val_string,
         in_escape, in_val_token, post_val, post_element, in_ignore_array
     } state = 0;
     char *statenames[] = {
@@ -222,10 +222,10 @@ static int json_internal_read_object(const char *cp,
     memset(valbuf, 0, sizeof(valbuf));
 
     // stuff fields with defaults in case they're omitted in the JSON input
-    for (cursor = attrs; cursor->attribute != NULL; cursor++)
+    for (cursor = attrs; cursor->attribute != NULL; cursor++) {
         if (!cursor->nodefault) {
             lptr = json_target_address(cursor, parent, offset);
-            if (NULL != lptr)
+            if (NULL != lptr) {
                 switch (cursor->type) {
                 case t_byte:
                     lptr[0] = cursor->dflt.byte;
@@ -265,8 +265,9 @@ static int json_internal_read_object(const char *cp,
                 case t_string:
                     if (parent != NULL
                         && parent->element_type != t_structobject
-                        && offset > 0)
+                        && offset > 0) {
                         return JSON_ERR_NOPARSTR;
+                    }
                     lptr[0] = '\0';
                     break;
                 case t_boolean:
@@ -286,14 +287,16 @@ static int json_internal_read_object(const char *cp,
                 case t_ignore:
                     break;
                 }
+            }
         }
+    }
 
     json_debug_trace(1, "json: JSON parse of '%s' begins.\n", cp);
 
     // parse input JSON
     for (; *cp != '\0'; cp++) {
         json_debug_trace(2, "json: State %-14s, looking at '%c' (%p)\n",
-                          statenames[state], *cp, cp);
+                         statenames[state], *cp, cp);
         switch (state) {
         case init:
             if (isspace((unsigned char) *cp)) {
@@ -303,7 +306,7 @@ static int json_internal_read_object(const char *cp,
                 state = await_attr;
             } else {
                 json_debug_trace(1, "json: %s",
-                                  "Non-WS when expecting object start.\n");
+                                 "Non-WS when expecting object start.\n");
                 if (NULL != end) {
                     *end = cp;
                 }
@@ -324,7 +327,7 @@ static int json_internal_read_object(const char *cp,
                 break;
             } else {
                 json_debug_trace(1, "json: %s",
-                          "Non-WS when expecting attribute.\n");
+                                 "Non-WS when expecting attribute.\n");
                 if (NULL != end) {
                     *end = cp;
                 }
@@ -339,10 +342,10 @@ static int json_internal_read_object(const char *cp,
             if (*cp == '"') {
                 *pattr++ = '\0';
                 json_debug_trace(1, "json: Collected attribute name %s\n",
-                                  attrbuf);
+                                 attrbuf);
                 for (cursor = attrs; cursor->attribute != NULL; cursor++) {
                     json_debug_trace(2, "json: Checking against %s\n",
-                                      cursor->attribute);
+                                     cursor->attribute);
                     if (strcmp(cursor->attribute, attrbuf) == 0) {
                         break;
                     }
@@ -353,9 +356,9 @@ static int json_internal_read_object(const char *cp,
                 }
                 if (NULL == cursor->attribute) {
                     json_debug_trace(1,
-                                      "json: Unknown attribute name '%s'"
-                                      " (attributes begin with '%s').\n",
-                                      attrbuf, attrs->attribute);
+                                     "json: Unknown attribute name '%s'"
+                                     " (attributes begin with '%s').\n",
+                                     attrbuf, attrs->attribute);
                     // don't update end here, leave at attribute start
                     return JSON_ERR_BADATTR;
                 }
@@ -389,13 +392,14 @@ static int json_internal_read_object(const char *cp,
                     /* skip to terminating ], not being fooled by
                      * sub arrays, etc.
                      * FIXME:  someday  */
-                    state = in_ignore_array;;
+                    state = in_ignore_array;
+                    ;
                     value_quoted = false;
                     break;
                 }
                 if (cursor->type != t_array) {
                     json_debug_trace(1,"json: %s",
-                                      "Saw [ when not expecting array.\n");
+                                     "Saw [ when not expecting array.\n");
                     if (NULL != end) {
                         *end = cp;
                     }
@@ -408,7 +412,7 @@ static int json_internal_read_object(const char *cp,
                 state = post_element;
             } else if (cursor->type == t_array) {
                 json_debug_trace(1, "json: %s",
-                                  "Array element was specified, but no [.\n");
+                                 "Array element was specified, but no [.\n");
                 if (NULL != end) {
                     *end = cp;
                 }
@@ -462,7 +466,7 @@ static int json_internal_read_object(const char *cp,
             break;
         case in_escape:
             if (NULL == pval) {
-                /* don't update end here, leave at value start */
+                // don't update end here, leave at value start
                 return JSON_ERR_NULLPTR;
             }
             if (pval > valbuf + JSON_VAL_MAX - 1 ||
@@ -487,26 +491,25 @@ static int json_internal_read_object(const char *cp,
             case 't':
                 *pval++ = '\t';
                 break;
-            case 'u':
-                {
-                    unsigned n;
+            case 'u': {
+                unsigned n;
 
-                    cp++;                   // skip the 'u'
-                    // NetBSD 6 wants the cast
-                    for (n = 0; n < 4 && isxdigit((unsigned char)*cp); n++) {
-                        uescape[n] = *cp++;
-                    }
-                    uescape[n] = '\0';      // terminate
-                    --cp;
-                    // ECMA-404 says JSON \u must have 4 hex digits
-                    if ((4 != n) ||
-                        (1 != sscanf(uescape, "%4x", &u))) {
-                        return JSON_ERR_BADSTRING;
-                    }
-                    // truncate values above 0xff
-                    *pval++ = (unsigned char)u;
+                cp++;                       // skip the 'u'
+                // NetBSD 6 wants the cast
+                for (n = 0; n < 4 && isxdigit((unsigned char)*cp); n++) {
+                    uescape[n] = *cp++;
                 }
-                break;
+                uescape[n] = '\0';          // terminate
+                --cp;
+                // ECMA-404 says JSON \u must have 4 hex digits
+                if ((4 != n) ||
+                    (1 != sscanf(uescape, "%4x", &u))) {
+                    return JSON_ERR_BADSTRING;
+                }
+                // truncate values above 0xff
+                *pval++ = (unsigned char)u;
+            }
+            break;
             default:            // handles double quote and solidus
                 *pval++ = *cp;
                 break;
@@ -537,15 +540,15 @@ static int json_internal_read_object(const char *cp,
                 *pval++ = *cp;
             }
             break;
-            // coverity[unterminated_case]
+        // coverity[unterminated_case]
         case post_val:
             // Ignore whitespace after either string or token values.
-	  if (isspace((unsigned char) *cp)) {
+            if (isspace((unsigned char) *cp)) {
                 while (*cp != '\0' && isspace((unsigned char) *cp)) {
                     ++cp;
                 }
                 json_debug_trace(1,
-                    "json: Skipped trailing whitespace: value \"%s\"\n", valbuf);
+                                 "json: Skipped trailing whitespace: value \"%s\"\n", valbuf);
             }
             /*
              * We know that cursor points at the first spec matching
@@ -583,8 +586,9 @@ static int json_internal_read_object(const char *cp,
                                      seeking == t_ulongint ||
                                      seeking == t_time ||
                                      seeking == t_short ||
-                                     seeking == t_ushort))
+                                     seeking == t_ushort)) {
                         break;
+                    }
                 }
                 if (NULL == cursor[1].attribute) {  // out of possibilities
                     break;
@@ -602,7 +606,7 @@ static int json_internal_read_object(const char *cp,
                  cursor->type != t_ignore &&
                  cursor->map == 0)) {
                 json_debug_trace(1, "json: %s", "Saw quoted value when expecting"
-                                  " non-string.\n");
+                                 " non-string.\n");
                 return JSON_ERR_QNONSTRING;
             }
             if (!value_quoted &&
@@ -615,15 +619,16 @@ static int json_internal_read_object(const char *cp,
                 return JSON_ERR_NONQSTRING;
             }
             if (cursor->map != 0) {
-                for (mp = cursor->map; mp->name != NULL; mp++)
+                for (mp = cursor->map; mp->name != NULL; mp++) {
                     if (strcmp(mp->name, valbuf) == 0) {
                         goto foundit;
                     }
+                }
                 json_debug_trace(1,
                                  "json: Invalid enumerated value string %s.\n",
-                                  valbuf);
+                                 valbuf);
                 return JSON_ERR_BADENUM;
-              foundit:
+foundit:
                 (void)snprintf(valbuf, sizeof(valbuf), "%d", mp->value);
             }
             if (cursor->type == t_check) {
@@ -633,91 +638,80 @@ static int json_internal_read_object(const char *cp,
             }
             if (NULL != lptr) {
                 switch (cursor->type) {
-                case t_byte:
-                    {
-                        int tmp = atoi(valbuf);
-                        lptr[0] = (char)tmp;
-                    }
-                    break;
-                case t_ubyte:
-                    {
-                        int tmp = atoi(valbuf);
-                        lptr[0] = (unsigned char)tmp;
-                    }
-                    break;
-                case t_integer:
-                    {
-                        int tmp = atoi(valbuf);
-                        memcpy(lptr, &tmp, sizeof(int));
-                    }
-                    break;
-                case t_uinteger:
-                    {
-                        unsigned int tmp = (unsigned int)atol(valbuf);
-                        memcpy(lptr, &tmp, sizeof(unsigned int));
-                    }
-                    break;
-                case t_longint:
-                    {
-                        long tmp = atol(valbuf);
-                        memcpy(lptr, &tmp, sizeof(long));
-                    }
-                    break;
-                case t_ulongint:
-                    {
-                        unsigned long tmp = (unsigned long)atoll(valbuf);
-                        memcpy(lptr, &tmp, sizeof(unsigned long));
-                    }
-                    break;
-                case t_short:
-                    {
-                        short tmp = atoi(valbuf);
-                        memcpy(lptr, &tmp, sizeof(short));
-                    }
-                    break;
-                case t_ushort:
-                    {
-                        unsigned short tmp = (unsigned int)atoi(valbuf);
-                        memcpy(lptr, &tmp, sizeof(unsigned short));
-                    }
-                    break;
-                case t_time:
-                    {
-                        timespec_t ts_tmp = {0, 0};
+                case t_byte: {
+                    int tmp = atoi(valbuf);
+                    lptr[0] = (char)tmp;
+                }
+                break;
+                case t_ubyte: {
+                    int tmp = atoi(valbuf);
+                    lptr[0] = (unsigned char)tmp;
+                }
+                break;
+                case t_integer: {
+                    int tmp = atoi(valbuf);
+                    memcpy(lptr, &tmp, sizeof(int));
+                }
+                break;
+                case t_uinteger: {
+                    unsigned int tmp = (unsigned int)atol(valbuf);
+                    memcpy(lptr, &tmp, sizeof(unsigned int));
+                }
+                break;
+                case t_longint: {
+                    long tmp = atol(valbuf);
+                    memcpy(lptr, &tmp, sizeof(long));
+                }
+                break;
+                case t_ulongint: {
+                    unsigned long tmp = (unsigned long)atoll(valbuf);
+                    memcpy(lptr, &tmp, sizeof(unsigned long));
+                }
+                break;
+                case t_short: {
+                    short tmp = atoi(valbuf);
+                    memcpy(lptr, &tmp, sizeof(short));
+                }
+                break;
+                case t_ushort: {
+                    unsigned short tmp = (unsigned int)atoi(valbuf);
+                    memcpy(lptr, &tmp, sizeof(unsigned short));
+                }
+                break;
+                case t_time: {
+                    timespec_t ts_tmp = {0, 0};
 
-                        if (value_quoted) {
-                            ts_tmp = iso8601_to_timespec(valbuf);
-                        } else if (NULL == strchr(valbuf, '.')) {
-                            // integer
-                            ts_tmp.tv_sec = (time_t)atoll(valbuf);
-                        } else {
-                            // real
-                            double sec_tmp = safe_atof(valbuf);
-                            if (0 != isfinite(sec_tmp)) {
-                                DTOTS(&ts_tmp, sec_tmp);
-                            }  // else, leave at default
-                        }
-                        memcpy(lptr, &ts_tmp, sizeof(timespec_t));
-                    }
-                    break;
-                case t_timespec:
-                    {
+                    if (value_quoted) {
+                        ts_tmp = iso8601_to_timespec(valbuf);
+                    } else if (NULL == strchr(valbuf, '.')) {
+                        // integer
+                        ts_tmp.tv_sec = (time_t)atoll(valbuf);
+                    } else {
+                        // real
                         double sec_tmp = safe_atof(valbuf);
-                        timespec_t ts_tmp;
                         if (0 != isfinite(sec_tmp)) {
                             DTOTS(&ts_tmp, sec_tmp);
-                            memcpy(lptr, &ts_tmp, sizeof(timespec_t));
-                        } // else leave at .dflt
+                        }      // else, leave at default
                     }
-                    break;
-                case t_real:
-                    {
-                        double tmp = safe_atof(valbuf);
-                        if (0 != isfinite(tmp)) {
-                            memcpy(lptr, &tmp, sizeof(double));
-                        } // else leave at .dflt
-                    }
-                    break;
+                    memcpy(lptr, &ts_tmp, sizeof(timespec_t));
+                }
+                break;
+                case t_timespec: {
+                    double sec_tmp = safe_atof(valbuf);
+                    timespec_t ts_tmp;
+                    if (0 != isfinite(sec_tmp)) {
+                        DTOTS(&ts_tmp, sec_tmp);
+                        memcpy(lptr, &ts_tmp, sizeof(timespec_t));
+                    }     // else leave at .dflt
+                }
+                break;
+                case t_real: {
+                    double tmp = safe_atof(valbuf);
+                    if (0 != isfinite(tmp)) {
+                        memcpy(lptr, &tmp, sizeof(double));
+                    }     // else leave at .dflt
+                }
+                break;
                 case t_string:
                     if (NULL != parent &&
                         parent->element_type != t_structobject &&
@@ -726,12 +720,11 @@ static int json_internal_read_object(const char *cp,
                     }
                     (void)strlcpy(lptr, valbuf, cursor->len);
                     break;
-                case t_boolean:
-                    {
-                        bool tmp = (strcmp(valbuf, "true") == 0);
-                        memcpy(lptr, &tmp, sizeof(bool));
-                    }
-                    break;
+                case t_boolean: {
+                    bool tmp = (strcmp(valbuf, "true") == 0);
+                    memcpy(lptr, &tmp, sizeof(bool));
+                }
+                break;
                 case t_character:
                     if (strnlen(valbuf, 2) > 1) {
                         // don't update end here, leave at value start
@@ -751,8 +744,8 @@ static int json_internal_read_object(const char *cp,
                 case t_check:
                     if (strcmp(cursor->dflt.check, valbuf) != 0) {
                         json_debug_trace(1, "json: Required attribute value %s"
-                                          " not present.\n",
-                                          cursor->dflt.check);
+                                         " not present.\n",
+                                         cursor->dflt.check);
                         // don't update end here, leave at start of attribute
                         return JSON_ERR_CHECKFAIL;
                     }
@@ -771,7 +764,7 @@ static int json_internal_read_object(const char *cp,
                 goto good_parse;
             } else {
                 json_debug_trace(1, "json: %s",
-                                "Garbage while expecting comma or }\n");
+                                 "Garbage while expecting comma or }\n");
                 if (NULL != end) {
                     *end = cp;
                 }
@@ -785,7 +778,7 @@ static int json_internal_read_object(const char *cp,
         return JSON_ERR_EMPTY;
     }
 
-  good_parse:
+good_parse:
     // in case there's another object following, consume trailing WS
     while (isspace((unsigned char)*cp)) {
         ++cp;
@@ -846,22 +839,23 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
             }
             arr->arr.strings.ptrs[offset] = tp;
             for (; tp - arr->arr.strings.store < arr->arr.strings.storelen;
-                 tp++)
+                 tp++) {
                 if (*cp == '"') {
                     ++cp;
                     *tp++ = '\0';
                     goto stringend;
                 } else if (*cp == '\0') {
                     json_debug_trace(1, "json: %s",
-                                      "Bad string syntax in string list.\n");
+                                     "Bad string syntax in string list.\n");
                     return JSON_ERR_BADSTRING;
                 } else {
                     *tp = *cp++;
                 }
+            }
             json_debug_trace(1, "json: %s",
                              "Bad string syntax in string list.\n");
             return JSON_ERR_BADSTRING;
-          stringend:
+stringend:
             break;
         case t_object:
             FALLTHROUGH
@@ -935,26 +929,25 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
             }
             cp = ep;
             break;
-        case t_time:
-            {
-                timespec_t ts_tmp;
-                if (*cp != '"') {
-                    return JSON_ERR_BADSTRING;
-                } else {
-                    ++cp;
-                }
-                ts_tmp = iso8601_to_timespec(cp);
-                arr->arr.timespecs.store[offset] = ts_tmp;
-                while (*cp &&
-                       *cp != '"') {
-                    cp++;
-                }
-                if (*cp != '"') {
-                    return JSON_ERR_BADSTRING;
-                }
+        case t_time: {
+            timespec_t ts_tmp;
+            if (*cp != '"') {
+                return JSON_ERR_BADSTRING;
+            } else {
                 ++cp;
             }
-            break;
+            ts_tmp = iso8601_to_timespec(cp);
+            arr->arr.timespecs.store[offset] = ts_tmp;
+            while (*cp &&
+                   *cp != '"') {
+                cp++;
+            }
+            if (*cp != '"') {
+                return JSON_ERR_BADSTRING;
+            }
+            ++cp;
+        }
+        break;
         case t_timespec:
             // TODO not sure how to implement this
             return JSON_ERR_BADNUM;
@@ -1005,7 +998,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
         *end = cp;
     }
     return JSON_ERR_SUBTOOLONG;
-  breakout:
+breakout:
     if (NULL != arr->count) {
         *(arr->count) = arrcount;
     }
@@ -1013,7 +1006,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
         *end = cp;
     }
     json_debug_trace(1, "json: leaving json_read_array() with %d elements\n",
-                      arrcount);
+                     arrcount);
     return 0;
 }
 
@@ -1143,8 +1136,8 @@ char *json_quote(const char *in_buffer, char *out_buffer, size_t in_len,
         escape_ptr = strchr(escape_match, in_buffer[in_index]);
         if (escape_ptr >= escape_match) {
             out_buffer[out_index++] = '\\';
-            out_buffer[out_index++] = escaped_bit[escape_ptr-escape_match];
-            out_buffer[out_index]   = 0;
+            out_buffer[out_index++] = escaped_bit[escape_ptr - escape_match];
+            out_buffer[out_index] = 0;
             continue;
         }
 
