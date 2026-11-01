@@ -119,122 +119,123 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
     if (S_ISCHR(sb.st_mode)) {
         sourcetype_t devtype = SOURCE_RS232;
 #ifdef __linux__
-        /* Linux major device numbers live here
-         *
-         * https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/admin-guide/devices.txt
-         *
-         * Note: This code works because Linux major device numbers are
-         * stable and architecture-independent.  It is *not* a good model
-         * for other Unixes where either or both assumptions may break.
-         */
-        int devmajor = major(sb.st_rdev);
-        int devminor = minor(sb.st_rdev);
-
-        switch (devmajor) {
-        case 3:      // First MFM, RLL and IDE hard disk/CD-ROM interface ?
-            FALLTHROUGH
-        case 136:    // Unix98 PTY slaves
-            FALLTHROUGH
-        case 137:    // Unix98 PTY slaves
-            FALLTHROUGH
-        case 138:    // Unix98 PTY slaves
-            FALLTHROUGH
-        case 139:    // Unix98 PTY slaves
-            FALLTHROUGH
-        case 140:    // Unix98 PTY slaves
-            FALLTHROUGH
-        case 141:    // Unix98 PTY slaves
-            FALLTHROUGH
-        case 142:    // Unix98 PTY slaves
-            FALLTHROUGH
-        case 143:    // Unix98 PTY slaves
-            devtype = SOURCE_PTY;
-            break;
-
-        case 4:      // TTY Devices
-            FALLTHROUGH
-        case 22:     // Digiboard serial card
-            FALLTHROUGH
-        case 23:     // Digiboard serial card
-            FALLTHROUGH
-        case 24:     // Stallion serial card
-            FALLTHROUGH
-        case 32:     // Specialx serial card
-            FALLTHROUGH
-        case 46:     // Rocketport serial card
-            FALLTHROUGH
-        case 48:     // SDL RISCom serial card
-            FALLTHROUGH
-        case 57:     // Hayes ESP serial card
-            FALLTHROUGH
-        case 71:     // Computone IntelliPort II serial card
-            FALLTHROUGH
-        case 75:     // Specialix IO8+ serial card
-            FALLTHROUGH
-        case 105:    // Comtrol VS-1000+ serial card
-            FALLTHROUGH
-        case 112:    // ISI serial card
-            FALLTHROUGH
-        case 148:    // TCL serial card
-            FALLTHROUGH
-        case 154:    // Specialix RIO serial card
-            FALLTHROUGH
-        case 156:    // Specialix RIO serial card
-            FALLTHROUGH
-        case 164:    // Chase Research serial card
-            FALLTHROUGH
-        case 172:    // Moxa Intellio serial card
-            FALLTHROUGH
-        case 174:    // SmartIO serial card
-            FALLTHROUGH
-        case 204:    // Low-density serial ports
-            FALLTHROUGH
-        case 207:    // 207 FREESCALE I.MX UARTS (TTYMXC*)
-            FALLTHROUGH
-        case 208:    // User space serial ports
-            FALLTHROUGH
-        case 210:    // SBE serial ports
-            FALLTHROUGH
-        case 2224:    // A2232 serial ports
-            devtype = SOURCE_RS232;
-            break;
-
-        case 10:      // Non-serial mice, misc features
-            if (223 == devminor) {
-                devtype = SOURCE_PPS;
-            } // else WTF?
-            break;
-
-        case 166:    // ACM USB modems
-            // ACM has no speed, otherwise similar to SOURCE_USB
-            devtype = SOURCE_ACM;
-            break;
-        case 188:    // USB serial converters
-            devtype = SOURCE_USB;
-            break;
-
-        case 216:    // Bluetooth RFCOMM TTY devices
-            FALLTHROUGH
-        case 217:    // Bluetooth RFCOMM TTY devices (alternate devices)
-            devtype = SOURCE_BLUETOOTH;
-            break;
-
-        default:
-            /* 234 to 254 Reserved for dynamic assignment
-             * 240 to 254 Reserved for local/experimental use
+            /* Linux major device numbers live here
              *
-             * reports that Buildroot may use major 241 for serial,
-             *  instead of its documented purpose (usbmon). */
-            GPSD_LOG(LOG_WARNING, &session->context->errout,
-                     "SER: gpsd_classify(%s) Unknown Major Device # %d\n",
-                     path, devmajor);
-            // Give up, default to rs232
-            devtype = SOURCE_RS232;
-            break;
-        }
+             * https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/admin-guide/devices.txt
+             *
+             * Note: This code works because Linux major device numbers are
+             * stable and architecture-independent.  It is *not* a good model
+             * for other Unixes where either or both assumptions may break.
+             */
+            int devmajor = major(sb.st_rdev);
+            int devminor = minor(sb.st_rdev);
+
+            switch (devmajor) {
+            case 3:    // First MFM, RLL and IDE hard disk/CD-ROM interface ?
+                FALLTHROUGH
+            case 136:  // Unix98 PTY slaves
+                FALLTHROUGH
+            case 137:  // Unix98 PTY slaves
+                FALLTHROUGH
+            case 138:  // Unix98 PTY slaves
+                FALLTHROUGH
+            case 139:  // Unix98 PTY slaves
+                FALLTHROUGH
+            case 140:  // Unix98 PTY slaves
+                FALLTHROUGH
+            case 141:  // Unix98 PTY slaves
+                FALLTHROUGH
+            case 142:  // Unix98 PTY slaves
+                FALLTHROUGH
+            case 143:  // Unix98 PTY slaves
+                devtype = SOURCE_PTY;
+                break;
+
+            case 4:    // TTY Devices
+                FALLTHROUGH
+            case 22:   // Digiboard serial card
+                FALLTHROUGH
+            case 23:   // Digiboard serial card
+                FALLTHROUGH
+            case 24:   // Stallion serial card
+                FALLTHROUGH
+            case 32:   // Specialx serial card
+                FALLTHROUGH
+            case 46:   // Rocketport serial card
+                FALLTHROUGH
+            case 48:   // SDL RISCom serial card
+                FALLTHROUGH
+            case 57:   // Hayes ESP serial card
+                FALLTHROUGH
+            case 71:   // Computone IntelliPort II serial card
+                FALLTHROUGH
+            case 75:   // Specialix IO8+ serial card
+                FALLTHROUGH
+            case 105:  // Comtrol VS-1000+ serial card
+                FALLTHROUGH
+            case 112:  // ISI serial card
+                FALLTHROUGH
+            case 148:  // TCL serial card
+                FALLTHROUGH
+            case 154:  // Specialix RIO serial card
+                FALLTHROUGH
+            case 156:  // Specialix RIO serial card
+                FALLTHROUGH
+            case 164:  // Chase Research serial card
+                FALLTHROUGH
+            case 172:  // Moxa Intellio serial card
+                FALLTHROUGH
+            case 174:  // SmartIO serial card
+                FALLTHROUGH
+            case 204:  // Low-density serial ports
+                FALLTHROUGH
+            case 207:  // 207 FREESCALE I.MX UARTS (TTYMXC*)
+                FALLTHROUGH
+            case 208:  // User space serial ports
+                FALLTHROUGH
+            case 210:  // SBE serial ports
+                FALLTHROUGH
+            case 2224: // A2232 serial ports
+                devtype = SOURCE_RS232;
+                break;
+
+            case 10:   // Non-serial mice, misc features
+                if (223 == devminor) {
+                    devtype = SOURCE_PPS;
+                } // else WTF?
+                break;
+
+            case 166:  // ACM USB modems
+                // ACM has no speed, otherwise similar to SOURCE_USB
+                devtype = SOURCE_ACM;
+                break;
+            case 188:  // USB serial converters
+                devtype = SOURCE_USB;
+                break;
+
+            case 216:  // Bluetooth RFCOMM TTY devices
+                FALLTHROUGH
+            case 217:  // Bluetooth RFCOMM TTY devices (alternate devices)
+                devtype = SOURCE_BLUETOOTH;
+                break;
+
+            default:
+                /* 234 to 254 Reserved for dynamic assignment
+                 * 240 to 254 Reserved for local/experimental use
+                 *
+                 * reports that Buildroot may use major 241 for serial,
+                 *  instead of its documented purpose (usbmon). */
+                GPSD_LOG(LOG_WARNING, &session->context->errout,
+                         "SER: gpsd_classify(%s) Unknown Major Device # %d\n",
+                         path, devmajor);
+                // Give up, default to rs232
+                devtype = SOURCE_RS232;
+                break;
+            }
 #endif  // __linux__
         /*
-         * See http://nadeausoftware.com/articles/2012/01/c_c_tip_how_use_compiler_predefined_macros_detect_operating_system
+         * See
+         * http://nadeausoftware.com/articles/2012/01/c_c_tip_how_use_compiler_predefined_macros_detect_operating_system
          * for discussion how this works.  Key graphs:
          *
          * Compilers for the old BSD base for these distributions
@@ -258,18 +259,18 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
          * the later section on OSX and iOS).
          */
 #ifdef BSD
-        /*
-         * Hacky check for pty, which is what really matters for avoiding
-         * adaptive delay.
-         */
-        if (0 == strncmp(path, "/dev/ttyp", 9) ||
-            0 == strncmp(path, "/dev/ttyq", 9)) {
-            devtype = SOURCE_PTY;
-        } else if (0 == strncmp(path, "/dev/ttyU", 9) ||
-                   0 == strncmp(path, "/dev/dtyU", 9)) {
-            devtype = SOURCE_USB;
-        }
-        // XXX bluetooth
+            /*
+             * Hacky check for pty, which is what really matters for avoiding
+             * adaptive delay.
+             */
+            if (0 == strncmp(path, "/dev/ttyp", 9) ||
+                0 == strncmp(path, "/dev/ttyq", 9)) {
+                devtype = SOURCE_PTY;
+            } else if (0 == strncmp(path, "/dev/ttyU", 9) ||
+                       0 == strncmp(path, "/dev/dtyU", 9)) {
+                devtype = SOURCE_USB;
+            }
+            // XXX bluetooth
 #endif  // BSD
         return devtype;
     }
@@ -282,89 +283,90 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
 /* Try to find how many times a file is open.  0 to n.
  * return -1 on failure
  */
-static int fusercount(struct gps_device_t *session)
-{
-    DIR *procd, *fdd;
-    struct dirent *procentry, *fdentry;
-    char procpath[GPS_PATH_MAX], fdpath[GPS_PATH_MAX], linkpath[GPS_PATH_MAX];
-    char *fullpath = NULL;        // what dev.path points to
-    int cnt = 0;
+    static int fusercount(struct gps_device_t *session)
+    {
+        DIR *procd, *fdd;
+        struct dirent *procentry, *fdentry;
+        char procpath[GPS_PATH_MAX], fdpath[GPS_PATH_MAX];
+        char linkpath[GPS_PATH_MAX];
+        char *fullpath = NULL;    // what dev.path points to
+        int cnt = 0;
 
-    // POSIX 2008
-    fullpath = realpath(session->gpsdata.dev.path, NULL);
-    if (NULL == fullpath) {
-        // Huh?
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "SER: fusercount(): realpath(%s) failed: %s(%d)\n",
-                 session->gpsdata.dev.path,
-                 strerror(errno), errno);
-        return -1;
-    }
+        // POSIX 2008
+        fullpath = realpath(session->gpsdata.dev.path, NULL);
+        if (NULL == fullpath) {
+            // Huh?
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: fusercount(): realpath(%s) failed: %s(%d)\n",
+                     session->gpsdata.dev.path,
+                     strerror(errno), errno);
+            return -1;
+        }
 
-    if (NULL == (procd = opendir("/proc"))) {
+        if (NULL == (procd = opendir("/proc"))) {
+            free(fullpath);
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: fusercount(): opendir(/proc) failed: %s(%d)\n",
+                     strerror(errno), errno);
+            return -1;
+        }
+
+        // debug
+        // GPSD_LOG(LOG_SHOUT, &session->context->errout,
+        // "SER: fusercount: path %s fullpath %s\n",
+        // session->gpsdata.dev.path, fullpath);
+
+        while (NULL != (procentry = readdir(procd))) {
+            if (0 == isdigit((unsigned char)procentry->d_name[0])) {
+                // skip non-precess entries
+                continue;
+            }
+            // longest procentry->d_name I could find was 12
+            (void)snprintf(procpath, sizeof(procpath),
+                           "/proc/%.20s/fd/", procentry->d_name);
+            if (NULL == (fdd = opendir(procpath))) {
+                continue;
+            }
+            while (NULL != (fdentry = readdir(fdd))) {
+                ssize_t rd;
+
+                if (0 == isdigit((unsigned char)fdentry->d_name[0])) {
+                    // skip . and ..
+                    continue;
+                }
+                (void)strlcpy(fdpath, procpath, sizeof(fdpath));
+                (void)strlcat(fdpath, fdentry->d_name, sizeof(fdpath));
+
+                // readlink does not always NUL terminate.
+                rd = readlink(fdpath, linkpath, sizeof(linkpath) - 1);
+                if (0 > rd) {
+                    // maybe access error, maybe too long, maybe...
+                    continue;
+                }
+                // pacify coverity by setting NUL
+                linkpath[rd] = '\0';
+                if ('/' != linkpath[0]) {
+                    // not a full path
+                    continue;
+                }
+                // debug
+                // GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                // "SER: fusercount: %s linkpath %s fullpath %s\n",
+                // fdpath, linkpath, fullpath);
+                if (0 == strcmp(linkpath, fullpath)) {
+                    ++cnt;
+                }
+            }
+            (void)closedir(fdd);
+        }
+        (void)closedir(procd);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "SER: fusercount: path %s fullpath %s cnt %d\n",
+                 session->gpsdata.dev.path, fullpath, cnt);
         free(fullpath);
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "SER: fusercount(): opendir(/proc) failed: %s(%d)\n",
-                 strerror(errno), errno);
-        return -1;
+
+        return cnt;
     }
-
-    // debug
-    // GPSD_LOG(LOG_SHOUT, &session->context->errout,
-    //          "SER: fusercount: path %s fullpath %s\n",
-    //          session->gpsdata.dev.path, fullpath);
-
-    while (NULL != (procentry = readdir(procd))) {
-        if (0 == isdigit((unsigned char)procentry->d_name[0])) {
-            // skip non-precess entries
-            continue;
-        }
-        // longest procentry->d_name I could find was 12
-        (void)snprintf(procpath, sizeof(procpath),
-                       "/proc/%.20s/fd/", procentry->d_name);
-        if (NULL == (fdd = opendir(procpath))) {
-            continue;
-        }
-        while (NULL != (fdentry = readdir(fdd))) {
-            ssize_t rd;
-
-            if (0 == isdigit((unsigned char)fdentry->d_name[0])) {
-                // skip . and ..
-                continue;
-            }
-            (void)strlcpy(fdpath, procpath, sizeof(fdpath));
-            (void)strlcat(fdpath, fdentry->d_name, sizeof(fdpath));
-
-            // readlink does not always NUL terminate.
-            rd = readlink(fdpath, linkpath, sizeof(linkpath) - 1);
-            if (0 > rd) {
-                // maybe access error, maybe too long, maybe...
-                continue;
-            }
-            // pacify coverity by setting NUL
-            linkpath[rd] = '\0';
-            if ('/' != linkpath[0]) {
-                // not a full path
-                continue;
-            }
-            // debug
-            // GPSD_LOG(LOG_SHOUT, &session->context->errout,
-            //          "SER: fusercount: %s linkpath %s fullpath %s\n",
-            //          fdpath, linkpath, fullpath);
-            if (0 == strcmp(linkpath, fullpath)) {
-                ++cnt;
-            }
-        }
-        (void)closedir(fdd);
-    }
-    (void)closedir(procd);
-    GPSD_LOG(LOG_IO, &session->context->errout,
-             "SER: fusercount: path %s fullpath %s cnt %d\n",
-             session->gpsdata.dev.path, fullpath, cnt);
-    free(fullpath);
-
-    return cnt;
-}
 #endif   // __linux__
 
 // to be called on allocating a device
@@ -384,15 +386,15 @@ void gpsd_tty_init(struct gps_device_t *session)
  *
  * Pasted from man page; added in serial.c arbitrarily
  */
-void cfmakeraw(struct termios *termios_p)
-{
-    termios_p->c_iflag &=
-        ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
-    termios_p->c_oflag &= ~OPOST;
-    termios_p->c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
-    termios_p->c_cflag &= ~(CSIZE | PARENB);
-    termios_p->c_cflag |= CS8;
-}
+    void cfmakeraw(struct termios *termios_p)
+    {
+        termios_p->c_iflag &=
+            ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+        termios_p->c_oflag &= ~OPOST;
+        termios_p->c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+        termios_p->c_cflag &= ~(CSIZE | PARENB);
+        termios_p->c_cflag |= CS8;
+    }
 #endif   // !defined(HAVE_CFMAKERAW)
 
 // speed conversion table for speed2code() and code2speed()
@@ -410,49 +412,49 @@ static struct speed_code_t {
     {B115200, 115200},
     {B230400, 230400},
 #ifdef B460800
-    {B460800, 460800},
+        {B460800, 460800},
 #endif
 #ifdef B500000
-    {B500000, 500000},
+        {B500000, 500000},
 #endif
 #ifdef B576000
-    {B576000, 576000},
+        {B576000, 576000},
 #endif
 #ifdef B921600
-    {B921600, 921600},
+        {B921600, 921600},
 #endif
 #ifdef B1000000
-    {B1000000, 1000000},
+        {B1000000, 1000000},
 #endif
 #ifdef B1152000
-    {B1152000, 1152000},
+        {B1152000, 1152000},
 #endif
 #ifdef B1500000
-    {B1500000, 1500000},
+        {B1500000, 1500000},
 #endif
 #ifdef B2000000
-    {B2000000, 2000000},
+        {B2000000, 2000000},
 #endif
 #ifdef B2500000
-    {B2500000, 2500000},
+        {B2500000, 2500000},
 #endif
 #ifdef B3000000
-    {B3000000, 3000000},
+        {B3000000, 3000000},
 #endif
 #ifdef B3500000
-    {B3500000, 3500000},
+        {B3500000, 3500000},
 #endif
 #ifdef B4000000
-    {B4000000, 4000000},
+        {B4000000, 4000000},
 #endif
-   {B0, 0},           // flag for end of list
+    {B0, 0},                   // flag for end of list
 };
 
 // Convert speed code into speed
 static speed_t speed2code(const int speed)
 {
-    speed_t code = B9600;          // fall back
-    speed_t last_code = B9600;     // fall back
+    speed_t code = B9600;      // fall back
+    speed_t last_code = B9600; // fall back
     int index;
 
     // dumb linear search
@@ -573,7 +575,7 @@ int gpsd_get_stopbits(const struct gps_device_t *dev)
  * from testing that a 100-millisec delay is too short, allowing
  * occasional failure to lock.
  */
-static void gpsd_flush(struct gps_device_t * session)
+static void gpsd_flush(struct gps_device_t *session)
 {
     struct timespec delay;
 
@@ -597,7 +599,7 @@ static void gpsd_flush(struct gps_device_t * session)
 }
 
 // Set device into raw mode
-bool gpsd_set_raw(struct gps_device_t * session)
+bool gpsd_set_raw(struct gps_device_t *session)
 {
     // on some OS cfmakeraw() returns an int, POSIX says it is void.
     (void)cfmakeraw(&session->ttyset);
@@ -631,13 +633,13 @@ int gpsd_serial_isatty(const struct gps_device_t *session)
     }
     if (ENOTTY == errno ||
 #if defined(ENXIO)
-        ENXIO == errno ||         // Some OSXes return this.  Not POSIX.
+            ENXIO == errno ||      // Some OSXes return this.  Not POSIX.
 #endif  // defined(ENXIO)
 #if defined(EADDRNOTAVAIL)
-        EADDRNOTAVAIL == errno || // Some BSDs return this.  Not POSIX.
+            EADDRNOTAVAIL == errno || // Some BSDs return this.  Not POSIX.
 #endif  // defined(EADDRNOTAVAIL)
 #if defined(EOPNOTSUPP)
-        EOPNOTSUPP == errno ||    // Some BSDs/OSXes return this.  Not POSIX.
+            EOPNOTSUPP == errno || // Some BSDs/OSXes return this.  Not POSIX.
 #endif  // defined(EOPNOTSUPP)
         0 == errno) {
         // is not a tty
@@ -760,11 +762,11 @@ void gpsd_set_speed(struct gps_device_t *session,
              * be nailed down.
              * cast for 32-bit intptr_t
              */
-             GPSD_LOG(LOG_WARN, &session->context->errout,
-                      "SER: fd %ld error setting port attributes: %s(%d), "
-                      "sourcetype: %d\n",
-                      (long)session->gpsdata.gps_fd,
-                      strerror(errno), errno, session->sourcetype);
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "SER: fd %ld error setting port attributes: %s(%d), "
+                     "sourcetype: %d\n",
+                     (long)session->gpsdata.gps_fd,
+                     strerror(errno), errno, session->sourcetype);
         }
 
         gpsd_flush(session);
@@ -860,43 +862,43 @@ int gpsd_serial_open(struct gps_device_t *session)
                  (int)session->sourcetype, session->gpsdata.dev.path);
     }
 #ifdef ENABLE_BLUEZ
-    if (0 == bachk(session->gpsdata.dev.path)) {
-        struct sockaddr_rc addr = { 0, *BDADDR_ANY, 0};
+        if (0 == bachk(session->gpsdata.dev.path)) {
+            struct sockaddr_rc addr = { 0, *BDADDR_ANY, 0};
 
-        errno = 0;
-        session->gpsdata.gps_fd = socket(AF_BLUETOOTH,
-                                         SOCK_STREAM,
-                                         BTPROTO_RFCOMM);
-        if (0 > session->gpsdata.gps_fd) {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: bluetooth socket() failed: %s(%d)\n",
-                     strerror(errno), errno);
-            return UNALLOCATED_FD;
-        }
-        addr.rc_family = AF_BLUETOOTH;
-        addr.rc_channel = (uint8_t) 1;
-        (void) str2ba(session->gpsdata.dev.path, &addr.rc_bdaddr);
-        if (-1 == connect(session->gpsdata.gps_fd,
-                          (struct sockaddr *) &addr,
-                          sizeof (addr))) {
-            if (EINPROGRESS != errno &&
-                EAGAIN != errno) {
-                (void)close(session->gpsdata.gps_fd);
+            errno = 0;
+            session->gpsdata.gps_fd = socket(AF_BLUETOOTH,
+                                             SOCK_STREAM,
+                                             BTPROTO_RFCOMM);
+            if (0 > session->gpsdata.gps_fd) {
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "SER: bluetooth socket connect failed: %s(%d)\n",
+                         "SER: bluetooth socket() failed: %s(%d)\n",
                          strerror(errno), errno);
                 return UNALLOCATED_FD;
             }
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: bluetooth socket connect in progress or "
-                     "EAGAIN: %s(%d)\n",
-                     strerror(errno), errno);
-        }
-        (void)fcntl(session->gpsdata.gps_fd, F_SETFL, (int)mode);
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SER: bluez device open success: %s %s(%d)\n",
-                 session->gpsdata.dev.path, strerror(errno), errno);
-    } else
+            addr.rc_family = AF_BLUETOOTH;
+            addr.rc_channel = (uint8_t) 1;
+            (void) str2ba(session->gpsdata.dev.path, &addr.rc_bdaddr);
+            if (-1 == connect(session->gpsdata.gps_fd,
+                              (struct sockaddr *) &addr,
+                              sizeof (addr))) {
+                if (EINPROGRESS != errno &&
+                    EAGAIN != errno) {
+                    (void)close(session->gpsdata.gps_fd);
+                    GPSD_LOG(LOG_ERROR, &session->context->errout,
+                             "SER: bluetooth socket connect failed: %s(%d)\n",
+                             strerror(errno), errno);
+                    return UNALLOCATED_FD;
+                }
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "SER: bluetooth socket connect in progress or "
+                         "EAGAIN: %s(%d)\n",
+                         strerror(errno), errno);
+            }
+            (void)fcntl(session->gpsdata.gps_fd, F_SETFL, (int)mode);
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "SER: bluez device open success: %s %s(%d)\n",
+                     session->gpsdata.dev.path, strerror(errno), errno);
+        } else
 #endif   // BLUEZ
     {
         /*
@@ -906,16 +908,16 @@ int gpsd_serial_open(struct gps_device_t *session)
          */
         errno = 0;
         if (-1 == (session->gpsdata.gps_fd =
-                   open(session->gpsdata.dev.path,
-                        (int)(mode | O_NONBLOCK | O_NOCTTY)))) {
+                       open(session->gpsdata.dev.path,
+                            (int)(mode | O_NONBLOCK | O_NOCTTY)))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "SER: device open of %s failed: %s(%d) - "
                      "retrying read-only\n",
                      session->gpsdata.dev.path,
                      strerror(errno), errno);
             if (-1 == (session->gpsdata.gps_fd =
-                       open(session->gpsdata.dev.path,
-                            O_RDONLY | O_NONBLOCK | O_NOCTTY))) {
+                           open(session->gpsdata.dev.path,
+                                O_RDONLY | O_NONBLOCK | O_NOCTTY))) {
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
                          "SER: read-only device open of %s failed: %s(%d)\n",
                          session->gpsdata.dev.path,
@@ -948,37 +950,38 @@ int gpsd_serial_open(struct gps_device_t *session)
         // FIXME: Check for duplicates before opening device.
 
 #ifdef __linux__
-        int cnt;
-        /*
-         * Don't touch devices already opened by another process.
-         */
-        cnt = fusercount(session);
-        if (1 < cnt) {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: %s already opened by another process!!!!!!!!!!!\n",
-                     session->gpsdata.dev.path);
-            /* caan't really continue, make it obvious to the user as
-             * none understand what ERROR means. */
-            exit(1);
+            int cnt;
+            /*
+             * Don't touch devices already opened by another process.
+             */
+            cnt = fusercount(session);
+            if (1 < cnt) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "SER: %s already opened by another "
+                         " process!!!!!!!!!!!\n",
+                         session->gpsdata.dev.path);
+                /* caan't really continue, make it obvious to the user as
+                 * none understand what ERROR means. */
+                exit(1);
 
-            // (void)close(session->gpsdata.gps_fd);
-            // session->gpsdata.gps_fd = UNALLOCATED_FD;
-            // return UNALLOCATED_FD;
-        }
-        if (0 == cnt) {
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "SER: fusercount(%s) failed to find own use.\n",
-                     session->gpsdata.dev.path);
-        }
+                // (void)close(session->gpsdata.gps_fd);
+                // session->gpsdata.gps_fd = UNALLOCATED_FD;
+                // return UNALLOCATED_FD;
+            }
+            if (0 == cnt) {
+                GPSD_LOG(LOG_PROG, &session->context->errout,
+                         "SER: fusercount(%s) failed to find own use.\n",
+                         session->gpsdata.dev.path);
+            }
 #endif   // __linux__
 
 #ifdef TIOCEXCL
-        /*
-         * Try to block other processes from using this device while we
-         * have it open (later opens should return EBUSY).  Won't work
-         * against anything with root privileges, alas.
-         */
-        (void)ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCEXCL);
+            /*
+             * Try to block other processes from using this device while we
+             * have it open (later opens should return EBUSY).  Won't work
+             * against anything with root privileges, alas.
+             */
+            (void)ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCEXCL);
 #endif  // TIOCEXCL
     }
 
@@ -1098,12 +1101,12 @@ int gpsd_serial_open(struct gps_device_t *session)
     return session->gpsdata.gps_fd;
 }
 
-ssize_t gpsd_serial_write(struct gps_device_t * session,
+ssize_t gpsd_serial_write(struct gps_device_t *session,
                           const char *buf, const size_t len)
 {
     ssize_t status;
     bool ok;
-    char scratchbuf[MAX_PACKET_LENGTH*2+1];
+    char scratchbuf[MAX_PACKET_LENGTH * 2 + 1];
 
     if (NULL == session ||
         NULL == session->context ||
@@ -1142,12 +1145,12 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
 #define SNIFF_RETRIES   (MAX_PACKET_LENGTH + 128)
 
 // advance to the next hunt setting
-bool gpsd_next_hunt_setting(struct gps_device_t * session)
+bool gpsd_next_hunt_setting(struct gps_device_t *session)
 {
     struct timespec ts_now, ts_diff;
 #ifdef TIOCGICOUNT
-    // serial input counters
-    struct serial_icounter_struct icount;
+        // serial input counters
+        struct serial_icounter_struct icount;
 #endif  // TIOCGICOUNT
 
     // don't waste time in the hunt loop if this is not actually a tty
@@ -1166,7 +1169,7 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
 
     // ...or if the port speed is fixed.
     if (0 < session->context->fixed_port_speed) {
-        //  this prevents framing hunt.
+        // this prevents framing hunt.
         return false;
     }
 
@@ -1189,45 +1192,49 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         // Javad can ro 1.5 mbps
         // every rate we're likely to see on a GNSS receiver
         static unsigned int rates[] =
-            {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400,
-             460800, 921600};
+        {
+            0, 4800, 9600, 19200, 38400, 57600, 115200, 230400,
+            460800, 921600
+        };
 
 #ifdef TIOCGICOUNT
-        // check input counts
-        if (LOG_INF > session->context->errout.debug) {
-            // do nothing
-        } else if (-1 == ioctl(session->gpsdata.gps_fd,
-                               (unsigned long)TIOCGICOUNT, &icount)) {
-            // some tty-like devices do not implement TIOCGICOUNT
-            if (ENOTTY != errno) {
+            // check input counts
+            if (LOG_INF > session->context->errout.debug) {
+                // do nothing
+            } else if (-1 == ioctl(session->gpsdata.gps_fd,
+                                   (unsigned long)TIOCGICOUNT, &icount)) {
+                // some tty-like devices do not implement TIOCGICOUNT
+                if (ENOTTY != errno) {
+                    // cast for 32-bit intptr_t
+                    GPSD_LOG(LOG_ERROR, &session->context->errout,
+                             "SER: ioctl(%ld, TIOCGICOUNT) failed: %s(%d)\n",
+                             (long)session->gpsdata.gps_fd,
+                             strerror(errno), errno);
+                }
+            } else {
                 // cast for 32-bit intptr_t
-                GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "SER: ioctl(%ld, TIOCGICOUNT) failed: %s(%d)\n",
-                         (long)session->gpsdata.gps_fd,
-                         strerror(errno), errno);
+                GPSD_LOG(LOG_INF, &session->context->errout,
+                         "SER: ioctl(%ld, TIOCGICOUNT) rx %d tx %d frame %d "
+                         "overrun %d parity %d brk %d buf_overrun %d\n",
+                         (long)session->gpsdata.gps_fd, icount.rx, icount.tx,
+                         icount.frame, icount.overrun,
+                         icount.parity, icount.brk,
+                         icount.buf_overrun);
             }
-        } else {
-            // cast for 32-bit intptr_t
-            GPSD_LOG(LOG_INF, &session->context->errout,
-                     "SER: ioctl(%ld, TIOCGICOUNT) rx %d tx %d frame %d "
-                     "overrun %d parity %d brk %d buf_overrun %d\n",
-                     (long)session->gpsdata.gps_fd, icount.rx, icount.tx,
-                     icount.frame, icount.overrun, icount.parity, icount.brk,
-                     icount.buf_overrun);
-        }
 #endif  // TIOCGICOUNT
 
         if (ROWS(rates) <= ++session->baudindex) {
 
             // start over, maybe with new stop bits.
-            session->baudindex = 1;  // skip reates[0]. which os B0.
+            // skip rates[0]. which is B0.
+            session->baudindex = 1;
             if ('\0' == session->context->fixed_port_framing[0]) {
                 // This toggles from 7N2 to 8N1, and back to 7N2
                 // FIXME?? Also try 8E1 and 8O1 ??  For Trimble
                 if (2 == session->gpsdata.dev.stopbits) {
-                    session->gpsdata.dev.stopbits = 1;  // restart at 1
+                    session->gpsdata.dev.stopbits = 1; // restart at 1
                 } else {
-                    session->gpsdata.dev.stopbits = 2;  // increment to 2
+                    session->gpsdata.dev.stopbits = 2; // increment to 2
                 }
             }
         }
@@ -1276,14 +1283,15 @@ void gpsd_close(struct gps_device_t *session)
 
     if (0 < gpsd_serial_isatty(session)) {
 #ifdef TIOCNXCL
-        // This command resets the exclusive use of a terminal.
-        if (-1 == ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCNXCL)) {
+            // This command resets the exclusive use of a terminal.
+            if (-1 == ioctl(session->gpsdata.gps_fd,
+                            (unsigned long)TIOCNXCL)) {
                 // cast for 32-bit intptr_t
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
                          "SER: ioctl(%ld, TIOCNXCL) failed: %s(%d)\n",
                          (long)session->gpsdata.gps_fd,
                          strerror(errno), errno);
-        }
+            }
 #endif  // TIOCNXCL
         if (!session->context->readonly) {
             // Be sure all output is sent.
