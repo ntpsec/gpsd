@@ -97,7 +97,7 @@ const char *char2str(unsigned char ch, const struct clist_t *clist)
  *
  * flags the flags to find in vlist
  * buffer -  the buffer to return string in
- ( buflen - length of buffer
+ * buflen - length of buffer
  *
  * Return: pointer to passed in buffer
  *         A string matching the flags.
@@ -338,7 +338,7 @@ double safe_atof(const char *string)
     // FIXME: JSON is UTF-8, but isspace() islocale dependent...
 
     p = string;
-    while (isspace((int)*p)) {
+    while (isspace((unsigned char)*p)) {
         p += 1;
     }
     if (isdigit((unsigned char)*p)) {
@@ -362,7 +362,7 @@ double safe_atof(const char *string)
     decPt = -1;
     for (mantSize = 0; ; mantSize += 1) {
         c = *p;
-        if (!isdigit(c)) {
+        if (!isdigit((unsigned char)c)) {
             if ((c != '.') || (decPt >= 0)) {
                 break;
             }

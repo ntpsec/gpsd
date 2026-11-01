@@ -56,12 +56,12 @@ const char *gpsd_packetdump(char *scbuf, size_t scbuflen,
  * Return scbuf
  */
 const char *gps_hexdump(char *scbuf, size_t scbuflen,
-                        const unsigned  char *binbuf, size_t binbuflen)
+                        const unsigned char *binbuf, size_t binbuflen)
 {
     size_t i, j = 0;
     size_t len =
         (size_t)((binbuflen >
-                   MAX_PACKET_LENGTH) ? MAX_PACKET_LENGTH : binbuflen);
+                  MAX_PACKET_LENGTH) ? MAX_PACKET_LENGTH : binbuflen);
     const char *hexchar = "0123456789abcdef";
 
     if (NULL == binbuf ||
@@ -314,7 +314,7 @@ ssize_t hex_escapes(char *cooked, const char *raw)
 // copy inbuf string to outbuf, replacingg non-printing characters
 // slow, but only used for debug output
 char *gps_visibilize(char *outbuf, size_t outlen,
-                      const char *inbuf, size_t inlen)
+                     const char *inbuf, size_t inlen)
 {
     const char *sp;
     size_t next = 0;
