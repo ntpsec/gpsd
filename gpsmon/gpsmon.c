@@ -5,9 +5,10 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#undef USE_QT       // this progtam does not work with QT. Pacify Codacy
+#undef USE_QT                       // this progtam does not work with QT.
+                                    // Pacify Codacy
 
-#include "../include/gpsd_config.h"  // must be before all includes
+#include "../include/gpsd_config.h" // must be before all includes
 
 #include <assert.h>
 #include <ctype.h>
@@ -86,37 +87,37 @@ const struct monitor_object_t json_mmt = {
 static const struct monitor_object_t *monitor_objects[] = {
     &nmea_mmt,
 #if defined(GARMIN_ENABLE)
-    &garmin_mmt,
+        &garmin_mmt,
 #endif  // GARMIN_ENABLE
 #if defined(GARMIN_ENABLE)
-    &garmin_bin_ser_mmt,
+        &garmin_bin_ser_mmt,
 #endif  // defined(GARMIN_ENABLE)
     &ashtech_mmt,
 #ifdef FV18_ENABLE
-    &fv18_mmt,
+        &fv18_mmt,
 #endif  // FV18_ENABLE
 #ifdef GPSCLOCK_ENABLE
-    &gpsclock_mmt,
+        &gpsclock_mmt,
 #endif  // GPSCLOCK_ENABLE
     &mtk3301_mmt,
 #ifdef AIVDM_ENABLE
-    &aivdm_mmt,
+        &aivdm_mmt,
 #endif  // AIVDM_ENABLE
 #if defined(SIRF_ENABLE)
-    &sirf_mmt,
+        &sirf_mmt,
 #endif  // defined(SIRF_ENABLE)
     &ubx_mmt,
 #if defined(ITRAX_ENABLE)
-    &italk_mmt,
+        &italk_mmt,
 #endif  // defined(ITALK_ENABLE)
 #if defined(SUPERSTAR2_ENABLE)
-    &superstar2_mmt,
+        &superstar2_mmt,
 #endif  // defined(SUPERSTAR2_ENABLE)
 #if defined(ONCORE_ENABLE)
-    &oncore_mmt,
+        &oncore_mmt,
 #endif  // defined(ONCORE_ENABLE)
 #ifdef TNT_ENABLE
-    &tnt_mmt,
+        &tnt_mmt,
 #endif  // TNT_ENABLE
     &json_mmt,
     NULL,
@@ -152,17 +153,17 @@ static inline void report_unlock(void)
 }
 
 #define PPSBAR "-------------------------------------" \
-               " PPS " \
-               "-------------------------------------\n"
+        " PPS " \
+        "-------------------------------------\n"
 
 // Dummy conditional for *display* of (possibly remote) PPS events
 #define PPS_DISPLAY_ENABLE 1
 
-/******************************************************************************
- *
- * Visualization helpers
- *
- ******************************************************************************/
+/****************************************************************************
+*
+* Visualization helpers
+*
+****************************************************************************/
 
 /* pass through visibilized if all printable, hexdump otherwise
  *
@@ -175,11 +176,12 @@ static void cond_hexdump(char *buf2, size_t len2,
 {
     size_t i;
     bool printable = true;
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; i++) {
         if (!isprint((unsigned char)buf[i]) &&
             !isspace((unsigned char) buf[i])) {
             printable = false;
         }
+    }
     if (printable) {
         size_t j;
         for (i = j = 0; i < len && j < len2 - 1; i++) {
@@ -286,12 +288,12 @@ void pps_update(WINDOW *win, int y, int x)
 }
 
 /******************************************************************************
- *
- * Curses I/O
- *
- ******************************************************************************/
+*
+* Curses I/O
+*
+******************************************************************************/
 
-void monitor_fixframe(WINDOW * win)
+void monitor_fixframe(WINDOW *win)
 {
     int ymax UNUSED, xmax, ycur, xcur UNUSED;
 
@@ -354,7 +356,7 @@ static void announce_log(const char *fmt, ...)
     (void)vsnprintf(buf, sizeof(buf) - 5, fmt, ap);
     va_end(ap);
 
-   if (NULL != packetwin) {
+    if (NULL != packetwin) {
         report_lock();
         (void)wattrset(packetwin, A_BOLD);
         (void)wprintw(packetwin, ">>>");
@@ -362,10 +364,10 @@ static void announce_log(const char *fmt, ...)
         (void)wattrset(packetwin, A_NORMAL);
         (void)wprintw(packetwin, "\n");
         report_unlock();
-   }
-   if (NULL != logfile) {
-       (void)fprintf(logfile, ">>>%s\n", buf);
-   }
+    }
+    if (NULL != logfile) {
+        (void)fprintf(logfile, ">>>%s\n", buf);
+    }
 }
 
 static void monitor_vcomplain(const char *fmt, va_list ap)
@@ -634,7 +636,7 @@ static char *curses_get_command(void)
             KEY_LEFT == c ||
             (int)erasechar() == c) {
             input[len--] = '\0';
-        } else if (isprint(c)) {
+        } else if (isprint((unsigned char)c)) {
             input[len] = (char)c;
             input[++len] = '\0';
             (void)waddch(cmdwin, (chtype)c);
@@ -668,7 +670,7 @@ static char *curses_get_command(void)
             bailout = TERM_QUIT;
             return NULL;
         }
-        if (COMMAND_MATCH == status ) {
+        if (COMMAND_MATCH == status) {
             return NULL;
         }
         // FIXME: assert()s must die
@@ -679,17 +681,17 @@ static char *curses_get_command(void)
 }
 
 /******************************************************************************
- *
- * Mode-independent I/O
- *
- * Below this line, all calls to curses-dependent functions are guarded
- * by curses_active and have ttylike alternatives.
- *
- ******************************************************************************/
+*
+* Mode-independent I/O
+*
+* Below this line, all calls to curses-dependent functions are guarded
+* by curses_active and have ttylike alternatives.
+*
+******************************************************************************/
 
 static ssize_t gpsmon_serial_write(struct gps_device_t *session,
-                   const char *buf,
-                   const size_t len)
+                                   const char *buf,
+                                   const size_t len)
 // pass low-level data to devices, echoing it to the log window
 {
     monitor_dump_send((const char *)buf, len);
@@ -733,105 +735,106 @@ static void complain(const char *fmt, ...)
 }
 
 /*****************************************************************************
- *
- * Main sequence
- *
- *****************************************************************************/
+*
+* Main sequence
+*
+*****************************************************************************/
 
 // per-packet hook
 static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
 {
-    char buf[BUFSIZ] = "";;
+    char buf[BUFSIZ] = "";
+    ;
 
 // FIXME:  If the following condition is false, the display is screwed up.
 #ifdef PPS_DISPLAY_ENABLE
 
-    char ts_buf1[TIMESPEC_LEN] = "";
-    char ts_buf2[TIMESPEC_LEN] = "";
+        char ts_buf1[TIMESPEC_LEN] = "";
+        char ts_buf2[TIMESPEC_LEN] = "";
 
-    if (!serial &&
-        str_starts_with((char*)device->lexer.outbuffer,
-                        "{\"class\":\"TOFF\",")) {
-        const char *end = NULL;
-        int status = json_toff_read((const char *)device->lexer.outbuffer,
-                                   &session.gpsdata,
-                                   &end);
+        if (!serial &&
+            str_starts_with((char *)device->lexer.outbuffer,
+                            "{\"class\":\"TOFF\",")) {
+            const char *end = NULL;
+            int status = json_toff_read((const char *)device->lexer.outbuffer,
+                                        &session.gpsdata,
+                                        &end);
 
-        if (0 != status) {
-            complain("Ill-formed TOFF packet: %d (%s)", status,
-                     json_error_string(status));
+            if (0 != status) {
+                complain("Ill-formed TOFF packet: %d (%s)", status,
+                         json_error_string(status));
+                return;
+            }
+            if (!curses_active) {
+                (void)fprintf(stderr, "TOFF=%s real=%s\n",
+                              timespec_str(&session.gpsdata.toff.clock,
+                                           ts_buf1, sizeof(ts_buf1)),
+                              timespec_str(&session.gpsdata.toff.real,
+                                           ts_buf2, sizeof(ts_buf2)));
+            }
+            time_offset = session.gpsdata.toff;
             return;
-        }
-        if (!curses_active) {
-            (void)fprintf(stderr, "TOFF=%s real=%s\n",
-                          timespec_str(&session.gpsdata.toff.clock,
-                                       ts_buf1, sizeof(ts_buf1)),
-                          timespec_str(&session.gpsdata.toff.real,
-                                       ts_buf2, sizeof(ts_buf2)));
-        }
-        time_offset = session.gpsdata.toff;
-        return;
-    } else if (!serial &&
-               str_starts_with((char*)device->lexer.outbuffer,
-                               "{\"class\":\"PPS\",")) {
-        const char *end = NULL;
-        struct gps_data_t noclobber;
-        struct timespec timedelta;
-        char timedelta_str[TIMESPEC_LEN];
-        int status = json_pps_read((const char *)device->lexer.outbuffer,
-                                   &noclobber,
-                                   &end);
+        } else if (!serial &&
+                   str_starts_with((char *)device->lexer.outbuffer,
+                                   "{\"class\":\"PPS\",")) {
+            const char *end = NULL;
+            struct gps_data_t noclobber;
+            struct timespec timedelta;
+            char timedelta_str[TIMESPEC_LEN];
+            int status = json_pps_read((const char *)device->lexer.outbuffer,
+                                       &noclobber,
+                                       &end);
 
-        if (0 != status) {
-            complain("Ill-formed PPS packet: %d (%s)", status,
-                     json_error_string(status));
-            return;
-        }
+            if (0 != status) {
+                complain("Ill-formed PPS packet: %d (%s)", status,
+                         json_error_string(status));
+                return;
+            }
 
-        TS_SUB( &timedelta, &noclobber.pps.clock, &noclobber.pps.real);
-        timespec_str(&timedelta, timedelta_str, sizeof(timedelta_str));
+            TS_SUB( &timedelta, &noclobber.pps.clock, &noclobber.pps.real);
+            timespec_str(&timedelta, timedelta_str, sizeof(timedelta_str));
 
-        if (!curses_active) {
-            char pps_clock_str[TIMESPEC_LEN];
-            char pps_real_str[TIMESPEC_LEN];
+            if (!curses_active) {
+                char pps_clock_str[TIMESPEC_LEN];
+                char pps_real_str[TIMESPEC_LEN];
 
-            timespec_str(&noclobber.pps.clock, pps_clock_str,
-                         sizeof(pps_clock_str));
-            timespec_str(&noclobber.pps.real, pps_real_str,
-                         sizeof(pps_real_str));
+                timespec_str(&noclobber.pps.clock, pps_clock_str,
+                             sizeof(pps_clock_str));
+                timespec_str(&noclobber.pps.real, pps_real_str,
+                             sizeof(pps_real_str));
 
-            (void)fprintf(stderr,
-                          "PPS=%.20s clock=%.20s offset=%.20s\n",
-                          pps_clock_str,
-                          pps_real_str,
-                          timedelta_str);
-        }
+                (void)fprintf(stderr,
+                              "PPS=%.20s clock=%.20s offset=%.20s\n",
+                              pps_clock_str,
+                              pps_real_str,
+                              timedelta_str);
+            }
 
-        (void)snprintf(buf, sizeof(buf),
-                      "------------------- PPS offset: %.20s ------\n",
-                      timedelta_str);
+            (void)snprintf(buf, sizeof(buf),
+                           "------------------- PPS offset: %.20s ------\n",
+                           timedelta_str);
 // FIXME:  Decouple this from the pps_thread code.
-        /*
-         * In direct mode this would be a bad idea, but we're not actually
-         * watching for handshake events on a spawned thread here.
-         */
-        // coverity[missing_lock]
-        session.pps_thread.pps_out = noclobber.pps;
-        // coverity[missing_lock]
-        session.pps_thread.ppsout_count++;
-    } else
+            /*
+             * In direct mode this would be a bad idea, but we're not actually
+             * watching for handshake events on a spawned thread here.
+             */
+            // coverity[missing_lock]
+            session.pps_thread.pps_out = noclobber.pps;
+            // coverity[missing_lock]
+            session.pps_thread.ppsout_count++;
+        } else
 #endif // PPS_DISPLAY_ENABLE
     {
         char buf2[BUFSIZ - 5] = "";
 
 #ifdef __future__
-        if (!serial) {
-            if (JSON_PACKET == device->lexer.type) {
-                const char *end = NULL;
-                libgps_json_unpack((char *)device->lexer.outbuffer,
-                                   &session.gpsdata, &end);
+            if (!serial) {
+                if (JSON_PACKET == device->lexer.type) {
+                    const char *end = NULL;
+                    libgps_json_unpack((char *)device->lexer.outbuffer,
+                                       &session.gpsdata, &end);
+                }
             }
-        }
 #endif // __future__
 
         if (curses_active) {
@@ -1166,7 +1169,8 @@ static bool do_command(const char *line)
 }
 
 static char *pps_report(volatile struct pps_thread_t *pps_thread UNUSED,
-                        struct timedelta_t *td UNUSED) {
+                        struct timedelta_t *td UNUSED)
+{
     report_lock();
     gpsmon_report(PPSBAR);
     report_unlock();
@@ -1176,7 +1180,8 @@ static char *pps_report(volatile struct pps_thread_t *pps_thread UNUSED,
 /* Handle signals.  All we can really do in a signal handler is mark it
  * and return.
  */
-static void onsig(int sig UNUSED) {
+static void onsig(int sig UNUSED)
+{
     if (SIGABRT == sig) {
         bailout = TERM_QUIT;
     } else {
@@ -1195,27 +1200,27 @@ static const char *cmdline;
 static void usage(void)
 {
     (void)fputs(
-         "usage: gpsmon [OPTIONS] [server[:port:[device]]]\n\n"
+        "usage: gpsmon [OPTIONS] [server[:port:[device]]]\n\n"
 #ifdef HAVE_GETOPT_LONG
-         "  --debug DEBUGLEVEL  Set DEBUGLEVEL\n"
-         "  --help              Show this help, then exit\n"
-         "  --list              List known device types, then exit.\n"
-         "  --logfile FILE      Log to LOGFILE\n"
-         "  --nocurses          No curses. Data only.\n"
-         "  --nmea              Force NMEA mode.\n"
-         "  --type TYPE         Set receiver TYPE\n"
-         "  --version           Show version, then exit\n"
+            "  --debug DEBUGLEVEL  Set DEBUGLEVEL\n"
+            "  --help              Show this help, then exit\n"
+            "  --list              List known device types, then exit.\n"
+            "  --logfile FILE      Log to LOGFILE\n"
+            "  --nocurses          No curses. Data only.\n"
+            "  --nmea              Force NMEA mode.\n"
+            "  --type TYPE         Set receiver TYPE\n"
+            "  --version           Show version, then exit\n"
 #endif
-         "  -a                  No curses. Data only.\n"
-         "  -?                  Show this help, then exit\n"
-         "  -D DEBUGLEVEL       Set DEBUGLEVEL\n"
-         "  -h                  Show this help, then exit\n"
-         "  -L                  List known device types, then exit.\n"
-         "  -l FILE             Log to LOGFILE\n"
-         "  -n                  Force NMEA mode.\n"
-         "  -t TYPE             Set receiver TYPE\n"
-         "  -V                  Show version, then exit\n",
-         stderr);
+        "  -a                  No curses. Data only.\n"
+        "  -?                  Show this help, then exit\n"
+        "  -D DEBUGLEVEL       Set DEBUGLEVEL\n"
+        "  -h                  Show this help, then exit\n"
+        "  -L                  List known device types, then exit.\n"
+        "  -l FILE             Log to LOGFILE\n"
+        "  -n                  Force NMEA mode.\n"
+        "  -t TYPE             Set receiver TYPE\n"
+        "  -V                  Show version, then exit\n",
+        stderr);
 }
 
 int main(int argc, char **argv)
@@ -1232,30 +1237,30 @@ int main(int argc, char **argv)
     int activated = -1;
     const char *optstring = "?aD:hLl:nt:V";
 #ifdef HAVE_GETOPT_LONG
-    int option_index = 0;
-    static struct option long_options[] = {
-        {"debug", required_argument, NULL, 'D'},
-        {"help", no_argument, NULL, 'h'},
-        {"list", no_argument, NULL, 'L' },
-        {"logfile", required_argument, NULL, 'l'},
-        {"nmea", no_argument, NULL, 'n' },
-        {"nocurses", no_argument, NULL, 'a' },
-        {"type", required_argument, NULL, 't'},
-        {"version", no_argument, NULL, 'V' },
-        {NULL, 0, NULL, 0},
-    };
+        int option_index = 0;
+        static struct option long_options[] = {
+            {"debug", required_argument, NULL, 'D'},
+            {"help", no_argument, NULL, 'h'},
+            {"list", no_argument, NULL, 'L' },
+            {"logfile", required_argument, NULL, 'l'},
+            {"nmea", no_argument, NULL, 'n' },
+            {"nocurses", no_argument, NULL, 'a' },
+            {"type", required_argument, NULL, 't'},
+            {"version", no_argument, NULL, 'V' },
+            {NULL, 0, NULL, 0},
+        };
 #endif
 
     gethostname(hostname, sizeof(hostname) - 1);
-    (void)putenv("TZ=UTC");     // for ctime()
-    gps_context_init(&context, "gpsmon");       // initialize the report mutex
+    (void)putenv("TZ=UTC");               // for ctime()
+    gps_context_init(&context, "gpsmon"); // initialize the report mutex
     context.serial_write = gpsmon_serial_write;
     context.errout.report = gpsmon_report;
     while (1) {
 #ifdef HAVE_GETOPT_LONG
-        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+            ch = getopt_long(argc, argv, optstring, long_options, &option_index);
 #else
-        ch = getopt(argc, argv, optstring);
+            ch = getopt(argc, argv, optstring);
 #endif
 
         if (ch == -1) {
@@ -1272,10 +1277,10 @@ int main(int argc, char **argv)
             break;
         case 'L':               // list known device types
             (void)
-                fputs
+            fputs
                 ("General commands available per type. '+' "
-                 "means there are private commands.\n",
-                 stdout);
+                "means there are private commands.\n",
+                stdout);
             for (active = monitor_objects; *active; active++) {
                 (void)fputs("i l q ^S ^Q", stdout);
                 (void)fputc(' ', stdout);
@@ -1388,7 +1393,7 @@ int main(int argc, char **argv)
             session.gpsdata.dev.path[0] = '\0';
         }
         str_appendf(session.gpsdata.dev.path, sizeof(session.gpsdata.dev.path),
-                       "%s:%s", source.server, source.port);
+                    "%s:%s", source.server, source.port);
     }
 
     (void)fputs("gpsmon:WARN: gpsmon is  deprecated and long obsolete.\n"
@@ -1409,23 +1414,23 @@ int main(int argc, char **argv)
         // this guard suppresses a warning on Bluetooth devices
         if (SOURCE_RS232 == session.sourcetype ||
             SOURCE_ACM == session.sourcetype ||
-            SOURCE_USB == session.sourcetype ) {
+            SOURCE_USB == session.sourcetype) {
             session.pps_thread.report_hook = pps_report;
 #ifdef MAGIC_HAT_ENABLE
-            /*
-             * The HAT kludge. If we're using the HAT GPS on a
-             * Raspberry Pi or a workalike like the ODROIDC2, and
-             * there is a static "first PPS", and we have access because
-             * we're root, assume we want to use KPPS.
-             */
-            if (0 == strcmp(session.pps_thread.devicename, MAGIC_HAT_GPS) ||
-                0 == strcmp(session.pps_thread.devicename, MAGIC_LINK_GPS)) {
-                const char *first_pps = pps_get_first();
+                /*
+                 * The HAT kludge. If we're using the HAT GPS on a
+                 * Raspberry Pi or a workalike like the ODROIDC2, and
+                 * there is a static "first PPS", and we have access because
+                 * we're root, assume we want to use KPPS.
+                 */
+                if (0 == strcmp(session.pps_thread.devicename, MAGIC_HAT_GPS) ||
+                    0 == strcmp(session.pps_thread.devicename, MAGIC_LINK_GPS)) {
+                    const char *first_pps = pps_get_first();
 
-                if (0 == access(first_pps, R_OK | W_OK)) {
+                    if (0 == access(first_pps, R_OK | W_OK)) {
                         session.pps_thread.devicename = first_pps;
+                    }
                 }
-            }
 #endif  // MAGIC_HAT_ENABLE
             pps_thread_activate(&session.pps_thread);
         }
@@ -1445,13 +1450,13 @@ int main(int argc, char **argv)
 
     FD_ZERO(&all_fds);
 #ifndef __clang_analyzer__
-    FD_SET(0, &all_fds);        // accept keystroke inputs
+        FD_SET(0, &all_fds);    // accept keystroke inputs
 #endif // __clang_analyzer__
 
 
     FD_SET(session.gpsdata.gps_fd, &all_fds);
     if (session.gpsdata.gps_fd > maxfd) {
-         maxfd = session.gpsdata.gps_fd;
+        maxfd = session.gpsdata.gps_fd;
     }
 
     // quit cleanly if we get a signal
@@ -1466,7 +1471,7 @@ int main(int argc, char **argv)
         (void)fputs("\n", stdout);
         (void)tcgetattr(0, &cooked);
         (void)tcgetattr(0, &rare);
-        rare.c_lflag &=~ (ICANON | ECHO);
+        rare.c_lflag &= ~(ICANON | ECHO);
         rare.c_cc[VMIN] = (cc_t)1;
         (void)tcflush(0, TCIFLUSH);
         (void)tcsetattr(0, TCSANOW, &rare);
@@ -1486,8 +1491,8 @@ int main(int argc, char **argv)
         }
         timespec_t ts_timeout = {2, 0};   // timeout for pselect()
 
-        switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds,
-                               &context.errout, ts_timeout)) {
+        switch (gpsd_await_data(&rfds, &efds, maxfd, &all_fds,
+                                &context.errout, ts_timeout)) {
         case AWAIT_GOT_INPUT:
             FALLTHROUGH
         case AWAIT_TIMEOUT:
@@ -1509,8 +1514,8 @@ int main(int argc, char **argv)
             break;
         }
 
-        switch(gpsd_multipoll(FD_ISSET(session.gpsdata.gps_fd, &rfds),
-                              &session, gpsmon_hook, 0)) {
+        switch (gpsd_multipoll(FD_ISSET(session.gpsdata.gps_fd, &rfds),
+                               &session, gpsmon_hook, 0)) {
         case DEVICE_READY:
             FD_SET(session.gpsdata.gps_fd, &all_fds);
             break;
@@ -1580,7 +1585,7 @@ int main(int argc, char **argv)
 
     // Shut down PPS monitoring.
     if (serial) {
-       (void)pps_thread_deactivate(&session.pps_thread);
+        (void)pps_thread_deactivate(&session.pps_thread);
     }
 
     gpsd_close(&session);
@@ -1646,7 +1651,8 @@ int main(int argc, char **argv)
  * caveat: flen is not passed if f is finite, write fmt with all
  *         numbers hardcoded.
  */
-void pastef(WINDOW *win, int y, int x, int flen, char *fmt, double f) {
+void pastef(WINDOW *win, int y, int x, int flen, char *fmt, double f)
+{
     if (0 != isfinite(f)) {
         (void)mvwprintw(win, y, x, fmt, f);
     } else {
