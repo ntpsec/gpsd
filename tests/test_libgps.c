@@ -45,106 +45,105 @@ int main(int argc, char *argv[])
     // FIXME: signal() not portable.  Use sigaction() instead.
     (void)signal(SIGSEGV, onsig);
 #ifdef SIGBUS
-    (void)signal(SIGBUS, onsig);
+        (void)signal(SIGBUS, onsig);
 #endif
 
     while (-1 != (option = getopt(argc, argv, "bf:hsD:?"))) {
-	switch (option) {
-	case 'b':
-	    batchmode = true;
-	    break;
-	case 'f':
-	    forwardmode = true;
-	    fmsg = optarg;
-	    break;
-	case 's':
-	    (void)printf("Sizes: fix=%zu gpsdata=%zu rtcm2=%zu rtcm3=%zu "
+        switch (option) {
+        case 'b':
+            batchmode = true;
+            break;
+        case 'f':
+            forwardmode = true;
+            fmsg = optarg;
+            break;
+        case 's':
+            (void)printf("Sizes: fix=%zu gpsdata=%zu rtcm2=%zu rtcm3=%zu "
                          "ais=%zu compass=%zu raw=%zu devices=%zu policy=%zu "
                          "version=%zu, noise=%zu\n",
-		         sizeof(struct gps_fix_t),
-		         sizeof(struct gps_data_t), sizeof(struct rtcm2_t),
-		         sizeof(struct rtcm3_t), sizeof(struct ais_t),
-		         sizeof(struct attitude_t), sizeof(struct rawdata_t),
-		         sizeof(collect.devices), sizeof(struct gps_policy_t),
-		         sizeof(struct version_t), sizeof(struct gst_t));
-	    exit(EXIT_SUCCESS);
-	case 'D':
-	    debug = atoi(optarg);
-	    break;
-	case '?':
-	case 'h':
-	default:
-	    (void)fputs("usage: test_libgps [-b] [-f fwdmsg] [-D lvl] "
+                         sizeof(struct gps_fix_t),
+                         sizeof(struct gps_data_t), sizeof(struct rtcm2_t),
+                         sizeof(struct rtcm3_t), sizeof(struct ais_t),
+                         sizeof(struct attitude_t), sizeof(struct rawdata_t),
+                         sizeof(collect.devices), sizeof(struct gps_policy_t),
+                         sizeof(struct version_t), sizeof(struct gst_t));
+            exit(EXIT_SUCCESS);
+        case 'D':
+            debug = atoi(optarg);
+            break;
+        case '?':
+        case 'h':
+        default:
+            (void)fputs("usage: test_libgps [-b] [-f fwdmsg] [-D lvl] "
                         "[-s] [server[:port:[device]]]\n", stderr);
-	    exit(EXIT_FAILURE);
-	}
+            exit(EXIT_FAILURE);
+        }
     }
 
     // Grok the server, port, and device.
     if (optind < argc) {
-	gpsd_source_spec(argv[optind], &source);
+        gpsd_source_spec(argv[optind], &source);
     } else {
-	gpsd_source_spec(NULL, &source);
+        gpsd_source_spec(NULL, &source);
     }
 
     gps_enable_debug(debug, stdout);
     if (batchmode) {
-	while (NULL != fgets(buf, sizeof(buf), stdin)) {
-	    if ('{'  == buf[0] ||
+        while (NULL != fgets(buf, sizeof(buf), stdin)) {
+            if ('{' == buf[0] ||
                 isalpha( (unsigned char) buf[0])) {
                 int errcode;
 
-		errcode = gps_unpack(buf, &gpsdata);
-		libgps_dump_state(&gpsdata);
+                errcode = gps_unpack(buf, &gpsdata);
+                libgps_dump_state(&gpsdata);
                 if (0 != errcode) {
                     (void)fprintf(stderr,
                                   "test_libgps: batchmode failed %d\n",
                                   errcode);
                     exit(EXIT_FAILURE);
                 }
-	    }
-	}
+            }
+        }
     } else if (0 != (err = gps_open(source.server, source.port, &collect))) {
         (void)fprintf(stderr,
                       "test_libgps: gps_open() failed  %s(%d) errno %s(%d)\n",
                       gps_errstr(err), err, strerror(errno), errno);
-	exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     } else if (forwardmode) {
-	if (-1 == gps_send(&collect, fmsg)) {
-	  (void)fprintf(stderr,
-			"test_libgps: gps send error: %d, %s\n",
-			errno, gps_errstr(errno));
-	}
-	if (0 > gps_read(&collect, NULL, 0)) {
-	  (void)fprintf(stderr,
-			"test_libgps: gps read error: %d, %s\n",
-			errno, gps_errstr(errno));
-	}
-	libgps_dump_state(&collect);
-	(void)gps_close(&collect);
-    } else {
-	int tty = isatty(0);
-
-	if (tty) {
-	    (void)fputs("This is the gpsd exerciser.\n", stdout);
+        if (-1 == gps_send(&collect, fmsg)) {
+            (void)fprintf(stderr,
+                          "test_libgps: gps send error: %d, %s\n",
+                          errno, gps_errstr(errno));
         }
-	for (;;) {
-	    if (tty) {
-		(void)fputs("> ", stdout);
+        if (0 > gps_read(&collect, NULL, 0)) {
+            (void)fprintf(stderr,
+                          "test_libgps: gps read error: %d, %s\n",
+                          errno, gps_errstr(errno));
+        }
+        libgps_dump_state(&collect);
+        (void)gps_close(&collect);
+    } else {
+        int tty = isatty(0);
+
+        if (tty) {
+            (void)fputs("This is the gpsd exerciser.\n", stdout);
+        }
+        for (;;) {
+            if (tty) {
+                (void)fputs("> ", stdout);
             }
-	    if (NULL == fgets(buf, sizeof(buf), stdin)) {
-		if (tty) {
-		    putchar('\n');
+            if (NULL == fgets(buf, sizeof(buf), stdin)) {
+                if (tty) {
+                    putchar('\n');
                 }
-		break;
-	    }
-	    collect.set = 0;
-	    (void)gps_send(&collect, buf);
-	    (void)gps_read(&collect, NULL, 0);
-	    libgps_dump_state(&collect);
-	}
-	(void)gps_close(&collect);
+                break;
+            }
+            collect.set = 0;
+            (void)gps_send(&collect, buf);
+            (void)gps_read(&collect, NULL, 0);
+            libgps_dump_state(&collect);
+        }
+        (void)gps_close(&collect);
     }
     return 0;
 }
-
