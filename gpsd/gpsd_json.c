@@ -75,8 +75,8 @@ char *json_stringify(char *to, size_t len, const char *from)
      * escape
      */
     for (sp = from; *sp != '\0' && ((tp - to) < ((int)len - 6)); sp++) {
-        if (!isascii(*sp) ||
-            iscntrl(*sp)) {
+        if (!isascii((unsigned char)*sp) ||
+            iscntrl((unsigned char)*sp)) {
             *tp++ = '\\';
             switch (*sp) {
             case '\b':
