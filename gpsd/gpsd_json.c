@@ -2683,7 +2683,7 @@ static void json_rtcm3_dump(const struct rtcm3_t *rtcm,
         };
 
 #define ST_DISPLAY(n) (((n) < (unsigned)NITEMS(station_type_legends)) ? \
-                        station_type_legends[n] : "INVALID STATION TYPE")
+                       station_type_legends[n] : "INVALID STATION TYPE")
 
         static const char *navaid_type_legends[] = {
             "Unspecified",
@@ -3480,7 +3480,7 @@ static void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                                     "\"pressure\":%u,\"pressuretend\":\"%s\"",
                                     ((signed int)ais->type8.dac1fid11.airtemp -
                                      DAC1FID11_AIRTEMP_OFFSET) /
-                                     DAC1FID11_AIRTEMP_DIV,
+                                    DAC1FID11_AIRTEMP_DIV,
                                     ((signed int)ais->type8.dac1fid11.dewpoint -
                                      DAC1FID11_DEWPOINT_OFFSET) /
                                     DAC1FID11_DEWPOINT_DIV,
@@ -3929,13 +3929,19 @@ static void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     {8040, 80, "Gas tanker"},
                     {8050, 79, "Motor freighter, tug"},
                     {8060, 89, "Motor tanker, tug"},
-                    {8070, 79, "Motor freighter with one or more "
-                     "ships alongside"},
+                    {
+                        8070, 79, "Motor freighter with one or more "
+                        "ships alongside"
+                    },
                     {8080, 89, "Motor freighter with tanker"},
-                    {8090, 79, "Motor freighter pushing one or more "
-                     "freighters"},
-                    {8100, 89, "Motor freighter pushing at least "
-                     "one tank-ship"},
+                    {
+                        8090, 79, "Motor freighter pushing one or more "
+                        "freighters"
+                    },
+                    {
+                        8100, 89, "Motor freighter pushing at least "
+                        "one tank-ship"
+                    },
                     {8110, 79, "Tug, freighter"},
                     {8120, 89, "Tug, tanker"},
                     {8130, 31, "Tug freighter, coupled"},
@@ -3944,8 +3950,10 @@ static void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     {8160, 99, "Tankbarge"},
                     {8161, 90, "Tankbarge, liquid cargo, type N"},
                     {8162, 90, "Tankbarge, liquid cargo, type C"},
-                    {8163, 99, "Tankbarge, dry cargo as if liquid "
-                     "(e.g. cement)"},
+                    {
+                        8163, 99, "Tankbarge, dry cargo as if liquid "
+                        "(e.g. cement)"
+                    },
                     {8170, 99, "Freightbarge with containers"},
                     {8180, 90, "Tankbarge, gas"},
                     {8210, 79, "Pushtow, one cargo barge"},
