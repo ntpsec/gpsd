@@ -315,7 +315,7 @@ static int fusercount(struct gps_device_t *session)
     //          session->gpsdata.dev.path, fullpath);
 
     while (NULL != (procentry = readdir(procd))) {
-        if (0 == isdigit(procentry->d_name[0])) {
+        if (0 == isdigit((unsigned char)procentry->d_name[0])) {
             // skip non-precess entries
             continue;
         }
@@ -328,7 +328,7 @@ static int fusercount(struct gps_device_t *session)
         while (NULL != (fdentry = readdir(fdd))) {
             ssize_t rd;
 
-            if (0 == isdigit(fdentry->d_name[0])) {
+            if (0 == isdigit((unsigned char)fdentry->d_name[0])) {
                 // skip . and ..
                 continue;
             }
