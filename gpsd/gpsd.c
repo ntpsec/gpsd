@@ -6,18 +6,18 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"    // must be before all includes
+#include "../include/gpsd_config.h" // must be before all includes
 
-#include <arpa/inet.h>    // for htons() and friends
+#include <arpa/inet.h>              // for htons() and friends
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <float.h>    // for FLT_EVAL_METHOD
+#include <float.h>                  // for FLT_EVAL_METHOD
 #ifdef HAVE_GETOPT_LONG
    #include <getopt.h>
 #endif
-#include <grp.h>    // for setgroups()
+#include <grp.h>                    // for setgroups()
 #include <math.h>
 #include <netdb.h>
 #include <pthread.h>
@@ -26,21 +26,21 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdint.h>    // for uint32_t, etc.
+#include <stdint.h>             // for uint32_t, etc.
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>    // for strlcat(), strcpy(), etc.
+#include <string.h>             // for strlcat(), strcpy(), etc.
 #include <syslog.h>
 #ifdef HAVE_LIBCAP
 // defunct, draft POSIX.1e Standard: 25.2 Capabilities
-    #include <sys/capability.h>    // for cap_get_flag()
+    #include <sys/capability.h> // for cap_get_flag()
 #endif
-#include <sys/param.h>    // for setgroups()
+#include <sys/param.h>          // for setgroups()
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
 #include <time.h>
-#include <unistd.h>    // for setgroups()
+#include <unistd.h>             // for setgroups()
 
 #ifndef AF_UNSPEC
     #include <sys/socket.h>
@@ -560,10 +560,10 @@ static int passivesocks(char *service, char *tcp_or_udp,
 }
 
 struct subscriber_t {
-    int fd;        // client file descriptor. -1 if unused
+    int fd;                     // client file descriptor. -1 if unused
     time_t active; // when subscriber last polled for data
-    struct gps_policy_t policy;    // configurable bits
-    pthread_mutex_t mutex;    // serialize access to fd
+    struct gps_policy_t policy; // configurable bits
+    pthread_mutex_t mutex;      // serialize access to fd
 };
 
 #define subscribed(sub, devp)    (sub->policy.watcher &&  \
@@ -2155,8 +2155,8 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf,
 
 
 #ifdef __UNUSED_AUTOCONNECT__
-#define DGPS_THRESHOLD  1600000    // max. useful dist. from DGPS server (m)
-#define SERVER_SAMPLE   12    // # of servers within threshold to check
+#define DGPS_THRESHOLD  1600000 // max. useful dist. from DGPS server (m)
+#define SERVER_SAMPLE   12      // # of servers within threshold to check
 
     struct dgps_server_t {
         double lat, lon;
@@ -2920,8 +2920,9 @@ int main(int argc, char *argv[])
     while (0 == signalled) {
         fd_set efds;
         // static here suppresses longjmp warning
-        static const timespec_t ts_timeout = {2, 0};    // timeout for pselect()
-        timespec_t before, after;    // time before/after gpsd_await_data()
+        static const timespec_t ts_timeout = {2, 0}; // timeout for pselect()
+        timespec_t before, after;                    // time before/after
+                                                     // gpsd_await_data()
         int await;
         bool time_warp;
 
