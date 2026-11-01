@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     if (batchmode) {
 	while (NULL != fgets(buf, sizeof(buf), stdin)) {
 	    if ('{'  == buf[0] ||
-                isalpha( (int) buf[0])) {
+                isalpha( (unsigned char) buf[0])) {
                 int errcode;
 
 		errcode = gps_unpack(buf, &gpsdata);
