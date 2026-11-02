@@ -921,7 +921,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                  * by range-checking certain fields.
                  */
                 if (DAC200FID10_HAZARD_MAX < ais->type8.dac200fid10.hazard ||
-                    !isascii((int)ais->type8.dac200fid10.vin[0])) {
+                    !isascii((unsigned char)ais->type8.dac200fid10.vin[0])) {
                     ais->type8.structured = false;
                 } else {
                     ais->type8.structured = true;
