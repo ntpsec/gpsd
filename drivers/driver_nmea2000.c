@@ -2199,7 +2199,7 @@ int nmea2000_open(struct gps_device_t *session)
             continue;
         }
         if (NULL != sa_ptr) {
-            if (0 == isdigit(interface_name[l])) {
+            if (0 == isdigit((unsigned char)interface_name[l])) {
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
                          "NMEA2000 open: Invalid char x%x in source addr.\n",
                          interface_name[l]);
