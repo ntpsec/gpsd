@@ -81,8 +81,11 @@
     #define COMPILE_CHECK_IS_ARRAY(arr) 0
 #endif
 
-// Needed because 4.x versions of GCC are really annoying
-// FIXME: in 20202, do we care about gcc 4?
+/* Needed because 4.x versions of GCC are really annoying
+ * In 2026, gcc 16 is even more annoying.  Code like:
+ * (void)write(...)
+ * will still generate a warning.   Thus, this macro.
+ */
 #define ignore_return(funcall) \
     do { \
         UNUSED ssize_t locresult = (funcall); \
