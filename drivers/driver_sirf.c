@@ -957,7 +957,8 @@
         uint8_t msg_info = 0;
         uint8_t num_of_sats = 0;
         unsigned int sat_num;
-        int st;                // index into skyview
+        unsigned st, last_st;             // indexes into skyview
+        char ts_buf[TIMESPEC_LEN];
 
         if (18 > len) {
             // zero sats is len == 18
@@ -976,7 +977,8 @@
         }
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF V: MID 67,16 Multiconstellation Satellite Data Response\n");
+                 "SiRF V: MID 67,16 Multiconstellation Satellite "
+                 "Data Response\n");
 
         gps_week = getbeu16(buf, 2);
         gps_tow = getbeu32(buf, 4) / 1000;
@@ -985,12 +987,16 @@
         gps_tow_sub_ms += getbeu32(buf, 8); // add in the ns
         gps_tow_ns.tv_sec = gps_tow;
         gps_tow_ns.tv_nsec = gps_tow_sub_ms;
-        session->newdata.time = gpsd_gpstime_resolv(session, gps_week, gps_tow_ns);
+        session->newdata.time = gpsd_gpstime_resolv(session, gps_week,
+                                                    gps_tow_ns);
         session->gpsdata.skyview_time = session->newdata.time;
         time_bias = getbes16(buf, 12);
         // time_accuracy is an odd 8 bit float
         time_accuracy = getub(buf, 14);
         time_source = getub(buf, 15);
+        /* msg_info[0:3] "order" of this sentence.  1-15
+         * msg_info[4:7] number of sats in this sentence.
+         */
         msg_info = getub(buf, 16);
         if (0 == (msg_info & 0x0f)) {
             // WTF?
@@ -1000,29 +1006,24 @@
             // first set, zero the sats
             gpsd_zero_satellites(&session->gpsdata);
         }
+        // st is index into skyview[] for each sat.  This is first one.
         st = ((msg_info & 0x0f) - 1) * 15;
+        // use len to get number of sats in this message, compute last one.
+        last_st = st + ((len - 18) / 12);
         num_of_sats = getub(buf, 17);
         // got time now
         mask |= TIME_SET;
 
-        // skip all the debug pushing and popping, unless needed
-        if (LOG_IO <= session->context->errout.debug) {
-            /* coerce time_t to long to placate older OS, like 32-bit FreeBSD,
-             * where time_t is int */
-            char ts_buf[TIMESPEC_LEN];
-
-            GPSD_LOG(LOG_IO, &session->context->errout,
-                     "SiRF V: MID 67,16 GPS Week %d, tow %d.%03d, time %s\n",
-                     gps_week, gps_tow, gps_tow_sub_ms,
-                     timespec_str(&now, ts_buf, sizeof(ts_buf)));
-            GPSD_LOG(LOG_IO, &session->context->errout,
-                     "SiRF V: MID 67,16 Time bias: %u ns, accuracy %#02x, source %u, "
-                     "msg_info %#02x, sats %u\n",
-                     time_bias, time_accuracy, time_source, msg_info,
-                     num_of_sats);
-        }
-
-        // used?
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "SiRF V: MID 67,16 GPS Week %d, tow %d.%03d, time %s\n",
+                 gps_week, gps_tow, gps_tow_sub_ms,
+                 timespec_str(&now, ts_buf, sizeof(ts_buf)));
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "SiRF V: MID 67,16 Time bias: %d ns, accuracy %#02x, "
+                 "source %u, msg_info %#02x, sats %u st %u last_st %u "
+                 "len %zu\n",
+                 time_bias, time_accuracy, time_source, msg_info,
+                 num_of_sats, st, last_st, len);
 
         if (MAXCHANNELS < num_of_sats) {
             // shut up coverity
@@ -1030,10 +1031,10 @@
         }
         session->gpsdata.satellites_visible = num_of_sats;
 
-        // now decode the individual sat data
-        /* FIXME: num_of_sats is total sats tracked, not the number of sats
-         * in this message, so this looks wrong? */
-        for (sat_num = 0; sat_num < num_of_sats; sat_num++) {
+        /* now decode the individual sat data
+         * 15 sats per message max.
+         * Seems to always be exactly 15, some empty */
+        for (sat_num = 0; sat_num < 15; sat_num++) {
             unsigned offset;
             uint16_t sat_info;
             uint16_t other_info;
@@ -1047,18 +1048,35 @@
             double ss;
             uint32_t status;
 
+            if (st >= MAXCHANNELS) {
+                // filled up skyview
+                break;
+            }
+            // 4 byte header, each seat 12 bytes
             offset = 18 + (sat_num * 12);
+#if 0  // debug
+                GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                         "SiRF V: MID 67,16 num_of_sats %u sat_num %u st %u "
+                         "offset %u\n",
+                         num_of_sats, sat_num, st, offset);
+#endif
+
+            // len is always 198 bytes??
             if (offset >= len) {
-                // end of this message
+                // Not enough data in message for this sat.
                 break;
             }
             sat_info = getbeu16(buf, offset);
             if (0 == sat_info) {
                 // empty slot, ignore
+#if 0  // debug
+                    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                             "SiRF V: MID 67,16 slot %u empty\n", st);
+#endif
                 continue;
             }
 
-            /* 0 = GPS/QZSS
+            /*  0 = GPS/QZSS
              *  1 = SBAS
              *  2 = GLONASS
              *  3 = Galileo
@@ -1067,6 +1085,12 @@
             gnssId_sirf = sat_info >> 13;
             svId = sat_info & 0x0ff;
             other_info = (sat_info >> 8) & 0x1f;
+            /* If SBAS, other_info bits 8-12:
+             *  0 = WAAS
+             *  1 = EGNOS
+             *  2 = MSAS
+             *  3 = GAGAN
+             */
             /* make up a PRN based on gnssId:svId, using table 4-55
              * from (CS-303979-SP-9) SiRFstarV OSP Extensions
              * Note: the Qualcomm doc is very vague
@@ -1155,7 +1179,7 @@
 
             // note tenths in az and el
             azimuth = (double)getbeu16(buf, offset + 2) / 10.0;
-            // what, no negative elevation?
+            // what, no negative elevation!
             elevation = (double)getbeu16(buf, offset + 4) / 10.0;
             avg_cno = getbeu16(buf, offset + 6);
             ss = (double)avg_cno / 10.0;
@@ -1183,10 +1207,6 @@
                      sat_info, gnssId, svId, other_info, PRN, azimuth,
                      elevation, ss);
             st++;
-            if (st >= MAXCHANNELS) {
-                // filled up skyview
-                break;
-            }
         }
         if ((msg_info >> 4) == (msg_info & 0x0f)) {
             // got all the sats
@@ -1803,6 +1823,9 @@
     }
 
 /***************************************************************************
+*
+*   Geodetic Navigation Data - MID 41 (0x29)
+*
 *   We've stopped interpreting GND (0x29) for the following reasons:
 *
 *   1) Versions of SiRF firmware still in wide circulation (and likely to be
@@ -1828,6 +1851,11 @@
 *   update: Jan 2022
 *
 *   Decode the sentence, we need the extended week.
+*
+*   update: November 2026
+*
+*   The extended week is a lie.
+*
 *   The cycle ender seems to be preventing the previously seen duplicate TPV.
 *   For now be cautious on the mask.
 *
@@ -1869,6 +1897,8 @@
         }
 
         gps_week = getbeu16(buf, 5); // extended gps week
+        // BU-353-W, extended week is a lie, truncate it
+        // gps_week &= 0x03ff;  // breaks test/daemon/sirf2.log
         iTOW = getbeu32(buf, 7);
         MSTOTS(&tow, iTOW);
         session->newdata.time = gpsd_gpstime_resolv(session, gps_week, tow);
