@@ -1,5 +1,7 @@
 /*
- * This file is Copyright 2010 by the GPSD project
+ * Driver for NovAtel Superstar2
+ *
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #include "../include/gpsd_config.h"  // must be before all includes
@@ -298,7 +300,7 @@ superstar2_msg_timing(struct gps_device_t *session, unsigned char *buf,
  */
 static gps_mask_t
 superstar2_msg_measurement(struct gps_device_t *session, unsigned char *buf,
-                           size_t data_len UNUSED)
+                           size_t data_len)
 {
     gps_mask_t mask = 0;
     size_t i;
@@ -308,12 +310,20 @@ superstar2_msg_measurement(struct gps_device_t *session, unsigned char *buf,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "superstar2 #23 - measurement block\n");
 
-    n = (int)getub(buf, 6);     // number of measurements
+    n = getub(buf, 6);     // number of measurements
     if ((n < 1) || (n > MAXCHANNELS)) {
         GPSD_LOG(LOG_INF, &session->context->errout,
-                 "too many measurements\n");
+                 "superstar2 #23 - mtoo many measurements\n");
         return 0;
     }
+    // data_len == 15 + 11*N Measurement Block + 2
+    if ((17 + (11 * n)) != data_len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "superstar2 #23 - bad len %zu s/b %u\n", data_len,
+                 17 + (11 * n));
+        return 0;
+    }
+
     t = getled64((char *)buf, 7);               // measurement time
     DTOTS(&session->gpsdata.raw.mtime, t);
 
@@ -324,6 +334,7 @@ superstar2_msg_measurement(struct gps_device_t *session, unsigned char *buf,
     for (i = 0; i < n; i++) {
         unsigned long ul;
         unsigned off = 11 * i + 15;
+
         if (ROWS(session->gpsdata.skyview) <= i) {
             break;
         }
