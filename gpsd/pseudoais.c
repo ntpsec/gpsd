@@ -5,19 +5,18 @@
  *
  * This file is build from driver_ais.c
  *
- * This file is Copyright 2013 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
 #include "../include/gpsd_config.h"   // must be before all includes
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "../include/gpsd.h"
 #include "../include/bits.h"
-#include <stdint.h>
 
 #ifdef AIVDM_ENABLE
 
