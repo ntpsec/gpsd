@@ -708,7 +708,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case NMEA_VENDOR_LEAD:
         if ('A' == c) {            // $PA
             lexer->state = NMEA_PASHR_A;
-        } else if (isalpha(c)) {
+        } else if (ISALPHA(c)) {
             lexer->state = NMEA_LEADER_END;
         } else {
             (void) character_pushback(lexer, GROUND_STATE);
@@ -722,7 +722,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case NMEA_PASHR_A:
         if ('S' == c) {        // $PAS
             lexer->state = NMEA_PASHR_S;
-        } else if (isalpha(c)) {
+        } else if (ISALPHA(c)) {
             lexer->state = NMEA_LEADER_END;
         } else {
             (void)character_pushback(lexer, GROUND_STATE);
@@ -731,7 +731,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case NMEA_PASHR_S:
         if ('H' == c) {        // $PASH
             lexer->state = NMEA_PASHR_H;
-        } else if (isalpha(c)) {
+        } else if (ISALPHA(c)) {
             lexer->state = NMEA_LEADER_END;
         } else {
             (void)character_pushback(lexer, GROUND_STATE);
@@ -740,7 +740,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case NMEA_PASHR_H:
         if ('R' == c) {         // $PASHR
             lexer->state = NMEA_BINARY_BODY;
-        } else if (isalpha(c)) {
+        } else if (ISALPHA(c)) {
             lexer->state = NMEA_LEADER_END;
         } else {
             (void) character_pushback(lexer, GROUND_STATE);
@@ -788,7 +788,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case AIS_LEAD_2:
-        if (isalpha(c)) {
+        if (ISALPHA(c)) {
             lexer->state = AIS_LEADER_END;
         } else {
             return character_pushback(lexer, GROUND_STATE);
@@ -803,7 +803,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case AIS_LEAD_ALT2:
-        if (isalpha(c)) {
+        if (ISALPHA(c)) {
             lexer->state = AIS_LEADER_END;
         } else {
             return character_pushback(lexer, GROUND_STATE);
@@ -818,7 +818,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case AIS_LEAD_ALT4:
-        if (isalpha(c)) {
+        if (ISALPHA(c)) {
             lexer->state = AIS_LEADER_END;
         } else {
             return character_pushback(lexer, GROUND_STATE);
@@ -1436,7 +1436,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case ONCORE_ID1:
-        if (!isalpha(c)) {
+        if (!ISALPHA(c)) {
             return character_pushback(lexer, GROUND_STATE);
         }
         lexer->length =

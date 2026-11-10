@@ -132,6 +132,7 @@ extern "C" {
 /* POSIX isXXXXX() are locale dependent, accept an (int), but not all
  * int give defined results.  So avoid them.  Theseare for ASCII only,
  * and can take int, unsigned int, char and unsigned char */
+#define ISALPHA(x) (ISLOWER(x) || ISUPPER(x))
 #define ISASCII(x) ((unsigned char)(x) <= 0x7f)
 #define ISCNTRL(x) (0x1f >= (x) || 0x7f == (x))
 #define ISDIGIT(x) ('0' <= (x) && '9' >= (x))
