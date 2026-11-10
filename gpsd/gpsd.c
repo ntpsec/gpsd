@@ -10,7 +10,6 @@
 
 #include <arpa/inet.h>              // for htons() and friends
 #include <assert.h>
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <float.h>                  // for FLT_EVAL_METHOD
@@ -660,7 +659,7 @@ static ssize_t throttled_write(struct subscriber_t *sub, const char *buf,
     ssize_t status;
 
     if (LOG_CLIENT <= context.errout.debug) {
-        if (isprint((unsigned char) buf[0])) {
+        if (ISPRINT(buf[0])) {
             GPSD_LOG(LOG_CLIENT, &context.errout,
                      "=> client(%d) len %zu: %s\n",
                      sub_index(sub), len, buf);
@@ -956,8 +955,8 @@ static const char *write_gps(char *device, char *hex, size_t len)
         static char stash[BUFSIZ];
 
         for (q = p;
-             isprint((unsigned char)*p) &&
-             !isspace((unsigned char)*p) &&
+             ISPRINT(*p) &&
+             !ISSPACE(*p) &&
              (p - q < (ssize_t)(sizeof(stash) - 1));
              p++) {
             continue;
@@ -1189,7 +1188,7 @@ static void set_serial(struct gps_device_t *device,
     struct timespec delay;
 
 #ifndef __clang_analyzer__
-        while (isspace((unsigned char)*modestring)) {
+        while (ISSPACE(*modestring)) {
             modestring++;
         }
         if (*modestring &&
@@ -1198,7 +1197,7 @@ static void set_serial(struct gps_device_t *device,
             if (*modestring &&
                 NULL != strchr("NOE", *modestring)) {
                 parity = *modestring++;
-                while (isspace((unsigned char)*modestring)) {
+                while (ISSPACE(*modestring)) {
                     modestring++;
                 }
                 if (*modestring &&
@@ -1282,7 +1281,7 @@ static void rstrip(char *str, size_t replylen)
     char *strend;
 
     strend = str + strnlen(str, replylen) - 1;
-    while (isspace((unsigned char)*strend)) {
+    while (ISSPACE(*strend)) {
         *strend = '\0';
         --strend;
     }
@@ -1658,7 +1657,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         consumed = buf + strnlen(buf, bufsize);
         errend = consumed;
         while (errend > buf &&
-               isspace((unsigned char)errend[-1])) {
+               ISSPACE(errend[-1])) {
             --errend;
         }
         (void)snprintf(reply, replylen,
@@ -2087,7 +2086,7 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf,
         const char *end;
 
         for (end = buf; buf < limit && '\0' != *buf; buf = end) {
-            if (isspace((unsigned char)*buf)) {
+            if (ISSPACE(*buf)) {
                 end = buf + 1;
             } else {
                 size_t len = strnlen(reply, sizeof(reply));
