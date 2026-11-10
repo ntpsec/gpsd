@@ -18,7 +18,6 @@
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -921,7 +920,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                  * by range-checking certain fields.
                  */
                 if (DAC200FID10_HAZARD_MAX < ais->type8.dac200fid10.hazard ||
-                    !isascii((unsigned char)ais->type8.dac200fid10.vin[0])) {
+                    !ISASCII(ais->type8.dac200fid10.vin[0])) {
                     ais->type8.structured = false;
                 } else {
                     ais->type8.structured = true;
