@@ -140,10 +140,10 @@ extern "C" {
 #define ISPRINT(x) (0x20 <= (x) && 0x7e >= (x))
 // ASCII whitespace (tab through carriage return, plus space)
 #define ISSPACE(x) (0x20 == (x) || (0x09 <= (x) && 0x0d >= (x)))
+#define ISUPPER(x) ((x) >= 'A' && (x) <= 'Z')
 #define ISXDIGIT(x) (ISDIGIT(x) || \
                      ((x) >= 'a' && (x) <= 'f') || \
                      ((x) >= 'A' && (x) <= 'F'))
-#define ISUPPER(x) ((x) >= 'A' && (x) <= 'Z')
 #define TOUPPER(x) (ISLOWER(x) ? (x) - 'a' + 'A' : (x))
 
 // u-blox 9 tracks 140 signals
