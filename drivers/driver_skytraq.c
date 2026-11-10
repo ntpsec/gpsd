@@ -9,7 +9,6 @@
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
-#include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
