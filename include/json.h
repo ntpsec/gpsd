@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include <ctype.h>
 #include <stdbool.h>
 #include <sys/time.h>      // for struct timespec
 
