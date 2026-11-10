@@ -57,7 +57,6 @@
 #include "../include/gpsd_config.h"   // must be before all includes
 
 #include <assert.h>
-#include <ctype.h>        // isspace()
 #include <errno.h>
 #include <libgen.h>
 #include <math.h>
@@ -1005,7 +1004,7 @@ static  inline void rtrim(char *str)
 
     // Remove trailing whitespace
     while (0 <= end &&
-           isspace((unsigned char) str[end])) {
+           ISSPACE(str[end])) {
         str[end] = '\0';
         end--;
     }
