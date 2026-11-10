@@ -13,7 +13,6 @@
 #include "../include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
