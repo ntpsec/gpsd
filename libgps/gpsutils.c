@@ -12,7 +12,6 @@
 
 #include "../include/gpsd_config.h"    // must be before all includes
 
-#include <ctype.h>
 #include <errno.h>
 #include <math.h>
 #include <stdbool.h>
