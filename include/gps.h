@@ -130,7 +130,9 @@ extern "C" {
 #define GPSD_API_MINOR_VERSION  1        // bump on compatible changes
 
 /* POSIX isXXXXX() are locale dependent, accept an (int), but not all
- * int give defined results.  So avoid them */
+ * int give defined results.  So avoid them.  These can take
+ * int, unsigned int, char and unsigned char */
+#define ISASCII(x) ((unsigned char)(x) <= 0x7f)
 #define ISDIGIT(x) ('0' <= (x) && '9' >= (x))
 
 // u-blox 9 tracks 140 signals

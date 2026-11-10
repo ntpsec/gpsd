@@ -6,7 +6,6 @@
 #include "../include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -1374,7 +1373,7 @@ const struct gps_type_t driver_isync = {
         for (i = 0; i < (int)buflen; i++) {
             unsigned char c = buf[i];
 
-            if (!isascii(c)) {
+            if (!ISASCII(c)) {
                 /* discard sentences with high-half characters in them,
                  * they're corrupted. */
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -1448,7 +1447,7 @@ const struct gps_type_t driver_isync = {
         data = field[5];
 
         pad = 0;
-        if (isdigit((unsigned char)field[6][0])) {
+        if (ISDIGIT(field[6][0])) {
             pad = field[6][0] - '0';     // number padding bits ASCII encoded
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
