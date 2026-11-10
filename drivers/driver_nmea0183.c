@@ -18,6 +18,7 @@
 
 #include "../include/gpsd_config.h" // must be before all includes
 
+#include <assert.h>                 // for assert()()
 #include <ctype.h>                  // for isdigit()
 #include <float.h>                  // for FLT_EVAL_METHOD
 #include <stdio.h>
@@ -32,6 +33,64 @@
 #include "../include/strfuncs.h"
 
 #include "../include/timespec.h"
+
+/*
+ * gpsd_atoi(const char *s, bool *ok)
+ *
+ * Convert string s into an integer.
+ *         string contains ONLY "-", "0" to "9", and ends in NUL
+ *         No whitespace, no plus sign (+), no other characters
+ *
+ * Why not atoi()?
+ *    POSIX allows leading whitespace, or leading +.  NMEA does not
+ *    POSIX allows atoi() to return undefined on illagal input.
+ *    OSS Fuzz claims to have tickled undefined atoi() behvior in gpsd code.
+ *
+ * Return:  Good conversion:  integer of s, *ok = true
+ *          Bad conversion:  0, *bool = false
+ */
+static int gpsd_atoi(const char *s, bool *ok)
+{
+    int value = 0;
+    bool negative = false;
+
+    assert(NULL != ok);
+
+    *ok = false;
+
+    if ('-' == *s) {
+        negative = true;
+        s++;
+    }
+
+    if ('0' > *s ||
+        '9' < *s) {
+        return 0;
+    }
+    for (; *s >= '0' && *s <= '9'; s++) {
+        int digit = *s - '0';
+
+        if (negative) {
+            if (value < (INT_MIN + digit) / 10) {
+                return 0;
+            }
+            value = value * 10 - digit;
+        } else {
+            if (value > (INT_MAX - digit) / 10) {
+                return 0;
+            }
+            value = value * 10 + digit;
+        }
+    }
+
+    if (*s != '\0') {
+        return 0;
+    }
+
+    *ok = true;
+
+    return value;
+}
 
 /* hex2uchar() -- convert a signgle hex char to an insigned char
  *
@@ -2186,9 +2245,12 @@ static gps_mask_t processGSV(unsigned count, char *field[],
     unsigned char ubx_sigid = 0;
     int sane = 0;
 
-    if (3 >= count) {
+    if (3 >= count ||
+        22 < count) {
+        // NMEA says 22 fields max, including checksum
+        // ST microelectronic Teseo LIV4F has 22 fields
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "NMEA0183: %s, malformed - fieldcount %d <= 3\n",
+                 "NMEA0183: %s, malformed - fieldcount %u <= 3\n",
                  field[0], count);
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
@@ -2196,7 +2258,7 @@ static gps_mask_t processGSV(unsigned count, char *field[],
     session->nmea.await = atoi(field[1]);
     if (1 > session->nmea.await ||
         10 < session->nmea.await) {
-        // numbeof sentences is either 0, or too many
+        // number of sentences is either 0, or too many
         session->nmea.await = 0;
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: %s: bad number of sentences %d\n",
@@ -2356,16 +2418,21 @@ static gps_mask_t processGSV(unsigned count, char *field[],
         struct satellite_t *sp;
         int nmea_svid;
         unsigned fldnum = recnum * 4;
+        int az = 0, el = 0, ss = 0;
+        bool az_ok = false, el_ok = false, ok = false;
+
+        if (fldnum + 3 >= count) {
+            // not enough fields for this sat.
+            break;
+        }
 
         // Quectel querk: EL and AZ, but no PRN...
-        if ('\0' == field[fldnum][0]) {
-            continue;
-        }
         // mtk-3301 has PRN and ss, but no az or el
-        nmea_svid = atoi(field[fldnum]);
-        if (0 == nmea_svid) {
+        nmea_svid = gpsd_atoi(field[fldnum], &ok);
+        if (!ok ||
+            0 == nmea_svid) {
             // skip bogus fields
-            GPSD_LOG(LOG_SHOUT, &session->context->errout,
+            GPSD_LOG(LOG_IO, &session->context->errout,
                      "NMEA0183: %s bad svid %d\n",
                      field[0], nmea_svid);
             continue;
@@ -2383,10 +2450,10 @@ static gps_mask_t processGSV(unsigned count, char *field[],
                                        &sp->gnssid, &sp->svid);
 
         // both al/az, or neither. ericsson-gru04 can report only el!
-        if ('\0' != field[fldnum + 1][0] &&
-            '\0' != field[fldnum + 2][0]) {
-            int el = atoi(field[fldnum + 1]);
-            int az = atoi(field[fldnum + 2]);
+        el = gpsd_atoi(field[fldnum + 1], &el_ok);
+        az = gpsd_atoi(field[fldnum + 2], &az_ok);
+        if (el_ok &&
+            az_ok) {
             if (90 >= abs(el)) {
                 sp->elevation = (double)el;
             }
@@ -2398,8 +2465,8 @@ static gps_mask_t processGSV(unsigned count, char *field[],
                 sp->azimuth = (double)az;
             }
         }
-        if ('\0' != field[fldnum + 3][0]) {
-            int ss = atoi(field[fldnum + 3]);
+        ss = gpsd_atoi(field[fldnum + 3], &ok);
+        if (ok) {
             sp->ss = (double)ss;
         }
         sp->used = false;
