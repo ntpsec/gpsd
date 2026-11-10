@@ -75,7 +75,6 @@
 
 #include "../include/gpsd_config.h"    // must be before all includes
 
-#include <ctype.h>
 #include <curses.h>
 #include <errno.h>
 #ifdef HAVE_GETOPT_LONG
