@@ -64,7 +64,6 @@
  ***************************************************************************/
 #include "../include/gpsd_config.h" // must be before all includes
 
-#include <ctype.h>
 #include <math.h>                   // for HUGE_VAL
 #include <stdarg.h>                 // for va_arg(), etc.
 #include <stdbool.h>
@@ -299,7 +298,7 @@ static int json_internal_read_object(const char *cp,
                          statenames[state], *cp, cp);
         switch (state) {
         case init:
-            if (isspace((unsigned char) *cp)) {
+            if (ISSPACE(*cp)) {
                 continue;
             }
             if (*cp == '{') {
@@ -314,7 +313,7 @@ static int json_internal_read_object(const char *cp,
             }
             break;
         case await_attr:
-            if (isspace((unsigned char) *cp)) {
+            if (ISSPACE(*cp)) {
                 continue;
             }
             if (*cp == '"') {
@@ -383,7 +382,7 @@ static int json_internal_read_object(const char *cp,
             }
             break;
         case await_value:
-            if (isspace((unsigned char) *cp) ||
+            if (ISSPACE(*cp) ||
                 *cp == ':') {
                 continue;
             }
@@ -521,7 +520,7 @@ static int json_internal_read_object(const char *cp,
                 // don't update end here, leave at value start
                 return JSON_ERR_NULLPTR;
             }
-            if (isspace((unsigned char) *cp) ||
+            if (ISSPACE(*cp) ||
                 *cp == ',' ||
                 *cp == '}') {
                 *pval = '\0';
@@ -543,8 +542,8 @@ static int json_internal_read_object(const char *cp,
         // coverity[unterminated_case]
         case post_val:
             // Ignore whitespace after either string or token values.
-            if (isspace((unsigned char) *cp)) {
-                while (*cp != '\0' && isspace((unsigned char) *cp)) {
+            if (ISSPACE(*cp)) {
+                while (*cp != '\0' && ISSPACE(*cp)) {
                     ++cp;
                 }
                 json_debug_trace(1,
@@ -754,7 +753,7 @@ foundit:
             }
             FALLTHROUGH
         case post_element:
-            if (isspace((unsigned char) *cp)) {
+            if (ISSPACE(*cp)) {
                 continue;
             }
             if (*cp == ',') {
@@ -780,7 +779,7 @@ foundit:
 
 good_parse:
     // in case there's another object following, consume trailing WS
-    while (isspace((unsigned char)*cp)) {
+    while (ISSPACE(*cp)) {
         ++cp;
     }
     if (NULL != end) {
@@ -803,7 +802,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
 
     json_debug_trace(1, "json: %s", "Entered json_read_array()\n");
 
-    while (isspace((unsigned char)*cp)) {
+    while (ISSPACE(*cp)) {
         cp++;
     }
     if (*cp != '[') {
@@ -816,7 +815,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
     arrcount = 0;
 
     // Check for empty array
-    while (isspace((unsigned char)*cp)) {
+    while (ISSPACE(*cp)) {
         cp++;
     }
     if (*cp == ']') {
@@ -829,7 +828,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
         json_debug_trace(1, "json: Looking at %s\n", cp);
         switch (arr->element_type) {
         case t_string:
-            if (isspace((unsigned char) *cp)) {
+            if (ISSPACE(*cp)) {
                 cp++;
             }
             if (*cp != '"') {
@@ -979,7 +978,7 @@ stringend:
             return JSON_ERR_SUBTYPE;
         }
         arrcount++;
-        if (isspace((unsigned char)*cp)) {
+        if (ISSPACE(*cp)) {
             cp++;
         }
         if (*cp == ']') {
