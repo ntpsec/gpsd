@@ -21,7 +21,6 @@
 
 #if defined(NMEA2000_ENABLE)
 
-#include <ctype.h>
 #include <errno.h>                  // for strerror(errno), errno)
 #include <fcntl.h>
 #include <linux/can.h>              // for  struct can_frame
@@ -2276,7 +2275,7 @@
                 continue;
             }
             if (NULL != sa_ptr) {
-                if (0 == isdigit((unsigned char)interface_name[l])) {
+                if (0 == ISDIGIT(interface_name[l])) {
                     GPSD_LOG(LOG_ERROR, &session->context->errout,
                              "NMEA2000 open: Invalid char x%x in source addr.\n",
                              interface_name[l]);
