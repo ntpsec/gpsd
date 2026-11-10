@@ -11,7 +11,6 @@
 #include "../include/gpsd_config.h" // must be before all includes
 
 #include <assert.h>
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #ifdef HAVE_GETOPT_LONG
@@ -177,15 +176,15 @@ static void cond_hexdump(char *buf2, size_t len2,
     size_t i;
     bool printable = true;
     for (i = 0; i < len; i++) {
-        if (!isprint((unsigned char)buf[i]) &&
-            !isspace((unsigned char) buf[i])) {
+        if (!ISPRINT(buf[i]) &&
+            !ISSPACE(buf[i])) {
             printable = false;
         }
     }
     if (printable) {
         size_t j;
         for (i = j = 0; i < len && j < len2 - 1; i++) {
-            if (isprint((unsigned char)buf[i])) {
+            if (ISPRINT(buf[i])) {
                 buf2[j++] = buf[i];
                 buf2[j] = '\0';
             } else {
@@ -636,7 +635,7 @@ static char *curses_get_command(void)
             KEY_LEFT == c ||
             (int)erasechar() == c) {
             input[len--] = '\0';
-        } else if (isprint((unsigned char)c)) {
+        } else if (ISPRINT(c)) {
             input[len] = (char)c;
             input[++len] = '\0';
             (void)waddch(cmdwin, (chtype)c);
@@ -901,7 +900,7 @@ static bool do_command(const char *line)
     // skip over any spaces until NUL or the next argument
     for (arg = line + 1;
          *arg != '\0' &&
-         isspace((unsigned char) *arg);
+         ISSPACE(*arg);
          arg++) {
     }
 
