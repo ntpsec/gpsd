@@ -420,8 +420,8 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
 
     /* Verify checksum is 2 hex digits.  Irnoge trailing stuff.
      * Magellan EC-10X has lower case hex in checksum. It is rare.  */
-    if (!isxdigit((unsigned char) end[1]) ||
-        !isxdigit((unsigned char) end[2])) {
+    if (!ISXDIGIT(end[1]) ||
+        !ISXDIGIT(end[2])) {
         return false;
     }
 
@@ -1428,7 +1428,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #endif  // SUPERSTAR2_ENABLE
 #ifdef ONCORE_ENABLE
     case ONCORE_AT2:
-        if (isupper(c)) {
+        if (ISUPPER(c)) {
             lexer->length = (size_t)c;
             lexer->state = ONCORE_ID1;
         } else {
@@ -2068,21 +2068,21 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case GREIS_REPLY_2:
         FALLTHROUGH
     case GREIS_ID_2:
-        if (!isxdigit(c)) {
+        if (!ISXDIGIT(c)) {
             return character_pushback(lexer, GROUND_STATE);
         }
         lexer->length = greis_hex2bin(c) << 8;
         lexer->state = GREIS_LENGTH_1;
         break;
     case GREIS_LENGTH_1:
-        if (!isxdigit(c)) {
+        if (!ISXDIGIT(c)) {
             return character_pushback(lexer, GROUND_STATE);
         }
         lexer->length += greis_hex2bin(c) << 4;
         lexer->state = GREIS_LENGTH_2;
         break;
     case GREIS_LENGTH_2:
-        if (!isxdigit(c)) {
+        if (!ISXDIGIT(c)) {
             return character_pushback(lexer, GROUND_STATE);
         }
         lexer->length += greis_hex2bin(c);

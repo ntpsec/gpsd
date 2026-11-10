@@ -135,10 +135,15 @@ extern "C" {
 #define ISASCII(x) ((unsigned char)(x) <= 0x7f)
 #define ISCNTRL(x) (0x1f >= (x) || 0x7f == (x))
 #define ISDIGIT(x) ('0' <= (x) && '9' >= (x))
+#define ISLOWER(x) ((x) >= 'a' && (x) <= 'z')
 #define ISPRINT(x) (0x20 <= (x) && 0x7e >= (x))
 // ASCII whitespace (tab through carriage return, plus space)
 #define ISSPACE(x) (0x20 == (x) || (0x09 <= (x) && 0x0d >= (x)))
-#define TOUPPER(x) (((x) >= 'a' && (x) <= 'z') ? (x) - 'a' + 'A' : (x))
+#define ISXDIGIT(x) (isdigit(x) || \
+                     ((x) >= 'a' && (x) <= 'f') || \
+                     ((x) >= 'A' && (x) <= 'F'))
+#define ISUPPER(x) ((x) >= 'A' && (x) <= 'Z')
+#define TOUPPER(x) (ISLOWER(x) ? (x) - 'a' + 'A' : (x))
 
 // u-blox 9 tracks 140 signals
 // Skytraq Phoenix tracks 230 signals
