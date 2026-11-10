@@ -33,7 +33,6 @@ PERMISSIONS
 #include "../include/gpsd_config.h"  // must be before all includes
 
 #include <arpa/inet.h>          // for htons()
-#include <ctype.h>
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdbool.h>
@@ -463,7 +462,7 @@ static bool character_pushback(struct gps_lexer_t *lexer,
         GPSD_LOG(LOG_RAW, &lexer->errout,
                  "%08ld: character '%c' [%02x]  pushed back, state set to %s\n",
                  lexer->char_counter,
-                 (isprint((int)c) ? c : '.'), c,
+                 (ISPRINT(c) ? c : '.'), c,
                  state_table[lexer->state]);
     }
 
@@ -631,7 +630,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         } else if ('\r' == c ||
                    '\t' == c) {
             // allow tabs and CR in comments
-        } else if (!isprint(c)) {
+        } else if (!ISPRINT(c)) {
             GPSD_LOG(LOG_RAW, &lexer->errout, "COMMENT: x%x\n", c);
             return character_pushback(lexer, GROUND_STATE);
         }
@@ -832,7 +831,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             /* not strictly correct (missing \r), but helps with
              * interpreting logfiles. */
             lexer->state = AIS_RECOGNIZED;
-        } else if (!isprint(c)) {
+        } else if (!ISPRINT(c)) {
             (void)character_pushback(lexer, GROUND_STATE);
         }
         break;
@@ -877,7 +876,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             break;
 #endif  // GARMINTXT_ENABLE
         default:
-            if (!isprint(c)) {
+            if (!ISPRINT(c)) {
                 return character_pushback(lexer, GROUND_STATE);
             }
         }
@@ -897,7 +896,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #else
             (void)character_pushback(lexer, GROUND_STATE);
 #endif
-        } else if (!isprint(c)) {
+        } else if (!ISPRINT(c)) {
             (void)character_pushback(lexer, GROUND_STATE);
         }
         break;
@@ -2485,7 +2484,7 @@ void packet_parse(struct gps_lexer_t *lexer)
         }
         GPSD_LOG(LOG_RAW, &lexer->errout,
                  "%08ld: character '%c' [%02x], %s -> %s\n",
-                 lexer->char_counter, (isprint(c) ? c : '.'), c,
+                 lexer->char_counter, (ISPRINT(c) ? c : '.'), c,
                  state_table[oldstate], state_table[lexer->state]);
         lexer->char_counter++;
         inbuflen = lexer->inbufptr - lexer->inbuffer;
