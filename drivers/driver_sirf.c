@@ -37,7 +37,6 @@
 
 #include "../include/gpsd_config.h"   // must be before all includes
 
-#include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -459,7 +458,7 @@
                      "SiRF: MID 0xe1 (225) SID %#0x %s\n", buf[1], msgbuf);
         } else if (0xff == buf[0]) { // Debug messages
             for (i = 1; i < (int)len; i++) {
-                if (isprint(buf[i])) {
+                if (ISPRINT(buf[i])) {
                     str_appendf(msgbuf, sizeof(msgbuf), "%c", buf[i]);
                 } else {
                     str_appendf(msgbuf, sizeof(msgbuf),
@@ -1472,7 +1471,7 @@
             session->driver.sirf.driverstate |= SIRF_GE_232;
             // FIXME: this only finding major version, not minor version
             for (cp = buf + 1; *cp != (unsigned char)'\0' &&
-                 0 == isdigit(*cp); cp++) {
+                 0 == ISDIGIT(*cp); cp++) {
                 continue;
             }
             fv = safe_atof((const char *)cp);
@@ -1483,7 +1482,7 @@
                           sizeof(session->subtype));
 
             for (cp = buf + 1; *cp != (unsigned char)'\0' &&
-                 0 == isdigit(*cp); cp++) {
+                 0 == ISDIGIT(*cp); cp++) {
                 continue;
             }
             fv = safe_atof((const char *)cp);
