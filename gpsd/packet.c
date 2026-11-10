@@ -430,8 +430,8 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
         csum ^= buf[n];
     }
     (void)snprintf(csum_s, sizeof(csum_s), "%02X", csum);
-    checksum_ok = (csum_s[0] == toupper((int)end[1]) &&
-                   csum_s[1] == toupper((int)end[2]));
+    checksum_ok = (csum_s[0] == TOUPPER(end[1]) &&
+                   csum_s[1] == TOUPPER(end[2]));
     if (!checksum_ok) {
         GPSD_LOG(LOG_WARN, errout,
                  "bad checksum in NMEA packet; got %c%c expected %s.\n",
@@ -2038,7 +2038,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case GREIS_EXPECTED:
         FALLTHROUGH
     case GREIS_RECOGNIZED:
-        if (!isascii(c)) {
+        if (!ISASCII(c)) {
             return character_pushback(lexer, GROUND_STATE);
         }
         if ('#' == c) {
@@ -2060,7 +2060,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = GREIS_REPLY_2;
         break;
     case GREIS_ID_1:
-        if (!isascii(c)) {
+        if (!ISASCII(c)) {
             return character_pushback(lexer, GROUND_STATE);
         }
         lexer->state = GREIS_ID_2;
@@ -2190,7 +2190,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->json_after = JSON_END_ATTRIBUTE;
             break;
         default:
-            if (isspace(c)) {
+            if (ISSPACE(c)) {
                 break;
             }
             GPSD_LOG(LOG_RAW1, &lexer->errout,
@@ -2210,7 +2210,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = JSON_STRINGLITERAL;
         break;
     case JSON_END_ATTRIBUTE:
-        if (isspace(c)) {
+        if (ISSPACE(c)) {
             break;
         }
         if (':' == c) {
@@ -2221,7 +2221,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case JSON_EXPECT_VALUE:
-        if (isspace(c)) {
+        if (ISSPACE(c)) {
             break;
         }
         switch (c) {
@@ -2293,7 +2293,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case JSON_END_VALUE:
-        if (isspace(c)) {
+        if (ISSPACE(c)) {
             break;
         }
         if ('}' == c ||

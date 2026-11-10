@@ -130,12 +130,15 @@ extern "C" {
 #define GPSD_API_MINOR_VERSION  1        // bump on compatible changes
 
 /* POSIX isXXXXX() are locale dependent, accept an (int), but not all
- * int give defined results.  So avoid them.  These can take
- * int, unsigned int, char and unsigned char */
+ * int give defined results.  So avoid them.  Theseare for ASCII only,
+ * and can take int, unsigned int, char and unsigned char */
 #define ISASCII(x) ((unsigned char)(x) <= 0x7f)
 #define ISCNTRL(x) (0x1f >= (x) || 0x7f == (x))
 #define ISDIGIT(x) ('0' <= (x) && '9' >= (x))
 #define ISPRINT(x) (0x20 <= (x) && 0x7e >= (x))
+// ASCII whitespace (tab through carriage return, plus space)
+#define ISSPACE(x) (0x20 == (x) || (0x09 <= (x) && 0x0d >= (x)))
+#define TOUPPER(x) (((x) >= 'a' && (x) <= 'z') ? (x) - 'a' + 'A' : (x))
 
 // u-blox 9 tracks 140 signals
 // Skytraq Phoenix tracks 230 signals
