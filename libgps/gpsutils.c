@@ -273,9 +273,10 @@ const char *val2str(unsigned long val, const struct vlist_t *vlist)
  * with the decimal point and stripped down to an atof()-equivalent.
  */
 
-/* Takes a decimal ASCII floating-point number, optionally
- * preceded by white space.  Must have form "SI.FE-X",
- * S may be ither of the signs may be "+", "-", or omitted.
+/* Takes a decimal ASCII floating-point number.
+ * No leading white space or junk allowed.
+ * Must have form "SI.FE-X",
+ * S may be either of the signs may be "+", "-", or omitted.
  * I is the integer part of the mantissa,
  * F is the fractional part of the mantissa,
  * X is the exponent.
@@ -284,11 +285,12 @@ const char *val2str(unsigned long val, const struct vlist_t *vlist)
  * present.  The "E" may actually be an "e".  E and X
  * may both be omitted (but not just one).
  *
- * This code appears to e from early BSD.
+ * This code appears to be from early BSD.
  *
  * returns NaN if:
  *    *string is zero length,
- *    the first non-white space is not negative sign ('-'), positive sign ('_')
+ *    any leading junk (white space, non-digits).
+ *    the first char is not negative sign ('-'), positive sign ('_')
  *    or a digit
  */
 double safe_atof(const char *string)
@@ -333,16 +335,11 @@ double safe_atof(const char *string)
                                  * in string. */
 
     /*
-     * Strip off leading blanks and check for a sign.
+     * Check for a sign.
      */
 
-    // FIXME: JSON is UTF-8, but isspace() islocale dependent...
-
     p = string;
-    while (isspace((unsigned char)*p)) {
-        p += 1;
-    }
-    if (isdigit((unsigned char)*p)) {
+    if (ISDIGIT(*p)) {
         // ignore
     } else if ('-' == *p) {
         sign = true;
@@ -352,6 +349,7 @@ double safe_atof(const char *string)
     } else if ('.' == *p) {
         // ignore
     } else {
+        // leading junk
         return NAN;
     }
 
@@ -363,8 +361,9 @@ double safe_atof(const char *string)
     decPt = -1;
     for (mantSize = 0; ; mantSize += 1) {
         c = *p;
-        if (!isdigit((unsigned char)c)) {
-            if ((c != '.') || (decPt >= 0)) {
+        if (!ISDIGIT(c)) {
+            if (('.' != c) ||
+                (0 <= decPt)) {
                 break;
             }
             decPt = mantSize;
@@ -439,7 +438,7 @@ double safe_atof(const char *string)
             }
             expSign = false;
         }
-        while (isdigit((unsigned char) *p)) {
+        while (ISDIGIT(*p)) {
             exp = exp * 10 + (*p - '0');
             if (1024 < exp) {
                 if (true == expSign) {
