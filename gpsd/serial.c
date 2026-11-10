@@ -5,7 +5,6 @@
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
-#include <ctype.h>                   // for isdigit()
 #include <dirent.h>                  // for DIR
 #include <errno.h>
 #include <fcntl.h>
@@ -317,7 +316,7 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
         // session->gpsdata.dev.path, fullpath);
 
         while (NULL != (procentry = readdir(procd))) {
-            if (0 == isdigit((unsigned char)procentry->d_name[0])) {
+            if (0 == ISDIGIT(procentry->d_name[0])) {
                 // skip non-precess entries
                 continue;
             }
@@ -330,7 +329,7 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
             while (NULL != (fdentry = readdir(fdd))) {
                 ssize_t rd;
 
-                if (0 == isdigit((unsigned char)fdentry->d_name[0])) {
+                if (0 == ISDIGIT(fdentry->d_name[0])) {
                     // skip . and ..
                     continue;
                 }
