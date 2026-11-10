@@ -19,7 +19,6 @@
 #include "../include/gpsd_config.h" // must be before all includes
 
 #include <assert.h>                 // for assert()()
-#include <ctype.h>                  // for isdigit()
 #include <float.h>                  // for FLT_EVAL_METHOD
 #include <stdio.h>
 #include <stdlib.h>
@@ -370,7 +369,7 @@ static int decode_ddmmyy(struct tm *date, const char *ddmmyy,
         return 1;
     }
     for (i = 0; i < 6; i++) {
-        if (0 == isdigit((unsigned char)ddmmyy[i])) {
+        if (0 == ISDIGIT(ddmmyy[i])) {
             // catches NUL and non-digits
             // Telit HE910 can set year to "-1" (1999 - 2000)
             GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -459,7 +458,7 @@ static int decode_hhmmss(struct tm *date, long *nsec, const char *hhmmss,
         return 1;
     }
     for (i = 0; i < 6; i++) {
-        if (0 == isdigit((unsigned char)hhmmss[i])) {
+        if (0 == ISDIGIT(hhmmss[i])) {
             // catches NUL and non-digits
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NMEA0183: decode_hhmmss(%s), malformed time\n",  hhmmss);
@@ -477,7 +476,7 @@ static int decode_hhmmss(struct tm *date, long *nsec, const char *hhmmss,
     date->tm_sec = DD(hhmmss + 4);
 
     if ('.' == hhmmss[6] &&
-        0 != isdigit((unsigned char)hhmmss[7])) {
+        0 != ISDIGIT(hhmmss[7])) {
         // codacy hates strlen()
         int sublen = strnlen(hhmmss + 7, 20);
         i = atoi(hhmmss + 7);
@@ -4268,12 +4267,12 @@ static gps_mask_t processPGRMF(unsigned count UNUSED, char *field[],
     /* Some garmin fail due to GPS Week Roll Over
      * Ignore their UTC date/time, use their GPS week, GPS tow and
      * leap seconds to decide the correct time */
-    if (isdigit((unsigned char)field[5][0])) {
+    if (ISDIGIT(field[5][0])) {
         session->context->leap_seconds = atoi(field[5]);
         session->context->valid = LEAP_SECOND_VALID;
     }
-    if (isdigit((unsigned char)field[1][0]) &&
-        isdigit((unsigned char)field[2][0]) &&
+    if (ISDIGIT(field[1][0]) &&
+        ISDIGIT(field[2][0]) &&
         0 < session->context->leap_seconds) {
         // have GPS week, tow and leap second
         unsigned short week = atol(field[1]);
