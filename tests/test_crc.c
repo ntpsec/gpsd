@@ -4,8 +4,6 @@
  */
 #include "../include/gpsd_config.h"  // must be before all includes
 
-#include <ctype.h>
-#include <errno.h>          // for errno
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>

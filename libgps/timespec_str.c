@@ -3,13 +3,12 @@
  * newer features (like clock_gettime).  See the POSIX spec for more info:
  * http://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html#tag_15_02_01_02
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
 #include "../include/gpsd_config.h"  /* must be before all includes */
 
-#include <ctype.h>
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
