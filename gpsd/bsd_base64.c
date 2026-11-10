@@ -44,7 +44,6 @@
 #include "../include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
