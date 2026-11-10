@@ -133,6 +133,7 @@ extern "C" {
  * int give defined results.  So avoid them.  These can take
  * int, unsigned int, char and unsigned char */
 #define ISASCII(x) ((unsigned char)(x) <= 0x7f)
+#define ISCNTRL(x) (0x1f >= (x) || 0x7f == (x))
 #define ISDIGIT(x) ('0' <= (x) && '9' >= (x))
 #define ISPRINT(x) (0x20 <= (x) && 0x7e >= (x))
 

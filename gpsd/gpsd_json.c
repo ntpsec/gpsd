@@ -16,7 +16,6 @@
 
 #include "../include/gpsd_config.h" // must be before all includes
 
-#include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>                 // for qsort()
@@ -75,8 +74,8 @@ char *json_stringify(char *to, size_t len, const char *from)
      * escape
      */
     for (sp = from; *sp != '\0' && ((tp - to) < ((int)len - 6)); sp++) {
-        if (!isascii((unsigned char)*sp) ||
-            iscntrl((unsigned char)*sp)) {
+        if (!ISASCII(*sp) ||
+            ISCNTRL(*sp)) {
             *tp++ = '\\';
             switch (*sp) {
             case '\b':
