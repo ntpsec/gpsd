@@ -8,7 +8,6 @@
 #include "../include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
-#include <ctype.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
