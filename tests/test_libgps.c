@@ -5,7 +5,6 @@
  */
 #include "../include/gpsd_config.h"  // must be before all includes
 
-#include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
 #include <signal.h>
@@ -91,7 +90,7 @@ int main(int argc, char *argv[])
     if (batchmode) {
         while (NULL != fgets(buf, sizeof(buf), stdin)) {
             if ('{' == buf[0] ||
-                isalpha( (unsigned char) buf[0])) {
+                ISALPHA(buf[0])) {
                 int errcode;
 
                 errcode = gps_unpack(buf, &gpsdata);
