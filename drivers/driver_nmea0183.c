@@ -62,20 +62,21 @@ static int gpsd_atoi(const char *s, bool *ok)
         s++;
     }
 
-    if ('0' > *s ||
-        '9' < *s) {
+    if (!ISDIGIT(*s)) {
         return 0;
     }
-    for (; *s >= '0' && *s <= '9'; s++) {
+    for (; ISDIGIT(*s); s++) {
         int digit = *s - '0';
 
         if (negative) {
             if (value < (INT_MIN + digit) / 10) {
+                // would overflow
                 return 0;
             }
             value = value * 10 - digit;
         } else {
             if (value > (INT_MAX - digit) / 10) {
+                // would overflow
                 return 0;
             }
             value = value * 10 + digit;
@@ -83,11 +84,11 @@ static int gpsd_atoi(const char *s, bool *ok)
     }
 
     if (*s != '\0') {
+        // trailing non-digit
         return 0;
     }
 
     *ok = true;
-
     return value;
 }
 
@@ -475,20 +476,22 @@ static int decode_hhmmss(struct tm *date, long *nsec, const char *hhmmss,
     date->tm_min = DD(hhmmss + 2);
     date->tm_sec = DD(hhmmss + 4);
 
+    *nsec = 0;
     if ('.' == hhmmss[6] &&
         0 != ISDIGIT(hhmmss[7])) {
         // codacy hates strlen()
+        bool ok;
         int sublen = strnlen(hhmmss + 7, 20);
-        i = atoi(hhmmss + 7);
-        *nsec = (long)i * (long)pow(10.0, 9 - sublen);
-    } else {
-        *nsec = 0;
+
+        i = gpsd_atoi(hhmmss + 7,  &ok);
+        if (ok) {
+            *nsec = (long)i * (long)pow(10.0, 9 - sublen);
+        }
     }
     GPSD_LOG(LOG_RAW, &session->context->errout,
              "NMEA0183: decode_hhmmss(%s) %d %d %d %09ld\n",
              hhmmss,
              date->tm_hour, date->tm_min, date->tm_sec, *nsec);
-
     return 0;
 }
 
@@ -1241,15 +1244,15 @@ static gps_mask_t processGGA(unsigned count UNUSED, char *field[],
     int newstatus;
     char last_last_gga_talker = session->nmea.last_gga_talker;
     int fix;              // a.k.a Quality flag
+    bool ok;
     session->nmea.last_gga_talker = field[0][1];
 
-    if ('\0' == field[6][0]) {
+    fix = gpsd_atoi(field[6], &ok);
+    if (!ok) {
         /* no data is no data, assume no fix
          * the test/daemon/myguide-3100.log shows lat/lon/alt but
          * no status, and related RMC shows no fix. */
         fix = -1;
-    } else {
-        fix = atoi(field[6]);
     }
     // Jackson Labs Micro JLT uses nonstadard fix flag, not handled
     switch (fix) {
@@ -1345,7 +1348,7 @@ static gps_mask_t processGGA(unsigned count UNUSED, char *field[],
      * Some GPS, like SiRFstarV NMEA, report per GNSS used
      * counts in GPGGA and GLGGA.
      */
-    session->nmea.gga_sats_used = atoi(field[7]);
+    session->nmea.gga_sats_used = gpsd_atoi(field[7], &ok);
 
     if ('\0' == field[1][0]) {
         GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -1432,7 +1435,7 @@ static gps_mask_t processGGA(unsigned count UNUSED, char *field[],
         int station;
 
         age = safe_atof(field[13]);
-        station = atoi(field[14]);
+        station = gpsd_atoi(field[14], &ok);
         if (0.09 < age ||
             0 < station) {
             // ignore both zeros
@@ -1595,6 +1598,7 @@ static gps_mask_t processGNS(unsigned count UNUSED, char *field[],
      *
      */
     int newstatus;
+    bool ok;
     gps_mask_t mask = ONLINE_SET;
 
     if ('\0' != field[1][0]) {
@@ -1626,7 +1630,7 @@ static gps_mask_t processGNS(unsigned count UNUSED, char *field[],
         return mask;
     }
 
-    session->nmea.gga_sats_used = atoi(field[7]);
+    session->nmea.gga_sats_used = gpsd_atoi(field[7], &ok);
 
     if (0 == do_lat_lon(&field[2], &session->newdata)) {
         mask |= LATLON_SET;
