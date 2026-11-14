@@ -740,11 +740,21 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
     // Satellite details
     i = nsu = 0;
     if (298 < msg_len) {
-        /* pasify coverity
+        /* pacify coverity
          * msg_len = 18 + (14 * nsat)
          * assume 20 sats max */
         msg_len = 298;
     }
+
+    if (msg_len > session->lexer.outbuflen) {
+        // not enough data
+        return 0;
+    }
+    if (0 != ((msg_len - 18) % 14)) {
+        // not 18 byte header and 14 bytes per sat.
+        return 0;
+    }
+
     for (n = 17; n < msg_len; n += 14) {
         uint8_t prn, ele, ca_snr, p2_snr, log_channel, hw_channel, s, stat;
         uint16_t azm, dgps_age;
