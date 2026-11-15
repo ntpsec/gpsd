@@ -788,7 +788,9 @@ Two, the receiver returns something similar to this:
 ----
 
 The filestoreCapacity of zero means you have no flash for logging to
-use.  Game over, your receiver does not support logging.
+use *OR* your device may be in SAFEBOOT mode (cf. u-blox SAFEBOOT
+documentation).  If it is not due to SAFEBOOT, then game over, your
+receiver does not support logging.
 
 Three, the receiver returns something similar to this:
 
