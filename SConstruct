@@ -45,9 +45,37 @@ from __future__ import print_function
 
 import atexit      # for atexit.register()
 import os
+import SCons
+
+def SConsVersionTuple():
+    """Return (major, minor, micro) from SCons.__version__.
+
+    A release is a string like "4.11.0".  Very old SCons used a tuple.
+    A development build may append trailing junk ("4.11.0.abc").
+    """
+    version = SCons.__version__
+    if isinstance(version, tuple):
+        return tuple(version[:3])
+    parts = []
+    for part in version.split('.')[:3]:
+        digits = ''
+        for char in part:
+            if char.isdigit():
+                digits += char
+            else:
+                break
+        parts.append(int(digits or '0'))
+    while len(parts) < 3:
+        parts.append(0)
+    return tuple(parts)
 
 # gpsd needs Scons version at least 2.3
 EnsureSConsVersion(2, 3, 0)
+# SCons 4.11.0 crashes while reading a missing .scons-option-cache.
+# 4.10.1 and 4.11.1 work.  See #412.
+if SConsVersionTuple() == (4, 11, 0):
+    print('SCons 4.11.0 cannot build gpsd. SCons 4.10.1 and 4.11.1 can.')
+    Exit(1)
 # gpsd needs Python version at least 2.6
 EnsurePythonVersion(2, 6)
 
