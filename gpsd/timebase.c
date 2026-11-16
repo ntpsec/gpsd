@@ -478,7 +478,7 @@ timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
     // 2038 rollover hack for unsigned 32-bit time, assuming today is < 2038
     if (0 > t.tv_sec) {
         // recompute for previous EPOCH
-        week -= 1024;
+        new_week -= 1024;
         t.tv_sec = GPS_EPOCH + ((time_t)new_week * SECS_PER_WEEK) + tow.tv_sec;
         t.tv_sec -= session->context->leap_seconds;
         GPSD_LOG(LOG_WARN, &session->context->errout,
