@@ -2,15 +2,15 @@
  * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
-#include "../include/gpsd_config.h"  // must be before all includes
+#include "../include/gpsd_config.h" // must be before all includes
 
-#include <errno.h>          // for errno
+#include <errno.h>                  // for errno
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>       // for open()
+#include <sys/stat.h>               // for open()
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -18,8 +18,7 @@
 
 static int verbose = 0;
 
-struct map
-{
+struct map {
     char *legend;
     unsigned char test[MAX_PACKET_LENGTH + 1];
     size_t testlen;
@@ -77,7 +76,8 @@ static struct map singletests[] = {
     {
         .legend = "NMEA interrupted packet",
         .test = "$GPZDA,112533.00,20,01,2016,00,00*67\r\n$GPZDA,112533.00,20,"
-                "01,20$PTNTA,20000102173852,1,T4,,,6,1,0*32\r\n16,00,00*67\r\n",
+                "01,20$PTNTA,20000102173852,1,T4,,,6,1,0*32\r\n"
+                "16,00,00*67\r\n",
         .testlen = 115,
         .garbage_offset = 0,
         .type = NMEA_PACKET,
@@ -272,10 +272,10 @@ static struct map runontests[] = {
 static int packet_test(struct map *mp)
 {
     struct gps_lexer_t lexer;
-    struct gpsd_errout_t errout = {0};   // pacify Coverity.
+    struct gpsd_errout_t errout = {0}; // pacify Coverity.
     int failure = 0;
 
-    errout_reset(&errout);      // Do the real initialization of errout
+    errout_reset(&errout);             // Do the real initialization of errout
     errout.debug = verbose;
     lexer_init(&lexer, &errout);
     memcpy(lexer.inbufptr = lexer.inbuffer, mp->test, mp->testlen);
@@ -285,7 +285,7 @@ static int packet_test(struct map *mp)
         printf("%2ti: %s test FAILED (packet type %d wrong).\n",
                mp - singletests + 1, mp->legend, lexer.type);
     } else if (memcmp(mp->test + mp->garbage_offset, lexer.outbuffer,
-                     lexer.outbuflen)) {
+                      lexer.outbuflen)) {
         printf("%2ti: %s test FAILED (data garbled).\n", mp - singletests + 1,
                mp->legend);
         ++failure;
@@ -317,7 +317,7 @@ static void runon_test(struct map *mp)
     (void)fputs((char *)mp->test, stdout);
     do {
         st = packet_get(nullfd, &lexer);
-        //printf("packet_parse() returned %zd\n", st);
+        // printf("packet_parse() returned %zd\n", st);
     } while (0 < st);
 
     // pacify coverity by closing nullfd
