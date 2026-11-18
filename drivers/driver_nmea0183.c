@@ -94,12 +94,16 @@ static int gpsd_atoi(const char *s, bool *ok)
 
 /* hex2uchar() -- convert a signgle hex char to an insigned char
  *
- * Return: 0 on error
+ * Return: 255 on error
+ *         0 on NUL char
  *         The converted char
  */
 static unsigned char hex2uchar(unsigned char hex)
 {
 
+    if ('\0' == hex) {
+        return 0;
+    }
     if ('0' <= hex &&
         '9' >= hex) {
         return hex - '0';
@@ -113,7 +117,7 @@ static unsigned char hex2uchar(unsigned char hex)
         return hex - 'a' + 10;
     }
     // fail
-    return 0;
+    return 255;
 }
 
 // $SNRSTAAT insstatus
@@ -2247,6 +2251,7 @@ static gps_mask_t processGSV(unsigned count, char *field[],
     int nmea_gnssid = 0;
     unsigned char ubx_sigid = 0;
     int sane = 0;
+    bool ok;
 
     if (3 >= count ||
         22 < count) {
@@ -2258,8 +2263,9 @@ static gps_mask_t processGSV(unsigned count, char *field[],
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
     }
-    session->nmea.await = atoi(field[1]);
-    if (1 > session->nmea.await ||
+    session->nmea.await = gpsd_atoi(field[1], &ok);
+    if (!ok ||
+        1 > session->nmea.await ||
         10 < session->nmea.await) {
         // number of sentences is either 0, or too many
         session->nmea.await = 0;
@@ -2269,8 +2275,9 @@ static gps_mask_t processGSV(unsigned count, char *field[],
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
     }
-    session->nmea.part = atoi(field[2]);
-    if (1 > session->nmea.part ||
+    session->nmea.part = gpsd_atoi(field[2], &ok);
+    if (!ok ||
+        1 > session->nmea.part ||
         session->nmea.await < session->nmea.part) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: %s: bad part %d of %d\n",
@@ -2298,12 +2305,25 @@ static gps_mask_t processGSV(unsigned count, char *field[],
     case 1:
         // NMEA 4.10, and later, get the signal ID
         nmea_sigid = hex2uchar(field[count - 1][0]);
+        if (255 == nmea_sigid) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "NMEA0183: %sm invalid nmea_sigid %d\n",
+                     field[0], nmea_sigid);
+            return ONLINE_SET;
+        }
         break;
     case 2:
         // Quectel Querk. $PQGSV, get the signal ID, and system ID
         nmea_sigid = hex2uchar(field[count - 2][0]);
-        nmea_gnssid = atoi(field[count - 1]);
-        if (4 > nmea_gnssid ||
+        if (255 == nmea_sigid) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "NMEA0183: %sm invalid nmea_sigid %d\n",
+                     field[0], nmea_sigid);
+            return ONLINE_SET;
+        }
+        nmea_gnssid = gpsd_atoi(field[count - 1], &ok);
+        if (!ok ||
+            4 > nmea_gnssid ||
             5 < nmea_gnssid) {
             // Quectel says only 4 or 5
             GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -2422,7 +2442,7 @@ static gps_mask_t processGSV(unsigned count, char *field[],
         int nmea_svid;
         unsigned fldnum = recnum * 4;
         int az = 0, el = 0, ss = 0;
-        bool az_ok = false, el_ok = false, ok = false;
+        bool az_ok = false, el_ok = false;
 
         if (fldnum + 3 >= count) {
             // not enough fields for this sat.
