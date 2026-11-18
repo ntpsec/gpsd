@@ -421,11 +421,19 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
      * Magellan EC-10X has lower case hex in checksum. It is rare.  */
     if (!ISXDIGIT(end[1]) ||
         !ISXDIGIT(end[2])) {
+            GPSD_LOG(LOG_WARN, errout,
+                     "bad char in NMEA checksum; x%02x x%02x\n",
+                     end[1], end[2]);
         return false;
     }
 
     // compute the checksum
     for (n = 1; buf + n < end; n++) {
+        if (!ISPRINT(buf[n])) {
+            GPSD_LOG(LOG_WARN, errout, "bad char in NMEA packet; x%02x\n",
+                     buf[n]);
+            return false;
+        }
         csum ^= buf[n];
     }
     (void)snprintf(csum_s, sizeof(csum_s), "%02X", csum);
