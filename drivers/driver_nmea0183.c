@@ -6752,7 +6752,6 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
     gps_mask_t mask = 0;
     unsigned i, thistag = 0, lasttag;
     char *p, *e;
-    volatile char *t;      // why volatile?
     char ts_buf1[TIMESPEC_LEN];
     char ts_buf2[TIMESPEC_LEN];
     bool skytraq_sti = false;
@@ -6790,13 +6789,6 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
     (void)strlcpy((char *)session->nmea.fieldcopy, sentence,
                   sizeof(session->nmea.fieldcopy) - 1);
     // discard the checksum part
-    for (p = session->nmea.fieldcopy;
-         ('*' != *p) && (' ' <= *p);) {
-        ++p;
-    }
-    if ('*' == *p) {
-        *p++ = ',';             // otherwise we drop the last field
-    }
 #ifdef SKYTRAQ_ENABLE_UNUSED
         // $STI is special, no trailing *, or chacksum
         if (0 != strncmp( "STI,", sentence, 4)) {
@@ -6804,36 +6796,50 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
             *p++ = ',';         // otherwise we drop the last field
         }
 #endif
-    *p = '\0';
-    e = p;
-
     // split sentence copy on commas, filling the field array
     count = 0;
-    t = p;                                   // end of sentence
     p = session->nmea.fieldcopy + 1;         // beginning of tag, 'G' not '$'
-    // while there is a search string and we haven't run off the buffer...
-    while ((NULL != p) &&
-           (p <= t)) {
-        session->nmea.field[count] = p;      // we have a field. record it
-        // search for the next delimiter
-        if (NULL != (p = strchr((char *)p, ','))) {
-            *p = '\0';                       // replace it with a NUL
-            count++;                         // bump the counters and continue
-            p++;
+    e = p;
+
+    // while there is a string and we haven't run off the buffer...
+    for (p = session->nmea.fieldcopy; ; p++) {
+        if ('\0' == *p ||
+            '*' == *p) {
+            // end, or found checksum
+            // new field
+            session->nmea.field[count] = e;      // we have a field. record it
+            *p = '\0';                           // replace it with a NUL
+            count++;
+            break;
+        }
+        if (',' == *p) {
+            // new field
+            session->nmea.field[count] = e;      // we have a field. record it
+            *p = '\0';                           // replace it with a NUL
+            e = p + 1;                           // next field
+            // bump the counter and continue
+            count++;
             if (NMEA_MAX_FLD <= count) {
                 // ensure no overflow
                 break;
             }
+            continue;
+        }
+        if (!ISPRINT(*p)) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "bad char in NMEA packet; x%02x\n",
+                     *p);
+            return false;
         }
     }
     if (NMEA_MAX_FLD < count) {
         // ensure no overflow, OSS Fuzz 515100083
         count = NMEA_MAX_FLD;
-    }
-
-    // point remaining fields at empty string, just in case
-    for (i = count; i < NMEA_MAX_FLD; i++) {
-        session->nmea.field[i] = e;
+    } else {
+        // point remaining fields at empty string, just in case
+        for (i = count; i < NMEA_MAX_FLD; i++) {
+            session->nmea.field[i] = "";
+        }
     }
 
     // sentences handlers will tell us when they have fractional time
@@ -6843,7 +6849,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
 
 #ifdef __UNUSED
         // debug
-        GPSD_LOG(0, &session->context->errout,
+        GPSD_LOG(LOG_SHOUT, &session->context->errout,
                  "NMEA0183: got %s\n", session->nmea.field[0]);
 #endif // __UNUSED
 

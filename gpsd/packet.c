@@ -429,11 +429,6 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
 
     // compute the checksum
     for (n = 1; buf + n < end; n++) {
-        if (!ISPRINT(buf[n])) {
-            GPSD_LOG(LOG_WARN, errout, "bad char in NMEA packet; x%02x\n",
-                     buf[n]);
-            return false;
-        }
         csum ^= buf[n];
     }
     (void)snprintf(csum_s, sizeof(csum_s), "%02X", csum);
