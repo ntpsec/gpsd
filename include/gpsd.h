@@ -650,7 +650,7 @@ struct gps_device_t {
         timespec_t subseconds;          // subsec part of last sentence time
         // pointers to each field in fieldcopy.  Each is NUL terminated.
         char *field[NMEA_MAX_FLD];
-        unsigned char fieldcopy[NMEA_MAX+1]; // a copy of the current sentence
+        char fieldcopy[NMEA_MAX+1];     // a copy of the current sentence
         // detect receivers that ship GGA with non-advancing timestamp
         bool latch_mode;
         char last_gga_timestamp[16];

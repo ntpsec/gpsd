@@ -6752,7 +6752,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
     gps_mask_t mask = 0;
     unsigned i, thistag = 0, lasttag;
     char *p, *e;
-    volatile char *t;
+    volatile char *t;      // why volatile?
     char ts_buf1[TIMESPEC_LEN];
     char ts_buf2[TIMESPEC_LEN];
     bool skytraq_sti = false;
@@ -6768,10 +6768,21 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
      */
     // codacy does not like strlen()
     mlen = strnlen(sentence, NMEA_MAX + 1);
-    if (NMEA_MAX < mlen) {
+    if (6 >= mlen ||
+        NMEA_MAX < mlen) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "NMEA0183: Overlong packet of %zd+ chars rejected.\n",
+                 "NMEA0183: bad sized packet of %zd+ chars rejected.\n",
                  mlen);
+        return ONLINE_SET;
+    }
+
+    if ('$' != sentence[0] ||
+        !ISUPPER(sentence[1]) ||
+        !ISUPPER(sentence[2])) {
+        // Should not happen, but fuzzers deep link past packet.c checks
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: bad talker x%02x x%02x  x%02x\n",
+                 sentence[0], sentence[1], sentence[2]);
         return ONLINE_SET;
     }
 
@@ -6779,7 +6790,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
     (void)strlcpy((char *)session->nmea.fieldcopy, sentence,
                   sizeof(session->nmea.fieldcopy) - 1);
     // discard the checksum part
-    for (p = (char *)session->nmea.fieldcopy;
+    for (p = session->nmea.fieldcopy;
          ('*' != *p) && (' ' <= *p);) {
         ++p;
     }
@@ -6799,12 +6810,13 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
     // split sentence copy on commas, filling the field array
     count = 0;
     t = p;                                   // end of sentence
-    p = (char *)session->nmea.fieldcopy + 1; // beginning of tag, 'G' not '$'
+    p = session->nmea.fieldcopy + 1;         // beginning of tag, 'G' not '$'
     // while there is a search string and we haven't run off the buffer...
     while ((NULL != p) &&
            (p <= t)) {
         session->nmea.field[count] = p;      // we have a field. record it
-        if (NULL != (p = strchr(p, ','))) {  // search for the next delimiter
+        // search for the next delimiter
+        if (NULL != (p = strchr((char *)p, ','))) {
             *p = '\0';                       // replace it with a NUL
             count++;                         // bump the counters and continue
             p++;
