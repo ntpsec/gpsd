@@ -61,12 +61,18 @@ static int gpsd_atoi(const char *s, bool *ok)
         negative = true;
         s++;
     }
-
     if (!ISDIGIT(*s)) {
+        // empty or bad string
         return 0;
     }
+
     for (; ISDIGIT(*s); s++) {
-        int digit = *s - '0';
+        int digit;
+
+        if (!ISDIGIT(*s)) {
+            return 0;
+        }
+        digit = *s - '0';
 
         if (negative) {
             if (value < (INT_MIN + digit) / 10) {
@@ -83,7 +89,51 @@ static int gpsd_atoi(const char *s, bool *ok)
         }
     }
 
-    if (*s != '\0') {
+    if ('\0' != *s) {
+        // trailing non-digit
+        return 0;
+    }
+
+    *ok = true;
+    return value;
+}
+
+/*
+ * gpsd_atou(const char *s, bool *ok)
+ *
+ * Convert string s into an unsigned integer.
+ *         string contains ONLY "0" to "9", and ends in NUL
+ *         No whitespace, no plus sign (+), no minus (-),  no other characters
+ *
+ * Why not atou()?
+ *    atou(): no such function
+ *
+ * Return:  Good conversion:  integer of s, *ok = true
+ *          Bad conversion:  0, *bool = false
+ */
+static int gpsd_atou(const char *s, bool *ok)
+{
+    unsigned value = 0;
+
+    assert(NULL != ok);
+
+    *ok = false;
+
+    for (; ; s++) {
+        int digit;
+
+        if (!ISDIGIT(*s)) {
+            break;
+        }
+        digit = *s - '0';
+        if (value > (UINT_MAX - digit) / 10) {
+            // would overflow
+            return 0;
+        }
+        value = value * 10 + digit;
+    }
+
+    if ('\0' != *s) {
         // trailing non-digit
         return 0;
     }
@@ -1247,11 +1297,11 @@ static gps_mask_t processGGA(unsigned count UNUSED, char *field[],
     gps_mask_t mask = ONLINE_SET;
     int newstatus;
     char last_last_gga_talker = session->nmea.last_gga_talker;
-    int fix;              // a.k.a Quality flag
+    unsigned fix;              // a.k.a Quality flag
     bool ok;
     session->nmea.last_gga_talker = field[0][1];
 
-    fix = gpsd_atoi(field[6], &ok);
+    fix = gpsd_atou(field[6], &ok);
     if (!ok) {
         /* no data is no data, assume no fix
          * the test/daemon/myguide-3100.log shows lat/lon/alt but
@@ -1331,9 +1381,9 @@ static gps_mask_t processGGA(unsigned count UNUSED, char *field[],
         // skip the time check
         session->nmea.latch_mode = 0;
     } else {
-        session->nmea.latch_mode = strncmp(field[1],
-                                           session->nmea.last_gga_timestamp,
-                                           sizeof(session->nmea.last_gga_timestamp)) == 0;
+        bool mode = 0 == strncmp(field[1], session->nmea.last_gga_timestamp,
+                                 sizeof(session->nmea.last_gga_timestamp));
+        session->nmea.latch_mode = mode;
     }
 
     if (session->nmea.latch_mode) {
@@ -1352,7 +1402,7 @@ static gps_mask_t processGGA(unsigned count UNUSED, char *field[],
      * Some GPS, like SiRFstarV NMEA, report per GNSS used
      * counts in GPGGA and GLGGA.
      */
-    session->nmea.gga_sats_used = gpsd_atoi(field[7], &ok);
+    session->nmea.gga_sats_used = gpsd_atou(field[7], &ok);
 
     if ('\0' == field[1][0]) {
         GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -1422,8 +1472,7 @@ static gps_mask_t processGGA(unsigned count UNUSED, char *field[],
     // Jackson Labs send 99.00 for invalid DOPs
     // Skytraq send 0.00 for invalid DOPs
     if ('\0' != field[8][0]) {
-        double hdop;
-        hdop = safe_atof(field[8]);
+        double hdop = safe_atof(field[8]);
         if (IN(0.01, hdop, 89.99)) {
             // why not to newdata?
             session->gpsdata.dop.hdop = hdop;
@@ -1435,11 +1484,9 @@ static gps_mask_t processGGA(unsigned count UNUSED, char *field[],
     if ('\0' != field[13][0] &&
         '\0' != field[14][0]) {
         // both, or neither
-        double age;
-        int station;
+        double age = safe_atof(field[13]);
+        int station = gpsd_atoi(field[14], &ok);
 
-        age = safe_atof(field[13]);
-        station = gpsd_atoi(field[14], &ok);
         if (0.09 < age ||
             0 < station) {
             // ignore both zeros
