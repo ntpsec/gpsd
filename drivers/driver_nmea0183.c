@@ -34,6 +34,21 @@
 #include "../include/timespec.h"
 
 /*
+ * byteToHex() - convert a byte to two hex chars
+ *
+ * avoid the complexity of snprintf()
+ *
+ * Return: void
+ */
+static void byteToHex(char *hex, unsigned char byte) {
+    const char hexDigits[] = "0123456789ABCDEF";
+
+    hex[0] = hexDigits[(byte >> 4) & 0x0F];  // High nibble
+    hex[1] = hexDigits[byte & 0x0F];         // Low nibble
+    hex[2] = '\0';                           // NUL-terminate the string
+}
+
+/*
  * gpsd_atoi(const char *s, bool *ok)
  *
  * Convert string s into an integer.
@@ -6803,6 +6818,9 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
     char ts_buf2[TIMESPEC_LEN];
     bool skytraq_sti = false;
     size_t mlen;
+    bool csum_found = false;      // found a checksum (*XX) in message
+    unsigned csum = 0;
+    char csum_s[3] = { '0', '0', '0' };
 
     /*
      * We've had reports that on the Garmin GPS-10 the device sometimes
@@ -6845,20 +6863,30 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
 #endif
     // split sentence copy on commas, filling the field array
     count = 0;
-    p = session->nmea.fieldcopy + 1;         // beginning of tag, 'G' not '$'
+    p = session->nmea.fieldcopy + 1;    // beginning of Talker ID, 'G' not '$'
     e = p;
 
     // while there is a string and we haven't run off the buffer...
-    for (p = session->nmea.fieldcopy; ; p++) {
-        if ('\0' == *p ||
-            '*' == *p) {
-            // end, or found checksum
-            // new field
+    for (; ; p++) {
+        if ('\0' == *p) {
+            // end, no checksum
             session->nmea.field[count] = e;      // we have a field. record it
-            *p = '\0';                           // replace it with a NUL
+            *p = '\0';                           // terminate it with a NUL
             count++;
             break;
         }
+
+        if ('*' == *p) {
+            // found checksum
+            session->nmea.field[count] = e;      // we have a field. record it
+            *p = '\0';                           // terminate it with a NUL
+            count++;
+            e = p + 1;                           // next field is checksum
+            csum_found = true;
+            break;
+        }
+
+        csum ^= (unsigned)*p;
         if (',' == *p) {
             // new field
             session->nmea.field[count] = e;      // we have a field. record it
@@ -6876,6 +6904,32 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "bad char in NMEA packet; x%02x\n",
                      *p);
+            return false;
+        }
+    }
+    if (csum_found &&
+        ISXDIGIT(e[0]) &&
+        ISXDIGIT(e[1])) {
+        byteToHex(csum_s, csum);
+        if (csum_s[0] != TOUPPER(e[0]) ||
+            csum_s[1] != TOUPPER(e[1])) {
+            // Bad Checksum
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "got checksum %s expected %c%c\n", csum_s,
+                    TOUPPER(e[0]), TOUPPER(e[1]));
+            return false;
+        }
+    } else {
+        /* These have no checksum:
+         *  GPS-320FW emits $PLCS
+         *  MTK-3301 emits $POLYN
+         *  Skytraq S2525F8-BD-RTK emits $STI
+         *  Telit SL869 emits $GPTXT
+         *  Ashtech (old!) $PASHR,MCA and $PASHR,PBN with no checksum
+         * All undocumented,  Let them fail, except $STI.
+         */
+        if (!strncmp(session->nmea.field[0], "STI", 4)) {
+            GPSD_LOG(LOG_WARN, &session->context->errout, "missing checksum\n");
             return false;
         }
     }
