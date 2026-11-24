@@ -123,11 +123,12 @@ extern "C" {
  *       MAXCHANNELS bumped 230, for SkyTraq
  *       add magnetic_dev, true_track to gps_data_t.
  *       add path_obf devconfig_t.
+ * 17    Release 3.28
  */
 
 // API version should match in SConscript
-#define GPSD_API_MAJOR_VERSION  16       // bump on incompatible changes
-#define GPSD_API_MINOR_VERSION  1        // bump on compatible changes
+#define GPSD_API_MAJOR_VERSION  17       // bump on incompatible changes
+#define GPSD_API_MINOR_VERSION  0        // bump on compatible changes
 
 /* POSIX isXXXXX() are locale dependent, accept an (int), but not all
  * int give defined results.  So avoid them.  Theseare for ASCII only,

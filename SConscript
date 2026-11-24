@@ -1,6 +1,6 @@
 # scons file.  Only meant to be run from SContruct.
 #
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -257,11 +257,11 @@ except OSError:
     pass  # May already exist
 
 # API (JSON) version, should match include/gps.h
-api_version_major = 16
-api_version_minor = 1
+api_version_major = 17
+api_version_minor = 0
 
 # client library version
-libgps_version_current = 32
+libgps_version_current = 33
 libgps_version_revision = 0
 libgps_version_age = 0
 libgps_version = "%d.%d.%d" % (libgps_version_current, libgps_version_age,
@@ -2842,7 +2842,7 @@ cppcheck = Utility("cppcheck",
                    "-UPATH_MAX -UHAVE_STRLCAT -UHAVE_STRLCPY "
                    "-UHAVE_STRNLEN -UHAVE_STPNCPY"
                    "-UIPTOS_LOWDELAY -UIPV6_TCLASS -UTCP_NODELAY -UTIOCMIWAIT "
-                   "--template gcc "
+                   "--template=gcc "
                    "--enable=all --inline-suppr "
                    "--suppress='*:drivers/driver_proto.c' "
                    "--force '${SRCDIR}'")

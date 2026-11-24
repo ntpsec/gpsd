@@ -1,7 +1,7 @@
 /*
  * gpsdclient.h -- common functions for GPSD clients
  *
- * This file is Copyright 2010 by the GPSD project
+ * This file is Copyright by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */

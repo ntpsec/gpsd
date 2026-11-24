@@ -80,7 +80,7 @@ if SConsVersionTuple() == (4, 11, 0):
 EnsurePythonVersion(2, 6)
 
 # package version
-gpsd_version = "3.27.6~dev"
+gpsd_version = "3.28"
 # name 'build' is already taken, put stuff in gpsd-$VERSION
 # it makes tar simple
 variantdir = 'gpsd-' + gpsd_version

@@ -1,4 +1,4 @@
-/* gpsd.h -- fundamental types and structures for the gpsd library
+/* gpsd.h -- fundamental types and structures for gpsd internals
  *
  * Nothing in this file should be used by any client.  So safe to change
  * anything here without (directly) affecting the API or ABI.
@@ -118,7 +118,7 @@ extern "C" {
  * 3.27
  *      add SPARTN_PACKET
  *      gps_lexer_t, add type_mask, to mask our bad types, like SPARTN
- * 3.28 WIP
+ * 3.28
  *      gps_lexer_t inbuffer, outbuffer and stashbuffer same size.
  *      remove unused gps_device_t.driver.nmea2000.pgnlist
  *      add const to gps_device_t.driver.nmea2000.workpgn
@@ -129,8 +129,8 @@ extern "C" {
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
 
-// be sure to change BUILD_LEAPSECONDS as needed.
 #define BUILD_CENTURY 2000
+// As of 2026 BUILD_LEAPSECONDS will be 18 seconds going forward.
 #define BUILD_LEAPSECONDS 18
 
 #ifndef DEFAULT_GPSD_SOCKET
