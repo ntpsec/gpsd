@@ -258,11 +258,11 @@ except OSError:
 
 # API (JSON) version, should match include/gps.h
 api_version_major = 17
-api_version_minor = 0
+api_version_minor = 1
 
 # client library version
 libgps_version_current = 33
-libgps_version_revision = 0
+libgps_version_revision = 1
 libgps_version_age = 0
 libgps_version = "%d.%d.%d" % (libgps_version_current, libgps_version_age,
                                libgps_version_revision)

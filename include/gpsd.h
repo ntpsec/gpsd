@@ -124,6 +124,7 @@ extern "C" {
  *      add const to gps_device_t.driver.nmea2000.workpgn
  *      gps_device_t.driver.nmea2000.unit to source_addr
  *      add obfuscate_uri()
+ * 3.28.1~dev
  *
  */
 
