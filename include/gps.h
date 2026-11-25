@@ -3049,8 +3049,8 @@ extern int gps_mainloop(struct gps_data_t *, int,
                         void (*)(struct gps_data_t *));
 extern const char *gps_data(const struct gps_data_t *);
 extern const char *gps_errstr(const int);
-extern char *gps_visibilize(char *outbuf, size_t outlen,
-                            const char *inbuf, size_t inlen);
+extern const  char *gps_visibilize(char *outbuf, size_t outlen,
+                                   const char *inbuf, size_t inlen);
 
 int json_toff_read(const char *buf, struct gps_data_t *,
                   const char **);

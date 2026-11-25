@@ -30,13 +30,13 @@ const char *gpsd_packetdump(char *scbuf, size_t scbuflen,
 {
     const unsigned char *cp;
 
-    if (NULL == binbuf) {
+    if (NULL == binbuf ||
+        0 == binbuflen ||
+        0 == scbuflen) {
         return "";
     }
     for (cp = binbuf; cp < binbuf + binbuflen; cp++) {
-        if (0x7f <= *cp ||
-            (!ISPRINT(*cp) &&
-             !ISSPACE(*cp))) {
+        if (!ISPRINT(*cp)) {
             // some non-printable, do it the hard way.
             return gps_hexdump(scbuf, scbuflen, binbuf, binbuflen);
         }
@@ -311,13 +311,17 @@ ssize_t hex_escapes(char *cooked, const char *raw)
 
 // copy inbuf string to outbuf, replacingg non-printing characters
 // slow, but only used for debug output
-char *gps_visibilize(char *outbuf, size_t outlen,
-                     const char *inbuf, size_t inlen)
+const char *gps_visibilize(char *outbuf, size_t outlen,
+                          const char *inbuf, size_t inlen)
 {
     const char *sp;
     size_t next = 0;
 
-    outbuf[0] = '\0';
+    if (NULL == outbuf ||
+        0 == outlen ||
+        0 == inlen) {
+        return "";
+    }
     // FIXME!! snprintf() when strlcat() will do!
     for (sp = inbuf; sp < inbuf + inlen && (next + 6) < outlen; sp++) {
         int ret;
