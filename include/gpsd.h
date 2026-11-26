@@ -125,6 +125,7 @@ extern "C" {
  *      gps_device_t.driver.nmea2000.unit to source_addr
  *      add obfuscate_uri()
  * 3.28.1~dev
+ *      NMEA_MAX increased.  Another Quectel Querk!
  *
  */
 
@@ -162,10 +163,12 @@ extern "C" {
  *  The Trimble BX-960 receiver emits a 91-character GGA message.
  *  The Skytraq S2525F8 which emits a 100-character PSTI message.
  *  The Skytraq PX1172RH which emits a 103-character PSTI message.
- *  The current hog champion is the Inertial Sense Inc (ISI) GRX-1 with a
- *  a 119-character $INFO message.
+ *  The Inertial Sense Inc (ISI) GRX-1 with a 119-character $INFO message.
+ *  The Quectel LC79D with a  131-character $PGLOR message.
+ *  The current hog champion is the mtk-3301, $PMTKCHN
+ *  a 205-character message.
  */
-#define NMEA_MAX        130             // max length of NMEA sentence
+#define NMEA_MAX        206             // max length of NMEA sentence
 #define NMEA_MAX_FLD    100             // max fields in an NMEA sentence
 #define NMEA_BIG_BUF    (2*NMEA_MAX+1)  // longer than longest NMEA sentence
 

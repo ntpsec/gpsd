@@ -2802,17 +2802,12 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // NAVCOM_ENABLE
 
         case NMEA_RECOGNIZED:
-            if (nmea_checksum(&lexer->errout,
-                              (const char *)lexer->inbuffer,
-                              (const char *)lexer->inbufptr)) {
-                packet_type = NMEA_PACKET;
+             /* nmea_parse() will check the packet checksum
+             * so clients may deep link nmea_parse(), bypassing this code */
+            packet_type = NMEA_PACKET;
 #ifdef STASH_ENABLE
-                unstash = true;
+            unstash = true;
 #endif  // STASH_ENABLE
-            } else {
-                lexer->state = GROUND_STATE;
-                packet_type = BAD_PACKET;
-            }
             acc_dis = ACCEPT;
             break;
 

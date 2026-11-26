@@ -6165,6 +6165,10 @@ static gps_mask_t processTXT(unsigned count, char *field[],
      *
      * $GNTXT,01,01,01,0,500482,0000,80A0,80A0,-45.277,0*6B
      * $GNTXT,01,01,02,0,00,10000,00,01,17,01,0001,0000,0.000*57
+     *
+     * TELIT SL869, no checksum!
+     *
+     * $GPTXT,TELIT SW Version: SL869 v3.1.2.1 -STD -N96
      */
     gps_mask_t mask = ONLINE_SET;
     int msgType = 0;
@@ -6463,7 +6467,11 @@ static gps_mask_t processZDA(unsigned count UNUSED, char *field[],
 *
 **************************************************************************/
 
-// parse an NMEA sentence, unpack it into a session structure
+/* parse an NMEA sentence, unpack it into a session structure
+ *
+ * Return: gps_mask
+ *         0 on bad packet (wrong checksum, invalid chars, etc.)
+ */
 gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
 {
     typedef gps_mask_t (*nmea_decoder) (unsigned count, char *f[],
@@ -6834,20 +6842,22 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
     mlen = strnlen(sentence, NMEA_MAX + 1);
     if (6 >= mlen ||
         NMEA_MAX < mlen) {
+        session->lexer.type = BAD_PACKET;
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: bad sized packet of %zd+ chars rejected.\n",
                  mlen);
-        return ONLINE_SET;
+        return 0;
     }
 
     if ('$' != sentence[0] ||
         !ISUPPER(sentence[1]) ||
         !ISUPPER(sentence[2])) {
+        session->lexer.type = BAD_PACKET;
         // Should not happen, but fuzzers deep link past packet.c checks
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: bad talker x%02x x%02x  x%02x\n",
                  sentence[0], sentence[1], sentence[2]);
-        return ONLINE_SET;
+        return 0;
     }
 
     // make an editable copy of the sentence
@@ -6868,7 +6878,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
 
     // while there is a string and we haven't run off the buffer...
     for (; ; p++) {
-        if ('\0' == *p) {
+        if ('\r' == *p ||
+            '\0' == *p) {
             // end, no checksum
             session->nmea.field[count] = e;      // we have a field. record it
             *p = '\0';                           // terminate it with a NUL
@@ -6901,23 +6912,33 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
             continue;
         }
         if (!ISPRINT(*p)) {
+            session->lexer.type = BAD_PACKET;
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "bad char in NMEA packet; x%02x\n",
                      *p);
-            return false;
+            return 0;
         }
     }
     if (csum_found &&
         ISXDIGIT(e[0]) &&
         ISXDIGIT(e[1])) {
+        if ('\x0a' != e[2] &&
+            '\x0d' != e[2]) {
+            // trailing trash
+            session->lexer.type = BAD_PACKET;
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "bad terminator x%02x\n", e[2]);
+            e[2] = '\0';
+        }
         byteToHex(csum_s, csum);
         if (csum_s[0] != TOUPPER(e[0]) ||
             csum_s[1] != TOUPPER(e[1])) {
             // Bad Checksum
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
+            session->lexer.type = BAD_PACKET;
+            GPSD_LOG(LOG_WARN, &session->context->errout,
                      "got checksum %s expected %c%c\n", csum_s,
                     TOUPPER(e[0]), TOUPPER(e[1]));
-            return false;
+            return 0;
         }
     } else {
         /* These have no checksum:
@@ -6928,10 +6949,14 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
          *  Ashtech (old!) $PASHR,MCA and $PASHR,PBN with no checksum
          * All undocumented,  Let them fail, except $STI.
          */
-        if (!strncmp(session->nmea.field[0], "STI", 4)) {
+        if (0 != strncmp(session->nmea.field[0], "STI", 4) &&
+            0 != strncmp(session->nmea.field[0], "GPTXT", 4)) {
             GPSD_LOG(LOG_WARN, &session->context->errout, "missing checksum\n");
-            return false;
+            session->lexer.type = BAD_PACKET;
+            return 0;
         }
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "allowing missing checksum\n");
     }
     if (NMEA_MAX_FLD < count) {
         // ensure no overflow, OSS Fuzz 515100083

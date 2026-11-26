@@ -31,19 +31,17 @@ gps_mask_t generic_parse_input(struct gps_device_t *session)
         const struct gps_type_t **dp;
         gps_mask_t st = 0;
         char *sentence = (char *)session->lexer.outbuffer;
+        size_t slen = strnlen(sentence, sizeof(session->lexer.outbuffer));
+        char buf[1024];
 
-        if ('\n' != sentence[strnlen(sentence,
-                                     sizeof(session->lexer.outbuffer)) - 1]) {
-            GPSD_LOG(LOG_IO, &session->context->errout,
-                     "<= GPS: %s\n", sentence);
-        } else {
-            GPSD_LOG(LOG_IO, &session->context->errout,
-                     "<= GPS: %s", sentence);
-        }
+        // don't log any binary!
+        (void)gps_visibilize(buf, sizeof(buf), sentence, slen);
+        GPSD_LOG(LOG_IO, &session->context->errout, "<= GPS: \"%s\"\n", buf);
 
         if (0 == (st = nmea_parse(sentence, session))) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "unknown sentence: \"%s\"\n", sentence);
+                     "bad sentence: \"%s\"\n", buf);
+            return 0;
         }
         for (dp = gpsd_drivers; *dp; dp++) {
             char *trigger = (*dp)->trigger;

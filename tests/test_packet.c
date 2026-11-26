@@ -63,7 +63,7 @@ static struct map singletests[] = {
         .test = "$GPVTG,308.74,T,,M,0.00,N,0.0,K*28\r\n",
         .testlen = 36,
         .garbage_offset = 0,
-        .type = BAD_PACKET,
+        .type = NMEA_PACKET,
     },
     {
         .legend = "NMEA interspersed packet",
