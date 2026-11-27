@@ -431,7 +431,7 @@ static gps_mask_t zodiac_analyze(struct gps_device_t *session)
         break;
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "ZODIAC: %u: unknwon message id, length %zd",
+                 "ZODIAC: %u: unknown message id, length %zd",
                  id, session->lexer.outbuflen);
         break;
     }

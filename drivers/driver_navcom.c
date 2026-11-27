@@ -1190,7 +1190,7 @@
             /* min payload: cmd_id, msg_len(2), cksum
              * Fuzzers love to do this. */
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "Navcom: bad lenghts, msg_len %u len %zu\n", msg_len, len);
+                     "Navcom: bad lengths, msg_len %u len %zu\n", msg_len, len);
             return 0;
         }
 

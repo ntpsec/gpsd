@@ -188,7 +188,7 @@
         {475, "GME aka Standard Communications Pty LTD"},
         {476, "Humminbird Marine Electronics"},
         {478, "Ocean Sat BV"},
-        {481, "Chetco Digitial Instruments"},
+        {481, "Chetco Digital Instruments"},
         {493, "Watcheye"},
         {499, "Lcj Capteurs"},
         {502, "Attwood Marine"},

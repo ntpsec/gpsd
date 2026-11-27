@@ -893,7 +893,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     default:
         // unknown/illegal subframe
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "SUB,GPS: unknwon subframe num %u\n",
+                 "SUB,GPS: unknown subframe num %u\n",
                  subp->subframe_num);
         return 0;
     }
