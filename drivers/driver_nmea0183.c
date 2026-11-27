@@ -6166,15 +6166,26 @@ static gps_mask_t processTXT(unsigned count, char *field[],
      * $GNTXT,01,01,01,0,500482,0000,80A0,80A0,-45.277,0*6B
      * $GNTXT,01,01,02,0,00,10000,00,01,17,01,0001,0000,0.000*57
      *
-     * TELIT SL869, no checksum!
+     * TELIT SL869, no checksum!  Only two fields
      *
      * $GPTXT,TELIT SW Version: SL869 v3.1.2.1 -STD -N96
+     *
+     * ST microelectronic Teseo LIV4F.  Only two fields
+     *
+     * $$GPTXT,DEFAULT PVT CONFIGURATION*2A
      */
     gps_mask_t mask = ONLINE_SET;
     int msgType = 0;
     char *msgType_txt = "Unknown";
 
-    if (5 != count) {
+    if (2 == count) {
+        // maximum text length unknown, guess 80
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: %.10s: %.80s\n",
+                 field[0], field[1]);
+        return mask;
+    }
+    if (5 <= count) {
         return mask;
     }
 
@@ -6195,10 +6206,16 @@ static gps_mask_t processTXT(unsigned count, char *field[],
         break;
     }
 
-    // maximum text length unknown, guess 80
-    GPSD_LOG(LOG_WARN, &session->context->errout,
-             "NMEA0183: TXT: %.10s: %.80s\n",
-             msgType_txt, field[4]);
+    if (5 == count) {
+        // maximum text length unknown, guess 80
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: %.10s: %.10s: %.80s\n",
+                 field[0], msgType_txt, field[4]);
+    } else {
+        // 11 = count, unicore, undocumented.
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: %.10s: undocumented\n", field[0]);
+    }
     return mask;
 }
 
@@ -6802,7 +6819,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)
         {"THS", NULL, 0,  false, processTHS},        // True Heading and Status
         {"TRL", NULL, 0, false, NULL},               // AIS Xmit offline, NMEA
                                                      // 4.10+
-        {"TXT", NULL, 5,  false, processTXT},
+        {"TXT", NULL, 2,  false, processTXT},
         {"TXTbase", NULL, 0,  false, NULL},          // RTCM 1029 TXT
         {"VBW", NULL, 0,  false, NULL},              // Dual Ground/Water Speed
         {"VDO", NULL, 0,  false, NULL},              // Own Vessel's Information
